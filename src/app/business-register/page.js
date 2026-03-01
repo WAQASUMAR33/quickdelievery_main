@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import NextLink from 'next/link'
 import toast from 'react-hot-toast'
-import { styled } from '@mui/material/styles'
+import { styled, createTheme, ThemeProvider } from '@mui/material/styles'
 import ImageUploadField from '@/components/ui/ImageUploadField'
+import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
 
 import AppBar            from '@mui/material/AppBar'
 import Toolbar           from '@mui/material/Toolbar'
@@ -52,6 +53,8 @@ import HomeOutlinedIcon           from '@mui/icons-material/HomeOutlined'
 import CheckIcon                  from '@mui/icons-material/Check'
 import CheckCircleOutlinedIcon    from '@mui/icons-material/CheckCircleOutlined'
 import StorefrontOutlinedIcon     from '@mui/icons-material/StorefrontOutlined'
+import MyLocationIcon             from '@mui/icons-material/MyLocation'
+import PinDropOutlinedIcon        from '@mui/icons-material/PinDropOutlined'
 import ChevronRightIcon           from '@mui/icons-material/ChevronRight'
 import ChevronLeftIcon            from '@mui/icons-material/ChevronLeft'
 // Filled — used inside Stepper icon
@@ -60,6 +63,11 @@ import StoreIcon          from '@mui/icons-material/Store'
 import DescriptionIcon    from '@mui/icons-material/Description'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import CameraAltIcon      from '@mui/icons-material/CameraAlt'
+
+// ─── Google Maps constants ─────────────────────────────────────────────────────
+const MAP_LIBRARIES = ['places']
+const MAP_CONTAINER = { width: '100%', height: '300px' }
+const DEFAULT_CENTER = { lat: 33.6844, lng: 73.0479 } // Islamabad
 
 // ─── Brand colour ─────────────────────────────────────────────────────────────
 const BRAND = '#D70F64'
@@ -81,6 +89,7 @@ const INITIAL = {
   urlCnicFront: '', urlCnicBack: '', ntnNo: '',
   bankName: '', bankIbanNo: '', bankAccountTitle: '', billingAddress: '',
   urlLogo: '', urlCoverPhoto: '', urlRestaurantImages: '',
+  latitude: null, longitude: null,
 }
 
 // ─── Styled Stepper connector ─────────────────────────────────────────────────
@@ -131,9 +140,19 @@ const fieldSx = {
 // ─── Adornment helper ─────────────────────────────────────────────────────────
 const adornment = Icon => (
   <InputAdornment position="start">
-    <Icon sx={{ color: 'action.active', fontSize: 20 }} />
+    <Icon sx={{ color: 'action.active', fontSize: 18 }} />
   </InputAdornment>
 )
+
+// ─── Small-size theme override for all form fields ────────────────────────────
+const smallTheme = createTheme({
+  components: {
+    MuiTextField:    { defaultProps: { size: 'small' } },
+    MuiFormControl:  { defaultProps: { size: 'small' } },
+    MuiSelect:       { defaultProps: { size: 'small' } },
+    MuiOutlinedInput:{ defaultProps: { size: 'small' } },
+  },
+})
 
 // ─── Page (inner — needs useSearchParams) ────────────────────────────────────
 function BusinessRegisterInner() {
@@ -148,10 +167,47 @@ function BusinessRegisterInner() {
   const [businessTypes,      setBusinessTypes]      = useState([])
   const [businessCategories, setBusinessCategories] = useState([])
 
+  // ── Google Maps state ────────────────────────────────────────────────────────
+  const mapRef       = useRef(null)
+  const searchBoxRef = useRef(null)
+  const [markerPos,  setMarkerPos]  = useState(null)
+  const [mapCenter,  setMapCenter]  = useState(DEFAULT_CENTER)
+
+  const { isLoaded: mapsLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    libraries: MAP_LIBRARIES,
+  })
+
+  const pinLocation = useCallback((lat, lng) => {
+    const pos = { lat, lng }
+    setMarkerPos(pos)
+    setMapCenter(pos)
+    setFormData(p => ({ ...p, latitude: lat, longitude: lng }))
+  }, [])
+
+  const handleMapClick       = useCallback(e => pinLocation(e.latLng.lat(), e.latLng.lng()), [pinLocation])
+  const handleMarkerDragEnd  = useCallback(e => pinLocation(e.latLng.lat(), e.latLng.lng()), [pinLocation])
+
+  const handleSearchChanged = useCallback(() => {
+    const places = searchBoxRef.current?.getPlaces?.()
+    if (!places?.length) return
+    const loc = places[0].geometry?.location
+    if (!loc) return
+    pinLocation(loc.lat(), loc.lng())
+  }, [pinLocation])
+
+  const handleGetLiveLocation = () => {
+    if (!navigator.geolocation) return toast.error('Geolocation not supported')
+    navigator.geolocation.getCurrentPosition(
+      pos => pinLocation(pos.coords.latitude, pos.coords.longitude),
+      ()  => toast.error('Unable to get your location'),
+    )
+  }
+
   useEffect(() => {
     fetch('/api/business-types')
       .then(r => r.json())
-      .then(d => { if (d.success) setBusinessTypes(d.data.map(t => ({ id: t.id, label: t.typeTitle }))) })
+      .then(d => { if (d.success) setBusinessTypes(d.data.map(t => ({ id: t.id, label: t.typeTitle, categoryId: t.businessCategoryId }))) })
       .catch(() => {})
 
     fetch('/api/business-categories')
@@ -160,7 +216,18 @@ function BusinessRegisterInner() {
       .catch(() => {})
   }, [])
 
-  const onChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }))
+  const onChange = e => {
+    const { name, value } = e.target
+    setFormData(p => ({
+      ...p,
+      [name]: value,
+      ...(name === 'businessCategoryId' ? { businessTypeId: '' } : {}),
+    }))
+  }
+
+  const filteredTypes = formData.businessCategoryId
+    ? businessTypes.filter(t => t.categoryId === parseInt(formData.businessCategoryId))
+    : []
 
   const validateStep = () => {
     const d = formData
@@ -211,6 +278,8 @@ function BusinessRegisterInner() {
           urlLogo:             formData.urlLogo            || null,
           urlCoverPhoto:       formData.urlCoverPhoto      || null,
           urlRestaurantImages: formData.urlRestaurantImages || null,
+          latitude:            formData.latitude  != null ? parseFloat(formData.latitude)  : null,
+          longitude:           formData.longitude != null ? parseFloat(formData.longitude) : null,
         }),
       })
       const data = await res.json()
@@ -332,6 +401,7 @@ function BusinessRegisterInner() {
 
           {/* ── Step content ─────────────────────────────────────────────── */}
           <Box sx={{ p: { xs: 3, sm: 4 } }}>
+            <ThemeProvider theme={smallTheme}>
             <AnimatePresence mode="wait">
 
               {/* ─── STEP 1 · Personal Info ─────────────────────────────── */}
@@ -431,38 +501,41 @@ function BusinessRegisterInner() {
                       InputProps={{ startAdornment: adornment(StoreOutlinedIcon) }}
                     />
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 300 }}>
-                          <InputLabel>Business Type</InputLabel>
-                          <Select
-                            name="businessTypeId" label="Business Type"
-                            value={formData.businessTypeId} onChange={onChange}
-                            startAdornment={adornment(BusinessOutlinedIcon)}
-                          >
-                            <MenuItem value="" disabled><em>Select type…</em></MenuItem>
-                            {businessTypes.map(o => (
-                              <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 300 }}>
-                          <InputLabel>Business Category</InputLabel>
-                          <Select
-                            name="businessCategoryId" label="Business Category"
-                            value={formData.businessCategoryId} onChange={onChange}
-                            startAdornment={adornment(CategoryOutlinedIcon)}
-                          >
-                            <MenuItem value="" disabled><em>Select category…</em></MenuItem>
-                            {businessCategories.map(o => (
-                              <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </Grid>
+                    {/* ── Business Category (select first) ── */}
+                    <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
+                      <InputLabel>Business Category</InputLabel>
+                      <Select
+                        name="businessCategoryId" label="Business Category"
+                        value={formData.businessCategoryId} onChange={onChange}
+                        startAdornment={adornment(CategoryOutlinedIcon)}
+                      >
+                        <MenuItem value="" disabled><em>Select category…</em></MenuItem>
+                        {businessCategories.map(o => (
+                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    {/* ── Business Type (filtered by selected category) ── */}
+                    <FormControl
+                      fullWidth required
+                      disabled={!formData.businessCategoryId}
+                      sx={{ ...fieldSx, minWidth: 240 }}
+                    >
+                      <InputLabel>
+                        {formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
+                      </InputLabel>
+                      <Select
+                        name="businessTypeId" label={formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
+                        value={formData.businessTypeId} onChange={onChange}
+                        startAdornment={adornment(BusinessOutlinedIcon)}
+                      >
+                        <MenuItem value="" disabled><em>Select type…</em></MenuItem>
+                        {filteredTypes.map(o => (
+                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
 
                     <Divider>
                       <Chip
@@ -491,6 +564,7 @@ function BusinessRegisterInner() {
                           fullWidth label="Shop / Unit No. (Optional)" name="houseNumber"
                           value={formData.houseNumber} onChange={onChange}
                           placeholder="e.g. 12-A" sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(NumbersOutlinedIcon) }}
                         />
                       </Grid>
                     </Grid>
@@ -508,6 +582,7 @@ function BusinessRegisterInner() {
                           fullWidth label="City" name="city"
                           value={formData.city} onChange={onChange}
                           placeholder="Lahore" required sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(PublicOutlinedIcon) }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={4}>
@@ -515,6 +590,7 @@ function BusinessRegisterInner() {
                           fullWidth label="State / Province" name="state"
                           value={formData.state} onChange={onChange}
                           placeholder="Punjab" required sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(PublicOutlinedIcon) }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={4}>
@@ -522,9 +598,83 @@ function BusinessRegisterInner() {
                           fullWidth label="Postal Code" name="postalCode"
                           value={formData.postalCode} onChange={onChange}
                           placeholder="54000" required sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(NumbersOutlinedIcon) }}
                         />
                       </Grid>
                     </Grid>
+
+                    {/* ── Google Maps pin ──────────────────────────────── */}
+                    <Divider>
+                      <Chip
+                        icon={<PinDropOutlinedIcon />}
+                        label="Pin Location on Map"
+                        size="small"
+                        variant="outlined"
+                        sx={{ borderColor: `${BRAND}55`, color: BRAND, '& .MuiChip-icon': { color: BRAND } }}
+                      />
+                    </Divider>
+
+                    <Typography variant="body2" color="text.secondary">
+                      Search your address or click/drag the pin to set your exact business location (optional but recommended).
+                    </Typography>
+
+                    {mapsLoaded ? (
+                      <Box>
+                        <StandaloneSearchBox
+                          onLoad={ref => (searchBoxRef.current = ref)}
+                          onPlacesChanged={handleSearchChanged}
+                        >
+                          <TextField
+                            fullWidth
+                            label="Search address"
+                            placeholder="Search for your business address…"
+                            sx={{ ...fieldSx, mb: 1.5 }}
+                            InputProps={{ startAdornment: adornment(LocationOnOutlinedIcon) }}
+                          />
+                        </StandaloneSearchBox>
+
+                        <Box sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                          <GoogleMap
+                            mapContainerStyle={MAP_CONTAINER}
+                            center={mapCenter}
+                            zoom={13}
+                            onClick={handleMapClick}
+                            onLoad={map => (mapRef.current = map)}
+                            options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
+                          >
+                            {markerPos && (
+                              <Marker
+                                position={markerPos}
+                                draggable
+                                onDragEnd={handleMarkerDragEnd}
+                              />
+                            )}
+                          </GoogleMap>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1, flexWrap: 'wrap', gap: 1 }}>
+                          <Button
+                            variant="outlined" size="small"
+                            startIcon={<MyLocationIcon />}
+                            onClick={handleGetLiveLocation}
+                            sx={{ textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}08`, borderColor: BRAND } }}
+                          >
+                            Use My Current Location
+                          </Button>
+
+                          {markerPos && (
+                            <Alert severity="success" icon={<LocationOnOutlinedIcon fontSize="small" />} sx={{ py: 0, flex: 1, minWidth: 200 }}>
+                              {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
+                            </Alert>
+                          )}
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
+                        <CircularProgress size={18} sx={{ color: BRAND }} />
+                        <Typography variant="body2" color="text.secondary">Loading map…</Typography>
+                      </Box>
+                    )}
                   </Stack>
                 </motion.div>
               )}
@@ -686,6 +836,7 @@ function BusinessRegisterInner() {
               )}
 
             </AnimatePresence>
+            </ThemeProvider>
           </Box>
 
           {/* ── Footer nav ──────────────────────────────────────────────── */}

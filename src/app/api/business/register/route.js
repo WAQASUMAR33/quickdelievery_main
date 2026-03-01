@@ -12,7 +12,8 @@ export async function POST(request) {
       state, city, postalCode,
       urlCnicFront, urlCnicBack, ntnNo,
       bankName, bankIbanNo, bankAccountTitle, billingAddress,
-      urlLogo, urlCoverPhoto, urlRestaurantImages
+      urlLogo, urlCoverPhoto, urlRestaurantImages,
+      latitude, longitude,
     } = body
 
     // Required field validation
@@ -62,6 +63,8 @@ export async function POST(request) {
         urlLogo: urlLogo || null,
         urlCoverPhoto: urlCoverPhoto || null,
         urlRestaurantImages: urlRestaurantImages || null,
+        latitude:  latitude  != null ? parseFloat(latitude)  : null,
+        longitude: longitude != null ? parseFloat(longitude) : null,
       }
     })
 
