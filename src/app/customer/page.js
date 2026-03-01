@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useRouter } from 'next/navigation'
+import NextLink from 'next/link'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
 import OrderHistory from '@/components/customer/OrderHistory'
@@ -14,230 +14,206 @@ import CustomerHero from '@/components/customer/CustomerHero'
 import CartPage from '@/components/customer/CartPage'
 import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import {
-  ShoppingBag,
-  Package,
-  User,
-  Heart,
-  Search,
-  Filter,
-  Star,
-  ShoppingCart,
-  Bell,
-  Menu,
-  X,
-  LogOut,
-  ChevronDown,
-  Grid3X3,
-  Layers,
-  UserCircle,
-  Wishlist,
-  Settings
-} from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const CustomerDashboard = () => {
+import AppBar          from '@mui/material/AppBar'
+import Avatar          from '@mui/material/Avatar'
+import Badge           from '@mui/material/Badge'
+import Box             from '@mui/material/Box'
+import Button          from '@mui/material/Button'
+import Card            from '@mui/material/Card'
+import CardActions     from '@mui/material/CardActions'
+import CardContent     from '@mui/material/CardContent'
+import CardMedia       from '@mui/material/CardMedia'
+import CircularProgress from '@mui/material/CircularProgress'
+import Divider         from '@mui/material/Divider'
+import Drawer          from '@mui/material/Drawer'
+import IconButton      from '@mui/material/IconButton'
+import InputAdornment  from '@mui/material/InputAdornment'
+import List            from '@mui/material/List'
+import ListItemButton  from '@mui/material/ListItemButton'
+import ListItemIcon    from '@mui/material/ListItemIcon'
+import ListItemText    from '@mui/material/ListItemText'
+import Menu            from '@mui/material/Menu'
+import MenuItem        from '@mui/material/MenuItem'
+import Tab             from '@mui/material/Tab'
+import Tabs            from '@mui/material/Tabs'
+import TextField       from '@mui/material/TextField'
+import Toolbar         from '@mui/material/Toolbar'
+import Typography      from '@mui/material/Typography'
+
+import CategoryOutlinedIcon    from '@mui/icons-material/CategoryOutlined'
+import CloseIcon               from '@mui/icons-material/Close'
+import ExpandMoreIcon          from '@mui/icons-material/ExpandMore'
+import FavoriteIcon            from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon      from '@mui/icons-material/FavoriteBorder'
+import InventoryOutlinedIcon   from '@mui/icons-material/InventoryOutlined'
+import LogoutOutlinedIcon      from '@mui/icons-material/LogoutOutlined'
+import MenuIcon                from '@mui/icons-material/Menu'
+import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
+import SearchIcon              from '@mui/icons-material/Search'
+import SettingsOutlinedIcon    from '@mui/icons-material/SettingsOutlined'
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
+import StarBorderIcon          from '@mui/icons-material/StarBorder'
+import StarIcon                from '@mui/icons-material/Star'
+
+const BRAND = '#D70F64'
+
+export default function CustomerDashboard() {
   const { user, userData, logout } = useAuth()
   const { addToCart, getTotalItems } = useCart()
   const { getTotalWishlistItems } = useWishlist()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('products')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [showCategoriesSidebar, setShowCategoriesSidebar] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showCart, setShowCart] = useState(false)
-  const [favorites, setFavorites] = useState([])
-  const [categories, setCategories] = useState([])
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'New products available!', time: '2 min ago', read: false },
-    { id: 2, message: 'Your order has been shipped', time: '1 hour ago', read: true },
-    { id: 3, message: 'Flash sale on electronics!', time: '3 hours ago', read: false }
-  ])
-  const [loading, setLoading] = useState(true)
+
+  const [activeTab,            setActiveTab]            = useState('products')
+  const [searchQuery,          setSearchQuery]          = useState('')
+  const [showMobileMenu,       setShowMobileMenu]       = useState(false)
+  const [showCategoriesSidebar,setShowCategoriesSidebar] = useState(false)
+  const [userMenuAnchor,       setUserMenuAnchor]       = useState(null)
+  const [showCart,             setShowCart]             = useState(false)
+  const [favorites,            setFavorites]            = useState([])
+  const [categories,           setCategories]           = useState([])
+  const [loading,              setLoading]              = useState(true)
 
   useEffect(() => {
     if (user && userData) {
       const access = checkUserAccess(user, userData, ['CUSTOMER'])
-
       if (!access.hasAccess) {
-        // Redirect based on user role
-        const userRole = getUserRole(userData)
-
-        if (userRole === 'ADMIN') {
-          router.push('/admin/dashboard')
-        } else if (userRole === 'VENDOR') {
-          router.push('/vendor/dashboard')
-        } else {
-          router.push(access.redirectTo)
-        }
+        const role = getUserRole(userData)
+        if (role === 'ADMIN')  router.push('/admin/dashboard')
+        else if (role === 'VENDOR') router.push('/vendor/dashboard')
+        else router.push(access.redirectTo)
         return
       }
-
-      // Customer - stay on customer page
       setLoading(false)
     }
   }, [user, userData, router])
 
-  // Fetch categories for sidebar
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/products?type=categories')
-        const data = await response.json()
-        if (data.success) {
-          setCategories(data.data || [])
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-      }
+        const res = await fetch('/api/products?type=categories')
+        const data = await res.json()
+        if (data.success) setCategories(data.data || [])
+      } catch (e) { console.error('Error fetching categories:', e) }
     }
     fetchCategories()
   }, [])
 
-  // Close user menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu && !event.target.closest('.user-menu-container')) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu])
-
-  const handleSignOut = async () => {
-    try {
-      await logout()
-      router.push('/login')
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
-
   const isGuest = userData?.role === 'GUEST'
 
   const tabs = [
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'orders', label: 'My Orders', icon: ShoppingBag, protected: true },
-    { id: 'wishlist', label: 'Wishlist', icon: Heart, protected: true },
-    { id: 'favorites', label: 'Favorites', icon: Star, protected: true },
-    { id: 'profile', label: 'Profile', icon: User, protected: true }
+    { id: 'products',  label: 'Products',   icon: <InventoryOutlinedIcon   fontSize="small" /> },
+    { id: 'orders',    label: 'My Orders',  icon: <ShoppingBagOutlinedIcon fontSize="small" />, protected: true },
+    { id: 'wishlist',  label: 'Wishlist',   icon: <FavoriteBorderIcon      fontSize="small" />, protected: true },
+    { id: 'favorites', label: 'Favorites',  icon: <StarBorderIcon          fontSize="small" />, protected: true },
+    { id: 'profile',   label: 'Profile',    icon: <PersonOutlineIcon       fontSize="small" />, protected: true },
   ].filter(tab => !isGuest || !tab.protected)
 
   const handleAddToCart = (product) => {
     addToCart(product)
-    if (isGuest) {
-      toast.success('Item added! Create an account to save your cart.')
-    }
+    if (isGuest) toast.success('Item added! Create an account to save your cart.')
   }
 
   const handleToggleFavorite = (product) => {
-    if (isGuest) {
-      toast.error('Please sign in to save favorites')
-      return
-    }
-    const isFavorite = favorites.find(fav => fav.proId === product.proId)
-    if (isFavorite) {
-      setFavorites(favorites.filter(fav => fav.proId !== product.proId))
-    } else {
-      setFavorites([...favorites, product])
-    }
+    if (isGuest) { toast.error('Please sign in to save favorites'); return }
+    const isFav = favorites.find(f => f.proId === product.proId)
+    setFavorites(isFav ? favorites.filter(f => f.proId !== product.proId) : [...favorites, product])
+  }
+
+  const handleSignOut = async () => {
+    setUserMenuAnchor(null)
+    await logout()
   }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'products':
         return (
-          <div>
+          <>
             <CustomerHero />
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+            <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
               <ProductCatalog
                 searchQuery={searchQuery}
                 onToggleFavorite={handleToggleFavorite}
                 favorites={favorites}
               />
-            </div>
-          </div>
+            </Box>
+          </>
         )
       case 'orders':
         return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
             <OrderHistory />
-          </div>
+          </Box>
         )
       case 'wishlist':
         return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
             <WishlistPage />
-          </div>
+          </Box>
         )
       case 'favorites':
         return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="space-y-6">
-              <div className="text-center py-8">
-                <Heart className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">My Favorites</h2>
-                <p className="text-gray-600">Products you&apos;ve saved for later</p>
-              </div>
-              {favorites.length === 0 ? (
-                <div className="text-center py-12">
-                  <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-600 mb-2">No favorites yet</h3>
-                  <p className="text-gray-500">Start adding products to your favorites!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {favorites.map((product, index) => (
-                    <motion.div
-                      key={product.proId}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ y: -5 }}
-                      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 product-card"
-                    >
-                      <div className="relative">
-                        <img
-                          src={product.proImages?.[0] || '/placeholder-product.jpg'}
-                          alt={product.proName}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <button
-                          onClick={() => handleToggleFavorite(product)}
-                          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
-                        >
-                          <Heart className="w-4 h-4 text-red-500 fill-current" />
-                        </button>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">{product.proName}</h3>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-blue-600">
-                            ${product.price}
-                          </span>
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            className="px-4 py-2 bg-[#F25D49] text-white rounded-lg hover:bg-[#F25D49]/90 transition-colors btn-animated"
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <FavoriteIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+              <Typography variant="h4" fontWeight={800} gutterBottom>My Favorites</Typography>
+              <Typography color="text.secondary">Products you&apos;ve saved for later</Typography>
+            </Box>
+
+            {favorites.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <FavoriteBorderIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>No favorites yet</Typography>
+                <Typography color="text.disabled">Start adding products to your favorites!</Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 3 }}>
+                {favorites.map(product => (
+                  <Card key={product.proId} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+                    <Box sx={{ position: 'relative' }}>
+                      <CardMedia
+                        component="img"
+                        height={192}
+                        image={product.proImages?.[0] || '/placeholder-product.jpg'}
+                        alt={product.proName}
+                        sx={{ objectFit: 'cover' }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleToggleFavorite(product)}
+                        sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'background.paper', '&:hover': { bgcolor: 'error.lighter' } }}
+                      >
+                        <FavoriteIcon sx={{ fontSize: 18, color: 'error.main' }} />
+                      </IconButton>
+                    </Box>
+                    <CardContent sx={{ pb: 1 }}>
+                      <Typography variant="body2" fontWeight={600} sx={{ mb: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        {product.proName}
+                      </Typography>
+                      <Typography variant="h6" fontWeight={800} sx={{ color: BRAND }}>${product.price}</Typography>
+                    </CardContent>
+                    <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
+                      <Button
+                        fullWidth variant="contained" size="small"
+                        onClick={() => handleAddToCart(product)}
+                        sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
+                      >
+                        Add to Cart
+                      </Button>
+                    </CardActions>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </Box>
         )
       case 'profile':
         return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
             <CustomerProfile />
-          </div>
+          </Box>
         )
       default:
         return null
@@ -246,369 +222,302 @@ const CustomerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 border-4 border-orange-200 border-t-[#F25D49] rounded-full mx-auto mb-6"
-          />
-          <motion.h2
-            className="text-2xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent mb-2"
-            animate={{
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            Loading Dashboard...
-          </motion.h2>
-          <p className="text-gray-600">Preparing your shopping experience</p>
-        </motion.div>
-      </div>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={56} sx={{ color: BRAND, mb: 3 }} />
+          <Typography variant="h5" fontWeight={700} sx={{ color: BRAND }}>Loading Dashboard…</Typography>
+          <Typography color="text.secondary" sx={{ mt: 1 }}>Preparing your shopping experience</Typography>
+        </Box>
+      </Box>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Foodpanda-style Sticky Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100 h-16 sm:h-20"
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+
+      {/* ── Sticky Header ── */}
+      <AppBar position="sticky" elevation={0} sx={{
+        bgcolor: 'background.paper',
+        borderBottom: 1, borderColor: 'divider',
+        color: 'text.primary',
+      }}>
+        <Toolbar sx={{
+          maxWidth: 1400, width: '100%', mx: 'auto',
+          px: { xs: 2, sm: 3 }, gap: 2,
+          minHeight: { xs: 64, sm: 72 },
+        }}>
+
+          {/* Logo */}
+          <Box
+            onClick={() => setActiveTab('products')}
+            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', flexShrink: 0 }}
+          >
+            <Box sx={{ width: 40, height: 40, bgcolor: BRAND, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography variant="body2" fontWeight={900} color="#fff" sx={{ fontSize: 13, letterSpacing: 0 }}>QD</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight={900} sx={{ color: BRAND, display: { xs: 'none', sm: 'block' }, letterSpacing: -0.5 }}>
+              QuickDelivery
+            </Typography>
+          </Box>
+
+          {/* Delivery location chip */}
+          <Box sx={{
+            display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.75,
+            bgcolor: 'grey.50', px: 2, py: 1, borderRadius: 6,
+            border: '1px solid', borderColor: 'divider',
+            cursor: 'pointer', flexShrink: 0,
+            '&:hover': { borderColor: BRAND },
+          }}>
+            <Typography variant="caption" fontWeight={700} sx={{ color: BRAND }}>Delivery to</Typography>
+            <Typography variant="caption" color="text.secondary">Home • Islamabad</Typography>
+            <ExpandMoreIcon sx={{ fontSize: 16, color: BRAND }} />
+          </Box>
+
+          {/* Search bar */}
+          <TextField
+            size="small"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search for shops & restaurants"
+            sx={{
+              flex: 1, display: { xs: 'none', lg: 'block' },
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 6, bgcolor: 'grey.50',
+                '&:hover fieldset': { borderColor: BRAND },
+                '&.Mui-focused fieldset': { borderColor: BRAND },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'action.active', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box sx={{ flex: 1, display: { xs: 'block', lg: 'none' } }} />
+
+          {/* Mobile search icon */}
+          <IconButton sx={{ display: { xs: 'flex', lg: 'none' }, color: 'text.secondary' }}>
+            <SearchIcon />
+          </IconButton>
+
+          {/* Cart */}
+          <IconButton
+            onClick={() => setShowCart(true)}
+            sx={{ color: 'text.secondary', '&:hover': { color: BRAND, bgcolor: `${BRAND}10` } }}
+          >
+            <Badge
+              badgeContent={getTotalItems() || null}
+              sx={{ '& .MuiBadge-badge': { bgcolor: BRAND, color: '#fff', fontSize: 10, minWidth: 18, height: 18 } }}
+            >
+              <ShoppingBagOutlinedIcon />
+            </Badge>
+          </IconButton>
+
+          {/* User menu trigger */}
+          <Box
+            onClick={e => setUserMenuAnchor(e.currentTarget)}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
+              border: '1px solid transparent', borderRadius: 6,
+              pl: 0.5, pr: 1.5, py: 0.5,
+              '&:hover': { borderColor: 'divider', bgcolor: 'grey.50' },
+            }}
+          >
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.100', color: 'text.secondary' }}>
+              <PersonOutlineIcon sx={{ fontSize: 20 }} />
+            </Avatar>
+            <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+              <Typography variant="caption" color="text.disabled" sx={{ display: 'block', lineHeight: 1.2 }}>Hello,</Typography>
+              <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.2, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.displayName || 'Guest'}
+              </Typography>
+            </Box>
+            <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+          </Box>
+
+          {/* Mobile hamburger */}
+          <IconButton onClick={() => setShowMobileMenu(true)} sx={{ display: { lg: 'none' }, color: BRAND }}>
+            <MenuIcon />
+          </IconButton>
+
+        </Toolbar>
+
+        {/* Tab nav strip — desktop only */}
+        <Box sx={{ borderTop: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, val) => setActiveTab(val)}
+            sx={{
+              maxWidth: 1400, mx: 'auto', px: 3, minHeight: 44,
+              '& .MuiTab-root': { minHeight: 44, textTransform: 'none', fontWeight: 600, color: 'text.secondary', fontSize: 14 },
+              '& .Mui-selected': { color: BRAND },
+              '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
+            }}
+          >
+            {tabs.map(tab => (
+              <Tab key={tab.id} value={tab.id} label={tab.label} icon={tab.icon} iconPosition="start" />
+            ))}
+          </Tabs>
+        </Box>
+      </AppBar>
+
+      {/* ── User dropdown Menu ── */}
+      <Menu
+        anchorEl={userMenuAnchor}
+        open={Boolean(userMenuAnchor)}
+        onClose={() => setUserMenuAnchor(null)}
+        PaperProps={{ elevation: 4, sx: { width: 280, borderRadius: 2, mt: 1 } }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <div className="max-w-[1400px] mx-auto px-4 h-full flex items-center justify-between gap-4">
-          {/* Logo & Loc */}
-          <div className="flex items-center gap-6">
-            <motion.button
-              onClick={() => setActiveTab('products')}
-              className="flex items-center gap-2 group"
+        {!isGuest ? (
+          <>
+            <Box sx={{ px: 2, py: 2, bgcolor: BRAND, color: '#fff' }}>
+              <Typography fontWeight={700} fontSize={16}>{user?.displayName}</Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9 }}>{user?.email}</Typography>
+            </Box>
+            <MenuItem onClick={() => { setActiveTab('orders');   setUserMenuAnchor(null) }}>
+              <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+              <ListItemText>Orders</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }}>
+              <ListItemIcon><FavoriteBorderIcon sx={{ color: BRAND }} /></ListItemIcon>
+              <ListItemText>Wishlist</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { setActiveTab('profile');  setUserMenuAnchor(null) }}>
+              <ListItemIcon><SettingsOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+              <ListItemText>Settings</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleSignOut}>
+              <ListItemIcon><LogoutOutlinedIcon /></ListItemIcon>
+              <ListItemText>Sign Out</ListItemText>
+            </MenuItem>
+          </>
+        ) : (
+          <Box sx={{ px: 2, py: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Login to access your orders &amp; profile
+            </Typography>
+            <Button
+              component={NextLink} href="/login"
+              fullWidth variant="contained"
+              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
             >
-              <div className="w-10 h-10 bg-[#D70F64] rounded-xl flex items-center justify-center text-white font-bold text-xl group-hover:scale-105 transition-transform">
-                FP
-              </div>
-              <span className="text-2xl font-bold text-[#D70F64] hidden sm:block tracking-tight">foodpanda</span>
-            </motion.button>
+              Login / Sign Up
+            </Button>
+          </Box>
+        )}
+      </Menu>
 
-            {/* Delivery Loc Placeholder */}
-            <div className="hidden md:flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-full border border-gray-200 hover:border-[#D70F64] cursor-pointer transition-colors max-w-xs">
-              <span className="text-[#D70F64] font-bold text-sm">Delivery to</span>
-              <span className="text-gray-600 text-sm truncate">Home • Islamabad</span>
-              <ChevronDown className="w-4 h-4 text-[#D70F64]" />
-            </div>
-          </div>
+      {/* ── Mobile Menu Drawer ── */}
+      <Drawer anchor="left" open={showMobileMenu} onClose={() => setShowMobileMenu(false)} PaperProps={{ sx: { width: 300 } }}>
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h6" fontWeight={700}>Menu</Typography>
+            <IconButton onClick={() => setShowMobileMenu(false)}><CloseIcon /></IconButton>
+          </Box>
 
-          {/* Search Bar - Centered */}
-          <div className="flex-1 max-w-2xl hidden lg:block">
-            <div className="relative group">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for shops & restaurants"
-                className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D70F64]/20 focus:border-[#D70F64] transition-all"
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-[#D70F64]" />
-            </div>
-          </div>
+          {/* User info strip */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: `${BRAND}10`, borderRadius: 2, mb: 3 }}>
+            <Avatar sx={{ bgcolor: BRAND, width: 48, height: 48, fontWeight: 700, fontSize: 20 }}>
+              {user?.displayName?.charAt(0) || 'G'}
+            </Avatar>
+            <Box>
+              <Typography fontWeight={600}>{user?.displayName || 'Guest'}</Typography>
+              <Typography variant="caption" color="text.secondary">{isGuest ? 'Guest' : 'Customer'}</Typography>
+            </Box>
+          </Box>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Mobile Search Toggle */}
-            <button className="lg:hidden p-2 text-gray-600 hover:text-[#D70F64] hover:bg-gray-50 rounded-full">
-              <Search className="w-6 h-6" />
-            </button>
-
-            {/* Cart */}
-            <button
-              onClick={() => setShowCart(true)}
-              className="p-2 text-gray-600 hover:text-[#D70F64] hover:bg-pink-50 rounded-full relative transition-colors"
-            >
-              <ShoppingBag className="w-6 h-6" />
-              {getTotalItems() > 0 && (
-                <span className="absolute top-0 right-0 bg-[#D70F64] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white">
-                  {getTotalItems()}
-                </span>
-              )}
-            </button>
-
-            {/* Profile Dropdown */}
-            <div className="relative user-menu-container">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 hover:bg-gray-50 p-1.5 pr-3 rounded-full border border-transparent hover:border-gray-200 transition-all"
+          <List disablePadding>
+            {tabs.map(tab => (
+              <ListItemButton
+                key={tab.id}
+                selected={activeTab === tab.id}
+                onClick={() => { setActiveTab(tab.id); setShowMobileMenu(false) }}
+                sx={{
+                  borderRadius: 2, mb: 0.5,
+                  '&.Mui-selected': { bgcolor: `${BRAND}15`, color: BRAND },
+                  '&.Mui-selected .MuiListItemIcon-root': { color: BRAND },
+                }}
               >
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <User className="w-5 h-5" />
-                </div>
-                <div className="hidden sm:block text-left">
-                  <span className="block text-xs text-gray-500 font-medium">Hello,</span>
-                  <span className="block text-sm font-bold text-gray-800 -mt-0.5 max-w-[100px] truncate">
-                    {user?.displayName || 'Guest'}
-                  </span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
+                <ListItemIcon>{tab.icon}</ListItemIcon>
+                <ListItemText primary={tab.label} primaryTypographyProps={{ fontWeight: 600 }} />
+              </ListItemButton>
+            ))}
 
-              <AnimatePresence>
-                {showUserMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden"
-                  >
-                    {!isGuest ? (
-                      <>
-                        <div className="px-4 py-3 bg-[#D70F64] text-white mb-2">
-                          <p className="font-bold text-lg">{user?.displayName}</p>
-                          <p className="text-sm opacity-90">{user?.email}</p>
-                        </div>
-                        <button onClick={() => { setActiveTab('orders'); setShowUserMenu(false) }} className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                          <Package className="w-5 h-5 mr-3 text-[#D70F64]" /> Orders
-                        </button>
-                        <button onClick={() => { setActiveTab('wishlist'); setShowUserMenu(false) }} className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                          <Heart className="w-5 h-5 mr-3 text-[#D70F64]" /> Wishlist
-                        </button>
-                        <button onClick={() => { setActiveTab('profile'); setShowUserMenu(false) }} className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                          <Settings className="w-5 h-5 mr-3 text-[#D70F64]" /> Settings
-                        </button>
-                      </>
-                    ) : (
-                      <div className="px-4 py-3 text-center">
-                        <p className="text-gray-600 mb-3">Login to access your orders & profile</p>
-                        <button onClick={handleSignOut} className="w-full py-2 bg-[#D70F64] text-white rounded-lg font-bold hover:bg-[#C20D5A]">
-                          Login / Sign up
-                        </button>
-                      </div>
-                    )}
-
-                    {!isGuest && (
-                      <div className="border-t border-gray-100 mt-2 pt-2">
-                        <button onClick={handleSignOut} className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                          <LogOut className="w-5 h-5 mr-3" /> Sign Out
-                        </button>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Mobile Menu Button - simplified */}
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2 text-[#D70F64]"
+            <ListItemButton
+              onClick={() => { setShowCategoriesSidebar(true); setShowMobileMenu(false) }}
+              sx={{ borderRadius: 2, mb: 0.5 }}
             >
-              {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-      </motion.header>
+              <ListItemIcon><CategoryOutlinedIcon /></ListItemIcon>
+              <ListItemText primary="Categories" primaryTypographyProps={{ fontWeight: 600 }} />
+            </ListItemButton>
 
-      {/* Main Content */}
-      <main>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderContent()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+            <Divider sx={{ my: 1 }} />
 
-      {/* Enhanced Mobile Menu Overlay */}
-      <AnimatePresence>
-        {showMobileMenu && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
-            onClick={() => setShowMobileMenu(false)}
-          >
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              className="w-80 h-full bg-white shadow-xl"
-              onClick={(e) => e.stopPropagation()}
+            <ListItemButton
+              onClick={() => { isGuest ? router.push('/login') : handleSignOut(); setShowMobileMenu(false) }}
+              sx={{ borderRadius: 2, color: isGuest ? 'primary.main' : 'error.main' }}
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-800">Menu</h2>
-                  <button
-                    onClick={() => setShowMobileMenu(false)}
-                    className="p-2 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+              <ListItemIcon sx={{ color: 'inherit' }}><LogoutOutlinedIcon /></ListItemIcon>
+              <ListItemText
+                primary={isGuest ? 'Sign In / Register' : 'Sign Out'}
+                primaryTypographyProps={{ fontWeight: 600 }}
+              />
+            </ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
 
-                {/* User Info */}
-                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-[#F25D49]/10 to-[#FF6B5B]/10 rounded-xl mb-6">
-                  <div className="w-12 h-12 bg-[#F25D49] rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">
-                      {user?.displayName?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800">{user?.displayName || 'User'}</p>
-                    <p className="text-sm text-gray-500">Customer</p>
-                  </div>
-                </div>
+      {/* ── Categories Drawer ── */}
+      <Drawer anchor="left" open={showCategoriesSidebar} onClose={() => setShowCategoriesSidebar(false)} PaperProps={{ sx: { width: 300 } }}>
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CategoryOutlinedIcon sx={{ color: BRAND }} />
+              <Typography variant="h6" fontWeight={700}>Categories</Typography>
+            </Box>
+            <IconButton onClick={() => setShowCategoriesSidebar(false)}><CloseIcon /></IconButton>
+          </Box>
 
-                <nav className="space-y-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setActiveTab(tab.id)
-                        setShowMobileMenu(false)
-                      }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 ${activeTab === tab.id
-                        ? 'bg-[#F25D49]/20 text-[#F25D49] border border-[#F25D49]/30'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-[#F25D49]'
-                        }`}
-                    >
-                      <tab.icon className="w-5 h-5" />
-                      <span className="font-medium">{tab.label}</span>
-                    </button>
-                  ))}
-
-                  {/* Categories Button */}
-                  <button
-                    onClick={() => {
-                      setShowCategoriesSidebar(true)
-                      setShowMobileMenu(false)
-                    }}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 text-gray-600 hover:bg-gray-100 hover:text-[#F25D49]"
-                  >
-                    <Grid3X3 className="w-5 h-5" />
-                    <span className="font-medium">Categories</span>
-                  </button>
-
-                  {/* Sign Out / Sign In Button */}
-                  <button
-                    onClick={() => {
-                      handleSignOut()
-                      setShowMobileMenu(false)
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 ${isGuest ? 'text-blue-600 hover:bg-blue-50' : 'text-red-600 hover:bg-red-50'}`}
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">{isGuest ? 'Sign In / Register' : 'Sign Out'}</span>
-                  </button>
-                </nav>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Enhanced Categories Sidebar - Leaving as is for now, but style could be updated */}
-      <AnimatePresence>
-        {showCategoriesSidebar && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex"
-            onClick={() => setShowCategoriesSidebar(false)}
-          >
-            {/* Clear/transparent backdrop that still captures clicks */}
-            <div className="absolute inset-0 bg-transparent" />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              className="relative z-10 w-80 h-full bg-white shadow-xl"
-              onClick={(e) => e.stopPropagation()}
+          <List disablePadding>
+            <ListItemButton
+              onClick={() => { setSearchQuery(''); setShowCategoriesSidebar(false) }}
+              sx={{ borderRadius: 2, mb: 0.5 }}
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                    <Layers className="w-6 h-6 mr-2 text-[#F25D49]" />
-                    Categories
-                  </h2>
-                  <button
-                    onClick={() => setShowCategoriesSidebar(false)}
-                    className="p-2 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+              <ListItemIcon><InventoryOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+              <ListItemText primary="All Products" primaryTypographyProps={{ fontWeight: 600, fontSize: 15 }} />
+            </ListItemButton>
 
-                <div className="space-y-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02, x: 5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setSearchQuery('')
-                      setShowCategoriesSidebar(false)
-                    }}
-                    className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
-                  >
-                    <Package className="w-6 h-6 mr-4 text-[#F25D49]" />
-                    <span className="font-semibold text-lg">All Products</span>
-                  </motion.button>
+            {categories.map(cat => (
+              <ListItemButton
+                key={cat.id}
+                onClick={() => { setSearchQuery(cat.name.toLowerCase()); setShowCategoriesSidebar(false) }}
+                sx={{ borderRadius: 2, mb: 0.5 }}
+              >
+                <ListItemIcon><CategoryOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+                <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600, fontSize: 15 }} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
 
-                  {categories.map((cat, idx) => {
-                    // Category icons mapping
-                    const categoryIcons = {
-                      'Electronics': Star,
-                      'Fashion': Heart,
-                      'Home & Kitchen': ShoppingBag,
-                      'Books': Package,
-                      'Health & Beauty': Star,
-                      'Sports': Package,
-                      'Food': Package,
-                      'Grocery': ShoppingBag
-                    }
+      {/* ── Main content ── */}
+      <Box component="main">
+        {renderContent()}
+      </Box>
 
-                    const IconComponent = categoryIcons[cat.name] || Package
-
-                    return (
-                      <motion.button
-                        key={cat.id}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setSearchQuery(cat.name.toLowerCase())
-                          setShowCategoriesSidebar(false)
-                        }}
-                        className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
-                      >
-                        <IconComponent className="w-6 h-6 mr-4 text-[#F25D49]" />
-                        <span className="font-semibold text-lg">{cat.name}</span>
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cart Page */}
-      <AnimatePresence>
-        {showCart && (
-          <CartPage onClose={() => setShowCart(false)} />
-        )}
-      </AnimatePresence>
+      {/* Cart slide-over */}
+      {showCart && <CartPage onClose={() => setShowCart(false)} />}
 
       {/* Footer */}
       <CustomerFooter />
-    </div>
+
+    </Box>
   )
 }
-
-export default CustomerDashboard
