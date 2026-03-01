@@ -199,6 +199,8 @@ model Business {
   urlLogo             String?          @map("url_logo") @db.VarChar(500)
   urlCoverPhoto       String?          @map("url_cover_photo") @db.VarChar(500)
   urlRestaurantImages String?          @map("url_restaurant_images") @db.LongText
+  latitude            Float?           @map("latitude")
+  longitude           Float?           @map("longitude")
   verificationStatus  BusinessVerificationStatus @default(PENDING) @map("verification_status")
   createdAt           DateTime         @default(now()) @map("created_at")
   updatedAt           DateTime         @updatedAt @map("updated_at")
