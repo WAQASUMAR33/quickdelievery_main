@@ -1,0 +1,41 @@
+{
+  "name": "quick_delivery",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "create-user": "node scripts/create-user.js"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/lab": "^7.0.1-beta.18",
+    "@mui/material": "^7.3.4",
+    "@mui/x-data-grid": "^8.14.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@prisma/client": "^6.17.1",
+    "bcryptjs": "^3.0.2",
+    "cookie": "^1.1.1",
+    "dotenv": "^17.2.3",
+    "framer-motion": "^12.23.24",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.545.0",
+    "next": "15.5.5",
+    "nodemailer": "^7.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hot-toast": "^2.6.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "^16.1.1",
+    "prisma": "^6.17.1",
+    "tailwindcss": "^4"
+  }
+}

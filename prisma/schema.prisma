@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                 Int       @id @default(autoincrement())
+  uid                String    @unique
+  username           String
+  email              String    @unique
+  phoneNumber        String
+  role               UserRole  @default(CUSTOMER)
+  emailVerification  Boolean   @default(false) @map("email_verification")
+  type               String?
+  createdAt          DateTime  @default(now()) @map("createdAt")
+  updatedAt          DateTime  @updatedAt @map("updatedAt")
+  password           String?
+  passwordResetToken String?   @map("password_reset_token")
+  verificationToken  String?   @map("verification_token")
+  productsAsApprover Product[] @relation("ApproverProducts")
+  productsAsCreator  Product[] @relation("CreatorProducts")
+  productsAsVendor   Product[] @relation("VendorProducts")
+  orders             Order[]
+
+  @@map("users")
+}
+
+model Category {
+  id            Int            @id @default(autoincrement())
+  name          String
+  code          String         @unique
+  description   String?
+  status        CategoryStatus @default(ACTIVE)
+  createdBy     String         @map("createdBy")
+  createdAt     DateTime       @default(now()) @map("createdAt")
+  updatedAt     DateTime       @updatedAt @map("updatedAt")
+  products      Product[]
+  subCategories SubCategory[]
+
+  @@map("categories")
+}
+
+model SubCategory {
+  subCatId   Int       @id @default(autoincrement()) @map("sub_cat_id")
+  subCatCode String    @unique @map("sub_cat_code") @db.VarChar(50)
+  subCatName String    @map("sub_cat_name") @db.VarChar(255)
+  status     Boolean   @default(true)
+  catId      Int    @map("cat_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  products   Product[]
+  category   Category  @relation(fields: [catId], references: [id], onDelete: Cascade)
+
+  @@index([catId], map: "sub_categories_cat_id_fkey")
+  @@map("sub_categories")
+}
+
+model Product {
+  description       String?        @db.Text
+  price             Decimal        @db.Decimal(10, 2)
+  sku               String         @unique @db.VarChar(100)
+  barcode           String?        @unique @db.VarChar(100)
+  status            Boolean        @default(true)
+  approvalStatus    ApprovalStatus @default(Pending) @map("approval_status")
+  approveById       String?        @map("approve_by")
+  catId             Int         @map("cat_id")
+  cost              Decimal        @db.Decimal(10, 2)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  createdById       String         @map("created_by")
+  discount          Decimal        @default(0.00) @db.Decimal(5, 2)
+  proId             Int            @id @default(autoincrement()) @map("pro_id")
+  proImages         String?        @map("pro_images") @db.LongText
+  proName           String         @map("pro_name") @db.VarChar(255)
+  qnty              Int            @default(0)
+  stock             Int            @default(0)
+  subCatId          Int            @map("sub_cat_id")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  vendorId          String         @map("vendor_id")
+  brandName         String?        @map("brand_name") @db.VarChar(255)
+  conditionType     String?        @map("condition_type") @db.VarChar(50)
+  currency          String?        @default("USD") @db.VarChar(10)
+  ingredients       String?        @db.Text
+  keyFeatures       String?        @map("key_features") @db.LongText
+  manufacturer      String?        @db.VarChar(255)
+  modelNumber       String?        @map("model_number") @db.VarChar(100)
+  packageWeight     String?        @map("package_weight") @db.VarChar(100)
+  productDimensions String?        @map("product_dimensions") @db.VarChar(255)
+  productType       String?        @map("product_type") @db.VarChar(100)
+  reviews           String?        @db.LongText
+  saleEndDate       DateTime?      @map("sale_end_date")
+  salePrice         Decimal?       @map("sale_price") @db.Decimal(10, 2)
+  saleStartDate     DateTime?      @map("sale_start_date")
+  sizeName          String?        @map("size_name") @db.VarChar(100)
+  variations        String?        @db.LongText
+  warranty          String?        @db.VarChar(255)
+  color             String?        @db.VarChar(100)
+  size              String?        @db.VarChar(100)
+  approver          Users?         @relation("ApproverProducts", fields: [approveById], references: [uid])
+  category          Category       @relation(fields: [catId], references: [id], onDelete: Cascade)
+  creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
+  subCategory       SubCategory    @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
+  vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
+  orderItems        OrderItem[]
+
+  @@index([approveById], map: "products_approve_by_fkey")
+  @@index([catId], map: "products_cat_id_fkey")
+  @@index([createdById], map: "products_created_by_fkey")
+  @@index([subCatId], map: "products_sub_cat_id_fkey")
+  @@index([vendorId], map: "products_vendor_id_fkey")
+  @@map("products")
+}
+
+model Order {
+  id               Int           @id @default(autoincrement())
+  userId           Int           @map("user_id")
+  status           OrderStatus   @default(PENDING)
+  shippingAddress  String?       @map("shipping_address") @db.VarChar(500)
+  paymentMethod    String?       @map("payment_method") @db.VarChar(50)
+  totalAmount      Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
+  trackingNumber   String?       @map("tracking_number") @db.VarChar(100)
+  estimatedDelivery DateTime?    @map("estimated_delivery")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  user             Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems       OrderItem[]
+
+  @@index([userId], map: "orders_user_id_fkey")
+  @@map("orders")
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @map("order_id")
+  productId  Int      @map("product_id")
+  quantity   Int      @default(1)
+  price      Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+
+  @@index([orderId], map: "order_items_order_id_fkey")
+  @@index([productId], map: "order_items_product_id_fkey")
+  @@map("order_items")
+}
+
+model BusinessType {
+  id                 Int               @id @default(autoincrement())
+  typeTitle          String            @map("type_title") @db.VarChar(255)
+  businessCategoryId Int?              @map("business_category_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  businesses         Business[]
+  businessCategory   BusinessCategory? @relation(fields: [businessCategoryId], references: [id])
+
+  @@index([businessCategoryId], map: "business_types_business_category_id_fkey")
+  @@map("business_types")
+}
+
+model BusinessCategory {
+  id            Int            @id @default(autoincrement())
+  categoryTitle String         @map("category_title") @db.VarChar(255)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  businesses    Business[]
+  businessTypes BusinessType[]
+
+  @@map("business_categories")
+}
+
+model Business {
+  id                  Int              @id @default(autoincrement())
+  email               String           @unique @db.VarChar(255)
+  businessName        String           @map("business_name") @db.VarChar(255)
+  firstName           String           @map("first_name") @db.VarChar(100)
+  lastName            String           @map("last_name") @db.VarChar(100)
+  cnicNo              String           @map("cnic_no") @db.VarChar(20)
+  businessTypeId      Int              @map("business_type_id")
+  businessCategoryId  Int              @map("business_category_id")
+  phoneNumber1        String           @map("phone_number_1") @db.VarChar(20)
+  phoneNumber2        String?          @map("phone_number_2") @db.VarChar(20)
+  buildingPlaceName   String?          @map("building_place_name") @db.VarChar(255)
+  streetAddress       String           @map("street_address") @db.VarChar(500)
+  houseNumber         String?          @map("house_number") @db.VarChar(50)
+  state               String           @db.VarChar(100)
+  city                String           @db.VarChar(100)
+  postalCode          String           @map("postal_code") @db.VarChar(20)
+  urlCnicFront        String           @map("url_cnic_front") @db.VarChar(500)
+  urlCnicBack         String           @map("url_cnic_back") @db.VarChar(500)
+  ntnNo               String?          @map("ntn_no") @db.VarChar(50)
+  bankName            String           @map("bank_name") @db.VarChar(255)
+  bankIbanNo          String           @map("bank_iban_no") @db.VarChar(50)
+  bankAccountTitle    String           @map("bank_account_title") @db.VarChar(255)
+  billingAddress      String           @map("billing_address") @db.VarChar(500)
+  urlLogo             String?          @map("url_logo") @db.VarChar(500)
+  urlCoverPhoto       String?          @map("url_cover_photo") @db.VarChar(500)
+  urlRestaurantImages String?          @map("url_restaurant_images") @db.LongText
+  verificationStatus  BusinessVerificationStatus @default(PENDING) @map("verification_status")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  businessType        BusinessType     @relation(fields: [businessTypeId], references: [id])
+  businessCategory    BusinessCategory @relation(fields: [businessCategoryId], references: [id])
+
+  @@index([businessTypeId], map: "businesses_business_type_id_fkey")
+  @@index([businessCategoryId], map: "businesses_business_category_id_fkey")
+  @@map("businesses")
+}
+
+enum UserRole {
+  ADMIN
+  SUPER_ADMIN
+  DRIVER
+  VENDOR
+  CUSTOMER
+}
+
+enum ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum BusinessVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
