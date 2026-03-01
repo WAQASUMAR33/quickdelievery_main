@@ -3,28 +3,118 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { motion, AnimatePresence } from 'framer-motion'
 import { getUserRole } from '@/lib/authHelpers'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShoppingBag, Truck, UtensilsCrossed } from 'lucide-react'
-import Link from 'next/link'
+import NextLink from 'next/link'
+
+import Alert           from '@mui/material/Alert'
+import Box             from '@mui/material/Box'
+import Button          from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Divider         from '@mui/material/Divider'
+import IconButton      from '@mui/material/IconButton'
+import InputAdornment  from '@mui/material/InputAdornment'
+import Paper           from '@mui/material/Paper'
+import Stack           from '@mui/material/Stack'
+import TextField       from '@mui/material/TextField'
+import Typography      from '@mui/material/Typography'
+
+import ArrowBackOutlinedIcon    from '@mui/icons-material/ArrowBackOutlined'
+import ArrowForwardIcon         from '@mui/icons-material/ArrowForward'
+import EmailOutlinedIcon        from '@mui/icons-material/EmailOutlined'
+import Inventory2Icon           from '@mui/icons-material/Inventory2'
+import LockOutlinedIcon         from '@mui/icons-material/LockOutlined'
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
+import LogoutOutlinedIcon       from '@mui/icons-material/LogoutOutlined'
+import RestaurantOutlinedIcon   from '@mui/icons-material/RestaurantOutlined'
+import ShoppingBagOutlinedIcon  from '@mui/icons-material/ShoppingBagOutlined'
+import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
+
+const BRAND = '#D70F64'
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 0,
+    '&:hover fieldset':       { borderColor: BRAND },
+    '&.Mui-focused fieldset': { borderColor: BRAND },
+  },
+  '& label.Mui-focused': { color: BRAND },
+}
+
+/* ── Left branding panel (same as register) ── */
+function BrandPanel() {
+  return (
+    <Box sx={{
+      display: { xs: 'none', lg: 'flex' },
+      width: '45%', flexShrink: 0,
+      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      p: 6, position: 'sticky', top: 0, height: '100vh',
+      background: `linear-gradient(155deg, ${BRAND} 0%, #FF1F8D 60%, #FF6B6B 100%)`,
+      overflow: 'hidden',
+    }}>
+      {/* Blobs */}
+      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        <Box sx={{ position: 'absolute', top: -60, left: -60, width: 320, height: 320, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.08)', filter: 'blur(40px)' }} />
+        <Box sx={{ position: 'absolute', bottom: -80, right: -80, width: 400, height: 400, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', filter: 'blur(60px)' }} />
+      </Box>
+
+      <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', color: '#fff' }}>
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 5 }}>
+          <Box sx={{ width: 60, height: 60, bgcolor: '#fff', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+            <Typography variant="h5" fontWeight={900} color={BRAND}>QD</Typography>
+          </Box>
+          <Typography variant="h3" fontWeight={900} letterSpacing={-1}>QuickDelivery</Typography>
+        </Box>
+
+        {/* Illustration */}
+        <Box sx={{ position: 'relative', display: 'inline-block', mb: 5 }}>
+          <Box sx={{
+            width: 220, height: 220,
+            bgcolor: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: '32px',
+            border: '1px solid rgba(255,255,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <LocalShippingOutlinedIcon sx={{ fontSize: 90, color: '#fff' }} />
+          </Box>
+          <Paper elevation={12} sx={{ position: 'absolute', top: -18, right: -18, width: 56, height: 56, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <RestaurantOutlinedIcon sx={{ fontSize: 28, color: BRAND }} />
+          </Paper>
+          <Paper elevation={12} sx={{ position: 'absolute', bottom: -18, left: -18, width: 56, height: 56, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShoppingBagOutlinedIcon sx={{ fontSize: 28, color: BRAND }} />
+          </Paper>
+        </Box>
+
+        {/* Tagline */}
+        <Typography variant="h4" fontWeight={800} gutterBottom sx={{ lineHeight: 1.2 }}>
+          Welcome back!
+        </Typography>
+        <Typography variant="body1" sx={{ opacity: 0.85, maxWidth: 280, mx: 'auto' }}>
+          Sign in to manage orders, products and your store.
+        </Typography>
+      </Box>
+    </Box>
+  )
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
 
   const { signIn, user, userData, loading: authLoading, logout, loginAsGuest } = useAuth()
   const router = useRouter()
 
-  // Redirect based on user role after login
   useEffect(() => {
     if (!authLoading && user && userData) {
-      const userRole = getUserRole(userData)
-      if (userRole === 'ADMIN') router.push('/admin/dashboard')
-      else if (userRole === 'VENDOR') router.push('/vendor/dashboard')
-      else if (userRole === 'CUSTOMER') router.push('/customer')
+      const role = getUserRole(userData)
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
+      else if (role === 'VENDOR')   router.push('/vendor/dashboard')
+      else if (role === 'CUSTOMER') router.push('/customer')
     }
   }, [user, userData, authLoading, router])
 
@@ -32,13 +122,10 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     try {
       const result = await signIn(email, password)
-      if (!result.success) {
-        setError(result.error || 'Login failed. Please check your credentials.')
-      }
-    } catch (error) {
+      if (!result.success) setError(result.error || 'Login failed. Please check your credentials.')
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -50,12 +137,9 @@ export default function LoginPage() {
     setError('')
     try {
       const result = await loginAsGuest()
-      if (result.success) {
-        router.push('/customer')
-      } else {
-        setError(result.error || 'Failed to login as guest')
-      }
-    } catch (err) {
+      if (result.success) router.push('/customer')
+      else setError(result.error || 'Failed to login as guest')
+    } catch {
       setError('An error occurred during guest login')
     } finally {
       setLoading(false)
@@ -63,249 +147,177 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-white">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#D70F64] to-[#FF1F8D] relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        </div>
+    <Box sx={{ minHeight: '100vh', display: 'flex', bgcolor: 'background.default' }}>
+      <BrandPanel />
 
-        <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-12"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center">
-                <span className="text-3xl font-bold text-[#D70F64]">FP</span>
-              </div>
-              <span className="text-5xl font-bold tracking-tight">foodpanda</span>
-            </div>
-          </motion.div>
+      {/* ── Right panel ── */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowY: 'auto', bgcolor: 'background.paper' }}>
 
-          {/* Illustration */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mb-8"
-          >
-            <div className="relative">
-              <div className="w-80 h-80 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-                <UtensilsCrossed className="w-32 h-32 text-white" />
-              </div>
+        {/* Top bar */}
+        <Box sx={{ px: { xs: 3, sm: 5 }, py: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 10 }}>
+          {/* Mobile logo */}
+          <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ width: 36, height: 36, bgcolor: BRAND, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography variant="body2" fontWeight={900} color="#fff">QD</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight={800} color={BRAND}>QuickDelivery</Typography>
+          </Box>
+          <Box sx={{ display: { xs: 'none', lg: 'block' } }} />
 
-              {/* Floating Icons */}
-              <motion.div
-                animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -top-6 -right-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center"
+          <Typography variant="body2" color="text.secondary">
+            Don&apos;t have an account?{' '}
+            <Box component={NextLink} href="/register"
+              sx={{ color: BRAND, fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              Sign Up
+            </Box>
+          </Typography>
+        </Box>
+
+        {/* Form area */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: { xs: 3, sm: 5 } }}>
+          <Box sx={{ width: '100%', maxWidth: 480 }}>
+
+            {/* Header */}
+            <Box mb={4}>
+              <Typography variant="h4" fontWeight={800} gutterBottom>Welcome back</Typography>
+              <Typography variant="body1" color="text.secondary">Sign in to your account to continue</Typography>
+            </Box>
+
+            {/* Already logged in notice */}
+            {user && (
+              <Alert
+                severity="info"
+                sx={{ mb: 3, borderRadius: 0, bgcolor: '#fce7f3', border: `1px solid ${BRAND}33`, color: BRAND, '& .MuiAlert-icon': { color: BRAND } }}
+                action={
+                  <Button size="small" startIcon={<LogoutOutlinedIcon />} onClick={logout}
+                    sx={{ color: BRAND, textTransform: 'none', fontWeight: 700 }}>
+                    Logout
+                  </Button>
+                }
               >
-                <ShoppingBag className="w-10 h-10 text-[#D70F64]" />
-              </motion.div>
+                <Typography variant="body2" fontWeight={600}>Already signed in</Typography>
+                <Typography variant="caption">as {user.email}</Typography>
+              </Alert>
+            )}
 
-              <motion.div
-                animate={{ y: [0, 20, 0] }}
-                transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-                className="absolute -bottom-6 -left-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center"
-              >
-                <Truck className="w-10 h-10 text-[#D70F64]" />
-              </motion.div>
-            </div>
-          </motion.div>
+            {/* Error */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 0 }}>{error}</Alert>
+            )}
 
-          {/* Tagline */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-center"
-          >
-            <h2 className="text-3xl font-bold mb-3">Order food & groceries</h2>
-            <p className="text-xl text-white/90">Fast delivery to your doorstep</p>
-          </motion.div>
-        </div>
-      </div>
+            {/* Form */}
+            <Box component="form" onSubmit={handleSubmit}>
+              <Stack spacing={2.5}>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md"
-        >
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-12 h-12 bg-[#D70F64] rounded-xl flex items-center justify-center">
-              <span className="text-xl font-bold text-white">FP</span>
-            </div>
-            <span className="text-3xl font-bold text-[#D70F64] tracking-tight">foodpanda</span>
-          </div>
-
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome back</h1>
-            <p className="text-gray-600">Sign in to your account to continue</p>
-          </div>
-
-          {/* Already Logged In Notice */}
-          {user && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              className="mb-6 p-4 bg-pink-50 border border-pink-200 rounded-xl flex items-center justify-between"
-            >
-              <div className="text-sm text-pink-800">
-                <span className="font-semibold block">Already Logged In</span>
-                as {user.email}
-              </div>
-              <button
-                type="button"
-                onClick={logout}
-                className="text-xs bg-pink-100 text-pink-900 px-3 py-1.5 rounded-lg hover:bg-pink-200 transition-colors font-medium"
-              >
-                Logout
-              </button>
-            </motion.div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2"
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Email Input */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="email">
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#D70F64] transition-colors" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#D70F64] transition-all outline-none text-gray-800 placeholder:text-gray-400"
-                  placeholder="name@example.com"
-                  required
+                <TextField
+                  fullWidth size="small" label="Email Address" type="email"
+                  value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="name@example.com" required
+                  sx={fieldSx}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailOutlinedIcon sx={{ fontSize: 18, color: 'action.active' }} />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-              </div>
-            </div>
 
-            {/* Password Input */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-bold text-gray-700" htmlFor="password">
-                  Password
-                </label>
-                <Link href="#" className="text-sm font-medium text-[#D70F64] hover:text-[#C20D5A]">
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#D70F64] transition-colors" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-14 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#D70F64] transition-all outline-none text-gray-800 placeholder:text-gray-400"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors"
+                <Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+                    <Typography variant="body2" fontWeight={600} color="text.primary">Password</Typography>
+                    <Box component={NextLink} href="#"
+                      sx={{ fontSize: 12, color: BRAND, fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                      Forgot Password?
+                    </Box>
+                  </Box>
+                  <TextField
+                    fullWidth size="small" label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter your password" required
+                    sx={fieldSx}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockOutlinedIcon sx={{ fontSize: 18, color: 'action.active' }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton size="small" edge="end" onClick={() => setShowPassword(v => !v)}>
+                            {showPassword
+                              ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} />
+                              : <VisibilityOutlinedIcon   sx={{ fontSize: 18 }} />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
+
+                {/* Sign In */}
+                <Button
+                  type="submit" fullWidth variant="contained" size="large"
+                  disabled={loading}
+                  endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />}
+                  sx={{
+                    py: 1.4, fontWeight: 700, fontSize: '1rem', textTransform: 'none', borderRadius: 0,
+                    bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                    boxShadow: `0 6px 20px ${BRAND}44`,
+                  }}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
+                  {loading ? 'Signing In…' : 'Sign In'}
+                </Button>
 
-            {/* Sign In Button */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-[#D70F64] text-white py-4 rounded-xl hover:bg-[#C20D5A] transition-all duration-300 font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg hover:shadow-xl group"
-            >
-              {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </motion.button>
+                <Divider>
+                  <Typography variant="caption" color="text.disabled" sx={{ px: 1 }}>OR</Typography>
+                </Divider>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">Or</span>
-              </div>
-            </div>
+                {/* Guest login */}
+                <Button
+                  type="button" fullWidth variant="outlined" size="large"
+                  disabled={loading}
+                  onClick={handleGuestLogin}
+                  sx={{
+                    py: 1.4, fontWeight: 700, fontSize: '1rem', textTransform: 'none', borderRadius: 0,
+                    borderColor: 'divider', color: 'text.secondary',
+                    '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: `${BRAND}08` },
+                  }}
+                >
+                  Continue as Guest
+                </Button>
 
-            {/* Guest Login Button */}
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleGuestLogin}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-gray-50 text-gray-700 font-bold py-4 rounded-xl hover:bg-gray-100 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300"
-            >
-              <span>Continue as Guest</span>
-            </motion.button>
-          </form>
+              </Stack>
+            </Box>
 
-          {/* Sign Up Link */}
-          <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                href="/register"
-                className="text-[#D70F64] hover:text-[#C20D5A] font-bold hover:underline"
+            <Divider sx={{ my: 3 }} />
+
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                component={NextLink} href="/"
+                variant="text" size="small"
+                startIcon={<ArrowBackOutlinedIcon />}
+                sx={{ textTransform: 'none', color: 'text.secondary', '&:hover': { color: BRAND, bgcolor: 'transparent' } }}
               >
-                Sign Up
-              </Link>
-            </p>
-          </div>
+                Back to Home
+              </Button>
+            </Box>
 
-          {/* Back to Home */}
-          <div className="mt-6 text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+          </Box>
+        </Box>
+
+        {/* Footer */}
+        <Box sx={{ px: { xs: 3, sm: 5 }, py: 2, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+          <Typography variant="caption" color="text.disabled">
+            By signing in you agree to our{' '}
+            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer' }}>Terms of Service</Box>
+            {' '}and{' '}
+            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer' }}>Privacy Policy</Box>.
+          </Typography>
+        </Box>
+
+      </Box>
+    </Box>
   )
 }
