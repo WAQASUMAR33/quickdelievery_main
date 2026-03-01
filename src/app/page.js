@@ -18,9 +18,9 @@ function HomeContent() {
           const userRole = getUserRole(userData)
 
           if (userRole === 'ADMIN') {
-            router.push('/dashboard')
+            router.push('/admin/dashboard')
           } else if (userRole === 'VENDOR') {
-            router.push('/vendor-dashboard')
+            router.push('/vendor/dashboard')
           } else if (userRole === 'CUSTOMER') {
             router.push('/customer')
           } else {

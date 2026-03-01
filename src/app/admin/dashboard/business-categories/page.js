@@ -22,7 +22,7 @@ const BusinessCategoriesPage = () => {
         if (userRole === 'CUSTOMER') {
           router.push('/customer')
         } else if (userRole === 'VENDOR') {
-          router.push('/vendor-dashboard')
+          router.push('/vendor/dashboard')
         } else {
           router.push(access.redirectTo)
         }

@@ -47,7 +47,7 @@ export default function AdminDashboard() {
       if (!access.hasAccess) {
         const role = getUserRole(userData)
         if (role === 'CUSTOMER')    router.push('/customer')
-        else if (role === 'VENDOR') router.push('/vendor-dashboard')
+        else if (role === 'VENDOR') router.push('/vendor/dashboard')
         else                        router.push(access.redirectTo)
       }
     }
@@ -225,7 +225,7 @@ function SettingsTab({ router }) {
         <Box mt={2}>
           <Chip
             label="Go to Settings →"
-            onClick={() => router.push('/dashboard/settings')}
+            onClick={() => router.push('/admin/dashboard/settings')}
             clickable
             sx={{ bgcolor: BRAND, color: 'white', fontWeight: 600, borderRadius: 0, '&:hover': { bgcolor: '#b00d52' } }}
           />

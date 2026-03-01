@@ -47,52 +47,52 @@ const COLLAPSED_W = 64
 
 // ── Menu definitions ─────────────────────────────────────────────────────────
 const ADMIN_ITEMS = [
-  { id: 'dashboard',      label: 'Dashboard',         icon: DashboardOutlinedIcon,     path: '/dashboard' },
-  { id: 'vendors',        label: 'Vendors',            icon: StorefrontOutlinedIcon,    path: '/dashboard/vendors' },
-  { id: 'customers',      label: 'Customers',          icon: PeopleOutlinedIcon,        path: '/dashboard/customers' },
-  { id: 'drivers',        label: 'Drivers',            icon: LocalShippingOutlinedIcon, path: '/dashboard/drivers' },
-  { id: 'payments',       label: 'Payments',           icon: CreditCardOutlinedIcon,    path: '/dashboard/payments' },
+  { id: 'dashboard',      label: 'Dashboard',         icon: DashboardOutlinedIcon,     path: '/admin/dashboard' },
+  { id: 'vendors',        label: 'Vendors',            icon: StorefrontOutlinedIcon,    path: '/admin/dashboard/vendors' },
+  { id: 'customers',      label: 'Customers',          icon: PeopleOutlinedIcon,        path: '/admin/dashboard/customers' },
+  { id: 'drivers',        label: 'Drivers',            icon: LocalShippingOutlinedIcon, path: '/admin/dashboard/drivers' },
+  { id: 'payments',       label: 'Payments',           icon: CreditCardOutlinedIcon,    path: '/admin/dashboard/payments' },
   {
     id: 'orders', label: 'Orders', icon: ShoppingBagOutlinedIcon,
     children: [
-      { id: 'new-orders',     label: 'New Orders',     path: '/dashboard/orders/new' },
-      { id: 'order-history',  label: 'Order History',  path: '/dashboard/orders/history' },
-      { id: 'pending-orders', label: 'Pending Orders', path: '/dashboard/orders/pending' },
+      { id: 'new-orders',     label: 'New Orders',     path: '/admin/dashboard/orders/new' },
+      { id: 'order-history',  label: 'Order History',  path: '/admin/dashboard/orders/history' },
+      { id: 'pending-orders', label: 'Pending Orders', path: '/admin/dashboard/orders/pending' },
     ],
   },
-  { id: 'products',      label: 'Products',         icon: Inventory2OutlinedIcon,  path: '/dashboard/products' },
-  { id: 'categories',    label: 'Categories',       icon: FolderOutlinedIcon,      path: '/dashboard/categories' },
-  { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/dashboard/subcategories' },
+  { id: 'products',      label: 'Products',         icon: Inventory2OutlinedIcon,  path: '/admin/dashboard/products' },
+  { id: 'categories',    label: 'Categories',       icon: FolderOutlinedIcon,      path: '/admin/dashboard/categories' },
+  { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/admin/dashboard/subcategories' },
   {
     id: 'business-setup', label: 'Business Setup', icon: WorkOutlinedIcon,
     children: [
-      { id: 'business-categories', label: 'Business Categories', path: '/dashboard/business-categories' },
-      { id: 'business-types',      label: 'Business Types',      path: '/dashboard/business-types' },
+      { id: 'business-categories', label: 'Business Categories', path: '/admin/dashboard/business-categories' },
+      { id: 'business-types',      label: 'Business Types',      path: '/admin/dashboard/business-types' },
     ],
   },
-  { id: 'employees', label: 'Employees', icon: HowToRegOutlinedIcon,    path: '/dashboard/employees' },
-  { id: 'disputes',  label: 'Disputes',  icon: WarningAmberOutlinedIcon, path: '/dashboard/disputes' },
-  { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,    path: '/dashboard/settings' },
+  { id: 'employees', label: 'Employees', icon: HowToRegOutlinedIcon,    path: '/admin/dashboard/employees' },
+  { id: 'disputes',  label: 'Disputes',  icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
+  { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,    path: '/admin/dashboard/settings' },
 ]
 
 const VENDOR_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/admin/dashboard' },
   {
     id: 'orders', label: 'Orders', icon: ShoppingBagOutlinedIcon,
     children: [
-      { id: 'new-orders',     label: 'New Orders',     path: '/dashboard/orders/new' },
-      { id: 'order-history',  label: 'Order History',  path: '/dashboard/orders/history' },
-      { id: 'pending-orders', label: 'Pending Orders', path: '/dashboard/orders/pending' },
+      { id: 'new-orders',     label: 'New Orders',     path: '/admin/dashboard/orders/new' },
+      { id: 'order-history',  label: 'Order History',  path: '/admin/dashboard/orders/history' },
+      { id: 'pending-orders', label: 'Pending Orders', path: '/admin/dashboard/orders/pending' },
     ],
   },
-  { id: 'products', label: 'Products', icon: Inventory2OutlinedIcon,   path: '/dashboard/products' },
-  { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/dashboard/disputes' },
-  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon,     path: '/dashboard/settings' },
+  { id: 'products', label: 'Products', icon: Inventory2OutlinedIcon,   path: '/admin/dashboard/products' },
+  { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
+  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon,     path: '/admin/dashboard/settings' },
 ]
 
 const DEFAULT_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/dashboard' },
-  { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,  path: '/dashboard/settings' },
+  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/admin/dashboard' },
+  { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,  path: '/admin/dashboard/settings' },
 ]
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ const Sidebar = () => {
 
   const isActive = (path) => {
     if (!path) return false
-    if (path === '/dashboard') return pathname === '/dashboard'
+    if (path === '/admin/dashboard') return pathname === '/admin/dashboard'
     return pathname.startsWith(path)
   }
 
@@ -253,7 +253,7 @@ const Sidebar = () => {
       }}>
         {!collapsed && (
           <Box
-            onClick={() => go('/dashboard')}
+            onClick={() => go('/admin/dashboard')}
             sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', flex: 1, '&:hover': { opacity: 0.85 }, transition: 'opacity 0.2s' }}
           >
             <Box sx={{

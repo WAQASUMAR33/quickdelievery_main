@@ -124,7 +124,7 @@ export default function ProductManagementPage() {
               Manage your product inventory
             </Typography>
           </Box>
-          <Button component={Link} href="/dashboard/products/add" variant="contained" startIcon={<AddIcon />}
+          <Button component={Link} href="/admin/dashboard/products/add" variant="contained" startIcon={<AddIcon />}
             sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, px: 3 }}>
             Add Product
           </Button>
@@ -217,7 +217,7 @@ export default function ProductManagementPage() {
               {searchQuery ? 'No products match your search.' : 'Get started by adding your first product.'}
             </Typography>
             {!searchQuery && (
-              <Button component={Link} href="/dashboard/products/add" variant="contained"
+              <Button component={Link} href="/admin/dashboard/products/add" variant="contained"
                 sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}>
                 Add Your First Product
               </Button>

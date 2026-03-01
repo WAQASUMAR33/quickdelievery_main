@@ -129,7 +129,7 @@ export default function OrderManagement({ defaultStatusFilter = '' }) {
   }, [orders])
 
   const handleViewDetails = (order) => {
-    router.push(`/dashboard/orders/${order.id}`)
+    router.push(`/admin/dashboard/orders/${order.id}`)
   }
 
   const openModal = (order) => {

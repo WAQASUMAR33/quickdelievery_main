@@ -108,7 +108,7 @@ const AddProductPage = () => {
       const verification = checkUserVerification(user, userData)
       if (!verification.isVerified) { router.push('/login'); return }
       const role = userData?.role || 'CUSTOMER'
-      if (!['ADMIN', 'SUPER_ADMIN', 'VENDOR'].includes(role)) { router.push('/dashboard'); return }
+      if (!['ADMIN', 'SUPER_ADMIN', 'VENDOR'].includes(role)) { router.push('/admin/dashboard'); return }
     }
   }, [user, userData, loading, router])
 
@@ -224,7 +224,7 @@ const AddProductPage = () => {
       if (result.success) {
         toast.success('Product added successfully!')
         clearDraft()
-        router.push('/dashboard/products')
+        router.push('/admin/dashboard/products')
       } else {
         toast.error(`Failed to add product: ${result.error}`)
       }

@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git --version)"
+      "Bash(git --version)",
+      "Bash(npm view next version)",
+      "Bash(npm view next versions --json)",
+      "Bash(npm audit fix)"
     ]
   }
 }

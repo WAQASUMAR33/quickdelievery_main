@@ -267,7 +267,7 @@ const VendorProductManagement = () => {
         </Box>
         <Button
           variant="contained" startIcon={<AddIcon />}
-          onClick={() => router.push('/dashboard/products/add')}
+          onClick={() => router.push('/admin/dashboard/products/add')}
           sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, px: 3, py: 1.5 }}
         >
           Add Product
