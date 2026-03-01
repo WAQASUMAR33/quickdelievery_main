@@ -15,9 +15,33 @@ export default function AuthProvider({ children }) {
   const [userDataLoadingTimeout, setUserDataLoadingTimeout] = useState(false)
   const router = useRouter()
 
+  const buildGuestSession = () => {
+    const guestUser = {
+      uid: 'guest_' + Date.now(),
+      email: 'guest@quickdelivery.com',
+      displayName: 'Guest User',
+      emailVerified: true,
+      phoneNumber: '',
+      getIdToken: async () => 'GUEST_SESSION'
+    }
+    const guestUserData = {
+      id: 'guest',
+      uid: guestUser.uid,
+      username: 'Guest User',
+      email: 'guest@quickdelivery.com',
+      role: 'GUEST',
+      emailVerification: true
+    }
+    return { guestUser, guestUserData }
+  }
+
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('authToken')
     if (!token) {
+      // No token — start as guest by default
+      const { guestUser, guestUserData } = buildGuestSession()
+      setUser(guestUser)
+      setUserData(guestUserData)
       setLoading(false)
       return
     }
@@ -213,10 +237,11 @@ export default function AuthProvider({ children }) {
   const logout = async () => {
     try {
       localStorage.removeItem('authToken')
-      setUser(null)
-      setUserData(null)
+      const { guestUser, guestUserData } = buildGuestSession()
+      setUser(guestUser)
+      setUserData(guestUserData)
       toast.success('Logged out successfully')
-      router.push('/login')
+      router.push('/customer')
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to log out')
