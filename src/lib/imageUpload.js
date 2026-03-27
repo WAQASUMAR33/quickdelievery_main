@@ -1,6 +1,3 @@
-const UPLOAD_API          = process.env.NEXT_PUBLIC_UPLOAD_IMAGE_API
-const UPLOADED_IMAGE_URL  = process.env.NEXT_PUBLIC_UPLOADED_IMAGE_URL
-
 // Convert a File object to a base64 data-URL string
 const toBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -14,7 +11,8 @@ export const uploadProductImage = async (file) => {
   try {
     const base64 = await toBase64(file)
 
-    const response = await fetch(UPLOAD_API, {
+    // Use server-side proxy to avoid CORS issues
+    const response = await fetch('/api/upload-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64 }),
@@ -26,10 +24,10 @@ export const uploadProductImage = async (file) => {
 
     const data = await response.json()
 
-    if (data.image_url) {
+    if (data.success && data.url) {
       return {
         success: true,
-        url: `${UPLOADED_IMAGE_URL}/${data.image_url}`,
+        url: data.url,
         fileName: data.image_url,
       }
     }

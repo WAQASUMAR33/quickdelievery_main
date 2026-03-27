@@ -127,7 +127,8 @@ export default function AddProductPage() {
         set('images', [...form.images, ...result.urls])
         toast.success(`Uploaded ${result.urls.length} image(s)`)
       } else {
-        toast.error(`Upload failed: ${result.error}`)
+        const msg = result.error || (result.errors && result.errors[0]) || 'Upload failed'
+        toast.error(msg)
       }
     } catch (e) {
       toast.error(e.message)
