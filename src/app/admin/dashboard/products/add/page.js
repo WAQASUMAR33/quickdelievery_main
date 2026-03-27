@@ -102,13 +102,25 @@ export default function AddProductPage() {
   useEffect(() => {
     if (!userData?.uid) return
     const adminUser = userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN'
+    const isVendor  = userData?.role === 'VENDOR'
+
+    // Auto-set vendor for logged-in vendor
+    if (isVendor) setForm(p => ({ ...p, vendorId: userData.uid }))
+
     const fetches = [
       fetch('/api/products?type=categories').then(r => r.json()),
       fetch('/api/products?type=subcategories').then(r => r.json()),
     ]
     if (adminUser) fetches.push(fetch('/api/users/all').then(r => r.json()))
     Promise.all(fetches).then(([cats, subs, usersRes]) => {
-      if (cats.success) setCategories(cats.data || [])
+      // Filter to restaurant categories only
+      const allCats = cats.success ? cats.data || [] : []
+      const restaurantCats = allCats.filter(c => c.name.toLowerCase().includes('restaurant'))
+      setCategories(restaurantCats)
+      // Auto-select if only one restaurant category exists
+      if (restaurantCats.length === 1) {
+        setForm(p => ({ ...p, catId: restaurantCats[0].id, subCatId: '' }))
+      }
       if (subs.success) setSubcategories(subs.data || [])
       if (usersRes?.success) setVendors((usersRes.data || []).filter(u => u.role === 'VENDOR'))
     }).catch(() => {})
@@ -260,7 +272,7 @@ export default function AddProductPage() {
 
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <FormControl {...tf} fullWidth required error={!!errors.catId}>
+                  <FormControl {...tf} fullWidth required error={!!errors.catId} sx={{ minWidth: 300 }}>
                     <InputLabel>Category</InputLabel>
                     <Select label="Category" value={form.catId}
                       onChange={e => { set('catId', e.target.value); set('subCatId', '') }}>
@@ -271,7 +283,7 @@ export default function AddProductPage() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <FormControl {...tf} fullWidth required disabled={!form.catId} error={!!errors.subCatId}>
+                  <FormControl {...tf} fullWidth required disabled={!form.catId} error={!!errors.subCatId} sx={{ minWidth: 300 }}>
                     <InputLabel>Sub-category</InputLabel>
                     <Select label="Sub-category" value={form.subCatId}
                       onChange={e => set('subCatId', e.target.value)}>
@@ -284,7 +296,7 @@ export default function AddProductPage() {
               </Grid>
 
               {isAdmin && (
-                <FormControl {...tf} fullWidth required error={!!errors.vendorId}>
+                <FormControl {...tf} fullWidth required error={!!errors.vendorId} sx={{ minWidth: 300 }}>
                   <InputLabel>Vendor</InputLabel>
                   <Select label="Vendor" value={form.vendorId}
                     onChange={e => set('vendorId', e.target.value)}>
