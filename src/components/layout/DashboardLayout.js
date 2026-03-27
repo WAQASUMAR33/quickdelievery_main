@@ -41,17 +41,17 @@ const DashboardLayout = ({ children }) => {
   const role        = userData?.role?.toLowerCase() || 'user'
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'flex-start' }}>
 
       {/* Sidebar */}
       <Sidebar />
 
       {/* Right panel */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>
 
         {/* ── Top AppBar ── */}
         <AppBar
-          position="static"
+          position="sticky"
           elevation={0}
           sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}
         >
@@ -124,7 +124,7 @@ const DashboardLayout = ({ children }) => {
         </AppBar>
 
         {/* ── Main content ── */}
-        <Box component="main" sx={{ flex: 1, overflow: 'auto' }}>
+        <Box component="main" sx={{ flex: 1 }}>
           {children}
         </Box>
 

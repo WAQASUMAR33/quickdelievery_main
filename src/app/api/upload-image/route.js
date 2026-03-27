@@ -1,3 +1,7 @@
+export const config = {
+  api: { bodyParser: { sizeLimit: '10mb' } },
+}
+
 export async function POST(request) {
   try {
     const body = await request.json()
@@ -7,25 +11,34 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'No image provided' }, { status: 400 })
     }
 
-    const uploadApi = process.env.NEXT_PUBLIC_UPLOAD_IMAGE_API
+    const uploadApi = (process.env.NEXT_PUBLIC_UPLOAD_IMAGE_API || '').trim()
     if (!uploadApi) {
       return Response.json({ success: false, error: 'Upload API not configured' }, { status: 500 })
     }
 
-    const res = await fetch(uploadApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image }),
-    })
-
-    if (!res.ok) {
-      return Response.json({ success: false, error: `Upload server returned ${res.status}` }, { status: 502 })
+    let res
+    try {
+      res = await fetch(uploadApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image }),
+      })
+    } catch (fetchErr) {
+      return Response.json({ success: false, error: `Cannot reach upload server: ${fetchErr.message}` }, { status: 502 })
     }
 
-    const data = await res.json()
+    const text = await res.text()
+
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      console.error('Upload server non-JSON response:', text.slice(0, 500))
+      return Response.json({ success: false, error: `Upload server error: ${text.slice(0, 200)}` }, { status: 502 })
+    }
 
     if (data.image_url) {
-      const baseUrl = process.env.NEXT_PUBLIC_UPLOADED_IMAGE_URL || ''
+      const baseUrl = (process.env.NEXT_PUBLIC_UPLOADED_IMAGE_URL || '').trim()
       return Response.json({
         success: true,
         image_url: data.image_url,
@@ -33,7 +46,7 @@ export async function POST(request) {
       })
     }
 
-    return Response.json({ success: false, error: data.error || 'Upload failed' }, { status: 500 })
+    return Response.json({ success: false, error: data.error || 'Upload server did not return image_url' }, { status: 500 })
 
   } catch (error) {
     console.error('Image upload proxy error:', error)

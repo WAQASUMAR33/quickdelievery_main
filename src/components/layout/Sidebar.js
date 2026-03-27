@@ -240,7 +240,9 @@ const Sidebar = () => {
       transition: 'width 0.25s ease, min-width 0.25s ease',
       overflow: 'hidden',
       flexShrink: 0,
-      position: 'relative',
+      position: 'sticky',
+      top: 0,
+      alignSelf: 'flex-start',
     }}>
 
       {/* ── Logo / Header ── */}
