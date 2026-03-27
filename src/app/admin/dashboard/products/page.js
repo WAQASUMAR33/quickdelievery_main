@@ -64,7 +64,7 @@ export default function ProductManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterApproval, setFilterApproval] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [viewMode, setViewMode] = useState('grid')
+  const [viewMode, setViewMode] = useState('table')
 
   useEffect(() => {
     if (!loading) {
@@ -284,7 +284,8 @@ export default function ProductManagementPage() {
 
                     {/* Actions */}
                     <Box sx={{ display: 'flex', gap: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                      <Button size="small" variant="outlined" startIcon={<VisibilityOutlinedIcon />} fullWidth
+                      <Button component={Link} href={`/admin/dashboard/products/${product.proId}`}
+                        size="small" variant="outlined" startIcon={<VisibilityOutlinedIcon />} fullWidth
                         sx={{ borderRadius: 0, fontSize: 11 }}>View</Button>
                       <Button size="small" variant="outlined" color="info" fullWidth
                         sx={{ borderRadius: 0, fontSize: 11 }}>Edit</Button>
@@ -343,7 +344,8 @@ export default function ProductManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Tooltip title="View">
-                        <IconButton size="small" sx={{ color: 'primary.main' }}>
+                        <IconButton component={Link} href={`/admin/dashboard/products/${product.proId}`}
+                          size="small" sx={{ color: 'primary.main' }}>
                           <VisibilityOutlinedIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

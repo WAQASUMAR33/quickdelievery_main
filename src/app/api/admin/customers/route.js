@@ -9,9 +9,9 @@ export async function GET(request) {
     const role = searchParams.get('role') || ''
     const verified = searchParams.get('verified')
 
-    // Build where clause
-    const whereClause = {}
-    
+    // Build where clause — always restrict to CUSTOMER role
+    const whereClause = { role: 'CUSTOMER' }
+
     if (search) {
       whereClause.OR = [
         { username: { contains: search, mode: 'insensitive' } },
@@ -19,11 +19,7 @@ export async function GET(request) {
         { phoneNumber: { contains: search, mode: 'insensitive' } }
       ]
     }
-    
-    if (role) {
-      whereClause.role = role
-    }
-    
+
     if (verified !== null && verified !== undefined) {
       whereClause.emailVerification = verified === 'true'
     }

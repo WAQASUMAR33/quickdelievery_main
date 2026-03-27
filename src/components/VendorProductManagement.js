@@ -115,9 +115,10 @@ const VendorProductManagement = () => {
   }
 
   const fetchProducts = useCallback(async () => {
+    if (!userData?.uid) return
     try {
       setLoading(true)
-      const res = await fetch(`/api/products?type=products&vendorId=${userData?.uid}`)
+      const res = await fetch(`/api/products?type=products&vendorId=${userData.uid}`)
       const r = await res.json()
       setProducts(r.success ? (r.data || []) : [])
     } catch { setProducts([]) }
@@ -165,11 +166,7 @@ const VendorProductManagement = () => {
   const handleDeleteProduct = async (productId) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
-      const res = await fetch('/api/products', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'product', id: productId }),
-      })
+      const res = await fetch(`/api/products?type=product&id=${productId}`, { method: 'DELETE' })
       const r = await res.json()
       if (r.success) { fetchProducts(); alert('Product deleted successfully!') }
       else alert(`Failed to delete product: ${r.error}`)
@@ -298,66 +295,47 @@ const VendorProductManagement = () => {
         ))}
       </Box>
 
-      {/* ── Filters & View Controls ── */}
-      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, flex: 1 }}>
-
-              {/* Search */}
-              <TextField
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                size="small"
-                sx={{ minWidth: DROP_MIN_W, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-              />
-
-              {/* Status Filter */}
-              <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
-                <InputLabel>Status</InputLabel>
-                <Select value={filterStatus} label="Status" onChange={e => setFilterStatus(e.target.value)} sx={{ borderRadius: 0 }}>
-                  <MenuItem value="all">All Status</MenuItem>
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Category Filter */}
-              <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
-                <InputLabel>Category</InputLabel>
-                <Select value={filterCategory} label="Category" onChange={e => setFilterCategory(e.target.value)} sx={{ borderRadius: 0 }}>
-                  <MenuItem value="all">All Categories</MenuItem>
-                  {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-                </Select>
-              </FormControl>
-
-              {/* Approval Filter */}
-              <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
-                <InputLabel>Approval</InputLabel>
-                <Select value={filterApproval} label="Approval" onChange={e => setFilterApproval(e.target.value)} sx={{ borderRadius: 0 }}>
-                  <MenuItem value="all">All Approval</MenuItem>
-                  <MenuItem value="Approved">Approved</MenuItem>
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Rejected">Rejected</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* View Mode Toggle */}
-            <ToggleButtonGroup
-              value={viewMode} exclusive size="small"
-              onChange={(_, v) => v && setViewMode(v)}
-              sx={{ '& .MuiToggleButton-root': { borderRadius: 0 } }}
-            >
-              <ToggleButton value="grid"><Tooltip title="Grid"><GridViewOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
-              <ToggleButton value="list"><Tooltip title="List"><ViewListOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
-              <ToggleButton value="table"><Tooltip title="Table"><TableRowsOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        </CardContent>
-      </Card>
+      {/* ── Filters ── */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between', p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, flex: 1 }}>
+          <TextField size="small" placeholder="Search products…"
+            value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+            sx={{ minWidth: 260, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+          />
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Approval</InputLabel>
+            <Select value={filterApproval} label="Approval" onChange={e => setFilterApproval(e.target.value)} sx={{ borderRadius: 0 }}>
+              <MenuItem value="all">All Approval</MenuItem>
+              <MenuItem value="Approved">Approved</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
+              <MenuItem value="Rejected">Rejected</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>Status</InputLabel>
+            <Select value={filterStatus} label="Status" onChange={e => setFilterStatus(e.target.value)} sx={{ borderRadius: 0 }}>
+              <MenuItem value="all">All Status</MenuItem>
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="inactive">Inactive</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Category</InputLabel>
+            <Select value={filterCategory} label="Category" onChange={e => setFilterCategory(e.target.value)} sx={{ borderRadius: 0 }}>
+              <MenuItem value="all">All Categories</MenuItem>
+              {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+            </Select>
+          </FormControl>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip label={`${filteredProducts.length} products`} size="small" sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          <ToggleButtonGroup value={viewMode} exclusive size="small" onChange={(_, v) => v && setViewMode(v)} sx={{ '& .MuiToggleButton-root': { borderRadius: 0 } }}>
+            <ToggleButton value="table"><Tooltip title="Table"><TableRowsOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
+            <ToggleButton value="grid"><Tooltip title="Grid"><GridViewOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      </Box>
 
       {/* ── Products Display ── */}
       {filteredProducts.length === 0 ? (
@@ -370,15 +348,11 @@ const VendorProductManagement = () => {
       ) : viewMode === 'table' ? (
         /* ── Table View ── */
         <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
-          <Box sx={{ px: 3, py: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="subtitle1" fontWeight={600}>Products ({filteredProducts.length} of {products.length})</Typography>
-            <Typography variant="body2" color="text.secondary">Showing {filteredProducts.length} products</Typography>
-          </Box>
-          <Table>
+          <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: 'grey.50' }}>
                 {['Image', 'Product', 'Category', 'Price', 'Stock', 'Status', 'Approval', 'Actions'].map(h => (
-                  <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5 }}>{h}</TableCell>
+                  <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>

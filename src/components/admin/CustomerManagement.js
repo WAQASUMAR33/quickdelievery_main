@@ -72,17 +72,14 @@ function RoleChip({ role }) {
 }
 
 const STAT_CARDS = [
-  { key: 'totalUsers',     label: 'Total Users',    color: '#3b82f6', icon: <PeopleOutlinedIcon /> },
-  { key: 'totalCustomers', label: 'Customers',      color: '#10b981', icon: <PersonOutlinedIcon /> },
-  { key: 'totalVendors',   label: 'Vendors',        color: '#8b5cf6', icon: <StoreOutlinedIcon /> },
-  { key: 'verifiedUsers',  label: 'Verified',       color: '#f59e0b', icon: <VerifiedUserOutlinedIcon /> },
+  { key: 'totalCustomers', label: 'Total Customers', color: '#10b981', icon: <PersonOutlinedIcon /> },
+  { key: 'verifiedUsers',  label: 'Verified',        color: '#f59e0b', icon: <VerifiedUserOutlinedIcon /> },
 ]
 
 export default function CustomerManagement() {
   const [customers,        setCustomers]        = useState([])
   const [loading,          setLoading]          = useState(true)
   const [searchTerm,       setSearchTerm]       = useState('')
-  const [roleFilter,       setRoleFilter]       = useState('')
   const [verifiedFilter,   setVerifiedFilter]   = useState('')
   const [currentPage,      setCurrentPage]      = useState(1)
   const [totalPages,       setTotalPages]       = useState(1)
@@ -97,7 +94,6 @@ export default function CustomerManagement() {
         page:     currentPage.toString(),
         limit:    '10',
         search:   searchTerm,
-        role:     roleFilter,
         ...(verifiedFilter !== '' ? { verified: verifiedFilter } : {}),
       })
       const res  = await fetch(`/api/admin/customers?${params}`)
@@ -118,7 +114,7 @@ export default function CustomerManagement() {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchTerm, roleFilter, verifiedFilter])
+  }, [currentPage, searchTerm, verifiedFilter])
 
   useEffect(() => { fetchCustomers() }, [fetchCustomers])
 
@@ -158,7 +154,7 @@ export default function CustomerManagement() {
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>Customer Management</Typography>
         <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Manage all users, customers, and vendors
+          Manage registered customers
         </Typography>
       </Box>
 
@@ -189,33 +185,23 @@ export default function CustomerManagement() {
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search users…"
+          placeholder="Search customers…"
           value={searchTerm}
           onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1) }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
           sx={{ minWidth: 280, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
         />
 
-        <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
-          <InputLabel>Role</InputLabel>
-          <Select value={roleFilter} label="Role" onChange={e => { setRoleFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
-            <MenuItem value="">All Roles</MenuItem>
-            <MenuItem value="CUSTOMER">Customer</MenuItem>
-            <MenuItem value="VENDOR">Vendor</MenuItem>
-            <MenuItem value="ADMIN">Admin</MenuItem>
-          </Select>
-        </FormControl>
-
-        <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Verification</InputLabel>
           <Select value={verifiedFilter} label="Verification" onChange={e => { setVerifiedFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
-            <MenuItem value="">All Users</MenuItem>
+            <MenuItem value="">All</MenuItem>
             <MenuItem value="true">Verified</MenuItem>
             <MenuItem value="false">Unverified</MenuItem>
           </Select>
         </FormControl>
 
-        <Button variant="outlined" size="small" onClick={() => { setSearchTerm(''); setRoleFilter(''); setVerifiedFilter(''); setCurrentPage(1) }}
+        <Button variant="outlined" size="small" onClick={() => { setSearchTerm(''); setVerifiedFilter(''); setCurrentPage(1) }}
           sx={{ borderRadius: 0, color: 'text.secondary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
           Clear Filters
         </Button>
@@ -229,7 +215,7 @@ export default function CustomerManagement() {
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
-              {['#', 'User', 'Email', 'Phone', 'Role', 'Verified', 'Joined', 'Actions'].map(h => (
+              {['#', 'Customer', 'Email', 'Phone', 'Verified', 'Joined', 'Actions'].map(h => (
                 <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>
                   {h}
                 </TableCell>
@@ -240,14 +226,14 @@ export default function CustomerManagement() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} sx={{ textAlign: 'center', py: 6 }}>
+                <TableCell colSpan={7} sx={{ textAlign: 'center', py: 6 }}>
                   <CircularProgress size={28} sx={{ color: BRAND }} />
                   <Typography variant="body2" color="text.secondary" mt={1}>Loading customers…</Typography>
                 </TableCell>
               </TableRow>
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} sx={{ textAlign: 'center', py: 8 }}>
+                <TableCell colSpan={7} sx={{ textAlign: 'center', py: 8 }}>
                   <PeopleOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                   <Typography variant="body2" color="text.secondary">No customers found</Typography>
                 </TableCell>
@@ -286,9 +272,6 @@ export default function CustomerManagement() {
                     ) : (
                       <Typography variant="caption" color="text.disabled">—</Typography>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <RoleChip role={c.role} />
                   </TableCell>
                   <TableCell>
                     {c.emailVerification
