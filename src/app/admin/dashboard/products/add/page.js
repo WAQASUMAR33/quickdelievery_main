@@ -68,12 +68,9 @@ export default function AddProductPage() {
 
   const [categories,      setCategories]      = useState([])
   const [subcategories,   setSubcategories]   = useState([])
-  const [vendors,         setVendors]         = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [isSubmitting,    setIsSubmitting]    = useState(false)
   const [dragOver,        setDragOver]        = useState(false)
-
-  const isAdmin = userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN'
 
   const [form, setForm] = useState({
     name:        '',
@@ -82,7 +79,6 @@ export default function AddProductPage() {
     discount:    '0',
     catId:       '',
     subCatId:    '',
-    vendorId:    '',
     images:      [],
     stock:       '0',
   })
@@ -101,30 +97,14 @@ export default function AddProductPage() {
 
   useEffect(() => {
     if (!userData?.uid) return
-    const adminUser = userData?.role === 'ADMIN' || userData?.role === 'SUPER_ADMIN'
-    const isVendor  = userData?.role === 'VENDOR'
-
-    // Auto-set vendor for logged-in vendor
-    if (isVendor) setForm(p => ({ ...p, vendorId: userData.uid }))
-
-    const fetches = [
+    Promise.all([
       fetch('/api/products?type=categories').then(r => r.json()),
       fetch('/api/products?type=subcategories').then(r => r.json()),
-    ]
-    if (adminUser) fetches.push(fetch('/api/users/all').then(r => r.json()))
-    Promise.all(fetches).then(([cats, subs, usersRes]) => {
-      // Filter to restaurant categories only
-      const allCats = cats.success ? cats.data || [] : []
-      const restaurantCats = allCats.filter(c => c.name.toLowerCase().includes('restaurant'))
-      setCategories(restaurantCats)
-      // Auto-select if only one restaurant category exists
-      if (restaurantCats.length === 1) {
-        setForm(p => ({ ...p, catId: restaurantCats[0].id, subCatId: '' }))
-      }
+    ]).then(([cats, subs]) => {
+      if (cats.success) setCategories(cats.data || [])
       if (subs.success) setSubcategories(subs.data || [])
-      if (usersRes?.success) setVendors((usersRes.data || []).filter(u => u.role === 'VENDOR'))
     }).catch(() => {})
-  }, [userData?.uid, userData?.role])
+  }, [userData?.uid])
 
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }))
@@ -165,7 +145,6 @@ export default function AddProductPage() {
     if (!form.catId)                                 e.catId    = 'Category is required'
     if (form.catId && !form.subCatId)                e.subCatId = 'Sub-category is required'
     if (!form.price || parseFloat(form.price) <= 0) e.price    = 'Valid price is required'
-    if (isAdmin && !form.vendorId)                   e.vendorId = 'Vendor is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -180,8 +159,6 @@ export default function AddProductPage() {
       const sku = `${form.name.replace(/\s+/g, '-').toUpperCase().slice(0, 12)}-${Date.now().toString(36).toUpperCase()}`
 
       const validVariations = variations.filter(v => v.name.trim() && v.price)
-
-      const resolvedVendorId = isAdmin ? form.vendorId : userData.uid
 
       const res = await fetch('/api/products', {
         method:  'POST',
@@ -200,7 +177,7 @@ export default function AddProductPage() {
           stock:        parseInt(form.stock) || 0,
           qnty:         parseInt(form.stock) || 0,
           proImages:    form.images,
-          vendorId:     resolvedVendorId,
+          vendorId:     userData.uid,
           createdById:  userData.uid,
           variations:   validVariations.length > 0 ? validVariations : null,
         }),
@@ -295,17 +272,6 @@ export default function AddProductPage() {
                 </Grid>
               </Grid>
 
-              {isAdmin && (
-                <FormControl {...tf} fullWidth required error={!!errors.vendorId} sx={{ minWidth: 300 }}>
-                  <InputLabel>Vendor</InputLabel>
-                  <Select label="Vendor" value={form.vendorId}
-                    onChange={e => set('vendorId', e.target.value)}>
-                    <MenuItem value=""><em>Select vendor…</em></MenuItem>
-                    {vendors.map(v => <MenuItem key={v.uid} value={v.uid}>{v.username} — {v.email}</MenuItem>)}
-                  </Select>
-                  {errors.vendorId && <Typography variant="caption" color="error" mt={0.5}>{errors.vendorId}</Typography>}
-                </FormControl>
-              )}
 
             </Stack>
           </SectionCard>
