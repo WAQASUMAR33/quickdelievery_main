@@ -48,6 +48,7 @@ model SubCategory {
   subCatId   Int       @id @default(autoincrement()) @map("sub_cat_id")
   subCatCode String    @unique @map("sub_cat_code") @db.VarChar(50)
   subCatName String    @map("sub_cat_name") @db.VarChar(255)
+  image      String?   @map("image") @db.VarChar(500)
   status     Boolean   @default(true)
   catId      Int    @map("cat_id")
   createdAt  DateTime  @default(now()) @map("created_at")

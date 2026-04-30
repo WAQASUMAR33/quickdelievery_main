@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
@@ -33,29 +34,34 @@ import TextField        from '@mui/material/TextField'
 import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
 
-import AddIcon              from '@mui/icons-material/Add'
+import AddIcon                from '@mui/icons-material/Add'
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined'
-import CloseIcon            from '@mui/icons-material/Close'
-import DeleteOutlinedIcon   from '@mui/icons-material/DeleteOutlined'
-import EditOutlinedIcon     from '@mui/icons-material/EditOutlined'
-import SaveOutlinedIcon     from '@mui/icons-material/SaveOutlined'
-import SearchIcon           from '@mui/icons-material/Search'
+import CloseIcon              from '@mui/icons-material/Close'
+import DeleteOutlinedIcon     from '@mui/icons-material/DeleteOutlined'
+import EditOutlinedIcon       from '@mui/icons-material/EditOutlined'
+import ImageOutlinedIcon      from '@mui/icons-material/ImageOutlined'
+import SaveOutlinedIcon       from '@mui/icons-material/SaveOutlined'
+import SearchIcon             from '@mui/icons-material/Search'
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 
 const BRAND = '#D70F64'
-const DROP_MIN_W = 300
+const DROP_MIN_W = 320
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 export default function SubcategoriesPage() {
   const { user, userData, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [categories, setCategories] = useState([])
+  const fileInputRef = useRef(null)
+
+  const [categories,    setCategories]    = useState([])
   const [subcategories, setSubcategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [editingSub, setEditingSub] = useState(null)
-  const [form, setForm] = useState({ name: '', code: '', categoryId: '' })
-  const [saving, setSaving] = useState(false)
+  const [loading,       setLoading]       = useState(true)
+  const [searchQuery,   setSearchQuery]   = useState('')
+  const [showModal,     setShowModal]     = useState(false)
+  const [editingSub,    setEditingSub]    = useState(null)
+  const [form,          setForm]          = useState({ name: '', code: '', categoryId: '', image: '' })
+  const [saving,        setSaving]        = useState(false)
+  const [uploadingImg,  setUploadingImg]  = useState(false)
 
   useEffect(() => {
     if (!authLoading) {
@@ -81,14 +87,34 @@ export default function SubcategoriesPage() {
 
   const openAdd = () => {
     setEditingSub(null)
-    setForm({ name: '', code: '', categoryId: '' })
+    setForm({ name: '', code: '', categoryId: '', image: '' })
     setShowModal(true)
   }
 
   const openEdit = (sub) => {
     setEditingSub(sub)
-    setForm({ name: sub.subCatName, code: sub.subCatCode, categoryId: sub.catId.toString() })
+    setForm({
+      name: sub.subCatName,
+      code: sub.subCatCode,
+      categoryId: sub.catId.toString(),
+      image: sub.image || '',
+    })
     setShowModal(true)
+  }
+
+  const handleImageFile = async (file) => {
+    if (!file) return
+    setUploadingImg(true)
+    try {
+      const result = await uploadProductImage(file)
+      if (result.success) {
+        setForm(f => ({ ...f, image: result.url }))
+        toast.success('Image uploaded')
+      } else {
+        toast.error(result.error || 'Upload failed')
+      }
+    } catch { toast.error('Upload error') }
+    finally { setUploadingImg(false) }
   }
 
   const handleSave = async () => {
@@ -97,8 +123,8 @@ export default function SubcategoriesPage() {
     setSaving(true)
     try {
       const body = editingSub
-        ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), status: true }
-        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), status: true }
+        ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: form.image || null, status: true }
+        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), image: form.image || null, status: true }
 
       const res = await fetch('/api/products', {
         method: editingSub ? 'PUT' : 'POST',
@@ -132,7 +158,6 @@ export default function SubcategoriesPage() {
     s.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Assign a colour to each parent category
   const catColorMap = {}
   const palette = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', BRAND]
   categories.forEach((c, i) => { catColorMap[c.id] = palette[i % palette.length] })
@@ -166,7 +191,7 @@ export default function SubcategoriesPage() {
           </Button>
         </Box>
 
-        {/* ── Search + Stats ── */}
+        {/* ── Search ── */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <TextField size="small" placeholder="Search subcategories or parent category…"
             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -183,7 +208,7 @@ export default function SubcategoriesPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: 'grey.50' }}>
-                {['#', 'Subcategory Name', 'Parent Category', 'Code', 'Actions'].map(h => (
+                {['#', 'Image', 'Subcategory Name', 'Parent Category', 'Code', 'Actions'].map(h => (
                   <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>
                     {h}
                   </TableCell>
@@ -193,7 +218,7 @@ export default function SubcategoriesPage() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ textAlign: 'center', py: 8 }}>
+                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 8 }}>
                     <AccountTreeOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                     <Typography variant="body2" color="text.secondary">No subcategories found</Typography>
                   </TableCell>
@@ -203,7 +228,24 @@ export default function SubcategoriesPage() {
                   const color = catColorMap[sub.catId] || '#6b7280'
                   return (
                     <TableRow key={sub.subCatId} hover sx={{ '&:last-child td': { border: 0 } }}>
-                      <TableCell sx={{ color: 'text.disabled', fontSize: 12, width: 48 }}>{idx + 1}</TableCell>
+                      <TableCell sx={{ color: 'text.disabled', fontSize: 12, width: 40 }}>{idx + 1}</TableCell>
+
+                      {/* Image thumbnail */}
+                      <TableCell sx={{ width: 64, py: 1 }}>
+                        <Box sx={{
+                          width: 48, height: 48, borderRadius: 1, overflow: 'hidden',
+                          border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          {sub.image ? (
+                            <img src={sub.image} alt={sub.subCatName}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <ImageOutlinedIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
+                          )}
+                        </Box>
+                      </TableCell>
+
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
@@ -242,7 +284,7 @@ export default function SubcategoriesPage() {
         </TableContainer>
 
         {/* ── Add / Edit Dialog ── */}
-        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="xs" fullWidth
+        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth
           PaperProps={{ sx: { borderRadius: 0 } }}>
           <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -256,9 +298,9 @@ export default function SubcategoriesPage() {
           <Divider />
 
           <DialogContent sx={{ pt: 2.5 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 
-              {/* Parent Category dropdown — min-width 300 */}
+              {/* Parent Category */}
               <FormControl size="small" fullWidth sx={{ minWidth: DROP_MIN_W }}>
                 <InputLabel>Parent Category *</InputLabel>
                 <Select value={form.categoryId} label="Parent Category *"
@@ -278,6 +320,57 @@ export default function SubcategoriesPage() {
               <TextField size="small" fullWidth label="Subcategory Code (unique)" value={form.code}
                 onChange={e => setForm({ ...form, code: e.target.value })}
                 placeholder="e.g., smartphones" {...tf} />
+
+              {/* Image upload */}
+              <Box>
+                <Typography variant="caption" fontWeight={700} color="text.secondary"
+                  sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1 }}>
+                  Subcategory Image
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  {/* Preview */}
+                  <Box sx={{
+                    width: 88, height: 88, flexShrink: 0, borderRadius: 1,
+                    border: '2px dashed', borderColor: form.image ? BRAND : 'divider',
+                    overflow: 'hidden', bgcolor: 'grey.50',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {form.image ? (
+                      <img src={form.image} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <ImageOutlinedIcon sx={{ color: 'text.disabled', fontSize: 32 }} />
+                    )}
+                  </Box>
+
+                  {/* Upload controls */}
+                  <Box sx={{ flex: 1 }}>
+                    <Button
+                      variant="outlined" size="small" fullWidth
+                      startIcon={uploadingImg ? <CircularProgress size={14} /> : <UploadFileOutlinedIcon />}
+                      disabled={uploadingImg}
+                      onClick={() => fileInputRef.current?.click()}
+                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: '#fce7f3' }, mb: 1 }}
+                    >
+                      {uploadingImg ? 'Uploading…' : form.image ? 'Change Image' : 'Upload Image'}
+                    </Button>
+                    <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                      onChange={e => { if (e.target.files?.[0]) handleImageFile(e.target.files[0]); e.target.value = '' }} />
+
+                    {form.image && (
+                      <Button size="small" fullWidth variant="text" color="error"
+                        onClick={() => setForm(f => ({ ...f, image: '' }))}
+                        sx={{ borderRadius: 0, fontSize: 11 }}>
+                        Remove Image
+                      </Button>
+                    )}
+                    <Typography variant="caption" color="text.disabled" display="block" mt={0.5}>
+                      Recommended: 200×200 px, JPG/PNG/WebP
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
             </Box>
           </DialogContent>
 

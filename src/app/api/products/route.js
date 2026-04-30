@@ -183,6 +183,7 @@ export async function POST(request) {
         data: {
           subCatCode,
           subCatName: data.subCatName,
+          image: data.image || null,
           catId: data.catId,
           status: (data.status === true || data.status === 'ACTIVE')
         }
@@ -295,10 +296,11 @@ export async function PUT(request) {
 
     if (type === 'subcategory') {
       const subcategory = await prisma.subCategory.update({
-        where: { id },
+        where: { subCatId: parseInt(id) },
         data: {
           subCatCode: data.subCatCode,
           subCatName: data.subCatName,
+          image: data.image !== undefined ? (data.image || null) : undefined,
           catId: data.catId,
           status: (data.status === true || data.status === 'ACTIVE')
         }
@@ -418,7 +420,7 @@ export async function DELETE(request) {
 
     if (type === 'subcategory') {
       await prisma.subCategory.delete({
-        where: { id }
+        where: { subCatId: parseInt(id) }
       })
 
       return Response.json({

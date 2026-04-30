@@ -362,10 +362,16 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                               : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm hover:scale-105'
                           }`}
                         >
-                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 shadow-md group-hover:shadow-lg transition-shadow`}>
-                            <span className="text-white text-lg font-black">
-                              {sub.subCatName.charAt(0).toUpperCase()}
-                            </span>
+                          <div className={`w-12 h-12 rounded-full overflow-hidden mb-2 shadow-md group-hover:shadow-lg transition-shadow flex-shrink-0 ${!sub.image ? `bg-gradient-to-br ${gradient}` : ''}`}>
+                            {sub.image ? (
+                              <img src={sub.image} alt={sub.subCatName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-white text-lg font-black">
+                                  {sub.subCatName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <span className={`text-xs font-bold text-center leading-tight line-clamp-2 ${isSelected ? 'text-[#D70F64]' : 'text-gray-700'}`}>
                             {sub.subCatName}
