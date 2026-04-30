@@ -34,16 +34,20 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
-  const [subcategories, setSubcategories] = useState([])
   const [recentOrderProducts, setRecentOrderProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('grid')
   const [sortBy, setSortBy] = useState('newest')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedSubcategory, setSelectedSubcategory] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [selectedVendor, setSelectedVendor] = useState('')
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 })
   const [showFilters, setShowFilters] = useState(false)
+
+  // Subcategories derived from already-loaded categories (no extra fetch needed)
+  const subcategories = selectedCategory
+    ? (categories.find(c => c.id === selectedCategory)?.subCategories || [])
+    : []
 
   useEffect(() => {
     fetchProducts()
@@ -53,28 +57,6 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   useEffect(() => {
     fetchProducts()
   }, [searchQuery, selectedCategory, selectedSubcategory, selectedVendor, sortBy])
-
-  useEffect(() => {
-    if (!selectedCategory) {
-      setSubcategories([])
-      setSelectedSubcategory('')
-      return
-    }
-    const fetchSubcategories = async () => {
-      try {
-        const res = await fetch(`/api/products?type=subcategories&categoryId=${selectedCategory}`)
-        if (!res.ok) return
-        const data = await res.json()
-        if (data.success && Array.isArray(data.data)) {
-          setSubcategories(data.data)
-          setSelectedSubcategory('')
-        } else {
-          setSubcategories([])
-        }
-      } catch { setSubcategories([]) }
-    }
-    fetchSubcategories()
-  }, [selectedCategory])
 
   useEffect(() => {
     if (isGuest || !user?.uid) return
@@ -129,8 +111,8 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.proName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory || product.catId === selectedCategory
-    const matchesSubcategory = !selectedSubcategory || product.subCatId === Number(selectedSubcategory)
+    const matchesCategory = selectedCategory == null || product.catId === selectedCategory
+    const matchesSubcategory = selectedSubcategory == null || product.subCatId === selectedSubcategory
     const matchesVendor = !selectedVendor || product.vendorId === selectedVendor
     const price = parseFloat(product.price) || 0
     return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor &&
@@ -293,9 +275,9 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
             <div className="relative">
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 <button
-                  onClick={() => setSelectedCategory('')}
+                  onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null) }}
                   className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] ${
-                    selectedCategory === ''
+                    selectedCategory == null
                       ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md'
                       : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm'
                   }`}
@@ -303,14 +285,14 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   <div className="w-14 h-14 bg-gradient-to-br from-[#D70F64] to-[#FF6B5B] rounded-full flex items-center justify-center mb-2 shadow-md">
                     <Package className="w-7 h-7 text-white" />
                   </div>
-                  <span className={`text-xs font-bold text-center ${selectedCategory === '' ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
+                  <span className={`text-xs font-bold text-center ${selectedCategory == null ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
                 </button>
                 {categories.map((cat, idx) => {
                   const image = categoryImages[cat.name] || defaultCatImages[idx % defaultCatImages.length]
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory(null) }}
                       className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] group ${
                         selectedCategory === cat.id
                           ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
@@ -332,17 +314,19 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
             </div>
 
-            {/* Subcategories — image cards */}
-            {selectedCategory && subcategories.length > 0 && (
+            {/* Subcategories — image cards (shown when a category is selected) */}
+            {selectedCategory != null && subcategories.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Choose a sub-category</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  {categories.find(c => c.id === selectedCategory)?.name} — Sub-categories
+                </h3>
                 <div className="relative">
                   <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
                     {/* All sub-categories card */}
                     <button
-                      onClick={() => setSelectedSubcategory('')}
+                      onClick={() => setSelectedSubcategory(null)}
                       className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] ${
-                        selectedSubcategory === ''
+                        selectedSubcategory == null
                           ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
                           : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm hover:scale-105'
                       }`}
@@ -350,7 +334,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D70F64] to-[#FF6B5B] flex items-center justify-center mb-2 shadow-md">
                         <Package className="w-6 h-6 text-white" />
                       </div>
-                      <span className={`text-xs font-bold text-center leading-tight ${selectedSubcategory === '' ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
+                      <span className={`text-xs font-bold text-center leading-tight ${selectedSubcategory == null ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
                     </button>
 
                     {subcategories.map((sub, idx) => {
@@ -365,13 +349,13 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                         'from-teal-400 to-green-400',
                       ]
                       const gradient = subColors[idx % subColors.length]
-                      const isSelected = selectedSubcategory === String(sub.subCatId)
+                      const isSelected = selectedSubcategory === sub.subCatId
                       const productCount = products.filter(p => p.subCatId === sub.subCatId).length
 
                       return (
                         <button
                           key={sub.subCatId}
-                          onClick={() => setSelectedSubcategory(String(sub.subCatId))}
+                          onClick={() => setSelectedSubcategory(sub.subCatId)}
                           className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] group ${
                             isSelected
                               ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
@@ -482,9 +466,9 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-gray-900">All Products</h2>
               <span className="text-sm text-gray-500 font-medium">({filteredProducts.length})</span>
-              {(selectedCategory || selectedVendor || searchQuery) && (
+              {(selectedCategory != null || selectedVendor || searchQuery) && (
                 <button
-                  onClick={() => { setSelectedCategory(''); setSelectedVendor(''); setSelectedSubcategory('') }}
+                  onClick={() => { setSelectedCategory(null); setSelectedVendor(''); setSelectedSubcategory(null) }}
                   className="text-xs text-[#D70F64] font-semibold flex items-center gap-1 hover:underline"
                 >
                   <X className="w-3 h-3" /> Clear
@@ -547,7 +531,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                         </h3>
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() => { setSelectedCategory(''); setSelectedVendor(''); setPriceRange({ min: 0, max: 100000 }) }}
+                            onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSelectedVendor(''); setPriceRange({ min: 0, max: 100000 }) }}
                             className="text-xs font-bold text-[#D70F64] hover:text-[#C20D5A] uppercase tracking-wide"
                           >Reset</button>
                           <button onClick={() => setShowFilters(false)} className="lg:hidden p-1 bg-gray-100 rounded-full hover:bg-gray-200">
@@ -560,16 +544,18 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       <div className="mb-6">
                         <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Category</h4>
                         <div className="space-y-1">
-                          {[{ id: '', name: 'All' }, ...categories].map(cat => (
-                            <label key={cat.id} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 ${selectedCategory === cat.id ? 'border-[#D70F64]' : 'border-gray-300 group-hover:border-[#D70F64]'}`}>
-                                {selectedCategory === cat.id && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
-                              </div>
-                              <input type="radio" name="category" value={cat.id} checked={selectedCategory === cat.id}
-                                onChange={e => setSelectedCategory(e.target.value)} className="hidden" />
-                              <span className={`text-sm font-medium ${selectedCategory === cat.id ? 'text-[#D70F64]' : 'text-gray-600 group-hover:text-gray-900'}`}>{cat.name}</span>
-                            </label>
-                          ))}
+                          {[{ id: null, name: 'All' }, ...categories].map(cat => {
+                            const active = selectedCategory === cat.id
+                            return (
+                              <button key={String(cat.id)} onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory(null) }}
+                                className="w-full flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors text-left">
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${active ? 'border-[#D70F64]' : 'border-gray-300'}`}>
+                                  {active && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
+                                </div>
+                                <span className={`text-sm font-medium ${active ? 'text-[#D70F64]' : 'text-gray-600'}`}>{cat.name}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
 
