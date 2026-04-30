@@ -206,7 +206,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               {avgRating > 0 ? avgRating.toFixed(1) : 'New'}
             </div>
             <span>•</span>
-            <span className="truncate max-w-[120px]">{product.vendor?.username || product.category?.name || 'General'}</span>
+            <span className="truncate max-w-[120px]">{product.vendor?.businessName || product.vendor?.username || product.category?.name || 'General'}</span>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-gray-50">
             <div className="flex items-center gap-2">
@@ -332,25 +332,69 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
             </div>
 
-            {/* Subcategories */}
+            {/* Subcategories — image cards */}
             {selectedCategory && subcategories.length > 0 && (
-              <div className="mt-4">
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  <button
-                    onClick={() => setSelectedSubcategory('')}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full whitespace-nowrap border text-sm font-medium transition-all ${
-                      selectedSubcategory === '' ? 'bg-[#D70F64] text-white border-[#D70F64]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#D70F64] hover:text-[#D70F64]'
-                    }`}
-                  >All</button>
-                  {subcategories.map(sub => (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Choose a sub-category</h3>
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                    {/* All sub-categories card */}
                     <button
-                      key={sub.subCatId}
-                      onClick={() => setSelectedSubcategory(String(sub.subCatId))}
-                      className={`flex-shrink-0 px-4 py-1.5 rounded-full whitespace-nowrap border text-sm font-medium transition-all ${
-                        selectedSubcategory === String(sub.subCatId) ? 'bg-[#D70F64] text-white border-[#D70F64]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#D70F64] hover:text-[#D70F64]'
+                      onClick={() => setSelectedSubcategory('')}
+                      className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] ${
+                        selectedSubcategory === ''
+                          ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
+                          : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm hover:scale-105'
                       }`}
-                    >{sub.subCatName}</button>
-                  ))}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D70F64] to-[#FF6B5B] flex items-center justify-center mb-2 shadow-md">
+                        <Package className="w-6 h-6 text-white" />
+                      </div>
+                      <span className={`text-xs font-bold text-center leading-tight ${selectedSubcategory === '' ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
+                    </button>
+
+                    {subcategories.map((sub, idx) => {
+                      const subColors = [
+                        'from-orange-400 to-red-400',
+                        'from-purple-400 to-pink-400',
+                        'from-blue-400 to-cyan-400',
+                        'from-green-400 to-teal-400',
+                        'from-yellow-400 to-orange-400',
+                        'from-pink-400 to-rose-400',
+                        'from-indigo-400 to-purple-400',
+                        'from-teal-400 to-green-400',
+                      ]
+                      const gradient = subColors[idx % subColors.length]
+                      const isSelected = selectedSubcategory === String(sub.subCatId)
+                      const productCount = products.filter(p => p.subCatId === sub.subCatId).length
+
+                      return (
+                        <button
+                          key={sub.subCatId}
+                          onClick={() => setSelectedSubcategory(String(sub.subCatId))}
+                          className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] group ${
+                            isSelected
+                              ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
+                              : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm hover:scale-105'
+                          }`}
+                        >
+                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 shadow-md group-hover:shadow-lg transition-shadow`}>
+                            <span className="text-white text-lg font-black">
+                              {sub.subCatName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className={`text-xs font-bold text-center leading-tight line-clamp-2 ${isSelected ? 'text-[#D70F64]' : 'text-gray-700'}`}>
+                            {sub.subCatName}
+                          </span>
+                          {productCount > 0 && (
+                            <span className="text-[10px] text-gray-400 mt-0.5">{productCount}</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="absolute left-0 top-0 bottom-4 w-6 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
+                  <div className="absolute right-0 top-0 bottom-4 w-6 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
                 </div>
               </div>
             )}
