@@ -25,6 +25,7 @@ model Users {
   productsAsCreator  Product[] @relation("CreatorProducts")
   productsAsVendor   Product[] @relation("VendorProducts")
   orders             Order[]
+  ownedFoodDeals    FoodDeal[] @relation("FoodDealVendorOwner")
 
   @@map("users")
 }
@@ -106,6 +107,7 @@ model Product {
   subCategory       SubCategory    @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
   vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
   orderItems        OrderItem[]
+  foodDeal          FoodDeal?
 
   @@index([approveById], map: "products_approve_by_fkey")
   @@index([catId], map: "products_cat_id_fkey")
@@ -115,6 +117,30 @@ model Product {
   @@map("products")
 }
 
+/// Curated storefront deals (Today's Deals carousel). Catalog product and/or custom typed lines (no product row).
+model FoodDeal {
+  dealId           Int       @id @default(autoincrement()) @map("deal_id")
+  productId        Int?      @unique @map("product_id")
+  product          Product?  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+  vendorUid        String?   @map("vendor_uid") @db.VarChar(128)
+  ownerUser        Users?    @relation("FoodDealVendorOwner", fields: [vendorUid], references: [uid], onDelete: SetNull)
+  customTitle      String?   @map("custom_title") @db.VarChar(255)
+  customItemsJson  String?   @map("custom_items_json") @db.Text
+  customImageUrl   String?   @map("custom_image_url") @db.VarChar(500)
+  customPriceLabel String?   @map("custom_price_label") @db.VarChar(64)
+  sortOrder        Int       @default(0) @map("sort_order")
+  active           Boolean   @default(true)
+  badgeLabel       String?   @map("badge_label") @db.VarChar(64)
+  startAt          DateTime? @map("start_at")
+  endAt            DateTime? @map("end_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([active, sortOrder])
+  @@index([vendorUid])
+  @@map("food_deals")
+}
+
 model Order {
   id               Int           @id @default(autoincrement())
   userId           Int           @map("user_id")
@@ -122,6 +148,7 @@ model Order {
   shippingAddress  String?       @map("shipping_address") @db.VarChar(500)
   paymentMethod    String?       @map("payment_method") @db.VarChar(50)
   totalAmount      Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
+  serviceCharge    Decimal       @default(0) @map("service_charge") @db.Decimal(10, 2)
   trackingNumber   String?       @map("tracking_number") @db.VarChar(100)
   estimatedDelivery DateTime?    @map("estimated_delivery")
   createdAt        DateTime      @default(now()) @map("created_at")

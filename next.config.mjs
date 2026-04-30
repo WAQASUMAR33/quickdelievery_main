@@ -1,5 +1,10 @@
+import path from 'path'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Prevent Next from resolving Prisma to the WASM/edge bundle (requires prisma:// / Accelerate).
+  // Keeps Node engine + mysql:// DATABASE_URL working in App Router route handlers.
+  serverExternalPackages: ['@prisma/client', 'prisma', '.prisma/client'],
   eslint: {
     // Speed up CI builds by skipping lint errors during production build
     ignoreDuringBuilds: true,
@@ -8,8 +13,19 @@ const nextConfig = {
     // Enable modern bundling features
     optimizePackageImports: ['@mui/material', 'framer-motion', 'lucide-react'],
   },
-  webpack: (config, { isServer }) => {
-    // Optimize client-side bundles
+  webpack: (config, { isServer, nextRuntime, dev, webpack }) => {
+    // Prisma MySQL/direct URL: RSC/route webpack often resolves `#main-entry-point` → wasm.js (edge-lite).
+    // Force the Node `.prisma/client/index.js` build for Node server only (not Middleware `edge`).
+    if (isServer && nextRuntime !== 'edge') {
+      const prismaNodeEntry = path.join(process.cwd(), 'node_modules', '.prisma', 'client', 'index.js')
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/\.prisma[\\/]client[\\/]wasm\.js$/i, prismaNodeEntry),
+      )
+      const prev = config.resolve.conditionNames || []
+      config.resolve.conditionNames = ['node', 'require', 'import', 'default', ...prev]
+    }
+
+    // Client-only Node polyfills
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -19,34 +35,37 @@ const nextConfig = {
         crypto: false,
       }
     }
-    
-    // Reduce bundle size by optimizing imports
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-          mui: {
-            test: /[\\/]node_modules[\\/]@mui[\\/]/,
-            name: 'mui',
-            chunks: 'all',
-            priority: 10,
-          },
-          framer: {
-            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-            name: 'framer-motion',
-            chunks: 'all',
-            priority: 10,
+
+    // Aggressive splitChunks breaks Next dev HMR (undefined `.call` in module factories).
+    // Keep custom chunking for production client only.
+    if (!isServer && !dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+            mui: {
+              test: /[\\/]node_modules[\\/]@mui[\\/]/,
+              name: 'mui',
+              chunks: 'all',
+              priority: 10,
+            },
+            framer: {
+              test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+              name: 'framer-motion',
+              chunks: 'all',
+              priority: 10,
+            },
           },
         },
-      },
+      }
     }
-    
+
     return config
   },
   images: {

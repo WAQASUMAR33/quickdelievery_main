@@ -6,23 +6,25 @@ const CartContext = createContext()
 
 const cartReducer = (state, action) => {
   switch (action.type) {
-    case 'ADD_TO_CART':
-      const existingItem = state.items.find(item => item.proId === action.payload.proId)
+    case 'ADD_TO_CART': {
+      const qtyToAdd = Math.max(1, Math.floor(Number(action.qtyToAdd) || 1))
+      const product = action.payload
+      const existingItem = state.items.find(item => item.proId === product.proId)
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
-            item.proId === action.payload.proId
-              ? { ...item, quantity: item.quantity + 1 }
+            item.proId === product.proId
+              ? { ...item, quantity: item.quantity + qtyToAdd }
               : item
           )
         }
-      } else {
-        return {
-          ...state,
-          items: [...state.items, { ...action.payload, quantity: 1 }]
-        }
       }
+      return {
+        ...state,
+        items: [...state.items, { ...product, quantity: qtyToAdd }]
+      }
+    }
     
     case 'REMOVE_FROM_CART':
       return {
@@ -80,8 +82,9 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('cart', JSON.stringify(state.items))
   }, [state.items])
 
-  const addToCart = (product) => {
-    dispatch({ type: 'ADD_TO_CART', payload: product })
+  const addToCart = (product, quantity = 1) => {
+    const qtyToAdd = Math.max(1, Math.floor(Number(quantity) || 1))
+    dispatch({ type: 'ADD_TO_CART', payload: product, qtyToAdd })
   }
 
   const removeFromCart = (productId) => {

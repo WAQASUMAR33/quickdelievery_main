@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { computeServiceCharge, computeOrderTotalWithService, getServiceChargePercent } from '@/lib/serviceCharge'
 import { 
   ShoppingCart, 
   Plus, 
@@ -21,6 +22,9 @@ import {
 
 const CartPage = ({ onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice, getTotalItems } = useCart()
+  const subtotalCart = getTotalPrice()
+  const serviceChargeAmt = computeServiceCharge(subtotalCart)
+  const orderGrandTotal = computeOrderTotalWithService(subtotalCart)
   const { user, userData } = useAuth()
   const [shippingAddress, setShippingAddress] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('CASH_ON_DELIVERY')
@@ -49,6 +53,13 @@ const CartPage = ({ onClose }) => {
       return
     }
 
+    const isGuestPlaceholder =
+      userData.role === 'GUEST' || userData.id === 'guest' || String(userData.id) === 'guest'
+    if (isGuestPlaceholder) {
+      alert('Please sign in or create an account to place an order.')
+      return
+    }
+
     if (!shippingAddress.trim()) {
       alert('Please enter a shipping address')
       return
@@ -74,7 +85,7 @@ const CartPage = ({ onClose }) => {
           items: orderItems,
           shippingAddress: shippingAddress,
           paymentMethod: paymentMethod,
-          totalAmount: getTotalPrice()
+          totalAmount: orderGrandTotal
         })
       })
 
@@ -282,7 +293,11 @@ const CartPage = ({ onClose }) => {
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${getTotalPrice().toFixed(2)}</span>
+                  <span className="font-medium">${subtotalCart.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm sm:text-base">
+                  <span className="text-gray-600">Service charges ({getServiceChargePercent()}%)</span>
+                  <span className="font-medium">${serviceChargeAmt.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-gray-600">Shipping</span>
@@ -295,7 +310,7 @@ const CartPage = ({ onClose }) => {
                 <div className="border-t border-gray-300 pt-3 sm:pt-4">
                   <div className="flex justify-between text-base sm:text-lg">
                     <span className="font-bold text-gray-800">Total</span>
-                    <span className="font-bold text-[#F25D49]">${getTotalPrice().toFixed(2)}</span>
+                    <span className="font-bold text-[#F25D49]">${orderGrandTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

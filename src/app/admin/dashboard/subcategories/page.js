@@ -59,9 +59,21 @@ export default function SubcategoriesPage() {
   const [searchQuery,   setSearchQuery]   = useState('')
   const [showModal,     setShowModal]     = useState(false)
   const [editingSub,    setEditingSub]    = useState(null)
-  const [form,          setForm]          = useState({ name: '', code: '', categoryId: '', image: '' })
-  const [saving,        setSaving]        = useState(false)
-  const [uploadingImg,  setUploadingImg]  = useState(false)
+  const [form,           setForm]           = useState({ name: '', code: '', categoryId: '', image: '' })
+  const [pendingImageFile, setPendingImageFile] = useState(null)
+  const [localPreview,    setLocalPreview]    = useState(null)
+  const [saving,          setSaving]          = useState(false)
+
+  /** Blob preview for a newly chosen file (cleaned up on change/unmount). */
+  useEffect(() => {
+    if (!pendingImageFile) {
+      setLocalPreview(null)
+      return
+    }
+    const u = URL.createObjectURL(pendingImageFile)
+    setLocalPreview(u)
+    return () => URL.revokeObjectURL(u)
+  }, [pendingImageFile])
 
   useEffect(() => {
     if (!authLoading) {
@@ -87,12 +99,14 @@ export default function SubcategoriesPage() {
 
   const openAdd = () => {
     setEditingSub(null)
+    setPendingImageFile(null)
     setForm({ name: '', code: '', categoryId: '', image: '' })
     setShowModal(true)
   }
 
   const openEdit = (sub) => {
     setEditingSub(sub)
+    setPendingImageFile(null)
     setForm({
       name: sub.subCatName,
       code: sub.subCatCode,
@@ -102,19 +116,12 @@ export default function SubcategoriesPage() {
     setShowModal(true)
   }
 
-  const handleImageFile = async (file) => {
-    if (!file) return
-    setUploadingImg(true)
-    try {
-      const result = await uploadProductImage(file)
-      if (result.success) {
-        setForm(f => ({ ...f, image: result.url }))
-        toast.success('Image uploaded')
-      } else {
-        toast.error(result.error || 'Upload failed')
-      }
-    } catch { toast.error('Upload error') }
-    finally { setUploadingImg(false) }
+  const handleImageFileChosen = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      toast.error('Please choose an image file')
+      return
+    }
+    setPendingImageFile(file)
   }
 
   const handleSave = async () => {
@@ -122,9 +129,22 @@ export default function SubcategoriesPage() {
     if (!form.name.trim()) { toast.error('Subcategory name is required'); return }
     setSaving(true)
     try {
+      let imageUrl = (form.image && String(form.image).trim()) || null
+
+      if (pendingImageFile) {
+        const uploadResult = await uploadProductImage(pendingImageFile)
+        if (!uploadResult.success) {
+          toast.error(uploadResult.error || 'Image upload failed')
+          return
+        }
+        imageUrl = uploadResult.url
+        setForm((f) => ({ ...f, image: imageUrl }))
+        setPendingImageFile(null)
+      }
+
       const body = editingSub
-        ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: form.image || null, status: true }
-        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), image: form.image || null, status: true }
+        ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
+        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), image: imageUrl, status: true }
 
       const res = await fetch('/api/products', {
         method: editingSub ? 'PUT' : 'POST',
@@ -134,6 +154,7 @@ export default function SubcategoriesPage() {
       const data = await res.json()
       if (data.success) {
         toast.success(editingSub ? 'Subcategory updated' : 'Subcategory created')
+        setPendingImageFile(null)
         fetchData()
         setShowModal(false)
       } else {
@@ -332,12 +353,12 @@ export default function SubcategoriesPage() {
                   {/* Preview */}
                   <Box sx={{
                     width: 88, height: 88, flexShrink: 0, borderRadius: 1,
-                    border: '2px dashed', borderColor: form.image ? BRAND : 'divider',
+                    border: '2px dashed', borderColor: (localPreview || form.image) ? BRAND : 'divider',
                     overflow: 'hidden', bgcolor: 'grey.50',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    {form.image ? (
-                      <img src={form.image} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {(localPreview || form.image) ? (
+                      <img src={localPreview || form.image} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <ImageOutlinedIcon sx={{ color: 'text.disabled', fontSize: 32 }} />
                     )}
@@ -347,25 +368,26 @@ export default function SubcategoriesPage() {
                   <Box sx={{ flex: 1 }}>
                     <Button
                       variant="outlined" size="small" fullWidth
-                      startIcon={uploadingImg ? <CircularProgress size={14} /> : <UploadFileOutlinedIcon />}
-                      disabled={uploadingImg}
+                      startIcon={<UploadFileOutlinedIcon />}
+                      disabled={saving}
                       onClick={() => fileInputRef.current?.click()}
                       sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: '#fce7f3' }, mb: 1 }}
                     >
-                      {uploadingImg ? 'Uploading…' : form.image ? 'Change Image' : 'Upload Image'}
+                      {(localPreview || form.image) ? 'Change Image' : 'Choose Image'}
                     </Button>
                     <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }}
-                      onChange={e => { if (e.target.files?.[0]) handleImageFile(e.target.files[0]); e.target.value = '' }} />
+                      onChange={e => { if (e.target.files?.[0]) handleImageFileChosen(e.target.files[0]); e.target.value = '' }} />
 
-                    {form.image && (
+                    {(localPreview || form.image) && (
                       <Button size="small" fullWidth variant="text" color="error"
-                        onClick={() => setForm(f => ({ ...f, image: '' }))}
+                        disabled={saving}
+                        onClick={() => { setPendingImageFile(null); setForm(f => ({ ...f, image: '' })) }}
                         sx={{ borderRadius: 0, fontSize: 11 }}>
                         Remove Image
                       </Button>
                     )}
                     <Typography variant="caption" color="text.disabled" display="block" mt={0.5}>
-                      Recommended: 200×200 px, JPG/PNG/WebP
+                      Image is converted to base64 and sent to the server when you create or update. Recommended: 200×200 px, JPG/PNG/WebP
                     </Typography>
                   </Box>
                 </Box>
@@ -378,9 +400,9 @@ export default function SubcategoriesPage() {
           <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
             <Button onClick={() => setShowModal(false)} variant="outlined" size="small" sx={{ borderRadius: 0 }}>Cancel</Button>
             <Button onClick={handleSave} variant="contained" size="small" disabled={saving}
-              startIcon={saving ? <CircularProgress size={14} /> : <SaveOutlinedIcon />}
+              startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
               sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}>
-              {editingSub ? 'Update' : 'Create'}
+              {saving ? (pendingImageFile ? 'Uploading…' : 'Saving…') : editingSub ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </Dialog>

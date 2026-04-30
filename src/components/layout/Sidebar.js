@@ -31,6 +31,7 @@ import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined
 import WarningAmberOutlinedIcon  from '@mui/icons-material/WarningAmberOutlined'
 import MenuOpenIcon              from '@mui/icons-material/MenuOpen'
 import MenuIcon                  from '@mui/icons-material/Menu'
+import LocalOfferOutlinedIcon    from '@mui/icons-material/LocalOfferOutlined'
 import WorkOutlinedIcon          from '@mui/icons-material/WorkOutlined'
 import FolderOutlinedIcon        from '@mui/icons-material/FolderOutlined'
 import AccountTreeOutlinedIcon   from '@mui/icons-material/AccountTreeOutlined'
@@ -63,6 +64,7 @@ const ADMIN_ITEMS = [
   { id: 'products',      label: 'Products',         icon: Inventory2OutlinedIcon,  path: '/admin/dashboard/products' },
   { id: 'categories',    label: 'Categories',       icon: FolderOutlinedIcon,      path: '/admin/dashboard/categories' },
   { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/admin/dashboard/subcategories' },
+  { id: 'deals',         label: 'Food Deals',       icon: LocalOfferOutlinedIcon, path: '/admin/dashboard/deals' },
   {
     id: 'business-setup', label: 'Business Setup', icon: WorkOutlinedIcon,
     children: [
@@ -76,18 +78,22 @@ const ADMIN_ITEMS = [
 ]
 
 const VENDOR_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/admin/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/vendor/dashboard' },
   {
-    id: 'orders', label: 'Orders', icon: ShoppingBagOutlinedIcon,
+    id: 'orders',
+    label: 'Orders',
+    icon: ShoppingBagOutlinedIcon,
     children: [
-      { id: 'new-orders',     label: 'New Orders',     path: '/admin/dashboard/orders/new' },
-      { id: 'order-history',  label: 'Order History',  path: '/admin/dashboard/orders/history' },
+      { id: 'new-orders', label: 'New Orders', path: '/admin/dashboard/orders/new' },
+      { id: 'order-history', label: 'Order History', path: '/admin/dashboard/orders/history' },
       { id: 'pending-orders', label: 'Pending Orders', path: '/admin/dashboard/orders/pending' },
     ],
   },
-  { id: 'products', label: 'Products', icon: Inventory2OutlinedIcon,   path: '/admin/dashboard/products' },
+  { id: 'products', label: 'Products', icon: Inventory2OutlinedIcon, path: '/vendor/dashboard/products' },
+  { id: 'deals', label: 'Food Deals', icon: LocalOfferOutlinedIcon, path: '/vendor/dashboard/deals' },
+  { id: 'profile', label: 'Business Profile', icon: StorefrontOutlinedIcon, path: '/vendor/dashboard/profile' },
   { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
-  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon,     path: '/admin/dashboard/settings' },
+  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, path: '/admin/dashboard/settings' },
 ]
 
 const DEFAULT_ITEMS = [
@@ -113,8 +119,11 @@ const Sidebar = () => {
 
   const isActive = (path) => {
     if (!path) return false
-    if (path === '/admin/dashboard') return pathname === '/admin/dashboard'
-    return pathname.startsWith(path)
+    const p = path.replace(/\/$/, '')
+    const cur = pathname.replace(/\/$/, '')
+    if (p === '/admin/dashboard') return cur === '/admin/dashboard'
+    if (p === '/vendor/dashboard') return cur === '/vendor/dashboard'
+    return cur === p || cur.startsWith(`${p}/`)
   }
 
   const role  = userData?.role || 'CUSTOMER'

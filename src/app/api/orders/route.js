@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { computeServiceCharge, computeOrderTotalWithService } from '@/lib/serviceCharge'
 
 // Test prisma connection
 if (!prisma) {
@@ -8,16 +9,33 @@ if (!prisma) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
     const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page')) || 1
     const limit = parseInt(searchParams.get('limit')) || 10
 
-    // Build where clause
+    // Build where clause — orders store numeric users.id; callers may send id or firebase uid string
     const whereClause = {}
-    
-    if (userId) {
-      whereClause.userId = userId
+
+    const rawUid = searchParams.get('userId')
+    if (rawUid !== null && String(rawUid).trim() !== '') {
+      const trimmed = String(rawUid).trim()
+      const numeric = Number.parseInt(trimmed, 10)
+      let dbUserPk = null
+      if (
+        Number.isFinite(numeric) &&
+        numeric > 0 &&
+        trimmed === String(numeric)
+      ) {
+        dbUserPk = numeric
+      } else {
+        const row = await prisma.users.findUnique({
+          where: { uid: trimmed },
+          select: { id: true },
+        })
+        if (row) dbUserPk = row.id
+      }
+      if (dbUserPk != null) whereClause.userId = dbUserPk
+      else whereClause.userId = -1
     }
     
     if (status) {
@@ -124,17 +142,50 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Check if user exists
-    const userExists = await prisma.users.findUnique({
-      where: { id: userId }
-    })
+    const subtotal = items.reduce(
+      (sum, item) => sum + parseFloat(item.price) * parseInt(item.quantity, 10),
+      0,
+    )
+    const roundedSubtotal = Math.round(subtotal * 100) / 100
+    const serviceChargeAmt = computeServiceCharge(roundedSubtotal)
+    const expectedTotal = computeOrderTotalWithService(roundedSubtotal)
+    const clientTotal = Math.round(parseFloat(totalAmount) * 100) / 100
+    if (Math.abs(expectedTotal - clientTotal) > 0.02) {
+      return Response.json(
+        {
+          success: false,
+          error:
+            `Total mismatch (items + service charges). Expected $${expectedTotal.toFixed(2)} including service charge.`,
+        },
+        { status: 400 },
+      )
+    }
+
+    // Resolve DB user — client may send numeric `Users.id`, Firebase `Users.uid`, or (invalid) placeholder `guest`.
+    const idStr = userId !== null && userId !== undefined ? String(userId).trim() : ''
+    if (!idStr || idStr === 'guest') {
+      return Response.json({
+        success: false,
+        error: 'Sign in or register to place an order. Guest checkout is not linked to your database account.',
+      }, { status: 403 })
+    }
+
+    let userExists = null
+    const idParsed = Number.parseInt(idStr, 10)
+    if (Number.isFinite(idParsed) && idParsed > 0 && idStr === String(idParsed)) {
+      userExists = await prisma.users.findUnique({ where: { id: idParsed } })
+    } else {
+      userExists = await prisma.users.findUnique({ where: { uid: idStr } })
+    }
 
     if (!userExists) {
       return Response.json({
         success: false,
-        error: 'User not found'
+        error: 'User not found',
       }, { status: 404 })
     }
+
+    const orderUserDbId = userExists.id
 
     // Verify products exist and are available
     const productIds = items.map(item => parseInt(item.proId))
@@ -162,11 +213,12 @@ export async function POST(request) {
         
         const newOrder = await tx.order.create({
           data: {
-            userId,
+            userId: orderUserDbId,
             status: 'PENDING',
             shippingAddress: shippingAddress || '',
             paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
             totalAmount: parseFloat(totalAmount),
+            serviceCharge: serviceChargeAmt,
             orderItems: {
               create: items.map(item => ({
                 productId: parseInt(item.proId),

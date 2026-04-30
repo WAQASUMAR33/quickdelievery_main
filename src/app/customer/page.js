@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
-import { useWishlist } from '@/contexts/WishlistContext'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
@@ -19,6 +18,9 @@ import AppBar          from '@mui/material/AppBar'
 import Avatar          from '@mui/material/Avatar'
 import Badge           from '@mui/material/Badge'
 import Box             from '@mui/material/Box'
+import Chip            from '@mui/material/Chip'
+import Paper           from '@mui/material/Paper'
+import Stack           from '@mui/material/Stack'
 import Button          from '@mui/material/Button'
 import Card            from '@mui/material/Card'
 import CardActions     from '@mui/material/CardActions'
@@ -48,6 +50,7 @@ import FavoriteIcon            from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon      from '@mui/icons-material/FavoriteBorder'
 import InventoryOutlinedIcon   from '@mui/icons-material/InventoryOutlined'
 import LogoutOutlinedIcon      from '@mui/icons-material/LogoutOutlined'
+import LanguageOutlinedIcon    from '@mui/icons-material/LanguageOutlined'
 import MenuIcon                from '@mui/icons-material/Menu'
 import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
 import SearchIcon              from '@mui/icons-material/Search'
@@ -57,11 +60,48 @@ import StarBorderIcon          from '@mui/icons-material/StarBorder'
 import StarIcon                from '@mui/icons-material/Star'
 
 const BRAND = '#D70F64'
+const SEARCH_PLACEHOLDER = 'Search for shops & restaurants'
+
+function storefrontGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
+/** Foodpanda-style search: pill on desktop, full-width strip on mobile */
+function HeaderSearch({ value, onChange, compact }) {
+  return (
+    <TextField
+      size="small"
+      fullWidth={compact}
+      value={value}
+      onChange={onChange}
+      placeholder={SEARCH_PLACEHOLDER}
+      sx={{
+        ...(compact ? {} : { flex: 1, maxWidth: 560, mx: 'auto', minWidth: 0 }),
+        '& .MuiOutlinedInput-root': {
+          borderRadius: compact ? '12px' : '9999px',
+          bgcolor: compact ? '#f6f7f8' : 'grey.50',
+          '&:hover fieldset': { borderColor: BRAND },
+          '&.Mui-focused fieldset': { borderColor: BRAND },
+        },
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon sx={{ color: 'action.active', fontSize: 22 }} />
+          </InputAdornment>
+        ),
+      }}
+    />
+  )
+}
 
 export default function CustomerDashboard() {
-  const { user, userData, logout } = useAuth()
+  const { user, userData, logout, loading: authLoading } = useAuth()
   const { addToCart, getTotalItems } = useCart()
-  const { getTotalWishlistItems } = useWishlist()
+
   const router = useRouter()
 
   const [activeTab,            setActiveTab]            = useState('products')
@@ -72,21 +112,37 @@ export default function CustomerDashboard() {
   const [showCart,             setShowCart]             = useState(false)
   const [favorites,            setFavorites]            = useState([])
   const [categories,           setCategories]           = useState([])
-  const [loading,              setLoading]              = useState(true)
+  const [serviceMode,          setServiceMode]          = useState('delivery')
 
   useEffect(() => {
-    if (user && userData) {
-      const access = checkUserAccess(user, userData, ['CUSTOMER'])
-      if (!access.hasAccess) {
-        const role = getUserRole(userData)
-        if (role === 'ADMIN')  router.push('/admin/dashboard')
-        else if (role === 'VENDOR') router.push('/vendor/dashboard')
-        else router.push(access.redirectTo)
-        return
-      }
-      setLoading(false)
+    if (authLoading || !user || !userData) return
+    const access = checkUserAccess(user, userData, ['CUSTOMER'])
+    if (access.hasAccess) return
+    const role = getUserRole(userData)
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
+    else if (role === 'VENDOR') router.push('/vendor/dashboard')
+    else router.push(access.redirectTo)
+  }, [user, userData, authLoading, router])
+
+  const { isGuest, tabs, effectiveTab } = useMemo(() => {
+    const guest = userData?.role === 'GUEST'
+    const tabDefs = [
+      { id: 'products',  label: 'Products',   icon: <InventoryOutlinedIcon   fontSize="small" /> },
+      { id: 'orders',    label: 'My Orders',  icon: <ShoppingBagOutlinedIcon fontSize="small" />, protected: true },
+      { id: 'wishlist',  label: 'Wishlist',   icon: <FavoriteBorderIcon      fontSize="small" />, protected: true },
+      { id: 'favorites', label: 'Favorites',  icon: <StarBorderIcon          fontSize="small" />, protected: true },
+      { id: 'profile',   label: 'Profile',    icon: <PersonOutlineIcon       fontSize="small" />, protected: true },
+    ]
+    const tabList = tabDefs.filter(tab => !guest || !tab.protected)
+    const allowedIds = new Set(tabList.map(t => t.id))
+    return {
+      isGuest: guest,
+      tabs: tabList,
+      effectiveTab: allowedIds.has(activeTab) ? activeTab : (tabList[0]?.id ?? 'products'),
     }
-  }, [user, userData, router])
+  }, [userData?.role, activeTab])
+
+
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -99,15 +155,13 @@ export default function CustomerDashboard() {
     fetchCategories()
   }, [])
 
-  const isGuest = userData?.role === 'GUEST'
-
-  const tabs = [
-    { id: 'products',  label: 'Products',   icon: <InventoryOutlinedIcon   fontSize="small" /> },
-    { id: 'orders',    label: 'My Orders',  icon: <ShoppingBagOutlinedIcon fontSize="small" />, protected: true },
-    { id: 'wishlist',  label: 'Wishlist',   icon: <FavoriteBorderIcon      fontSize="small" />, protected: true },
-    { id: 'favorites', label: 'Favorites',  icon: <StarBorderIcon          fontSize="small" />, protected: true },
-    { id: 'profile',   label: 'Profile',    icon: <PersonOutlineIcon       fontSize="small" />, protected: true },
-  ].filter(tab => !isGuest || !tab.protected)
+  const heroFirstName = useMemo(() => {
+    if (authLoading) return '…'
+    const dn = user?.displayName?.trim()
+    if (dn) return dn.split(/\s+/)[0]
+    if (userData?.username) return userData.username
+    return 'there'
+  }, [authLoading, user?.displayName, userData?.username])
 
   const handleAddToCart = (product) => {
     addToCart(product)
@@ -126,10 +180,10 @@ export default function CustomerDashboard() {
   }
 
   const renderContent = () => {
-    switch (activeTab) {
+    switch (effectiveTab) {
       case 'products':
         return (
-          <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+          <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3 } }}>
             <ProductCatalog
               searchQuery={searchQuery}
               onToggleFavorite={handleToggleFavorite}
@@ -216,171 +270,298 @@ export default function CustomerDashboard() {
     }
   }
 
-  if (loading) {
-    return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={56} sx={{ color: BRAND, mb: 3 }} />
-          <Typography variant="h5" fontWeight={700} sx={{ color: BRAND }}>Loading Dashboard…</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1 }}>Preparing your shopping experience</Typography>
-        </Box>
-      </Box>
-    )
-  }
-
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
 
-      {/* ── Sticky Header ── */}
-      <AppBar position="sticky" elevation={0} sx={{
-        bgcolor: 'background.paper',
-        borderBottom: 1, borderColor: 'divider',
-        color: 'text.primary',
-      }}>
-        <Toolbar sx={{
-          maxWidth: 1400, width: '100%', mx: 'auto',
-          px: { xs: 2, sm: 3 }, gap: 2,
-          minHeight: { xs: 64, sm: 72 },
-        }}>
-
-          {/* Logo */}
-          <Box
-            onClick={() => setActiveTab('products')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', flexShrink: 0 }}
-          >
-            <Box sx={{ width: 40, height: 40, bgcolor: BRAND, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body2" fontWeight={900} color="#fff" sx={{ fontSize: 13, letterSpacing: 0 }}>QD</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight={900} sx={{ color: BRAND, display: { xs: 'none', sm: 'block' }, letterSpacing: -0.5 }}>
-              QuickDelivery
-            </Typography>
-          </Box>
-
-          {/* Delivery location chip */}
-          <Box sx={{
-            display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.75,
-            bgcolor: 'grey.50', px: 2, py: 1, borderRadius: 6,
-            border: '1px solid', borderColor: 'divider',
-            cursor: 'pointer', flexShrink: 0,
-            '&:hover': { borderColor: BRAND },
-          }}>
-            <Typography variant="caption" fontWeight={700} sx={{ color: BRAND }}>Delivery to</Typography>
-            <Typography variant="caption" color="text.secondary">Home • Islamabad</Typography>
-            <ExpandMoreIcon sx={{ fontSize: 16, color: BRAND }} />
-          </Box>
-
-          {/* Search bar */}
-          <TextField
-            size="small"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search for shops & restaurants"
-            sx={{
-              flex: 1, display: { xs: 'none', lg: 'block' },
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 6, bgcolor: 'grey.50',
-                '&:hover fieldset': { borderColor: BRAND },
-                '&.Mui-focused fieldset': { borderColor: BRAND },
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'action.active', fontSize: 20 }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <Box sx={{ flex: 1, display: { xs: 'block', lg: 'none' } }} />
-
-          {/* Mobile search icon */}
-          <IconButton sx={{ display: { xs: 'flex', lg: 'none' }, color: 'text.secondary' }}>
-            <SearchIcon />
-          </IconButton>
-
-          {/* Cart */}
-          <IconButton
-            onClick={() => setShowCart(true)}
-            sx={{ color: 'text.secondary', '&:hover': { color: BRAND, bgcolor: `${BRAND}10` } }}
-          >
-            <Badge
-              badgeContent={getTotalItems() || null}
-              sx={{ '& .MuiBadge-badge': { bgcolor: BRAND, color: '#fff', fontSize: 10, minWidth: 18, height: 18 } }}
-            >
-              <ShoppingBagOutlinedIcon />
-            </Badge>
-          </IconButton>
-
-          {/* User menu trigger — Sign In for guests, name for authenticated */}
-          {isGuest ? (
-            <Button
-              component={NextLink} href="/login"
-              variant="contained" size="small"
-              startIcon={<PersonOutlineIcon />}
-              sx={{
-                bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
-                borderRadius: 6, textTransform: 'none', fontWeight: 700,
-                px: 2, py: 0.75, display: { xs: 'none', sm: 'flex' },
-              }}
-            >
-              Sign In
-            </Button>
-          ) : (
+      {/* Foodpanda-style sticky shell: logo + centered search (md+) + globe / cart / account */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          top: 0,
+          zIndex: t => t.zIndex.appBar,
+          bgcolor: '#fff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          color: 'text.primary',
+        }}
+      >
+        <Box sx={{ maxWidth: 1400, width: '100%', mx: 'auto', px: { xs: 2, sm: 2.5 }, pt: 1.25, pb: 0 }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, flexWrap: 'nowrap', minHeight: { xs: 48, md: 52 }, px: 0 }}>
             <Box
-              onClick={e => setUserMenuAnchor(e.currentTarget)}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
-                border: '1px solid transparent', borderRadius: 6,
-                pl: 0.5, pr: 1.5, py: 0.5,
-                '&:hover': { borderColor: 'divider', bgcolor: 'grey.50' },
-              }}
+              onClick={() => setActiveTab('products')}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1.25, cursor: 'pointer', flexShrink: 0 }}
+              aria-label="Home"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: BRAND, color: '#fff', fontSize: 14, fontWeight: 700 }}>
-                {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-              </Avatar>
-              <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
-                <Typography variant="caption" color="text.disabled" sx={{ display: 'block', lineHeight: 1.2 }}>Hello,</Typography>
-                <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.2, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user?.displayName}
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  bgcolor: BRAND,
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 4px 14px ${BRAND}40`,
+                }}
+              >
+                <Typography variant="body2" fontWeight={900} color="#fff" sx={{ fontSize: 14 }}>
+                  QD
                 </Typography>
               </Box>
-              <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+              <Typography
+                variant="h6"
+                fontWeight={900}
+                sx={{
+                  color: BRAND,
+                  letterSpacing: -0.4,
+                  display: { xs: 'none', sm: 'block' },
+                  fontSize: { sm: '1rem', md: '1.125rem' },
+                }}
+              >
+                QuickDelivery
+              </Typography>
             </Box>
-          )}
 
-          {/* Mobile: Sign In (guest) or hamburger (auth) */}
-          {isGuest ? (
-            <IconButton component={NextLink} href="/login" sx={{ display: { xs: 'flex', sm: 'none' }, color: BRAND }}>
-              <PersonOutlineIcon />
-            </IconButton>
-          ) : null}
-          <IconButton onClick={() => setShowMobileMenu(true)} sx={{ display: { lg: 'none' }, color: BRAND }}>
-            <MenuIcon />
-          </IconButton>
+            <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' }, minWidth: 0, px: { md: 1, lg: 3 } }}>
+              <HeaderSearch
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                compact={false}
+              />
+            </Box>
 
-        </Toolbar>
+            <Stack direction="row" alignItems="center" spacing={0} sx={{ flexShrink: 0, ml: 'auto' }}>
+              <IconButton size="medium" sx={{ color: 'text.secondary', '&:hover': { color: BRAND } }} title="Language">
+                <LanguageOutlinedIcon fontSize="small" />
+              </IconButton>
 
-        {/* Tab nav strip — desktop only */}
-        <Box sx={{ borderTop: 1, borderColor: 'divider', display: { xs: 'none', md: 'block' } }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, val) => setActiveTab(val)}
-            sx={{
-              maxWidth: 1400, mx: 'auto', px: 3, minHeight: 44,
-              '& .MuiTab-root': { minHeight: 44, textTransform: 'none', fontWeight: 600, color: 'text.secondary', fontSize: 14 },
-              '& .Mui-selected': { color: BRAND },
-              '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
-            }}
-          >
-            {tabs.map(tab => (
-              <Tab key={tab.id} value={tab.id} label={tab.label} icon={tab.icon} iconPosition="start" />
-            ))}
-          </Tabs>
+              <IconButton
+                onClick={() => setShowCart(true)}
+                size="medium"
+                sx={{ color: 'text.secondary', '&:hover': { color: BRAND } }}
+                aria-label="Cart"
+              >
+                <Badge
+                  badgeContent={getTotalItems() > 0 ? getTotalItems() : undefined}
+                  sx={{ '& .MuiBadge-badge': { bgcolor: BRAND, color: '#fff', fontWeight: 800 } }}
+                >
+                  <ShoppingBagOutlinedIcon fontSize="small" />
+                </Badge>
+              </IconButton>
+
+              {isGuest ? (
+                <Button
+                  component={NextLink}
+                  href="/login"
+                  variant="contained"
+                  size="small"
+                  startIcon={<PersonOutlineIcon sx={{ fontSize: 18 }} />}
+                  sx={{
+                    bgcolor: BRAND,
+                    '&:hover': { bgcolor: '#C20D5A' },
+                    borderRadius: 999,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    px: 2,
+                    display: { xs: 'none', sm: 'inline-flex' },
+                    ml: 0.75,
+                  }}
+                >
+                  Sign In
+                </Button>
+              ) : (
+                <Box
+                  onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                  sx={{
+                    display: { xs: 'none', sm: 'flex' },
+                    alignItems: 'center',
+                    gap: 0.75,
+                    cursor: 'pointer',
+                    borderRadius: 999,
+                    pl: 0.5,
+                    pr: 1.25,
+                    py: 0.25,
+                    ml: 0.75,
+                    '&:hover': { bgcolor: 'grey.50' },
+                  }}
+                >
+                  <Avatar sx={{ width: 34, height: 34, bgcolor: BRAND, color: '#fff', fontWeight: 800, fontSize: 14 }}>
+                    {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                  </Avatar>
+                  <Box sx={{ textAlign: 'left', maxWidth: 120 }}>
+                    <Typography variant="caption" color="text.disabled" sx={{ lineHeight: 1, fontSize: 10 }}>
+                      Account
+                    </Typography>
+                    <Typography variant="body2" fontWeight={800} sx={{ lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user?.displayName}
+                    </Typography>
+                  </Box>
+                  <ExpandMoreIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
+                </Box>
+              )}
+
+              <IconButton onClick={() => setShowMobileMenu(true)} sx={{ display: { xs: 'inline-flex', lg: 'none' }, ml: 0.25, color: BRAND }} aria-label="Menu">
+                <MenuIcon />
+              </IconButton>
+            </Stack>
+          </Toolbar>
+
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, pb: 1, pt: 0.75 }}>
+            <HeaderSearch value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} compact />
+          </Box>
+
+          <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 0 }}>
+            <Tabs
+              value={effectiveTab}
+              onChange={(_, val) => setActiveTab(val)}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                minHeight: 46,
+                px: 0,
+                '& .MuiTab-root': {
+                  minHeight: 46,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  color: 'text.secondary',
+                  fontSize: { xs: 13, sm: 14 },
+                  minWidth: { xs: 80, sm: 100 },
+                },
+                '& .Mui-selected': { color: BRAND },
+                '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
+                '& .MuiTab-iconWrapper': { marginRight: '6px !important' },
+              }}
+            >
+              {tabs.map((tab) => (
+                <Tab key={tab.id} value={tab.id} label={tab.label} icon={tab.icon} iconPosition="start" />
+              ))}
+            </Tabs>
+          </Box>
         </Box>
       </AppBar>
 
-      {/* ── User dropdown Menu ── */}
+      {effectiveTab === 'products' && !authLoading ? (
+        <Box
+          sx={{
+            background: 'linear-gradient(135deg,#D70F64 0%, #ff4478 50%, #D70F64 110%)',
+            color: '#fff',
+            pt: { xs: 3, md: 4 },
+            pb: { xs: 3.5, md: 4 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} alignItems={{ xs: 'stretch', lg: 'flex-start' }}>
+              <Paper
+                elevation={8}
+                sx={{
+                  borderRadius: 3,
+                  p: 2.5,
+                  maxWidth: { xs: '100%', lg: 340 },
+                  width: '100%',
+                  bgcolor: '#fff',
+                  color: 'text.primary',
+                  flexShrink: 0,
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 88,
+                      height: 88,
+                      borderRadius: 2,
+                      border: '2px dashed',
+                      borderColor: 'grey.300',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'grey.50',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Typography variant="caption" fontWeight={800} color="text.secondary" textAlign="center" px={1}>
+                      App QR
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.5 }}>
+                      What is your address?
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Save your favourite delivery spot — we&apos;ll show shops nearby.
+                    </Typography>
+                  </Box>
+                </Stack>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Enter street, area…"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: 'grey.50',
+                    },
+                  }}
+                />
+                <Button
+                  fullWidth
+                  variant="text"
+                  endIcon={<ExpandMoreIcon />}
+                  sx={{ mt: 1, color: BRAND, fontWeight: 800, textTransform: 'none' }}
+                >
+                  Deliver to: Home • Islamabad
+                </Button>
+              </Paper>
+
+              <Box sx={{ flex: 1, pt: { xs: 0, lg: 0.75 } }}>
+                <Typography
+                  variant="h4"
+                  fontWeight={900}
+                  sx={{ fontSize: { xs: '1.35rem', sm: '2rem', md: '2.25rem' }, mb: 0.85, lineHeight: 1.25 }}
+                >
+                  {storefrontGreeting()}, {heroFirstName}! Ready for something delicious?
+                </Typography>
+                <Typography variant="body1" sx={{ opacity: 0.94, mb: 2.25, fontWeight: 500, fontSize: { xs: '0.93rem', md: '1.05rem' } }}>
+                  Order from groceries &amp; kitchen — curated deals refreshed daily on QuickDelivery.
+                </Typography>
+                <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
+                  {[
+                    { id: 'delivery', label: 'Delivery' },
+                    { id: 'pickup', label: 'Pick-up' },
+                    { id: 'shops', label: 'Shops' },
+                    { id: 'dinein', label: 'Dine-in' },
+                  ].map((opt) => (
+                    <Chip
+                      key={opt.id}
+                      label={opt.label}
+                      clickable
+                      onClick={() => setServiceMode(opt.id)}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: 999,
+                        px: 0.25,
+                        height: 38,
+                        bgcolor: serviceMode === opt.id ? '#fff' : 'rgba(255,255,255,0.16)',
+                        color: serviceMode === opt.id ? BRAND : '#fff',
+                        border:
+                          serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.38)',
+                        '&:hover': {
+                          bgcolor: serviceMode === opt.id ? '#fff8fb' : 'rgba(255,255,255,0.26)',
+                        },
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          </Box>
+        </Box>
+      ) : null}
+
+      {/* User dropdown */}
       <Menu
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
@@ -389,31 +570,29 @@ export default function CustomerDashboard() {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {!isGuest ? (
-          <>
-            <Box sx={{ px: 2, py: 2, bgcolor: BRAND, color: '#fff' }}>
-              <Typography fontWeight={700} fontSize={16}>{user?.displayName}</Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9 }}>{user?.email}</Typography>
-            </Box>
-            <MenuItem onClick={() => { setActiveTab('orders');   setUserMenuAnchor(null) }}>
-              <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-              <ListItemText>Orders</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }}>
-              <ListItemIcon><FavoriteBorderIcon sx={{ color: BRAND }} /></ListItemIcon>
-              <ListItemText>Wishlist</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { setActiveTab('profile');  setUserMenuAnchor(null) }}>
-              <ListItemIcon><SettingsOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-              <ListItemText>Settings</ListItemText>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleSignOut}>
-              <ListItemIcon><LogoutOutlinedIcon /></ListItemIcon>
-              <ListItemText>Sign Out</ListItemText>
-            </MenuItem>
-          </>
-        ) : (
+        {!isGuest ? [
+          <Box key="user-header" sx={{ px: 2, py: 2, bgcolor: BRAND, color: '#fff' }}>
+            <Typography fontWeight={700} fontSize={16}>{user?.displayName}</Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9 }}>{user?.email}</Typography>
+          </Box>,
+          <MenuItem key="orders" onClick={() => { setActiveTab('orders');   setUserMenuAnchor(null) }}>
+            <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+            <ListItemText>Orders</ListItemText>
+          </MenuItem>,
+          <MenuItem key="wishlist" onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }}>
+            <ListItemIcon><FavoriteBorderIcon sx={{ color: BRAND }} /></ListItemIcon>
+            <ListItemText>Wishlist</ListItemText>
+          </MenuItem>,
+          <MenuItem key="profile" onClick={() => { setActiveTab('profile');  setUserMenuAnchor(null) }}>
+            <ListItemIcon><SettingsOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
+            <ListItemText>Settings</ListItemText>
+          </MenuItem>,
+          <Divider key="signout-divider" />,
+          <MenuItem key="signout" onClick={handleSignOut}>
+            <ListItemIcon><LogoutOutlinedIcon /></ListItemIcon>
+            <ListItemText>Sign Out</ListItemText>
+          </MenuItem>,
+        ] : (
           <Box sx={{ px: 2, py: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Login to access your orders &amp; profile
@@ -429,7 +608,6 @@ export default function CustomerDashboard() {
         )}
       </Menu>
 
-      {/* ── Mobile Menu Drawer ── */}
       <Drawer anchor="left" open={showMobileMenu} onClose={() => setShowMobileMenu(false)} PaperProps={{ sx: { width: 300 } }}>
         <Box sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -437,7 +615,6 @@ export default function CustomerDashboard() {
             <IconButton onClick={() => setShowMobileMenu(false)}><CloseIcon /></IconButton>
           </Box>
 
-          {/* User info strip */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: `${BRAND}10`, borderRadius: 2, mb: 3 }}>
             <Avatar sx={{ bgcolor: BRAND, width: 48, height: 48, fontWeight: 700, fontSize: 20 }}>
               {user?.displayName?.charAt(0) || 'G'}
@@ -452,7 +629,7 @@ export default function CustomerDashboard() {
             {tabs.map(tab => (
               <ListItemButton
                 key={tab.id}
-                selected={activeTab === tab.id}
+                selected={effectiveTab === tab.id}
                 onClick={() => { setActiveTab(tab.id); setShowMobileMenu(false) }}
                 sx={{
                   borderRadius: 2, mb: 0.5,
@@ -480,16 +657,12 @@ export default function CustomerDashboard() {
               sx={{ borderRadius: 2, color: isGuest ? 'primary.main' : 'error.main' }}
             >
               <ListItemIcon sx={{ color: 'inherit' }}><LogoutOutlinedIcon /></ListItemIcon>
-              <ListItemText
-                primary={isGuest ? 'Sign In / Register' : 'Sign Out'}
-                primaryTypographyProps={{ fontWeight: 600 }}
-              />
+              <ListItemText primary={isGuest ? 'Sign In / Register' : 'Sign Out'} primaryTypographyProps={{ fontWeight: 600 }} />
             </ListItemButton>
           </List>
         </Box>
       </Drawer>
 
-      {/* ── Categories Drawer ── */}
       <Drawer anchor="left" open={showCategoriesSidebar} onClose={() => setShowCategoriesSidebar(false)} PaperProps={{ sx: { width: 300 } }}>
         <Box sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -523,15 +696,19 @@ export default function CustomerDashboard() {
         </Box>
       </Drawer>
 
-      {/* ── Main content ── */}
       <Box component="main">
-        {renderContent()}
+        {authLoading ? (
+          <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <CircularProgress size={48} sx={{ color: BRAND }} />
+            <Typography color="text.secondary" variant="body2">Loading…</Typography>
+          </Box>
+        ) : (
+          renderContent()
+        )}
       </Box>
 
-      {/* Cart slide-over */}
       {showCart && <CartPage onClose={() => setShowCart(false)} />}
 
-      {/* Footer */}
       <CustomerFooter />
 
     </Box>

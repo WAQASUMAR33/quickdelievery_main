@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
@@ -36,8 +36,9 @@ export default function ImageUploadField({ label, required, value, onChange, dis
   const [error, setError]         = useState('')
   const [preview, setPreview]     = useState(value || '')
 
-  // Sync preview if parent resets value
-  // (simple — no deep dep tracking needed here)
+  useEffect(() => {
+    setPreview(value || '')
+  }, [value])
 
   const handleClick = () => {
     if (disabled || uploading) return

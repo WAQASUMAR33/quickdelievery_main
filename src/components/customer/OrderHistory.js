@@ -17,8 +17,80 @@ import {
   Calendar,
   MapPin,
   CreditCard,
-  X // Added missing X icon
+  X,
+  Printer,
 } from 'lucide-react'
+import { computeServiceCharge, getServiceChargePercent } from '@/lib/serviceCharge'
+
+function escapeReceiptHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;')
+}
+
+function printOrderReceipt(order) {
+  const pct = getServiceChargePercent()
+  const subtotal =
+    Number(order.subtotal) ||
+    order.items.reduce((s, i) => s + Number(i.price) * Number(i.quantity || 1), 0)
+  let svc = parseFloat(order.serviceCharge)
+  if (!Number.isFinite(svc)) {
+    svc = computeServiceCharge(Math.round(subtotal * 100) / 100)
+  }
+  const total = Number(order.total) || Math.round((subtotal + svc) * 100) / 100
+
+  const rowsHtml = order.items
+    .map(
+      (item) =>
+        `<tr>
+          <td>${escapeReceiptHtml(item.name)}</td>
+          <td style="text-align:right">${item.quantity}</td>
+          <td style="text-align:right">$${Number(item.price).toFixed(2)}</td>
+          <td style="text-align:right;font-weight:600">$${(Number(item.price) * item.quantity).toFixed(2)}</td>
+        </tr>`,
+    )
+    .join('')
+
+  const oid = escapeReceiptHtml(order.id)
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Receipt #${oid}</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;padding:24px;color:#111;max-width:560px;margin:0 auto;font-size:14px;}
+  h1{font-size:20px;margin:0 0 8px;} .muted{color:#666;font-size:12px;} table{width:100%;border-collapse:collapse;margin:16px 0;} th,td{border-bottom:1px solid #e5e5e5;padding:8px 4px;text-align:left;} th{font-size:11px;text-transform:uppercase;color:#666;} .sum{margin-top:12px;} .sum div{display:flex;justify-content:space-between;padding:4px 0;} .grand{font-size:17px;font-weight:800;margin-top:8px;padding-top:8px;border-top:2px solid #111;} .brand{color:#D70F64;font-weight:800;} footer{margin-top:28px;font-size:11px;color:#888;text-align:center;}
+</style></head><body>
+  <p class="brand">QuickDelivery</p>
+  <h1>Bill receipt</h1>
+  <p class="muted">Order #${oid}<br/>Date: ${escapeReceiptHtml(new Date(order.date).toLocaleString())}<br/>
+  Status: ${escapeReceiptHtml(order.status)}<br/>Payment: ${escapeReceiptHtml(order.paymentMethod)}</p>
+  <table>
+    <thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <div class="sum">
+    <div><span>Subtotal</span><span>$${Number(subtotal).toFixed(2)}</span></div>
+    <div><span>Service charges (${pct}%)</span><span>$${Number(svc).toFixed(2)}</span></div>
+    <div><span>Shipping</span><span>Free</span></div>
+    <div class="grand"><span>Total payable</span><span>$${Number(total).toFixed(2)}</span></div>
+  </div>
+  <p style="margin-top:20px;font-size:12px;"><strong>Deliver to</strong><br/>${escapeReceiptHtml(order.shippingAddress)}</p>
+  <footer>Thank you for your order.</footer>
+</body></html>`
+
+  const w = window.open('', '_blank')
+  if (!w) {
+    window.alert('Allow pop-ups to print the receipt.')
+    return
+  }
+  w.document.open()
+  w.document.write(html)
+  w.document.close()
+  w.onload = () => {
+    w.focus()
+    w.print()
+  }
+}
 
 const OrderHistory = () => {
   const { user, userData } = useAuth()
@@ -42,24 +114,47 @@ const OrderHistory = () => {
       const data = await response.json()
       
       if (data.success) {
-        // Transform API data to match component structure
-        const transformedOrders = (data.data || []).map(order => ({
-          id: order.id,
-          date: order.createdAt || order.date,
-          status: (order.status || 'PENDING').toLowerCase(),
-          total: parseFloat(order.totalAmount) || 0,
-          items: (order.orderItems || []).map(item => ({
-            name: item.product?.proName || 'Unknown Product',
-            price: parseFloat(item.price) || 0,
-            quantity: item.quantity || 1,
-            image: item.product?.proImages?.[0] || '/placeholder-product.jpg'
-          })),
-          shippingAddress: order.shippingAddress || 'N/A',
-          trackingNumber: order.trackingNumber || null,
-          estimatedDelivery: order.estimatedDelivery || null,
-          paymentMethod: order.paymentMethod || 'N/A'
-        }))
-        
+        const transformedOrders = (data.data || []).map((order) => {
+          const orderItems = order.orderItems || []
+          const items = orderItems.map((item) => {
+            let img = '/placeholder-product.jpg'
+            const pi = item.product?.proImages
+            if (typeof pi === 'string') {
+              try {
+                const parsed = JSON.parse(pi)
+                if (Array.isArray(parsed) && parsed[0]) img = parsed[0]
+              } catch { /* keep default */ }
+            } else if (Array.isArray(pi) && pi.length) {
+              img = pi[0]
+            }
+            return {
+              name: item.product?.proName || 'Unknown Product',
+              price: parseFloat(item.price) || 0,
+              quantity: item.quantity || 1,
+              image: img,
+            }
+          })
+          const subtotal = items.reduce((s, row) => s + row.price * row.quantity, 0)
+          const subRounded = Math.round(subtotal * 100) / 100
+          let serviceCharge = parseFloat(order.serviceCharge) || 0
+          if (!serviceCharge && subRounded > 0) {
+            serviceCharge = computeServiceCharge(subRounded)
+          }
+          return {
+            id: order.id,
+            date: order.createdAt || order.date,
+            status: (order.status || 'PENDING').toLowerCase(),
+            total: parseFloat(order.totalAmount) || 0,
+            subtotal: subRounded,
+            serviceCharge,
+            items,
+            shippingAddress: order.shippingAddress || 'N/A',
+            trackingNumber: order.trackingNumber || null,
+            estimatedDelivery: order.estimatedDelivery || null,
+            paymentMethod: order.paymentMethod || 'N/A',
+          }
+        })
+
         setOrders(transformedOrders)
       } else {
         console.error('Failed to fetch orders:', data.error)
@@ -176,7 +271,7 @@ const OrderHistory = () => {
             transition={{ delay: index * 0.1 + 0.2 }}
             className="text-lg font-semibold text-gray-800 group-hover:text-[#F25D49] transition-colors"
           >
-            Order #{order.id.slice(-8)}
+            Order #{order.id}
           </motion.h3>
           <motion.p 
             initial={{ opacity: 0, x: -20 }}
@@ -252,8 +347,18 @@ const OrderHistory = () => {
         transition={{ delay: index * 0.1 + 0.8 }}
         className="border-t border-gray-200/50 pt-4"
       >
+        <div className="space-y-1 mb-3 text-sm text-gray-600">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span className="font-medium text-gray-800">${Number(order.subtotal ?? 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Service charges ({getServiceChargePercent()}%)</span>
+            <span className="font-medium text-gray-800">${Number(order.serviceCharge ?? 0).toFixed(2)}</span>
+          </div>
+        </div>
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-gray-600">Total Amount:</span>
+          <span className="text-sm font-medium text-gray-600">Total payable:</span>
           <span className="text-2xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
             ${order.total.toFixed(2)}
           </span>
@@ -261,6 +366,15 @@ const OrderHistory = () => {
         
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex flex-wrap gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => printOrderReceipt(order)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print receipt</span>
+            </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -343,12 +457,23 @@ const OrderHistory = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
-              <button
-                onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" /> {/* Using imported X icon */}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => printOrderReceipt(order)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print receipt
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  aria-label="Close"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -369,8 +494,20 @@ const OrderHistory = () => {
                     <p className="font-medium capitalize">{order.status}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Total Amount:</span>
-                    <p className="font-medium">${order.total}</p>
+                    <span className="text-gray-600">Payment:</span>
+                    <p className="font-medium">{order.paymentMethod}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Subtotal:</span>
+                    <p className="font-medium">${Number(order.subtotal ?? 0).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Service charges ({getServiceChargePercent()}%):</span>
+                    <p className="font-medium">${Number(order.serviceCharge ?? 0).toFixed(2)}</p>
+                  </div>
+                  <div className="col-span-2 pt-2 border-t border-gray-200">
+                    <span className="text-gray-800 font-semibold">Total payable:</span>
+                    <p className="font-bold text-lg text-[#F25D49]">${Number(order.total).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
