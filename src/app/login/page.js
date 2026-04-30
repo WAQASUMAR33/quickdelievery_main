@@ -183,8 +183,8 @@ export default function LoginPage() {
               <Typography variant="body1" color="text.secondary">Sign in to your account to continue</Typography>
             </Box>
 
-            {/* Already logged in notice */}
-            {user && (
+            {/* Already logged in notice — only for real (non-guest) users */}
+            {user && userData?.role !== 'GUEST' && (
               <Alert
                 severity="info"
                 sx={{ mb: 3, borderRadius: 0, bgcolor: '#fce7f3', border: `1px solid ${BRAND}33`, color: BRAND, '& .MuiAlert-icon': { color: BRAND } }}

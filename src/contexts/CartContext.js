@@ -107,6 +107,10 @@ export const CartProvider = ({ children }) => {
     return state.items.reduce((total, item) => total + item.quantity, 0)
   }
 
+  const isInCart = (productId) => {
+    return state.items.some(item => item.proId === productId)
+  }
+
   const value = {
     items: state.items,
     addToCart,
@@ -114,7 +118,8 @@ export const CartProvider = ({ children }) => {
     updateQuantity,
     clearCart,
     getTotalPrice,
-    getTotalItems
+    getTotalItems,
+    isInCart
   }
 
   return (

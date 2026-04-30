@@ -95,12 +95,18 @@ export default function AuthProvider({ children }) {
         setUserData(dbUser)
       } else {
         localStorage.removeItem('authToken')
-        setUser(null)
-        setUserData(null)
+        // Fall back to guest session so pages don't hang indefinitely
+        const { guestUser, guestUserData } = buildGuestSession()
+        setUser(guestUser)
+        setUserData(guestUserData)
       }
     } catch (error) {
       console.error('Error loading user:', error)
       localStorage.removeItem('authToken')
+      // Fall back to guest session so pages don't hang indefinitely
+      const { guestUser, guestUserData } = buildGuestSession()
+      setUser(guestUser)
+      setUserData(guestUserData)
     } finally {
       setLoading(false)
       setUserDataLoadingTimeout(false)
@@ -241,7 +247,7 @@ export default function AuthProvider({ children }) {
       setUser(guestUser)
       setUserData(guestUserData)
       toast.success('Logged out successfully')
-      router.push('/customer')
+      router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to log out')

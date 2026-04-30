@@ -14,6 +14,11 @@ import CardContent      from '@mui/material/CardContent'
 import CardMedia        from '@mui/material/CardMedia'
 import Chip             from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog           from '@mui/material/Dialog'
+import DialogActions    from '@mui/material/DialogActions'
+import DialogContent    from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle      from '@mui/material/DialogTitle'
 import FormControl      from '@mui/material/FormControl'
 import Grid             from '@mui/material/Grid'
 import IconButton       from '@mui/material/IconButton'
@@ -37,6 +42,8 @@ import Typography       from '@mui/material/Typography'
 import AddIcon                  from '@mui/icons-material/Add'
 import CheckCircleOutlinedIcon  from '@mui/icons-material/CheckCircleOutlined'
 import CancelOutlinedIcon       from '@mui/icons-material/CancelOutlined'
+import DeleteOutlineIcon        from '@mui/icons-material/DeleteOutline'
+import EditOutlinedIcon         from '@mui/icons-material/EditOutlined'
 import GridViewOutlinedIcon     from '@mui/icons-material/GridViewOutlined'
 import Inventory2OutlinedIcon   from '@mui/icons-material/Inventory2Outlined'
 import LocalOfferOutlinedIcon   from '@mui/icons-material/LocalOfferOutlined'
@@ -65,6 +72,21 @@ export default function ProductManagementPage() {
   const [filterApproval, setFilterApproval] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [viewMode, setViewMode] = useState('table')
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/products?type=product&id=${deleteTarget.proId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        setProducts(prev => prev.filter(p => p.proId !== deleteTarget.proId))
+      }
+    } catch (e) { console.error(e) }
+    finally { setDeleting(false); setDeleteTarget(null) }
+  }
 
   useEffect(() => {
     if (!loading) {
@@ -287,8 +309,13 @@ export default function ProductManagementPage() {
                       <Button component={Link} href={`/admin/dashboard/products/${product.proId}`}
                         size="small" variant="outlined" startIcon={<VisibilityOutlinedIcon />} fullWidth
                         sx={{ borderRadius: 0, fontSize: 11 }}>View</Button>
-                      <Button size="small" variant="outlined" color="info" fullWidth
+                      <Button component={Link} href={`/admin/dashboard/products/${product.proId}`}
+                        size="small" variant="outlined" color="info" startIcon={<EditOutlinedIcon />} fullWidth
                         sx={{ borderRadius: 0, fontSize: 11 }}>Edit</Button>
+                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(product)}
+                        sx={{ border: '1px solid', borderColor: 'error.light', borderRadius: 0 }}>
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
                     </Box>
                   </CardContent>
                 </Card>
@@ -342,11 +369,22 @@ export default function ProductManagementPage() {
                     <TableCell>
                       <ApprovalChip status={product.approvalStatus} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
                       <Tooltip title="View">
                         <IconButton component={Link} href={`/admin/dashboard/products/${product.proId}`}
                           size="small" sx={{ color: 'primary.main' }}>
                           <VisibilityOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton component={Link} href={`/admin/dashboard/products/${product.proId}`}
+                          size="small" sx={{ color: 'info.main', mx: 0.5 }}>
+                          <EditOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton size="small" onClick={() => setDeleteTarget(product)} sx={{ color: 'error.main' }}>
+                          <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -358,6 +396,26 @@ export default function ProductManagementPage() {
         )}
 
       </Box>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete Product</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>{deleteTarget?.proName}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteTarget(null)} sx={{ borderRadius: 0, textTransform: 'none' }}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={14} color="inherit" /> : <DeleteOutlineIcon />}
+            sx={{ borderRadius: 0, textTransform: 'none' }}>
+            {deleting ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </DashboardLayout>
   )
 }

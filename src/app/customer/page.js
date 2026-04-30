@@ -10,7 +10,6 @@ import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
 import OrderHistory from '@/components/customer/OrderHistory'
 import CustomerProfile from '@/components/customer/CustomerProfile'
-import CustomerHero from '@/components/customer/CustomerHero'
 import CartPage from '@/components/customer/CartPage'
 import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
@@ -130,16 +129,13 @@ export default function CustomerDashboard() {
     switch (activeTab) {
       case 'products':
         return (
-          <>
-            <CustomerHero />
-            <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
-              <ProductCatalog
-                searchQuery={searchQuery}
-                onToggleFavorite={handleToggleFavorite}
-                favorites={favorites}
-              />
-            </Box>
-          </>
+          <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+            <ProductCatalog
+              searchQuery={searchQuery}
+              onToggleFavorite={handleToggleFavorite}
+              favorites={favorites}
+            />
+          </Box>
         )
       case 'orders':
         return (
@@ -316,29 +312,49 @@ export default function CustomerDashboard() {
             </Badge>
           </IconButton>
 
-          {/* User menu trigger */}
-          <Box
-            onClick={e => setUserMenuAnchor(e.currentTarget)}
-            sx={{
-              display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
-              border: '1px solid transparent', borderRadius: 6,
-              pl: 0.5, pr: 1.5, py: 0.5,
-              '&:hover': { borderColor: 'divider', bgcolor: 'grey.50' },
-            }}
-          >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.100', color: 'text.secondary' }}>
-              <PersonOutlineIcon sx={{ fontSize: 20 }} />
-            </Avatar>
-            <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
-              <Typography variant="caption" color="text.disabled" sx={{ display: 'block', lineHeight: 1.2 }}>Hello,</Typography>
-              <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.2, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.displayName || 'Guest'}
-              </Typography>
+          {/* User menu trigger — Sign In for guests, name for authenticated */}
+          {isGuest ? (
+            <Button
+              component={NextLink} href="/login"
+              variant="contained" size="small"
+              startIcon={<PersonOutlineIcon />}
+              sx={{
+                bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                borderRadius: 6, textTransform: 'none', fontWeight: 700,
+                px: 2, py: 0.75, display: { xs: 'none', sm: 'flex' },
+              }}
+            >
+              Sign In
+            </Button>
+          ) : (
+            <Box
+              onClick={e => setUserMenuAnchor(e.currentTarget)}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
+                border: '1px solid transparent', borderRadius: 6,
+                pl: 0.5, pr: 1.5, py: 0.5,
+                '&:hover': { borderColor: 'divider', bgcolor: 'grey.50' },
+              }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: BRAND, color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+              </Avatar>
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+                <Typography variant="caption" color="text.disabled" sx={{ display: 'block', lineHeight: 1.2 }}>Hello,</Typography>
+                <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.2, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.displayName}
+                </Typography>
+              </Box>
+              <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
             </Box>
-            <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-          </Box>
+          )}
 
-          {/* Mobile hamburger */}
+          {/* Mobile: Sign In (guest) or hamburger (auth) */}
+          {isGuest ? (
+            <IconButton component={NextLink} href="/login" sx={{ display: { xs: 'flex', sm: 'none' }, color: BRAND }}>
+              <PersonOutlineIcon />
+            </IconButton>
+          ) : null}
           <IconButton onClick={() => setShowMobileMenu(true)} sx={{ display: { lg: 'none' }, color: BRAND }}>
             <MenuIcon />
           </IconButton>

@@ -7,6 +7,7 @@ import { checkUserAccess } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import VendorProductManagement from '@/components/VendorProductManagement'
 import VendorBusinessProfile from '@/components/vendor/VendorBusinessProfile'
+import VendorAnalytics from '@/components/vendor/VendorAnalytics'
 
 import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -14,6 +15,7 @@ import Tab              from '@mui/material/Tab'
 import Tabs             from '@mui/material/Tabs'
 import Typography       from '@mui/material/Typography'
 
+import BarChartOutlinedIcon   from '@mui/icons-material/BarChartOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 
@@ -22,7 +24,7 @@ const BRAND = '#D70F64'
 export default function VendorDashboardPage() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('products')
+  const [activeTab, setActiveTab] = useState('analytics')
 
   useEffect(() => {
     if (!loading) {
@@ -53,15 +55,17 @@ export default function VendorDashboardPage() {
             '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
           }}
         >
-          <Tab value="products" label="My Products"     icon={<Inventory2OutlinedIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="profile"  label="Business Profile" icon={<StorefrontOutlinedIcon  fontSize="small" />} iconPosition="start" />
+          <Tab value="analytics" label="Analytics"       icon={<BarChartOutlinedIcon   fontSize="small" />} iconPosition="start" />
+          <Tab value="products"  label="My Products"     icon={<Inventory2OutlinedIcon fontSize="small" />} iconPosition="start" />
+          <Tab value="profile"   label="Business Profile" icon={<StorefrontOutlinedIcon  fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
 
       {/* ── Content ── */}
       <Box sx={{ p: 3 }}>
-        {activeTab === 'products' && <VendorProductManagement />}
-        {activeTab === 'profile'  && <VendorBusinessProfile />}
+        {activeTab === 'analytics' && <VendorAnalytics vendorId={userData?.uid} />}
+        {activeTab === 'products'  && <VendorProductManagement />}
+        {activeTab === 'profile'   && <VendorBusinessProfile />}
       </Box>
     </DashboardLayout>
   )
