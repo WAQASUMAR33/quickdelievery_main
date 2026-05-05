@@ -100,17 +100,26 @@ const OrderHistory = () => {
   const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => {
-    if (userData?.id) {
+    if (userData?.id || userData?.uid) {
       fetchOrders()
+      return
     }
+    setLoading(false)
   }, [userData])
 
   const fetchOrders = async () => {
+    const userRef = userData?.id || userData?.uid
+    if (!userRef) {
+      setOrders([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       
       // Fetch orders from API
-      const response = await fetch(`/api/orders?userId=${userData.id}`)
+      const response = await fetch(`/api/orders?userId=${encodeURIComponent(userRef)}`)
       const data = await response.json()
       
       if (data.success) {
