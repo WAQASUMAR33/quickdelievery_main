@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
@@ -93,6 +93,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const [curatedStorefrontDeals, setCuratedStorefrontDeals] = useState([])
   const [detailProduct, setDetailProduct] = useState(null)
   const [modalQty, setModalQty] = useState(1)
+  const dealsCarouselRef = useRef(null)
 
   // Subcategories derived from already-loaded categories (no extra fetch needed)
   const subcategories = selectedCategory != null
@@ -279,13 +280,107 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
     const seen = new Set()
     const shops = []
     for (const p of products) {
-      if (p.vendor && !seen.has(p.vendorId)) {
-        seen.add(p.vendorId)
-        shops.push(p.vendor)
+      const vendorKey = String(p.vendorId ?? p.vendor?.id ?? p.vendor?.uid ?? '')
+      if (p.vendor && vendorKey && !seen.has(vendorKey)) {
+        seen.add(vendorKey)
+        shops.push({
+          ...p.vendor,
+          __vendorKey: vendorKey,
+        })
       }
     }
     return shops.slice(0, 10)
   })()
+
+  const scrollDealsCarousel = (direction = 1) => {
+    if (!dealsCarouselRef.current) return
+    dealsCarouselRef.current.scrollBy({
+      left: direction * 360,
+      behavior: 'smooth',
+    })
+  }
+
+  const DealCarouselCard = ({ product, index }) => {
+    const isFavorite = favorites.find((fav) => fav.proId === product.proId)
+    const avgRating = product.reviews?.length
+      ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
+      : 4.8
+    const reviewsCount = product.reviews?.length || 5000
+    const isCustomDeal = Boolean(product.__isCustomDeal)
+    const dealBanner = product.__dealBadge || 'DEAL'
+    const itemCount = product.description
+      ? product.description.split('·').map((s) => s.trim()).filter(Boolean).length
+      : 0
+    const etaLabel = `From ${Math.max(15, 20 + ((index * 3) % 12))} min`
+    const cuisineLabel = isCustomDeal
+      ? itemCount > 0
+        ? `${itemCount} items`
+        : 'Combo'
+      : (product.category?.name || 'Food')
+    const rawPriceLabel = product.customPriceHint?.trim()
+    const numeric = parseFloat(product.price || 0)
+    const priceLabel = rawPriceLabel || (Number.isFinite(numeric) && numeric > 0 ? `Rs.${Math.round(numeric)}` : 'See price')
+
+    return (
+      <motion.div
+        role="button"
+        tabIndex={0}
+        onClick={() => setDetailProduct(product)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setDetailProduct(product)
+          }
+        }}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.04, duration: 0.25 }}
+        className="w-[280px] flex-shrink-0 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
+      >
+        <div className="relative h-36 w-full overflow-hidden bg-gray-100">
+          <img
+            src={product.proImages?.[0] || '/placeholder-product.jpg'}
+            alt={product.proName}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute left-0 top-2 rounded-r-full bg-[#D70F64] text-white text-[10px] font-extrabold px-2 py-1 tracking-wide">
+            {dealBanner}
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isCustomDeal) {
+                toast('Favourites apply to catalogue items.')
+                return
+              }
+              onToggleFavorite(product)
+            }}
+            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center"
+            aria-label="Toggle favorite"
+          >
+            <Heart className={`w-4 h-4 ${isFavorite ? 'text-[#D70F64] fill-current' : 'text-gray-600'}`} />
+          </button>
+        </div>
+
+        <div className="p-3.5">
+          <h3 className="text-lg leading-tight font-extrabold text-gray-900 line-clamp-1 mb-1">
+            {product.proName}
+          </h3>
+          <div className="flex items-center gap-1 text-sm text-gray-700 mb-1.5">
+            <Star className="w-4 h-4 text-[#F59E0B] fill-current" />
+            <span className="font-bold">{avgRating.toFixed(1)}</span>
+            <span className="text-gray-500">({reviewsCount}+)</span>
+          </div>
+          <p className="text-[13px] text-gray-600 line-clamp-1">
+            {etaLabel} · {cuisineLabel} · In-Store Price
+          </p>
+          <p className="mt-1.5 text-[14px] font-semibold text-gray-700">
+            From {priceLabel} with Saver
+          </p>
+        </div>
+      </motion.div>
+    )
+  }
 
   const ProductCard = ({ product, index }) => {
     const isFavorite = favorites.find(fav => fav.proId === product.proId)
@@ -539,7 +634,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
       <div className="mb-6">
         <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Shops</h4>
         <div className="space-y-1 max-h-48 overflow-y-auto">
-          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.id, name: s.businessName || s.username }))].map(v => (
+          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.__vendorKey || s.id || s.uid, name: s.businessName || s.username }))].map(v => (
             <label key={v.id} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center mr-3 ${selectedVendor === v.id ? 'border-[#D70F64] bg-[#D70F64]' : 'border-gray-300'}`}>
                 {selectedVendor === v.id && <div className="w-2 h-2 bg-white rounded-sm" />}
@@ -577,7 +672,14 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
   return (
     <div className="w-full overflow-x-hidden">
-      <div className="space-y-2">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <aside className="hidden lg:block w-[280px] flex-shrink-0 self-start">
+          <div className="bg-white rounded-xl p-5 sticky top-28 border border-gray-100 shadow-sm">
+            {filterPanelBody}
+          </div>
+        </aside>
+
+        <div className="flex-1 min-w-0 space-y-2">
 
         {/* ── 1. CATEGORIES ── */}
         {categories.length > 0 && (
@@ -744,180 +846,233 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           />
         )}
 
-        {/* ── ALL PRODUCTS ── */}
-        <div>
-          {/* Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-gray-900">All Products</h2>
-              <span className="text-sm text-gray-500 font-medium">({filteredProducts.length})</span>
-              {(selectedCategory != null || selectedVendor || searchQuery) && (
-                <button
-                  onClick={() => { setSelectedCategory(null); setSelectedVendor(''); setSelectedSubcategory(null) }}
-                  className="text-xs text-[#D70F64] font-semibold flex items-center gap-1 hover:underline"
-                >
-                  <X className="w-3 h-3" /> Clear
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow' : ''}`}>
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow' : ''}`}>
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value)}
-                  className="appearance-none bg-white border border-gray-200 rounded-lg px-3 py-1.5 pr-7 text-sm focus:ring-2 focus:ring-[#D70F64] focus:border-transparent outline-none cursor-pointer"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price ↑</option>
-                  <option value="price-high">Price ↓</option>
-                  <option value="rating">Top Rated</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex lg:hidden items-center gap-1.5 px-3 py-1.5 bg-[#D70F64] text-white rounded-lg hover:bg-[#C20D5A] transition-colors text-sm font-medium"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                <span>Filters</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Desktop: filters always visible (previously gated on showFilters default false). */}
-            <aside className="hidden lg:block w-[280px] flex-shrink-0">
-              <div className="bg-white rounded-xl p-5 sticky top-40 border border-gray-100 shadow-sm">
-                {filterPanelBody}
-              </div>
-            </aside>
-
-            {/* Mobile / tablet: slide-over */}
-            <AnimatePresence>
-              {showFilters && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    onClick={() => setShowFilters(false)}
-                    className="fixed inset-0 bg-black/50 z-[1200] lg:hidden"
-                  />
-                  <motion.div
-                    initial={{ x: -300, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -300, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="fixed inset-y-0 left-0 z-[1300] w-[280px] max-w-[85vw] bg-white shadow-2xl overflow-y-auto lg:hidden"
-                  >
-                    <div className="bg-white rounded-none p-5 min-h-full border-r border-gray-100">
-                      {filterPanelBody}
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-
-            {/* Products grid */}
-            <div className="flex-1">
-              {sortedProducts.length === 0 ? (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-                  <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="w-10 h-10 text-[#D70F64]" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-1">No products found</h3>
-                  <p className="text-gray-500">Try adjusting your search or filters</p>
-                  <motion.button
-                    onClick={() => { setSelectedCategory(null); setSelectedVendor(''); setSelectedSubcategory(null) }}
-                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                    className="mt-5 px-6 py-2.5 bg-[#D70F64] text-white font-bold rounded-xl hover:bg-[#C20D5A] transition-all shadow-md"
-                  >Clear Filters</motion.button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={catalogResultsKey}
-                  layout
-                  initial={{ opacity: 0.92 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.18 }}
-                  className={`grid gap-4 ${viewMode === 'grid'
-                    ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                    : 'grid-cols-1'}`}
-                >
-                  {sortedProducts.map((product, index) => (
-                    <ProductCard key={product.proId} product={product} index={index} />
-                  ))}
-                </motion.div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── TODAY'S DEALS & TOP SHOPS (after main product catalogue) ── */}
-        <div className="mt-10 pt-8 border-t border-gray-100 space-y-8">
-          {dealProducts.length > 0 && (
-            <HorizontalSection
-              title="Today's Deals"
-              icon={<Tag className="w-5 h-5 text-[#D70F64]" />}
-              items={dealProducts}
-              emptyMsg=""
-              renderItem={(p, i) => (
-                <div key={p.proId} className="w-44 flex-shrink-0">
-                  <ProductCard product={p} index={i} />
+        {/* ── MAIN CONTENT COLUMN ── */}
+        <div className="space-y-10">
+            {/* ── ALL PRODUCTS ── */}
+            <div>
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-gray-900">All Products</h2>
+                  <span className="text-sm text-gray-500 font-medium">({filteredProducts.length})</span>
+                  {(selectedCategory != null || selectedVendor || searchQuery) && (
+                    <button
+                      onClick={() => { setSelectedCategory(null); setSelectedVendor(''); setSelectedSubcategory(null) }}
+                      className="text-xs text-[#D70F64] font-semibold flex items-center gap-1 hover:underline"
+                    >
+                      <X className="w-3 h-3" /> Clear
+                    </button>
+                  )}
                 </div>
-              )}
-            />
+                <div className="flex items-center gap-2">
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow' : ''}`}>
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow' : ''}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={e => setSortBy(e.target.value)}
+                      className="appearance-none bg-white border border-gray-200 rounded-lg px-3 py-1.5 pr-7 text-sm focus:ring-2 focus:ring-[#D70F64] focus:border-transparent outline-none cursor-pointer"
+                    >
+                      <option value="newest">Newest</option>
+                      <option value="price-low">Price ↑</option>
+                      <option value="price-high">Price ↓</option>
+                      <option value="rating">Top Rated</option>
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex lg:hidden items-center gap-1.5 px-3 py-1.5 bg-[#D70F64] text-white rounded-lg hover:bg-[#C20D5A] transition-colors text-sm font-medium"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span>Filters</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile / tablet: slide-over */}
+              <AnimatePresence>
+                {showFilters && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      onClick={() => setShowFilters(false)}
+                      className="fixed inset-0 bg-black/50 z-[1200] lg:hidden"
+                    />
+                    <motion.div
+                      initial={{ x: -300, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -300, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                      className="fixed inset-y-0 left-0 z-[1300] w-[280px] max-w-[85vw] bg-white shadow-2xl overflow-y-auto lg:hidden"
+                    >
+                      <div className="bg-white rounded-none p-5 min-h-full border-r border-gray-100">
+                        {filterPanelBody}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+
+              {/* Products grid */}
+              <div className="flex-1">
+                {sortedProducts.length === 0 ? (
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+                    <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Package className="w-10 h-10 text-[#D70F64]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">No products found</h3>
+                    <p className="text-gray-500">Try adjusting your search or filters</p>
+                    <motion.button
+                      onClick={() => { setSelectedCategory(null); setSelectedVendor(''); setSelectedSubcategory(null) }}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                      className="mt-5 px-6 py-2.5 bg-[#D70F64] text-white font-bold rounded-xl hover:bg-[#C20D5A] transition-all shadow-md"
+                    >Clear Filters</motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={catalogResultsKey}
+                    layout
+                    initial={{ opacity: 0.92 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.18 }}
+                    className={`grid gap-4 ${viewMode === 'grid'
+                      ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                      : 'grid-cols-1'}`}
+                  >
+                    {sortedProducts.map((product, index) => (
+                      <ProductCard key={product.proId} product={product} index={index} />
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            {/* ── TODAY'S DEALS & TOP SHOPS (aligned with right content column) ── */}
+            <div className="pt-8 border-t border-gray-100 space-y-8">
+          {dealProducts.length > 0 && (
+            <div className="mb-0">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-[#D70F64]" />
+                  <h2 className="text-xl font-bold text-gray-900">Today&apos;s Deals</h2>
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollDealsCarousel(-1)}
+                    className="h-9 w-9 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                    aria-label="Scroll deals left"
+                  >
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollDealsCarousel(1)}
+                    className="h-9 w-9 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                    aria-label="Scroll deals right"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div ref={dealsCarouselRef} className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+                {dealProducts.map((p, i) => (
+                  <div key={p.proId} className="snap-start">
+                    <DealCarouselCard product={p} index={i} />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {topShops.length > 0 && (
             <div className="mb-0">
               <div className="flex items-center gap-2 mb-4">
                 <Store className="w-5 h-5 text-[#D70F64]" />
-                <h2 className="text-xl font-bold text-gray-900">Top Shops</h2>
+                <h2 className="text-xl font-bold text-gray-900">Top Restaurent</h2>
               </div>
-              <div className="relative">
-                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
-                  {topShops.map((shop, i) => (
+              <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                {topShops.map((shop, i) => {
+                  const shopKey = String(shop.__vendorKey || shop.id || shop.uid || '')
+                  const shopProducts = products.filter((p) => String(p.vendorId ?? p.vendor?.id ?? p.vendor?.uid ?? '') === shopKey)
+                  const coverImage = shopProducts.find((p) => p.proImages?.[0])?.proImages?.[0] || '/placeholder-product.jpg'
+                  const minPrice = shopProducts.length
+                    ? Math.min(...shopProducts.map((p) => Number.parseFloat(p.price) || 0).filter((n) => n > 0))
+                    : 0
+                  const avgShopRating = (() => {
+                    const rated = shopProducts
+                      .map((p) => {
+                        const arr = p.reviews || []
+                        if (!arr.length) return null
+                        return arr.reduce((s, r) => s + r.rating, 0) / arr.length
+                      })
+                      .filter((n) => Number.isFinite(n))
+                    if (!rated.length) return 4.8
+                    return rated.reduce((s, n) => s + n, 0) / rated.length
+                  })()
+                  const offerPct = Math.max(
+                    ...shopProducts.map((p) => Math.round(Number.parseFloat(p.discount || 0))).filter((n) => n > 0),
+                    20,
+                  )
+
+                  return (
                     <motion.button
-                      key={shop.id || i}
-                      whileHover={{ y: -3 }}
-                      onClick={() => setSelectedVendor(shop.id || '')}
-                      className={`flex-shrink-0 flex flex-col items-center p-4 rounded-2xl border-2 transition-all duration-200 min-w-[130px] bg-white ${
-                        selectedVendor === shop.id
+                      key={shopKey || i}
+                      whileHover={{ y: -2 }}
+                      onClick={() => setSelectedVendor(shopKey || '')}
+                      className={`text-left rounded-2xl border overflow-hidden bg-white transition-all ${
+                        selectedVendor === shopKey
                           ? 'border-[#D70F64] shadow-md'
                           : 'border-gray-200 hover:border-[#D70F64] hover:shadow-sm'
                       }`}
                     >
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center mb-2 overflow-hidden border-2 border-white shadow">
-                        {shop.profileImage ? (
-                          <img src={shop.profileImage} alt={shop.username} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-2xl font-black text-[#D70F64]">
-                            {(shop.businessName || shop.username || '?').charAt(0).toUpperCase()}
-                          </span>
-                        )}
+                      <div className="relative aspect-[16/9] w-full bg-gray-100 overflow-hidden">
+                        <img src={coverImage} alt={shop.businessName || shop.username} className="h-full w-full object-cover" />
+                        <div className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full">
+                          <Heart className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <div className="absolute bottom-2 right-2 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold text-white">
+                          Ad
+                        </div>
                       </div>
-                      <span className={`text-xs font-bold text-center leading-tight truncate w-full ${selectedVendor === shop.id ? 'text-[#D70F64]' : 'text-gray-800'}`}>
-                        {shop.businessName || shop.username}
-                      </span>
-                      <span className="text-[10px] text-gray-400 mt-0.5">
-                        {products.filter(p => p.vendorId === shop.id).length} items
-                      </span>
+                      <div className="p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-2xl font-extrabold text-gray-900 line-clamp-1">
+                            {shop.businessName || shop.username}
+                          </h3>
+                          <div className="flex items-center text-sm text-gray-600 whitespace-nowrap">
+                            <Star className="w-3.5 h-3.5 text-[#F59E0B] fill-current mr-1" />
+                            <span className="font-bold text-gray-800">{avgShopRating.toFixed(1)}</span>
+                            <span className="text-gray-500">(1000+)</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          From {20 + ((i * 5) % 15)} min · $$ · {shopProducts[0]?.category?.name || 'Burgers'}
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1">
+                          From {minPrice > 0 ? `Rs.${Math.round(minPrice)}` : 'Rs.99'} with Saver
+                        </p>
+                        <span className="mt-2 inline-flex items-center rounded-full bg-[#fde8f2] px-2.5 py-1 text-xs font-bold text-[#D70F64]">
+                          <Tag className="w-3 h-3 mr-1" />
+                          Up to {offerPct}% off
+                        </span>
+                      </div>
                     </motion.button>
-                  ))}
-                </div>
-                <div className="absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
+                  )
+                })}
               </div>
             </div>
           )}
+            </div>
+        </div>
         </div>
 
       </div>

@@ -158,7 +158,7 @@ const ProductManagement = () => {
   const handleDelete = async (productId) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
-      const response = await fetch(`/api/admin/products?id=${productId}`, { method: 'DELETE' })
+      const response = await fetch(`/api/admin/products?proId=${productId}`, { method: 'DELETE' })
       const data = await response.json()
       if (data.success) {
         toast.success('Product deleted')
@@ -177,7 +177,7 @@ const ProductManagement = () => {
       const response = await fetch('/api/admin/products', {
         method: editingProduct ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingProduct?.id, ...productData }),
+        body: JSON.stringify({ proId: editingProduct?.proId, ...productData }),
       })
       const data = await response.json()
       if (data.success) {
@@ -343,7 +343,7 @@ const ProductManagement = () => {
                       </TableCell>
                     </TableRow>
                   ) : products.map((product) => (
-                    <TableRow key={product.id} hover>
+                    <TableRow key={product.proId} hover>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Box sx={{ width: 40, height: 40, borderRadius: 1, overflow: 'hidden', flexShrink: 0, bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -389,7 +389,7 @@ const ProductManagement = () => {
                           <IconButton size="small" onClick={() => handleEdit(product)} sx={{ color: 'primary.main' }}>
                             <EditOutlinedIcon fontSize="small" />
                           </IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(product.id)} sx={{ color: 'error.main' }}>
+                          <IconButton size="small" onClick={() => handleDelete(product.proId)} sx={{ color: 'error.main' }}>
                             <DeleteOutlineIcon fontSize="small" />
                           </IconButton>
                         </Box>

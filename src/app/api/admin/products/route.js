@@ -215,6 +215,7 @@ export async function PUT(request) {
   try {
     const {
       id,
+      proId,
       proName,
       description,
       price,
@@ -232,10 +233,11 @@ export async function PUT(request) {
       approvalStatus
     } = await request.json()
 
-    if (!id) {
+    const productId = Number.parseInt(proId ?? id, 10)
+    if (!Number.isFinite(productId)) {
       return Response.json({
         success: false,
-        error: 'Product ID is required'
+        error: 'Valid product ID is required'
       }, { status: 400 })
     }
 
@@ -290,7 +292,7 @@ export async function PUT(request) {
     }
 
     const updatedProduct = await prisma.product.update({
-      where: { id },
+      where: { proId: productId },
       data: updateData,
       include: {
         category: true,
@@ -324,16 +326,18 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const proId = searchParams.get('proId')
+    const productId = Number.parseInt(proId ?? id, 10)
     
-    if (!id) {
+    if (!Number.isFinite(productId)) {
       return Response.json({
         success: false,
-        error: 'Product ID is required'
+        error: 'Valid product ID is required'
       }, { status: 400 })
     }
 
     await prisma.product.delete({
-      where: { id }
+      where: { proId: productId }
     })
 
     return Response.json({
