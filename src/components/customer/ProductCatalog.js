@@ -223,53 +223,48 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const catalogResultsKey = `${selectedCategory ?? 'all'}-${selectedSubcategory ?? 'all'}-${selectedVendor || ''}-${searchQuery}-${sortBy}`
 
   const dealProducts = useMemo(() => {
-    if (curatedStorefrontDeals.length > 0) {
-      return curatedStorefrontDeals.map((row) => {
-        if (row.product && row.product.proId != null) {
-          const p = mergeProductRelationIds(row.product)
-          const d = parseFloat(p.discount || 0)
-          return {
-            ...p,
-            __dealBadge:
-              (row.badgeLabel && String(row.badgeLabel).trim()) ||
-              (d > 0 ? `${Math.round(d)}% OFF` : 'DEAL'),
-          }
-        }
-
-        const desc = (row.customItems || []).map((i) => i.name).filter(Boolean).join(' · ')
-        const hint = row.customPriceLabel?.trim?.() ?? ''
-        const approx = approximatePriceFromLabel(hint)
-        const img = row.customImageUrl?.trim?.()
-        const vendorLabel = row.ownerUsername?.trim?.() || 'Special offer'
-
-        return mergeProductRelationIds({
-          __isCustomDeal: true,
-          __dealIdRef: row.dealId,
-          dealIdRef: row.dealId,
-          customPriceHint: hint || null,
-          proId: `cde-${row.dealId}`,
-          proName: row.customTitle || 'Special offer',
-          description: desc,
-          proImages: img ? [img] : null,
-          price: approx ?? 0,
-          salePrice: null,
-          discount: 0,
-          reviews: [],
-          vendorId: row.vendorUid || '',
-          vendor: { username: vendorLabel, businessName: vendorLabel },
-          category: { name: 'Deal' },
-          sku: '',
+    if (!curatedStorefrontDeals.length) return []
+    return curatedStorefrontDeals.map((row) => {
+      if (row.product && row.product.proId != null) {
+        const p = mergeProductRelationIds(row.product)
+        const d = parseFloat(p.discount || 0)
+        return {
+          ...p,
           __dealBadge:
             (row.badgeLabel && String(row.badgeLabel).trim()) ||
-            (hint ? hint : desc ? 'BUNDLE' : 'DEAL'),
-        })
+            (d > 0 ? `${Math.round(d)}% OFF` : 'DEAL'),
+        }
+      }
+
+      const desc = (row.customItems || []).map((i) => i.name).filter(Boolean).join(' · ')
+      const hint = row.customPriceLabel?.trim?.() ?? ''
+      const approx = approximatePriceFromLabel(hint)
+      const img = row.customImageUrl?.trim?.()
+      const vendorLabel = row.ownerUsername?.trim?.() || 'Special offer'
+
+      return mergeProductRelationIds({
+        __isCustomDeal: true,
+        __dealIdRef: row.dealId,
+        dealIdRef: row.dealId,
+        customPriceHint: hint || null,
+        proId: `cde-${row.dealId}`,
+        proName: row.customTitle || 'Special offer',
+        description: desc,
+        proImages: img ? [img] : null,
+        price: approx ?? 0,
+        salePrice: null,
+        discount: 0,
+        reviews: [],
+        vendorId: row.vendorUid || '',
+        vendor: { username: vendorLabel, businessName: vendorLabel },
+        category: { name: 'Deal' },
+        sku: '',
+        __dealBadge:
+          (row.badgeLabel && String(row.badgeLabel).trim()) ||
+          (hint ? hint : desc ? 'BUNDLE' : 'DEAL'),
       })
-    }
-    return products
-      .filter((p) => parseFloat(p.discount || 0) > 0)
-      .slice(0, 10)
-      .map(mergeProductRelationIds)
-  }, [curatedStorefrontDeals, products])
+    })
+  }, [curatedStorefrontDeals])
 
   // Top Shops: unique vendors
   const topShops = (() => {
