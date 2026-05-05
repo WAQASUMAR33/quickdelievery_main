@@ -203,44 +203,60 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Use nested create directly; Prisma keeps this atomic and avoids interactive tx timeout (P2028).
-    const order = await prisma.order.create({
-      data: {
-        userId: orderUserDbId,
-        status: 'PENDING',
-        shippingAddress: shippingAddress || '',
-        paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
-        totalAmount: parseFloat(totalAmount),
-        serviceCharge: serviceChargeAmt,
-        orderItems: {
-          create: items.map(item => ({
-            productId: parseInt(item.proId),
-            quantity: parseInt(item.quantity),
-            price: parseFloat(item.price)
-          }))
-        }
-      },
-      include: {
-        orderItems: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                vendor: true
-              }
+    const orderCreateInclude = {
+      orderItems: {
+        include: {
+          product: {
+            include: {
+              category: true,
+              vendor: true
             }
           }
-        },
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            phoneNumber: true
-          }
+        }
+      },
+      user: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          phoneNumber: true
         }
       }
-    })
+    }
+
+    const baseOrderCreateData = {
+      userId: orderUserDbId,
+      status: 'PENDING',
+      shippingAddress: shippingAddress || '',
+      paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+      totalAmount: parseFloat(totalAmount),
+      orderItems: {
+        create: items.map(item => ({
+          productId: parseInt(item.proId),
+          quantity: parseInt(item.quantity),
+          price: parseFloat(item.price)
+        }))
+      }
+    }
+
+    // Backward-compatible create: production DB/Prisma client may not have serviceCharge yet.
+    let order
+    try {
+      order = await prisma.order.create({
+        data: {
+          ...baseOrderCreateData,
+          serviceCharge: serviceChargeAmt,
+        },
+        include: orderCreateInclude,
+      })
+    } catch (createError) {
+      const msg = String(createError?.message || '')
+      if (!msg.includes('Unknown argument `serviceCharge`')) throw createError
+      order = await prisma.order.create({
+        data: baseOrderCreateData,
+        include: orderCreateInclude,
+      })
+    }
 
     return Response.json({
       success: true,
