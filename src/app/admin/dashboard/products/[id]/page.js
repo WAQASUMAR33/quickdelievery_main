@@ -147,6 +147,12 @@ export default function ProductEditPage() {
   const handleSave = async () => {
     if (!form.proName.trim()) { toast.error('Product name is required'); return }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error('Valid price is required'); return }
+    const parsedCatId = Number.parseInt(form.catId, 10)
+    const parsedSubCatId = Number.parseInt(form.subCatId, 10)
+    if (!Number.isFinite(parsedCatId) || !Number.isFinite(parsedSubCatId)) {
+      toast.error('Category and sub-category are required')
+      return
+    }
     setSaving(true)
     try {
       const res  = await fetch('/api/products', {
@@ -157,8 +163,8 @@ export default function ProductEditPage() {
           id:                parseInt(id),
           proName:           form.proName,
           description:       form.description,
-          catId:             parseInt(form.catId),
-          subCatId:          parseInt(form.subCatId),
+          catId:             parsedCatId,
+          subCatId:          parsedSubCatId,
           price:             parseFloat(form.price),
           cost:              parseFloat(form.cost),
           discount:          parseFloat(form.discount) || 0,
@@ -187,8 +193,12 @@ export default function ProductEditPage() {
         }),
       })
       const data = await res.json()
-      if (data.success) toast.success('Product saved successfully!')
-      else toast.error(data.error || 'Save failed')
+      if (!res.ok || !data.success) {
+        toast.error(data.error || 'Save failed')
+        return
+      }
+      set('status', Boolean(data.data?.status))
+      toast.success('Product saved successfully!')
     } catch { toast.error('Something went wrong') }
     finally { setSaving(false) }
   }
@@ -270,23 +280,23 @@ export default function ProductEditPage() {
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} alignItems="flex-start">
 
           {/* ══ LEFT COLUMN ══ */}
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={4} sx={{ order: { xs: 2, sm: 1 } }}>
             <Stack spacing={2.5}>
 
               {/* Images */}
               <SectionCard icon={<CameraAltOutlinedIcon fontSize="small" />} title="Product Images">
                 {form.proImages.length > 0 ? (
                   <>
-                    <Box sx={{ aspectRatio: '1', bgcolor: 'grey.100', overflow: 'hidden', mb: 1.5, position: 'relative' }}>
+                    <Box sx={{ height: { xs: 220, md: 240 }, bgcolor: 'grey.100', overflow: 'hidden', mb: 1.5, position: 'relative' }}>
                       <img src={form.proImages[activeImg]} alt="product"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {form.proImages.map((img, i) => (
-                        <Box key={i} sx={{ position: 'relative', width: 52, height: 52 }}>
+                        <Box key={i} sx={{ position: 'relative', width: 44, height: 44 }}>
                           <Box onClick={() => setActiveImg(i)} sx={{
                             width: '100%', height: '100%', cursor: 'pointer', overflow: 'hidden',
                             border: '2px solid', borderColor: activeImg === i ? BRAND : 'transparent',
@@ -335,7 +345,7 @@ export default function ProductEditPage() {
           </Grid>
 
           {/* ══ RIGHT COLUMN ══ */}
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12} sm={8} sx={{ order: { xs: 1, sm: 2 } }}>
             <Stack spacing={2.5}>
 
               {/* Basic Info */}

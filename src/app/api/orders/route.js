@@ -203,59 +203,44 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Create order with items in a transaction
-    console.log('Starting order creation transaction...')
-    
-    let order
-    try {
-      order = await prisma.$transaction(async (tx) => {
-        console.log('Inside transaction - creating order...')
-        
-        const newOrder = await tx.order.create({
-          data: {
-            userId: orderUserDbId,
-            status: 'PENDING',
-            shippingAddress: shippingAddress || '',
-            paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
-            totalAmount: parseFloat(totalAmount),
-            serviceCharge: serviceChargeAmt,
-            orderItems: {
-              create: items.map(item => ({
-                productId: parseInt(item.proId),
-                quantity: parseInt(item.quantity),
-                price: parseFloat(item.price)
-              }))
-            }
-          },
+    // Use nested create directly; Prisma keeps this atomic and avoids interactive tx timeout (P2028).
+    const order = await prisma.order.create({
+      data: {
+        userId: orderUserDbId,
+        status: 'PENDING',
+        shippingAddress: shippingAddress || '',
+        paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+        totalAmount: parseFloat(totalAmount),
+        serviceCharge: serviceChargeAmt,
+        orderItems: {
+          create: items.map(item => ({
+            productId: parseInt(item.proId),
+            quantity: parseInt(item.quantity),
+            price: parseFloat(item.price)
+          }))
+        }
+      },
+      include: {
+        orderItems: {
           include: {
-            orderItems: {
+            product: {
               include: {
-                product: {
-                  include: {
-                    category: true,
-                    vendor: true
-                  }
-                }
-              }
-            },
-            user: {
-              select: {
-                id: true,
-                username: true,
-                email: true,
-                phoneNumber: true
+                category: true,
+                vendor: true
               }
             }
           }
-        })
-
-        console.log('Order created successfully:', newOrder.id)
-        return newOrder
-      })
-    } catch (transactionError) {
-      console.error('Transaction failed:', transactionError)
-      throw transactionError
-    }
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            phoneNumber: true
+          }
+        }
+      }
+    })
 
     return Response.json({
       success: true,
