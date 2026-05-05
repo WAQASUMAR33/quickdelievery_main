@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import {
   Heart,
   ShoppingBag,
@@ -63,6 +62,15 @@ function getEffectiveUnitPrice(product) {
   const sale = parseFloat(product.salePrice)
   if (Number.isFinite(sale) && sale < list) return sale
   return list
+}
+
+function ShimmerBlock({ className = '' }) {
+  return (
+    <div
+      className={`rounded-md bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${className}`}
+      aria-hidden="true"
+    />
+  )
 }
 
 const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
@@ -408,8 +416,67 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" text="Loading products..." />
+      <div className="w-full overflow-x-hidden animate-pulse">
+        <div className="space-y-8">
+          <div>
+            <ShimmerBlock className="h-7 w-56 mb-4" />
+            <div className="flex gap-4 overflow-x-hidden">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={`cat-skel-${i}`} className="min-w-[100px] rounded-2xl border border-gray-100 bg-white p-3">
+                  <ShimmerBlock className="mx-auto h-14 w-14 rounded-full mb-2" />
+                  <ShimmerBlock className="h-3.5 w-16 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <ShimmerBlock className="h-7 w-40 mb-4" />
+            <div className="flex gap-4 overflow-x-hidden">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={`deal-skel-${i}`} className="w-44 flex-shrink-0 rounded-xl border border-gray-100 bg-white p-3">
+                  <ShimmerBlock className="h-28 w-full rounded-lg mb-3" />
+                  <ShimmerBlock className="h-4 w-4/5 mb-2" />
+                  <ShimmerBlock className="h-3 w-2/3 mb-3" />
+                  <ShimmerBlock className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4 pt-2 border-t border-gray-100">
+              <ShimmerBlock className="h-7 w-40" />
+              <div className="flex gap-2">
+                <ShimmerBlock className="h-8 w-20" />
+                <ShimmerBlock className="h-8 w-24" />
+              </div>
+            </div>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={`prod-skel-${i}`} className="rounded-xl border border-gray-100 bg-white p-3">
+                  <ShimmerBlock className="h-32 w-full rounded-lg mb-3" />
+                  <ShimmerBlock className="h-4 w-4/5 mb-2" />
+                  <ShimmerBlock className="h-3 w-2/3 mb-3" />
+                  <ShimmerBlock className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <ShimmerBlock className="h-7 w-36 mb-4" />
+            <div className="flex gap-4 overflow-x-hidden">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={`shop-skel-${i}`} className="min-w-[130px] rounded-2xl border border-gray-100 bg-white p-4">
+                  <ShimmerBlock className="mx-auto h-14 w-14 rounded-full mb-2" />
+                  <ShimmerBlock className="h-3.5 w-20 mx-auto mb-1" />
+                  <ShimmerBlock className="h-3 w-12 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
