@@ -142,7 +142,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const { uid, emailVerification } = await request.json()
+    const { uid, emailVerification, username, phoneNumber } = await request.json()
 
     if (!uid) {
       return Response.json({
@@ -151,9 +151,28 @@ export async function PUT(request) {
       }, { status: 400 })
     }
 
+    const updateData = {}
+
+    if (typeof emailVerification === 'boolean') {
+      updateData.emailVerification = emailVerification
+    }
+    if (typeof username === 'string') {
+      updateData.username = username.trim()
+    }
+    if (typeof phoneNumber === 'string') {
+      updateData.phoneNumber = phoneNumber.trim()
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return Response.json({
+        success: false,
+        error: 'No valid fields provided for update'
+      }, { status: 400 })
+    }
+
     const user = await prisma.users.update({
       where: { uid },
-      data: { emailVerification }
+      data: updateData
     })
 
     return Response.json({ success: true, user })

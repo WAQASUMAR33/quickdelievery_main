@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
+import toast from 'react-hot-toast'
 import { 
   User, 
   Mail, 
@@ -19,15 +20,27 @@ import {
 } from 'lucide-react'
 
 const CustomerProfile = () => {
-  const { user, userData } = useAuth()
+  const { user, userData, loadUserData } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
+  const [isSaving, setIsSaving] = useState(false)
+  
+  const getNameParts = () => {
+    const rawName = String(userData?.username || user?.displayName || '').trim()
+    if (!rawName) return { firstName: '', lastName: '' }
+    const parts = rawName.split(/\s+/)
+    return {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ')
+    }
+  }
+  const nameParts = getNameParts()
   
   const [profileData, setProfileData] = useState({
-    firstName: userData?.firstName || '',
-    lastName: userData?.lastName || '',
+    firstName: nameParts.firstName,
+    lastName: nameParts.lastName,
     email: user?.email || '',
-    phone: userData?.phone || '',
+    phone: userData?.phoneNumber || user?.phoneNumber || '',
     address: userData?.address || '',
     city: userData?.city || '',
     state: userData?.state || '',
@@ -36,6 +49,21 @@ const CustomerProfile = () => {
     gender: userData?.gender || ''
   })
 
+  useEffect(() => {
+    setProfileData({
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
+      email: user?.email || '',
+      phone: userData?.phoneNumber || user?.phoneNumber || '',
+      address: userData?.address || '',
+      city: userData?.city || '',
+      state: userData?.state || '',
+      zipCode: userData?.zipCode || '',
+      dateOfBirth: userData?.dateOfBirth || '',
+      gender: userData?.gender || ''
+    })
+  }, [nameParts.firstName, nameParts.lastName, user?.email, user?.phoneNumber, userData])
+
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
@@ -43,19 +71,46 @@ const CustomerProfile = () => {
     { id: 'payment', label: 'Payment', icon: CreditCard }
   ]
 
-  const handleSave = () => {
-    // Save profile data to backend
-    console.log('Saving profile:', profileData)
-    setIsEditing(false)
+  const handleSave = async () => {
+    if (!userData?.uid) {
+      toast.error('Unable to update profile right now.')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const username = `${profileData.firstName} ${profileData.lastName}`.trim()
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: userData.uid,
+          username,
+          phoneNumber: profileData.phone || ''
+        })
+      })
+      const result = await response.json()
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Failed to update profile')
+      }
+
+      await loadUserData()
+      toast.success('Profile updated successfully')
+      setIsEditing(false)
+    } catch (error) {
+      toast.error(error.message || 'Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancel = () => {
     // Reset form data
     setProfileData({
-      firstName: userData?.firstName || '',
-      lastName: userData?.lastName || '',
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
       email: user?.email || '',
-      phone: userData?.phone || '',
+      phone: userData?.phoneNumber || user?.phoneNumber || '',
       address: userData?.address || '',
       city: userData?.city || '',
       state: userData?.state || '',
@@ -104,13 +159,15 @@ const CustomerProfile = () => {
             <div className="flex space-x-2">
               <button
                 onClick={handleSave}
+                disabled={isSaving}
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Save className="w-4 h-4" />
-                <span>Save</span>
+                <span>{isSaving ? 'Saving...' : 'Save'}</span>
               </button>
               <button
                 onClick={handleCancel}
+                disabled={isSaving}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4" />
