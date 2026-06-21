@@ -163,6 +163,7 @@ export async function POST(request) {
           code: catCode,
           name: data.catName,
           description: data.description ?? null,
+          image: data.image ?? null,
           status: statusEnum,
           createdBy: data.createdBy || 'system'
         }
@@ -219,7 +220,8 @@ export async function POST(request) {
         data: {
           productCategoryName: data.productCategoryName,
           categoryId: parseInt(data.categoryId),
-          productCategoryDescription: data.productCategoryDescription ?? null
+          productCategoryDescription: data.productCategoryDescription ?? null,
+          image: data.image ?? null
         },
         include: {
           category: true,
@@ -324,6 +326,7 @@ export async function PUT(request) {
           code: data.catCode,
           name: data.catName,
           description: data.description,
+          image: data.image !== undefined ? (data.image || null) : undefined,
           status: (data.status === true || data.status === 'ACTIVE') ? 'ACTIVE' : 'INACTIVE'
         }
       })
@@ -360,7 +363,8 @@ export async function PUT(request) {
         data: {
           productCategoryName: data.productCategoryName,
           categoryId: parseInt(data.categoryId),
-          productCategoryDescription: data.productCategoryDescription
+          productCategoryDescription: data.productCategoryDescription,
+          image: data.image !== undefined ? (data.image || null) : undefined
         },
         include: {
           category: true,

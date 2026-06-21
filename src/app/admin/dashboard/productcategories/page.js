@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
@@ -50,8 +51,9 @@ export default function ProductCategoriesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingPC, setEditingPC] = useState(null)
-  const [form, setForm] = useState({ name: '', categoryId: '', description: '' })
+  const [form, setForm] = useState({ name: '', categoryId: '', description: '', image: '' })
   const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (!authLoading) {
@@ -85,7 +87,7 @@ export default function ProductCategoriesPage() {
 
   const openAdd = () => {
     setEditingPC(null)
-    setForm({ name: '', categoryId: '', description: '' })
+    setForm({ name: '', categoryId: '', description: '', image: '' })
     setShowModal(true)
   }
 
@@ -94,7 +96,8 @@ export default function ProductCategoriesPage() {
     setForm({
       name: pc.productCategoryName,
       categoryId: pc.categoryId,
-      description: pc.productCategoryDescription || ''
+      description: pc.productCategoryDescription || '',
+      image: pc.image || ''
     })
     setShowModal(true)
   }
@@ -105,8 +108,8 @@ export default function ProductCategoriesPage() {
     setSaving(true)
     try {
       const body = editingPC
-        ? { type: 'productcategory', id: editingPC.productCategoryId, productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description }
-        : { type: 'productcategory', productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description }
+        ? { type: 'productcategory', id: editingPC.productCategoryId, productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description, image: form.image }
+        : { type: 'productcategory', productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description, image: form.image }
 
       const res = await fetch('/api/products', {
         method: editingPC ? 'PUT' : 'POST',
@@ -211,9 +214,15 @@ export default function ProductCategoriesPage() {
                     <CardContent sx={{ p: 2.5 }}>
                       {/* Top row */}
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ p: 1.25, bgcolor: `${color}15`, borderRadius: 1, display: 'flex', color }}>
-                          <TagIcon fontSize="small" />
-                        </Box>
+                        {pc.image ? (
+                          <Box sx={{ width: 42, height: 42, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                            <img src={pc.image} alt={pc.productCategoryName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </Box>
+                        ) : (
+                          <Box sx={{ p: 1.25, bgcolor: `${color}15`, borderRadius: 1, display: 'flex', color }}>
+                            <TagIcon fontSize="small" />
+                          </Box>
+                        )}
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <Tooltip title="Edit">
                             <IconButton size="small" onClick={() => openEdit(pc)} sx={{ color: 'info.main' }}>
@@ -290,6 +299,60 @@ export default function ProductCategoriesPage() {
               <TextField size="small" fullWidth label="Description (optional)" value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="Short description…" multiline rows={3} {...tf} />
+
+              <Box>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1, fontWeight: 600 }}>
+                  Product Category Image
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {form.image ? (
+                    <Box sx={{ position: 'relative', width: 60, height: 60, border: '1px solid', borderColor: 'divider' }}>
+                      <img src={form.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <IconButton
+                        size="small"
+                        onClick={() => setForm({ ...form, image: '' })}
+                        sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'error.main', color: 'white', '&:hover': { bgcolor: 'error.dark' }, p: 0.25 }}
+                      >
+                        <CloseIcon sx={{ fontSize: 12 }} />
+                      </IconButton>
+                    </Box>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      disabled={uploadingImage}
+                      size="small"
+                      sx={{ borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215,15,100,0.04)' }, borderRadius: 0 }}
+                    >
+                      {uploadingImage ? <CircularProgress size={16} sx={{ mr: 1, color: BRAND }} /> : null}
+                      {uploadingImage ? 'Uploading…' : 'Upload Image'}
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (e.target.files?.[0]) {
+                            setUploadingImage(true)
+                            try {
+                              const res = await uploadProductImage(e.target.files[0])
+                              if (res.success) {
+                                setForm(prev => ({ ...prev, image: res.url }))
+                                toast.success('Image uploaded successfully')
+                              } else {
+                                toast.error(res.error || 'Upload failed')
+                              }
+                            } catch {
+                              toast.error('Upload error')
+                            } finally {
+                              setUploadingImage(false)
+                            }
+                          }
+                        }}
+                      />
+                    </Button>
+                  )}
+                </Box>
+              </Box>
             </Box>
           </DialogContent>
 

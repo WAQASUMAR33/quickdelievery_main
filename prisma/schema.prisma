@@ -36,6 +36,7 @@ model Category {
   code          String         @unique
   description   String?
   status        CategoryStatus @default(ACTIVE)
+  image         String?        @map("image") @db.VarChar(500)
   createdBy     String         @map("createdBy")
   createdAt     DateTime       @default(now()) @map("createdAt")
   updatedAt     DateTime       @updatedAt @map("updatedAt")
@@ -67,6 +68,7 @@ model ProductCategory {
   productCategoryName        String           @map("product_category_name")
   categoryId                 Int              @map("category_id")
   productCategoryDescription String?          @db.Text @map("product_category_description")
+  image                      String?          @map("image") @db.VarChar(500)
   createdAt                  DateTime         @default(now()) @map("created_at")
   updatedAt                  DateTime         @updatedAt @map("updated_at")
   
