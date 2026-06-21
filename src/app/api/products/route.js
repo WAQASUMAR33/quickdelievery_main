@@ -224,10 +224,7 @@ export async function POST(request) {
           image: data.image ?? null
         },
         include: {
-          category: true,
-          _count: {
-            select: { products: true }
-          }
+          category: true
         }
       })
 
@@ -367,10 +364,7 @@ export async function PUT(request) {
           image: data.image !== undefined ? (data.image || null) : undefined
         },
         include: {
-          category: true,
-          _count: {
-            select: { products: true }
-          }
+          category: true
         }
       })
 
