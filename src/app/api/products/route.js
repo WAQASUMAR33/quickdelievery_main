@@ -9,6 +9,51 @@ export async function GET(request) {
 
     let whereClause = {}
 
+    if (type === 'vendors') {
+      const businesses = await prisma.business.findMany({
+        where: {
+          verificationStatus: 'APPROVED'
+        },
+        include: {
+          businessType: true,
+          businessCategory: true
+        }
+      })
+
+      // Fetch corresponding vendor users to get their uid
+      const emails = businesses.map(b => b.email)
+      const users = await prisma.users.findMany({
+        where: {
+          email: { in: emails },
+          role: 'VENDOR'
+        },
+        select: {
+          uid: true,
+          email: true,
+          username: true
+        }
+      })
+
+      const userMap = {}
+      users.forEach(u => {
+        userMap[u.email.toLowerCase()] = u
+      })
+
+      const data = businesses.map(b => {
+        const u = userMap[b.email.toLowerCase()]
+        return {
+          ...b,
+          uid: u?.uid || null,
+          username: u?.username || b.firstName + ' ' + b.lastName
+        }
+      })
+
+      return Response.json({
+        success: true,
+        data
+      })
+    }
+
     if (type === 'categories') {
       const categories = await prisma.category.findMany({
         include: {
@@ -73,24 +118,45 @@ export async function GET(request) {
         whereClause.vendorId = vendorId
       }
 
-      const products = await prisma.product.findMany({
-        where: whereClause,
-        include: {
-          category: true,
-          subCategory: true,
-          productCategory: true,
-          vendor: true,
-          approver: true,
-          creator: true
-        },
-        orderBy: { createdAt: 'desc' }
+      const [products, businesses] = await Promise.all([
+        prisma.product.findMany({
+          where: whereClause,
+          include: {
+            category: true,
+            subCategory: true,
+            productCategory: true,
+            vendor: true,
+            approver: true,
+            creator: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.business.findMany({
+          select: {
+            email: true,
+            businessName: true,
+            urlLogo: true
+          }
+        })
+      ])
+
+      const businessMap = {}
+      businesses.forEach(b => {
+        businessMap[b.email.toLowerCase()] = b
       })
 
       // Parse JSON fields back to arrays/objects
       const processedProducts = products.map(product => {
+        const vendorEmail = product.vendor?.email
+        const biz = vendorEmail ? businessMap[vendorEmail.toLowerCase()] : null
         try {
           return {
             ...product,
+            vendor: product.vendor ? {
+              ...product.vendor,
+              businessName: biz?.businessName || product.vendor.username,
+              urlLogo: biz?.urlLogo || null
+            } : null,
             proImages: product.proImages ? JSON.parse(product.proImages) : null,
             keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
             variations: product.variations ? JSON.parse(product.variations) : null,
@@ -100,6 +166,11 @@ export async function GET(request) {
           console.warn('JSON parse error for product:', product.proId, parseError)
           return {
             ...product,
+            vendor: product.vendor ? {
+              ...product.vendor,
+              businessName: biz?.businessName || product.vendor.username,
+              urlLogo: biz?.urlLogo || null
+            } : null,
             proImages: null,
             keyFeatures: null,
             variations: null,

@@ -91,6 +91,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 })
   const [showFilters, setShowFilters] = useState(false)
   const [curatedStorefrontDeals, setCuratedStorefrontDeals] = useState([])
+  const [topShops, setTopShops] = useState([])
   const [detailProduct, setDetailProduct] = useState(null)
   const [modalQty, setModalQty] = useState(1)
   const dealsCarouselRef = useRef(null)
@@ -109,6 +110,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
         await Promise.all([
           fetchProducts(),
           fetchCategories(),
+          fetchShops(),
         ])
       } finally {
         if (!cancelled) setLoading(false)
@@ -194,6 +196,15 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
     } catch { setCategories([]) }
   }
 
+  const fetchShops = async () => {
+    try {
+      const res = await fetch('/api/products?type=vendors')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setTopShops(data.success && data.data?.length ? data.data : [])
+    } catch { setTopShops([]) }
+  }
+
   const filteredProducts = useMemo(() =>
     products.filter(product => {
       const q = searchQuery.toLowerCase().trim()
@@ -275,22 +286,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
     })
   }, [curatedStorefrontDeals])
 
-  // Top Shops: unique vendors
-  const topShops = (() => {
-    const seen = new Set()
-    const shops = []
-    for (const p of products) {
-      const vendorKey = String(p.vendorId ?? p.vendor?.id ?? p.vendor?.uid ?? '')
-      if (p.vendor && vendorKey && !seen.has(vendorKey)) {
-        seen.add(vendorKey)
-        shops.push({
-          ...p.vendor,
-          __vendorKey: vendorKey,
-        })
-      }
-    }
-    return shops.slice(0, 10)
-  })()
+
 
   const scrollDealsCarousel = (direction = 1) => {
     if (!dealsCarouselRef.current) return
@@ -634,7 +630,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
       <div className="mb-6">
         <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Shops</h4>
         <div className="space-y-1 max-h-48 overflow-y-auto">
-          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.__vendorKey || s.id || s.uid, name: s.businessName || s.username }))].map(v => (
+          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.uid || String(s.id), name: s.businessName || s.username }))].map(v => (
             <label key={v.id} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center mr-3 ${selectedVendor === v.id ? 'border-[#D70F64] bg-[#D70F64]' : 'border-gray-300'}`}>
                 {selectedVendor === v.id && <div className="w-2 h-2 bg-white rounded-sm" />}
@@ -1001,9 +997,9 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               </div>
               <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 {topShops.map((shop, i) => {
-                  const shopKey = String(shop.__vendorKey || shop.id || shop.uid || '')
+                  const shopKey = String(shop.uid || shop.id || '')
                   const shopProducts = products.filter((p) => String(p.vendorId ?? p.vendor?.id ?? p.vendor?.uid ?? '') === shopKey)
-                  const coverImage = shopProducts.find((p) => p.proImages?.[0])?.proImages?.[0] || '/placeholder-product.jpg'
+                  const coverImage = shop.urlCoverPhoto || shop.urlLogo || (shopProducts.find((p) => p.proImages?.[0])?.proImages?.[0]) || '/placeholder-product.jpg'
                   const minPrice = shopProducts.length
                     ? Math.min(...shopProducts.map((p) => Number.parseFloat(p.price) || 0).filter((n) => n > 0))
                     : 0
@@ -1055,7 +1051,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                           </div>
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">
-                          From {20 + ((i * 5) % 15)} min · $$ · {shopProducts[0]?.category?.name || 'Burgers'}
+                          From {20 + ((i * 5) % 15)} min · $$ · {shop.businessCategory?.categoryTitle || shopProducts[0]?.category?.name || 'Burgers'}
                         </p>
                         <p className="text-sm text-gray-700 mt-1">
                           From {minPrice > 0 ? `Rs.${Math.round(minPrice)}` : 'Rs.99'} with Saver
