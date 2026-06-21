@@ -219,7 +219,7 @@ export async function POST(request) {
       const productCategory = await prisma.productCategory.create({
         data: {
           productCategoryName: data.productCategoryName,
-          categoryId: parseInt(data.categoryId),
+          category: { connect: { id: parseInt(data.categoryId) } },
           productCategoryDescription: data.productCategoryDescription ?? null,
           image: data.image ?? null
         },
@@ -362,7 +362,7 @@ export async function PUT(request) {
         where: { productCategoryId: parseInt(id) },
         data: {
           productCategoryName: data.productCategoryName,
-          categoryId: parseInt(data.categoryId),
+          category: { connect: { id: parseInt(data.categoryId) } },
           productCategoryDescription: data.productCategoryDescription,
           image: data.image !== undefined ? (data.image || null) : undefined
         },
