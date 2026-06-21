@@ -39,8 +39,9 @@ model Category {
   createdBy     String         @map("createdBy")
   createdAt     DateTime       @default(now()) @map("createdAt")
   updatedAt     DateTime       @updatedAt @map("updatedAt")
-  products      Product[]
-  subCategories SubCategory[]
+  products          Product[]
+  subCategories     SubCategory[]
+  productCategories ProductCategory[]
 
   @@map("categories")
 }
@@ -59,6 +60,21 @@ model SubCategory {
 
   @@index([catId], map: "sub_categories_cat_id_fkey")
   @@map("sub_categories")
+}
+
+model ProductCategory {
+  productCategoryId          Int              @id @default(autoincrement()) @map("product_category_id")
+  productCategoryName        String           @map("product_category_name")
+  categoryId                 Int              @map("category_id")
+  productCategoryDescription String?          @db.Text @map("product_category_description")
+  createdAt                  DateTime         @default(now()) @map("created_at")
+  updatedAt                  DateTime         @updatedAt @map("updated_at")
+  
+  category                   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products                   Product[]
+
+  @@index([categoryId], map: "product_categories_category_id_fkey")
+  @@map("product_categories")
 }
 
 model Product {
@@ -101,11 +117,13 @@ model Product {
   warranty          String?        @db.VarChar(255)
   color             String?        @db.VarChar(100)
   size              String?        @db.VarChar(100)
+  productCategoryId Int?           @map("product_category_id")
   approver          Users?         @relation("ApproverProducts", fields: [approveById], references: [uid])
   category          Category       @relation(fields: [catId], references: [id], onDelete: Cascade)
   creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
   subCategory       SubCategory    @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
   vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
+  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [productCategoryId], onDelete: SetNull)
   orderItems        OrderItem[]
   foodDeal          FoodDeal?
 
@@ -114,6 +132,7 @@ model Product {
   @@index([createdById], map: "products_created_by_fkey")
   @@index([subCatId], map: "products_sub_cat_id_fkey")
   @@index([vendorId], map: "products_vendor_id_fkey")
+  @@index([productCategoryId], map: "products_product_category_id_fkey")
   @@map("products")
 }
 

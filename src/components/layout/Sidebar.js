@@ -63,6 +63,7 @@ const ADMIN_ITEMS = [
   },
   { id: 'products',      label: 'Products',         icon: Inventory2OutlinedIcon,  path: '/admin/dashboard/products' },
   { id: 'categories',    label: 'Categories',       icon: FolderOutlinedIcon,      path: '/admin/dashboard/categories' },
+  { id: 'productcategories', label: 'Product Categories', icon: FolderOutlinedIcon, path: '/admin/dashboard/productcategories' },
   { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/admin/dashboard/subcategories' },
   { id: 'deals',         label: 'Food Deals',       icon: LocalOfferOutlinedIcon, path: '/admin/dashboard/deals' },
   {

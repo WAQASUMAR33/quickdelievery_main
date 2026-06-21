@@ -48,6 +48,23 @@ export async function GET(request) {
       })
     }
 
+    if (type === 'productcategories') {
+      const productCategories = await prisma.productCategory.findMany({
+        include: {
+          category: true,
+          _count: {
+            select: { products: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return Response.json({
+        success: true,
+        data: productCategories
+      })
+    }
+
     if (type === 'products') {
       if (categoryId) {
         whereClause.catId = categoryId
@@ -61,6 +78,7 @@ export async function GET(request) {
         include: {
           category: true,
           subCategory: true,
+          productCategory: true,
           vendor: true,
           approver: true,
           creator: true
@@ -196,6 +214,28 @@ export async function POST(request) {
       })
     }
 
+    if (type === 'productcategory') {
+      const productCategory = await prisma.productCategory.create({
+        data: {
+          productCategoryName: data.productCategoryName,
+          categoryId: parseInt(data.categoryId),
+          productCategoryDescription: data.productCategoryDescription ?? null
+        },
+        include: {
+          category: true,
+          _count: {
+            select: { products: true }
+          }
+        }
+      })
+
+      return Response.json({
+        success: true,
+        data: productCategory,
+        message: 'Product category created successfully'
+      })
+    }
+
     if (type === 'product') {
       console.log('Creating product with data:', {
         proName: data.proName,
@@ -213,6 +253,7 @@ export async function POST(request) {
           description: data.description,
           catId: data.catId,
           subCatId: data.subCatId,
+          productCategoryId: data.productCategoryId ? parseInt(data.productCategoryId) : null,
           price: parseFloat(data.price),
           cost: parseFloat(data.cost),
           discount: parseFloat(data.discount || 0),
@@ -313,6 +354,29 @@ export async function PUT(request) {
       })
     }
 
+    if (type === 'productcategory') {
+      const productCategory = await prisma.productCategory.update({
+        where: { productCategoryId: parseInt(id) },
+        data: {
+          productCategoryName: data.productCategoryName,
+          categoryId: parseInt(data.categoryId),
+          productCategoryDescription: data.productCategoryDescription
+        },
+        include: {
+          category: true,
+          _count: {
+            select: { products: true }
+          }
+        }
+      })
+
+      return Response.json({
+        success: true,
+        data: productCategory,
+        message: 'Product category updated successfully'
+      })
+    }
+
     if (type === 'product') {
       const product = await prisma.product.update({
         where: { proId: parseInt(id) },
@@ -321,6 +385,7 @@ export async function PUT(request) {
           description:       data.description,
           catId:             data.catId,
           subCatId:          data.subCatId,
+          productCategoryId: data.productCategoryId !== undefined ? (data.productCategoryId ? parseInt(data.productCategoryId) : null) : undefined,
           price:             parseFloat(data.price),
           cost:              parseFloat(data.cost),
           discount:          parseFloat(data.discount || 0),
@@ -426,6 +491,32 @@ export async function DELETE(request) {
       return Response.json({
         success: true,
         message: 'Subcategory deleted successfully'
+      })
+    }
+
+    if (type === 'productcategory') {
+      const countObj = await prisma.productCategory.findUnique({
+        where: { productCategoryId: parseInt(id) },
+        include: {
+          _count: {
+            select: { products: true }
+          }
+        }
+      })
+      if (countObj && countObj._count.products > 0) {
+        return Response.json({
+          success: false,
+          error: 'Cannot delete product category with active products'
+        }, { status: 409 })
+      }
+
+      await prisma.productCategory.delete({
+        where: { productCategoryId: parseInt(id) }
+      })
+
+      return Response.json({
+        success: true,
+        message: 'Product category deleted successfully'
       })
     }
 
