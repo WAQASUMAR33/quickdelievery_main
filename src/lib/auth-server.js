@@ -42,6 +42,34 @@ export async function authenticateRequest(req) {
   if (!user) {
     throw new Error('User not found')
   }
-  
+
   return user
 }
+
+// Non-throwing variant: returns the authenticated user, or null when no valid
+// token is present. Use for endpoints that are public but must scope/authorize
+// differently when a known user is calling (e.g. vendor product isolation).
+export async function getAuthUser(req) {
+  try {
+    return await authenticateRequest(req)
+  } catch {
+    return null
+  }
+}
+
+// Authorize a request against a set of allowed roles. Returns { user } on
+// success, or { error, status } describing a 401 (no/invalid token) or 403
+// (authenticated but wrong role) that the caller should return verbatim.
+export async function requireRole(req, roles) {
+  const user = await getAuthUser(req)
+  if (!user) {
+    return { error: 'Authentication required', status: 401 }
+  }
+  if (roles && roles.length && !roles.includes(user.role)) {
+    return { error: 'Forbidden', status: 403 }
+  }
+  return { user }
+}
+
+// Roles allowed to manage catalog taxonomy and admin-level product operations.
+export const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN']

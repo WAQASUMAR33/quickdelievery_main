@@ -1,4 +1,8 @@
 import { prisma } from '@/lib/prisma'
+import { getAuthUser, requireRole, ADMIN_ROLES } from '@/lib/auth-server'
+
+// Catalog taxonomy types that only admins may create/update/delete.
+const ADMIN_ONLY_TYPES = ['category', 'subcategory', 'productcategory']
 
 export async function GET(request) {
   try {
@@ -114,7 +118,14 @@ export async function GET(request) {
       if (categoryId) {
         whereClause.catId = categoryId
       }
-      if (vendorId) {
+
+      // Vendor isolation: a request bearing a VENDOR token is locked to that
+      // vendor's own products, regardless of any vendorId query param they send.
+      // Admins / public storefront are unaffected and may filter explicitly.
+      const authUser = await getAuthUser(request)
+      if (authUser && authUser.role === 'VENDOR') {
+        whereClause.vendorId = authUser.uid
+      } else if (vendorId) {
         whereClause.vendorId = vendorId
       }
 
@@ -203,6 +214,13 @@ export async function POST(request) {
   try {
     const body = await request.json()
     const { type, ...data } = body
+
+    if (ADMIN_ONLY_TYPES.includes(type)) {
+      const auth = await requireRole(request, ADMIN_ROLES)
+      if (auth.error) {
+        return Response.json({ success: false, error: auth.error }, { status: auth.status })
+      }
+    }
 
     if (type === 'category') {
       // Map incoming payload to schema fields
@@ -307,16 +325,16 @@ export async function POST(request) {
     }
 
     if (type === 'product') {
-      console.log('Creating product with data:', {
-        proName: data.proName,
-        catId: data.catId,
-        subCatId: data.subCatId,
-        price: data.price,
-        cost: data.cost,
-        vendorId: data.vendorId,
-        createdById: data.createdById
-      })
-      
+      const authUser = await getAuthUser(request)
+      if (!authUser) {
+        return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      }
+
+      // Vendors can only create products under their own account. Admins may
+      // create on behalf of a vendor using the vendorId supplied in the body.
+      const vendorId    = authUser.role === 'VENDOR' ? authUser.uid : data.vendorId
+      const createdById = authUser.role === 'VENDOR' ? authUser.uid : (data.createdById || authUser.uid)
+
       const product = await prisma.product.create({
         data: {
           proName: data.proName,
@@ -332,10 +350,10 @@ export async function POST(request) {
           qnty: parseInt(data.qnty),
           stock: parseInt(data.stock),
           proImages: data.proImages ? JSON.stringify(data.proImages) : null,
-          vendorId: data.vendorId,
+          vendorId,
           status: (data.status === undefined ? true : !!data.status),
           approvalStatus: 'Pending',
-          createdById: data.createdById,
+          createdById,
           // New Product Fields
           brandName: data.brandName || null,
           manufacturer: data.manufacturer || null,
@@ -386,6 +404,13 @@ export async function PUT(request) {
   try {
     const body = await request.json()
     const { type, id, ...data } = body
+
+    if (ADMIN_ONLY_TYPES.includes(type)) {
+      const auth = await requireRole(request, ADMIN_ROLES)
+      if (auth.error) {
+        return Response.json({ success: false, error: auth.error }, { status: auth.status })
+      }
+    }
 
     if (type === 'category') {
       const category = await prisma.category.update({
@@ -447,6 +472,27 @@ export async function PUT(request) {
     }
 
     if (type === 'product') {
+      const authUser = await getAuthUser(request)
+      if (!authUser) {
+        return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      }
+
+      const existing = await prisma.product.findUnique({
+        where: { proId: parseInt(id) },
+        select: { vendorId: true }
+      })
+      if (!existing) {
+        return Response.json({ success: false, error: 'Product not found' }, { status: 404 })
+      }
+      if (authUser.role === 'VENDOR' && existing.vendorId !== authUser.uid) {
+        return Response.json({ success: false, error: 'Forbidden' }, { status: 403 })
+      }
+
+      // Vendors cannot reassign a product to another vendor.
+      const nextVendorId = authUser.role === 'VENDOR'
+        ? existing.vendorId
+        : (data.vendorId || undefined)
+
       const product = await prisma.product.update({
         where: { proId: parseInt(id) },
         data: {
@@ -463,7 +509,7 @@ export async function PUT(request) {
           qnty:              parseInt(data.qnty),
           stock:             parseInt(data.stock),
           proImages:         data.proImages ? JSON.stringify(data.proImages) : null,
-          vendorId:          data.vendorId  || undefined,
+          vendorId:          nextVendorId,
           status:            !!data.status,
           brandName:         data.brandName         || null,
           manufacturer:      data.manufacturer      || null,
@@ -492,6 +538,11 @@ export async function PUT(request) {
     }
 
     if (type === 'approve-product') {
+      const authUser = await getAuthUser(request)
+      if (!authUser || !['ADMIN', 'SUPER_ADMIN'].includes(authUser.role)) {
+        return Response.json({ success: false, error: 'Forbidden' }, { status: 403 })
+      }
+
       const updateData = {
         approvalStatus: data.approvalStatus,
         updatedAt: new Date()
@@ -533,6 +584,13 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const id = searchParams.get('id')
+
+    if (ADMIN_ONLY_TYPES.includes(type)) {
+      const auth = await requireRole(request, ADMIN_ROLES)
+      if (auth.error) {
+        return Response.json({ success: false, error: auth.error }, { status: auth.status })
+      }
+    }
 
     if (!id) {
       return Response.json({
@@ -590,6 +648,22 @@ export async function DELETE(request) {
     }
 
     if (type === 'product') {
+      const authUser = await getAuthUser(request)
+      if (!authUser) {
+        return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      }
+
+      const existing = await prisma.product.findUnique({
+        where: { proId: parseInt(id) },
+        select: { vendorId: true }
+      })
+      if (!existing) {
+        return Response.json({ success: false, error: 'Product not found' }, { status: 404 })
+      }
+      if (authUser.role === 'VENDOR' && existing.vendorId !== authUser.uid) {
+        return Response.json({ success: false, error: 'Forbidden' }, { status: 403 })
+      }
+
       await prisma.product.delete({
         where: { proId: parseInt(id) }
       })

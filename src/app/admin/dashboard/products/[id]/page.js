@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { authFetch } from '@/lib/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import toast from 'react-hot-toast'
 
@@ -155,7 +156,7 @@ export default function ProductEditPage() {
     }
     setSaving(true)
     try {
-      const res  = await fetch('/api/products', {
+      const res  = await authFetch('/api/products', {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -206,7 +207,7 @@ export default function ProductEditPage() {
   const handleApproval = async (status) => {
     setApproving(true)
     try {
-      const res  = await fetch('/api/products', {
+      const res  = await authFetch('/api/products', {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'approve-product', id: parseInt(id), approvalStatus: status, approveById: userData?.uid }),
@@ -250,7 +251,7 @@ export default function ProductEditPage() {
             </Button>
             <Box>
               <Typography variant="h5" fontWeight={700}>Edit Product</Typography>
-              <Typography variant="body2" color="text.secondary">SKU: {form.sku}</Typography>
+              {isAdmin && <Typography variant="body2" color="text.secondary">SKU: {form.sku}</Typography>}
             </Box>
           </Box>
 
@@ -303,12 +304,14 @@ export default function ProductEditPage() {
                           }}>
                             <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </Box>
-                          <IconButton size="small" onClick={() => removeImage(i)} sx={{
-                            position: 'absolute', top: -8, right: -8, bgcolor: 'error.main', color: '#fff',
-                            width: 18, height: 18, '&:hover': { bgcolor: 'error.dark' },
-                          }}>
-                            <CloseOutlinedIcon sx={{ fontSize: 12 }} />
-                          </IconButton>
+                          {!isAdmin && (
+                            <IconButton size="small" onClick={() => removeImage(i)} sx={{
+                              position: 'absolute', top: -8, right: -8, bgcolor: 'error.main', color: '#fff',
+                              width: 18, height: 18, '&:hover': { bgcolor: 'error.dark' },
+                            }}>
+                              <CloseOutlinedIcon sx={{ fontSize: 12 }} />
+                            </IconButton>
+                          )}
                         </Box>
                       ))}
                     </Box>
@@ -324,7 +327,7 @@ export default function ProductEditPage() {
               {/* Status */}
               <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title="Status">
                 <FormControlLabel
-                  control={<Switch checked={form.status} onChange={e => set('status', e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND } }} />}
+                  control={<Switch checked={form.status} disabled={isAdmin} onChange={e => set('status', e.target.checked)} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND } }} />}
                   label={<Typography variant="body2">{form.status ? 'Active' : 'Inactive'}</Typography>}
                 />
               </SectionCard>
@@ -351,37 +354,39 @@ export default function ProductEditPage() {
               {/* Basic Info */}
               <SectionCard icon={<Inventory2OutlinedIcon fontSize="small" />} title="Basic Information">
                 <Stack spacing={2}>
-                  <TextField {...tf} fullWidth required label="Product Name"
+                  <TextField {...tf} fullWidth required label="Product Name" disabled={isAdmin}
                     value={form.proName} onChange={e => set('proName', e.target.value)} />
-                  <TextField {...tf} fullWidth multiline rows={3} label="Description"
+                  <TextField {...tf} fullWidth multiline rows={3} label="Description" disabled={isAdmin}
                     value={form.description} onChange={e => set('description', e.target.value)} />
+                  {isAdmin && (
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField {...tf} fullWidth required label="SKU"
+                          value={form.sku} onChange={e => set('sku', e.target.value)} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField {...tf} fullWidth label="Barcode"
+                          value={form.barcode} onChange={e => set('barcode', e.target.value)} />
+                      </Grid>
+                    </Grid>
+                  )}
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth required label="SKU"
-                        value={form.sku} onChange={e => set('sku', e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Barcode"
-                        value={form.barcode} onChange={e => set('barcode', e.target.value)} />
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Brand"
+                      <TextField {...tf} fullWidth label="Brand" disabled={isAdmin}
                         value={form.brandName} onChange={e => set('brandName', e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Manufacturer"
+                      <TextField {...tf} fullWidth label="Manufacturer" disabled={isAdmin}
                         value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
                     </Grid>
                   </Grid>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Product Type"
+                      <TextField {...tf} fullWidth label="Product Type" disabled={isAdmin}
                         value={form.productType} onChange={e => set('productType', e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Model Number"
+                      <TextField {...tf} fullWidth label="Model Number" disabled={isAdmin}
                         value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
                     </Grid>
                   </Grid>
@@ -392,7 +397,7 @@ export default function ProductEditPage() {
               <SectionCard icon={<CategoryOutlinedIcon fontSize="small" />} title="Category">
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
-                    <FormControl {...tf} fullWidth required>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin}>
                       <InputLabel>Category</InputLabel>
                       <Select label="Category" value={form.catId}
                         onChange={e => { set('catId', e.target.value); set('subCatId', '') }}>
@@ -401,7 +406,7 @@ export default function ProductEditPage() {
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <FormControl {...tf} fullWidth required disabled={!form.catId}>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin || !form.catId}>
                       <InputLabel>Sub-category</InputLabel>
                       <Select label="Sub-category" value={form.subCatId} onChange={e => set('subCatId', e.target.value)}>
                         {filteredSubs.map(s => <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>)}
@@ -423,12 +428,12 @@ export default function ProductEditPage() {
                     { label: 'Quantity',   field: 'qnty',     type: 'number' },
                   ].map(({ label, field, type, required }) => (
                     <Grid item xs={6} sm={4} key={field}>
-                      <TextField {...tf} fullWidth required={required} label={label} type={type}
+                      <TextField {...tf} fullWidth required={required} label={label} type={type} disabled={isAdmin}
                         value={form[field]} onChange={e => set(field, e.target.value)} />
                     </Grid>
                   ))}
                   <Grid item xs={6} sm={4}>
-                    <FormControl {...tf} fullWidth>
+                    <FormControl {...tf} fullWidth disabled={isAdmin}>
                       <InputLabel>Currency</InputLabel>
                       <Select label="Currency" value={form.currency} onChange={e => set('currency', e.target.value)}>
                         {['USD', 'PKR', 'EUR', 'GBP', 'AED'].map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
@@ -436,12 +441,12 @@ export default function ProductEditPage() {
                     </FormControl>
                   </Grid>
                   <Grid item xs={6} sm={4}>
-                    <TextField {...tf} fullWidth label="Sale Start" type="date"
+                    <TextField {...tf} fullWidth label="Sale Start" type="date" disabled={isAdmin}
                       value={form.saleStartDate} onChange={e => set('saleStartDate', e.target.value)}
                       InputLabelProps={{ shrink: true }} />
                   </Grid>
                   <Grid item xs={6} sm={4}>
-                    <TextField {...tf} fullWidth label="Sale End" type="date"
+                    <TextField {...tf} fullWidth label="Sale End" type="date" disabled={isAdmin}
                       value={form.saleEndDate} onChange={e => set('saleEndDate', e.target.value)}
                       InputLabelProps={{ shrink: true }} />
                   </Grid>
@@ -461,7 +466,7 @@ export default function ProductEditPage() {
                     { label: 'Warranty',    field: 'warranty' },
                   ].map(({ label, field }) => (
                     <Grid item xs={12} sm={6} key={field}>
-                      <TextField {...tf} fullWidth label={label}
+                      <TextField {...tf} fullWidth label={label} disabled={isAdmin}
                         value={form[field]} onChange={e => set(field, e.target.value)} />
                     </Grid>
                   ))}
@@ -470,7 +475,7 @@ export default function ProductEditPage() {
 
               {/* Ingredients */}
               <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title="Ingredients / Notes">
-                <TextField {...tf} fullWidth multiline rows={3} label="Ingredients"
+                <TextField {...tf} fullWidth multiline rows={3} label="Ingredients" disabled={isAdmin}
                   value={form.ingredients} onChange={e => set('ingredients', e.target.value)} />
               </SectionCard>
 

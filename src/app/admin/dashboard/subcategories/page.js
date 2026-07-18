@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { authFetch } from '@/lib/apiClient'
 import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
@@ -146,7 +147,7 @@ export default function SubcategoriesPage() {
         ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
         : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), image: imageUrl, status: true }
 
-      const res = await fetch('/api/products', {
+      const res = await authFetch('/api/products', {
         method: editingSub ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -167,7 +168,7 @@ export default function SubcategoriesPage() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this subcategory?')) return
     try {
-      const res = await fetch(`/api/products?type=subcategory&id=${id}`, { method: 'DELETE' })
+      const res = await authFetch(`/api/products?type=subcategory&id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) { toast.success('Subcategory deleted'); fetchData() }
       else toast.error(data.error || 'Failed to delete')

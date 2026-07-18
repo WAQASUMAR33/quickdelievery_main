@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { authFetch } from '@/lib/apiClient'
 import { uploadMultipleImages } from '@/lib/imageUpload'
 import { getFirstProductImage, hasProductImages } from '@/lib/imageUtils'
 import NextImage from 'next/image'
@@ -118,7 +119,7 @@ const VendorProductManagement = () => {
     if (!userData?.uid) return
     try {
       setLoading(true)
-      const res = await fetch(`/api/products?type=products&vendorId=${userData.uid}`)
+      const res = await authFetch(`/api/products?type=products&vendorId=${userData.uid}`)
       const r = await res.json()
       setProducts(r.success ? (r.data || []) : [])
     } catch { setProducts([]) }
@@ -136,7 +137,7 @@ const VendorProductManagement = () => {
   const handleEditProduct = async () => {
     if (!selectedProduct) return
     try {
-      const res = await fetch('/api/products', {
+      const res = await authFetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,7 +167,7 @@ const VendorProductManagement = () => {
   const handleDeleteProduct = async (productId) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
-      const res = await fetch(`/api/products?type=product&id=${productId}`, { method: 'DELETE' })
+      const res = await authFetch(`/api/products?type=product&id=${productId}`, { method: 'DELETE' })
       const r = await res.json()
       if (r.success) { fetchProducts(); alert('Product deleted successfully!') }
       else alert(`Failed to delete product: ${r.error}`)
@@ -608,7 +609,7 @@ const VendorProductManagement = () => {
       {/* ── Edit Product Dialog ── */}
       <Dialog
         open={showEditModal} onClose={() => setShowEditModal(false)}
-        scroll="paper" maxWidth="md" fullWidth
+        scroll="paper" maxWidth="lg" fullWidth
         sx={{ '& .MuiDialog-paper': { height: '90vh', maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: 0 } }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -624,11 +625,6 @@ const VendorProductManagement = () => {
               <Grid item xs={12} md={6}>
                 <TextField fullWidth label="Product Name *" value={formData.proName}
                   onChange={e => setFormData({ ...formData, proName: e.target.value })}
-                  {...field()} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="SKU *" value={formData.sku}
-                  onChange={e => setFormData({ ...formData, sku: e.target.value })}
                   {...field()} />
               </Grid>
 
@@ -675,11 +671,6 @@ const VendorProductManagement = () => {
               <Grid item xs={12} md={6}>
                 <TextField fullWidth label="Stock Quantity *" type="number" value={formData.stock}
                   onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                  {...field()} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="Barcode" value={formData.barcode}
-                  onChange={e => setFormData({ ...formData, barcode: e.target.value })}
                   {...field()} />
               </Grid>
               <Grid item xs={12}>

@@ -55,6 +55,7 @@ const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 const ROLE_CONFIG = {
   ADMIN:    { label: 'Admin',    bg: '#f3e8ff', color: '#7c3aed', icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} /> },
   VENDOR:   { label: 'Vendor',   bg: '#dbeafe', color: '#1d4ed8', icon: <StoreOutlinedIcon sx={{ fontSize: 14 }} /> },
+  DRIVER: { label: 'Driver', bg: '#dcfce7', color: '#15803d', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
   CUSTOMER: { label: 'Customer', bg: '#dcfce7', color: '#15803d', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
 }
 
@@ -72,22 +73,23 @@ function RoleChip({ role }) {
 }
 
 const STAT_CARDS = [
-  { key: 'totalCustomers', label: 'Total Customers', color: '#10b981', icon: <PersonOutlinedIcon /> },
-  { key: 'verifiedUsers',  label: 'Verified',        color: '#f59e0b', icon: <VerifiedUserOutlinedIcon /> },
+  { key: 'totalDrivers', label: 'Total Drivers', color: '#10b981', icon: <PersonOutlinedIcon /> },
+  { key: 'verifiedDrivers',  label: 'Verified',        color: '#f59e0b', icon: <VerifiedUserOutlinedIcon /> },
+  { key: 'unverifiedDrivers',  label: 'Unverified',        color: '#ef4444', icon: <WarningAmberOutlinedIcon /> },
 ]
 
-export default function CustomerManagement() {
-  const [customers,        setCustomers]        = useState([])
+export default function DriverManagement() {
+  const [drivers,        setDrivers]        = useState([])
   const [loading,          setLoading]          = useState(true)
   const [searchTerm,       setSearchTerm]       = useState('')
   const [verifiedFilter,   setVerifiedFilter]   = useState('')
   const [currentPage,      setCurrentPage]      = useState(1)
   const [totalPages,       setTotalPages]       = useState(1)
   const [stats,            setStats]            = useState({})
-  const [editingCustomer,  setEditingCustomer]  = useState(null)
+  const [editingDriver,  setEditingDriver]  = useState(null)
   const [showModal,        setShowModal]        = useState(false)
 
-  const fetchCustomers = useCallback(async () => {
+  const fetchDrivers = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -96,55 +98,54 @@ export default function CustomerManagement() {
         search:   searchTerm,
         ...(verifiedFilter !== '' ? { verified: verifiedFilter } : {}),
       })
-      const res  = await fetch(`/api/admin/customers?${params}`)
+      const res  = await fetch(`/api/admin/drivers?${params}`)
       const data = await res.json()
       if (data.success) {
-        setCustomers(data.data || [])
+        setDrivers(data.data || [])
         setTotalPages(data.pagination?.pages || 1)
         setStats({
-          totalUsers:     data.stats?.totalUsers     || 0,
-          totalCustomers: data.stats?.totalCustomers || 0,
-          totalVendors:   data.stats?.totalVendors   || 0,
-          verifiedUsers:  data.stats?.verifiedUsers  || 0,
+          totalDrivers: data.stats?.totalDrivers || 0,
+          verifiedDrivers:  data.stats?.verifiedDrivers  || 0,
+          unverifiedDrivers:  data.stats?.unverifiedDrivers  || 0,
         })
       }
     } catch (err) {
-      console.error('Error fetching customers:', err)
-      toast.error('Failed to load customers')
+      console.error('Error fetching drivers:', err)
+      toast.error('Failed to load drivers')
     } finally {
       setLoading(false)
     }
   }, [currentPage, searchTerm, verifiedFilter])
 
-  useEffect(() => { fetchCustomers() }, [fetchCustomers])
+  useEffect(() => { fetchDrivers() }, [fetchDrivers])
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this customer?')) return
+    if (!confirm('Are you sure you want to delete this driver?')) return
     try {
-      const res  = await fetch(`/api/admin/customers?id=${id}`, { method: 'DELETE' })
+      const res  = await fetch(`/api/admin/drivers?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
-      if (data.success) { toast.success('Customer deleted'); fetchCustomers() }
-      else toast.error('Failed to delete customer')
-    } catch { toast.error('Error deleting customer') }
+      if (data.success) { toast.success('Driver deleted'); fetchDrivers() }
+      else toast.error('Failed to delete driver')
+    } catch { toast.error('Error deleting driver') }
   }
 
   const handleSave = async (formData) => {
     try {
-      const res  = await fetch('/api/admin/customers', {
+      const res  = await fetch('/api/admin/drivers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingCustomer.id, ...formData }),
+        body: JSON.stringify({ id: editingDriver.id, ...formData }),
       })
       const data = await res.json()
       if (data.success) {
-        toast.success('Customer updated')
+        toast.success('Driver updated')
         setShowModal(false)
-        setEditingCustomer(null)
-        fetchCustomers()
+        setEditingDriver(null)
+        fetchDrivers()
       } else {
-        toast.error('Failed to update customer')
+        toast.error('Failed to update driver')
       }
-    } catch { toast.error('Error updating customer') }
+    } catch { toast.error('Error updating driver') }
   }
 
   return (
@@ -152,9 +153,9 @@ export default function CustomerManagement() {
 
       {/* ── Header ── */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700}>Customer Management</Typography>
+        <Typography variant="h5" fontWeight={700}>Driver Management</Typography>
         <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Manage registered customers
+          Manage registered drivers
         </Typography>
       </Box>
 
@@ -185,7 +186,7 @@ export default function CustomerManagement() {
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search customers…"
+          placeholder="Search drivers…"
           value={searchTerm}
           onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1) }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
@@ -206,7 +207,7 @@ export default function CustomerManagement() {
           Clear Filters
         </Button>
 
-        <Chip label={`${customers.length} shown`} size="small"
+        <Chip label={`${drivers.length} shown`} size="small"
           sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
       </Box>
 
@@ -215,7 +216,7 @@ export default function CustomerManagement() {
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
-              {['#', 'Customer', 'Email', 'Phone', 'Verified', 'Joined', 'Actions'].map(h => (
+              {['#', 'Driver', 'Email', 'Phone', 'Verified', 'Joined', 'Actions'].map(h => (
                 <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>
                   {h}
                 </TableCell>
@@ -228,18 +229,18 @@ export default function CustomerManagement() {
               <TableRow>
                 <TableCell colSpan={7} sx={{ textAlign: 'center', py: 6 }}>
                   <CircularProgress size={28} sx={{ color: BRAND }} />
-                  <Typography variant="body2" color="text.secondary" mt={1}>Loading customers…</Typography>
+                  <Typography variant="body2" color="text.secondary" mt={1}>Loading drivers…</Typography>
                 </TableCell>
               </TableRow>
-            ) : customers.length === 0 ? (
+            ) : drivers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} sx={{ textAlign: 'center', py: 8 }}>
                   <PeopleOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-                  <Typography variant="body2" color="text.secondary">No customers found</Typography>
+                  <Typography variant="body2" color="text.secondary">No drivers found</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              customers.map((c, idx) => (
+              drivers.map((c, idx) => (
                 <TableRow key={c.id} hover sx={{ '&:last-child td': { border: 0 } }}>
                   <TableCell sx={{ color: 'text.disabled', fontSize: 12 }}>{idx + 1}</TableCell>
                   <TableCell>
@@ -287,7 +288,7 @@ export default function CustomerManagement() {
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <Tooltip title="Edit">
-                        <IconButton size="small" sx={{ color: 'info.main' }} onClick={() => { setEditingCustomer(c); setShowModal(true) }}>
+                        <IconButton size="small" sx={{ color: 'info.main' }} onClick={() => { setEditingDriver(c); setShowModal(true) }}>
                           <EditOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -327,15 +328,15 @@ export default function CustomerManagement() {
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PersonOutlinedIcon sx={{ color: BRAND }} />
-            <Typography variant="h6" fontWeight={700}>Edit Customer</Typography>
+            <Typography variant="h6" fontWeight={700}>Edit Driver</Typography>
           </Box>
           <IconButton size="small" onClick={() => setShowModal(false)}><CloseIcon /></IconButton>
         </DialogTitle>
         <Divider />
 
-        {editingCustomer && (
-          <EditCustomerForm
-            customer={editingCustomer}
+        {editingDriver && (
+          <EditDriverForm
+            driver={editingDriver}
             onSave={handleSave}
             onCancel={() => setShowModal(false)}
           />
@@ -346,13 +347,13 @@ export default function CustomerManagement() {
   )
 }
 
-function EditCustomerForm({ customer, onSave, onCancel }) {
+function EditDriverForm({ driver, onSave, onCancel }) {
   const [form, setForm] = useState({
-    username:          customer.username          || '',
-    email:             customer.email             || '',
-    phoneNumber:       customer.phoneNumber       || '',
-    role:              customer.role              || 'CUSTOMER',
-    emailVerification: customer.emailVerification || false,
+    username:          driver.username          || '',
+    email:             driver.email             || '',
+    phoneNumber:       driver.phoneNumber       || '',
+    role:              driver.role              || 'DRIVER',
+    emailVerification: driver.emailVerification || false,
   })
 
   const handleSubmit = (e) => {
@@ -384,7 +385,7 @@ function EditCustomerForm({ customer, onSave, onCancel }) {
               <Select value={form.role} label="Role"
                 onChange={e => setForm({ ...form, role: e.target.value })}
                 sx={{ borderRadius: 0 }}>
-                <MenuItem value="CUSTOMER">Customer</MenuItem>
+                <MenuItem value="CUSTOMER">Driver</MenuItem>
                 <MenuItem value="VENDOR">Vendor</MenuItem>
                 <MenuItem value="ADMIN">Admin</MenuItem>
               </Select>

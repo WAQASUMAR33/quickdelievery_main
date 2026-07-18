@@ -14,48 +14,52 @@ import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
 import toast from 'react-hot-toast'
 
-import AppBar          from '@mui/material/AppBar'
-import Avatar          from '@mui/material/Avatar'
-import Badge           from '@mui/material/Badge'
-import Box             from '@mui/material/Box'
-import Chip            from '@mui/material/Chip'
-import Paper           from '@mui/material/Paper'
-import Stack           from '@mui/material/Stack'
-import Button          from '@mui/material/Button'
-import Card            from '@mui/material/Card'
-import CardActions     from '@mui/material/CardActions'
-import CardContent     from '@mui/material/CardContent'
-import CardMedia       from '@mui/material/CardMedia'
-import CircularProgress from '@mui/material/CircularProgress'
-import Divider         from '@mui/material/Divider'
-import Drawer          from '@mui/material/Drawer'
-import IconButton      from '@mui/material/IconButton'
-import InputAdornment  from '@mui/material/InputAdornment'
-import List            from '@mui/material/List'
-import ListItemButton  from '@mui/material/ListItemButton'
-import ListItemIcon    from '@mui/material/ListItemIcon'
-import ListItemText    from '@mui/material/ListItemText'
-import Menu            from '@mui/material/Menu'
-import MenuItem        from '@mui/material/MenuItem'
-import Tab             from '@mui/material/Tab'
-import Tabs            from '@mui/material/Tabs'
-import TextField       from '@mui/material/TextField'
-import Toolbar         from '@mui/material/Toolbar'
-import Typography      from '@mui/material/Typography'
+import AppBar              from '@mui/material/AppBar'
+import Avatar              from '@mui/material/Avatar'
+import Badge               from '@mui/material/Badge'
+import BottomNavigation    from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Box                 from '@mui/material/Box'
+import Chip                from '@mui/material/Chip'
+import Paper               from '@mui/material/Paper'
+import Stack               from '@mui/material/Stack'
+import Button              from '@mui/material/Button'
+import Card                from '@mui/material/Card'
+import CardActions         from '@mui/material/CardActions'
+import CardContent         from '@mui/material/CardContent'
+import CardMedia           from '@mui/material/CardMedia'
+import CircularProgress    from '@mui/material/CircularProgress'
+import Divider             from '@mui/material/Divider'
+import Drawer              from '@mui/material/Drawer'
+import IconButton          from '@mui/material/IconButton'
+import InputAdornment      from '@mui/material/InputAdornment'
+import List                from '@mui/material/List'
+import ListItemButton      from '@mui/material/ListItemButton'
+import ListItemIcon        from '@mui/material/ListItemIcon'
+import ListItemText        from '@mui/material/ListItemText'
+import Menu                from '@mui/material/Menu'
+import MenuItem            from '@mui/material/MenuItem'
+import TextField           from '@mui/material/TextField'
+import Toolbar             from '@mui/material/Toolbar'
+import Typography          from '@mui/material/Typography'
 
 import CategoryOutlinedIcon    from '@mui/icons-material/CategoryOutlined'
 import CloseIcon               from '@mui/icons-material/Close'
 import ExpandMoreIcon          from '@mui/icons-material/ExpandMore'
 import FavoriteIcon            from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon      from '@mui/icons-material/FavoriteBorder'
+import HomeOutlinedIcon        from '@mui/icons-material/HomeOutlined'
+import HomeIcon                from '@mui/icons-material/Home'
 import InventoryOutlinedIcon   from '@mui/icons-material/InventoryOutlined'
 import LogoutOutlinedIcon      from '@mui/icons-material/LogoutOutlined'
 import LanguageOutlinedIcon    from '@mui/icons-material/LanguageOutlined'
 import MenuIcon                from '@mui/icons-material/Menu'
 import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
+import PersonIcon              from '@mui/icons-material/Person'
 import SearchIcon              from '@mui/icons-material/Search'
 import SettingsOutlinedIcon    from '@mui/icons-material/SettingsOutlined'
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
+import ShoppingBagIcon         from '@mui/icons-material/ShoppingBag'
 import StarBorderIcon          from '@mui/icons-material/StarBorder'
 import StarIcon                from '@mui/icons-material/Star'
 
@@ -127,7 +131,6 @@ export default function CustomerDashboard() {
   const { isGuest, tabs, effectiveTab } = useMemo(() => {
     const guest = userData?.role === 'GUEST'
     const tabDefs = [
-      { id: 'products',  label: 'Products',   icon: <InventoryOutlinedIcon   fontSize="small" /> },
       { id: 'orders',    label: 'My Orders',  icon: <ShoppingBagOutlinedIcon fontSize="small" />, protected: true },
       { id: 'wishlist',  label: 'Wishlist',   icon: <FavoriteBorderIcon      fontSize="small" />, protected: true },
       { id: 'favorites', label: 'Favorites',  icon: <StarBorderIcon          fontSize="small" />, protected: true },
@@ -135,10 +138,11 @@ export default function CustomerDashboard() {
     ]
     const tabList = tabDefs.filter(tab => !guest || !tab.protected)
     const allowedIds = new Set(tabList.map(t => t.id))
+    allowedIds.add('products')
     return {
       isGuest: guest,
       tabs: tabList,
-      effectiveTab: allowedIds.has(activeTab) ? activeTab : (tabList[0]?.id ?? 'products'),
+      effectiveTab: allowedIds.has(activeTab) ? activeTab : 'products',
     }
   }, [userData?.role, activeTab])
 
@@ -411,34 +415,7 @@ export default function CustomerDashboard() {
             <HeaderSearch value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} compact />
           </Box>
 
-          <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 0 }}>
-            <Tabs
-              value={effectiveTab}
-              onChange={(_, val) => setActiveTab(val)}
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
-              sx={{
-                minHeight: 46,
-                px: 0,
-                '& .MuiTab-root': {
-                  minHeight: 46,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  color: 'text.secondary',
-                  fontSize: { xs: 13, sm: 14 },
-                  minWidth: { xs: 80, sm: 100 },
-                },
-                '& .Mui-selected': { color: BRAND },
-                '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
-                '& .MuiTab-iconWrapper': { marginRight: '6px !important' },
-              }}
-            >
-              {tabs.map((tab) => (
-                <Tab key={tab.id} value={tab.id} label={tab.label} icon={tab.icon} iconPosition="start" />
-              ))}
-            </Tabs>
-          </Box>
+
         </Box>
       </AppBar>
 
@@ -453,110 +430,46 @@ export default function CustomerDashboard() {
           }}
         >
           <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} alignItems={{ xs: 'stretch', lg: 'flex-start' }}>
-              <Paper
-                elevation={8}
-                sx={{
-                  borderRadius: 3,
-                  p: 2.5,
-                  maxWidth: { xs: '100%', lg: 340 },
-                  width: '100%',
-                  bgcolor: '#fff',
-                  color: 'text.primary',
-                  flexShrink: 0,
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
-                }}
+            <Box sx={{ pt: { xs: 0, lg: 0.75 } }}>
+              <Typography
+                variant="h4"
+                fontWeight={900}
+                sx={{ fontSize: { xs: '1.35rem', sm: '2rem', md: '2.25rem' }, mb: 0.85, lineHeight: 1.25 }}
               >
-                <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 2 }}>
-                  <Box
+                {storefrontGreeting()}, {heroFirstName}! Ready for something delicious?
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.94, mb: 2.25, fontWeight: 500, fontSize: { xs: '0.93rem', md: '1.05rem' } }}>
+                Order from groceries &amp; kitchen — curated deals refreshed daily on QuickDelivery.
+              </Typography>
+              <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
+                {[
+                  { id: 'delivery', label: 'Delivery' },
+                  { id: 'pickup', label: 'Pick-up' },
+                  { id: 'shops', label: 'Shops' },
+                  { id: 'dinein', label: 'Dine-in' },
+                ].map((opt) => (
+                  <Chip
+                    key={opt.id}
+                    label={opt.label}
+                    clickable
+                    onClick={() => setServiceMode(opt.id)}
                     sx={{
-                      width: 88,
-                      height: 88,
-                      borderRadius: 2,
-                      border: '2px dashed',
-                      borderColor: 'grey.300',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'grey.50',
-                      flexShrink: 0,
+                      fontWeight: 800,
+                      borderRadius: 999,
+                      px: 0.25,
+                      height: 38,
+                      bgcolor: serviceMode === opt.id ? '#fff' : 'rgba(255,255,255,0.16)',
+                      color: serviceMode === opt.id ? BRAND : '#fff',
+                      border:
+                        serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.38)',
+                      '&:hover': {
+                        bgcolor: serviceMode === opt.id ? '#fff8fb' : 'rgba(255,255,255,0.26)',
+                      },
                     }}
-                  >
-                    <Typography variant="caption" fontWeight={800} color="text.secondary" textAlign="center" px={1}>
-                      App QR
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.5 }}>
-                      What is your address?
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Save your favourite delivery spot — we&apos;ll show shops nearby.
-                    </Typography>
-                  </Box>
-                </Stack>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Enter street, area…"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      bgcolor: 'grey.50',
-                    },
-                  }}
-                />
-                <Button
-                  fullWidth
-                  variant="text"
-                  endIcon={<ExpandMoreIcon />}
-                  sx={{ mt: 1, color: BRAND, fontWeight: 800, textTransform: 'none' }}
-                >
-                  Deliver to: Home • Islamabad
-                </Button>
-              </Paper>
-
-              <Box sx={{ flex: 1, pt: { xs: 0, lg: 0.75 } }}>
-                <Typography
-                  variant="h4"
-                  fontWeight={900}
-                  sx={{ fontSize: { xs: '1.35rem', sm: '2rem', md: '2.25rem' }, mb: 0.85, lineHeight: 1.25 }}
-                >
-                  {storefrontGreeting()}, {heroFirstName}! Ready for something delicious?
-                </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.94, mb: 2.25, fontWeight: 500, fontSize: { xs: '0.93rem', md: '1.05rem' } }}>
-                  Order from groceries &amp; kitchen — curated deals refreshed daily on QuickDelivery.
-                </Typography>
-                <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
-                  {[
-                    { id: 'delivery', label: 'Delivery' },
-                    { id: 'pickup', label: 'Pick-up' },
-                    { id: 'shops', label: 'Shops' },
-                    { id: 'dinein', label: 'Dine-in' },
-                  ].map((opt) => (
-                    <Chip
-                      key={opt.id}
-                      label={opt.label}
-                      clickable
-                      onClick={() => setServiceMode(opt.id)}
-                      sx={{
-                        fontWeight: 800,
-                        borderRadius: 999,
-                        px: 0.25,
-                        height: 38,
-                        bgcolor: serviceMode === opt.id ? '#fff' : 'rgba(255,255,255,0.16)',
-                        color: serviceMode === opt.id ? BRAND : '#fff',
-                        border:
-                          serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.38)',
-                        '&:hover': {
-                          bgcolor: serviceMode === opt.id ? '#fff8fb' : 'rgba(255,255,255,0.26)',
-                        },
-                      }}
-                    />
-                  ))}
-                </Stack>
-              </Box>
-            </Stack>
+                  />
+                ))}
+              </Stack>
+            </Box>
           </Box>
         </Box>
       ) : null}
@@ -696,7 +609,7 @@ export default function CustomerDashboard() {
         </Box>
       </Drawer>
 
-      <Box component="main">
+      <Box component="main" sx={{ pb: '72px' }}>
         {authLoading ? (
           <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <CircularProgress size={48} sx={{ color: BRAND }} />
@@ -710,6 +623,86 @@ export default function CustomerDashboard() {
       {showCart && <CartPage onClose={() => setShowCart(false)} />}
 
       <CustomerFooter />
+
+      {/* ─── Sticky Bottom Navigation Bar ─── */}
+      <Paper
+        elevation={8}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: (t) => t.zIndex.appBar + 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: '#fff',
+        }}
+      >
+        <BottomNavigation
+          value={effectiveTab}
+          onChange={(_, newVal) => {
+            const protectedTabs = ['orders', 'wishlist', 'favorites', 'profile']
+            if (isGuest && protectedTabs.includes(newVal)) {
+              toast.error('Please sign in to access this section')
+              return
+            }
+            setActiveTab(newVal)
+          }}
+          showLabels
+          sx={{
+            maxWidth: 600,
+            mx: 'auto',
+            height: 64,
+            bgcolor: 'transparent',
+            '& .MuiBottomNavigationAction-root': {
+              minWidth: 0,
+              py: 1,
+              color: 'text.secondary',
+              transition: 'color 0.2s, transform 0.2s',
+              '&:hover': { color: BRAND },
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                mt: 0.25,
+                transition: 'font-size 0.2s',
+              },
+              '&.Mui-selected': {
+                color: BRAND,
+                '& .MuiBottomNavigationAction-label': {
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                },
+              },
+            },
+          }}
+        >
+          <BottomNavigationAction
+            value="products"
+            label="Home"
+            icon={effectiveTab === 'products' ? <HomeIcon /> : <HomeOutlinedIcon />}
+          />
+          <BottomNavigationAction
+            value="orders"
+            label="My Orders"
+            icon={effectiveTab === 'orders' ? <ShoppingBagIcon /> : <ShoppingBagOutlinedIcon />}
+          />
+          <BottomNavigationAction
+            value="favorites"
+            label="Favourites"
+            icon={effectiveTab === 'favorites' ? <StarIcon /> : <StarBorderIcon />}
+          />
+          <BottomNavigationAction
+            value="wishlist"
+            label="Wishlist"
+            icon={effectiveTab === 'wishlist' ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          />
+          <BottomNavigationAction
+            value="profile"
+            label="Profile"
+            icon={effectiveTab === 'profile' ? <PersonIcon /> : <PersonOutlineIcon />}
+          />
+        </BottomNavigation>
+      </Paper>
 
     </Box>
   )

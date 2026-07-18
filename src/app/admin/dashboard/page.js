@@ -56,9 +56,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
         const [customersRes, productsRes] = await Promise.all([
-          fetch('/api/users?limit=1'),
-          fetch('/api/products?type=products&limit=1'),
+          fetch('/api/users', { headers }),
+          fetch('/api/products?type=products', { headers }),
         ])
         const [customersData, productsData] = await Promise.all([
           customersRes.json(),
@@ -90,24 +92,7 @@ export default function AdminDashboard() {
     )
   }
 
-  const TABS = [
-    { label: 'Overview',  icon: <BarChartOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { label: 'Customers', icon: <PeopleOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { label: 'Products',  icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} /> },
-    { label: 'Orders',    icon: <ShoppingCartOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { label: 'Settings',  icon: <SettingsOutlinedIcon sx={{ fontSize: 18 }} /> },
-  ]
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 0: return <OverviewTab stats={dashboardStats} username={userData?.username} />
-      case 1: return <CustomerManagement />
-      case 2: return <ProductManagement />
-      case 3: return <OrderManagement />
-      case 4: return <SettingsTab router={router} />
-      default: return null
-    }
-  }
 
   return (
     <DashboardLayout>
@@ -121,24 +106,7 @@ export default function AdminDashboard() {
           </Typography>
         </Box>
 
-        {/* Tabs */}
-        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 3 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, v) => setActiveTab(v)}
-            sx={{
-              '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 44, fontSize: 13, borderRadius: 0 },
-              '& .Mui-selected': { color: BRAND },
-              '& .MuiTabs-indicator': { bgcolor: BRAND },
-            }}
-          >
-            {TABS.map(({ label, icon }) => (
-              <Tab key={label} label={label} icon={icon} iconPosition="start" />
-            ))}
-          </Tabs>
-        </Box>
-
-        {renderContent()}
+        <OverviewTab stats={dashboardStats} username={userData?.username} />
 
       </Box>
     </DashboardLayout>

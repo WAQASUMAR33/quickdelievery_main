@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { authFetch } from '@/lib/apiClient'
 
 import Box        from '@mui/material/Box'
 import Card       from '@mui/material/Card'
@@ -48,7 +49,7 @@ export default function VendorAnalytics({ vendorId }) {
     if (!vendorId) return
     const fetchData = async () => {
       try {
-        const res  = await fetch(`/api/products?type=products&vendorId=${vendorId}`)
+        const res  = await authFetch(`/api/products?type=products&vendorId=${vendorId}`)
         const data = await res.json()
         if (data.success) setProducts(data.data || [])
       } catch (e) { console.error(e) }
@@ -100,20 +101,20 @@ export default function VendorAnalytics({ vendorId }) {
 
       {/* ── Stat cards ── */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={3}>
           <StatCard label="Total Products" value={products.length}
             icon={<Inventory2OutlinedIcon />} color="#3b82f6" bg="#eff6ff" />
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={3}>
           <StatCard label="Approved" value={approved.length}
             icon={<CheckCircleOutlinedIcon />} color="#10b981" bg="#f0fdf4"
             sub={`${approvalRate}%`} />
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={3}>
           <StatCard label="Pending Review" value={pending.length}
             icon={<PendingOutlinedIcon />} color="#f59e0b" bg="#fffbeb" />
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={3}>
           <StatCard label="Stock Value" value={`$${totalRevenue.toFixed(0)}`}
             icon={<AttachMoneyOutlinedIcon />} color="#8b5cf6" bg="#f5f3ff" />
         </Grid>

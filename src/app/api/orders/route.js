@@ -42,6 +42,14 @@ export async function GET(request) {
       whereClause.status = status
     }
 
+    // Vendor scoping: only orders that contain at least one product from this vendor.
+    const vendorId = searchParams.get('vendorId')
+    if (vendorId !== null && String(vendorId).trim() !== '') {
+      whereClause.orderItems = {
+        some: { product: { vendorId: String(vendorId).trim() } }
+      }
+    }
+
     // Get orders with pagination
     const orders = await prisma.order.findMany({
       where: whereClause,

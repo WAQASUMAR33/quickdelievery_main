@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { authFetch } from '@/lib/apiClient'
 
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
@@ -98,7 +99,7 @@ const ProductManagement = () => {
         approvalStatus: approvalFilter,
         sortBy,
       })
-      const response = await fetch(`/api/products?type=products&${params}`)
+      const response = await authFetch(`/api/admin/products?${params}`)
       const data = await response.json()
       if (data.success) {
         setProducts(data.data || [])
@@ -128,7 +129,7 @@ const ProductManagement = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch('/api/users?role=VENDOR')
+      const response = await authFetch('/api/users?role=VENDOR')
       const data = await response.json()
       if (data.success) setVendors(data.data)
     } catch (error) { console.error(error) }
@@ -158,7 +159,7 @@ const ProductManagement = () => {
   const handleDelete = async (productId) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
-      const response = await fetch(`/api/admin/products?proId=${productId}`, { method: 'DELETE' })
+      const response = await authFetch(`/api/admin/products?proId=${productId}`, { method: 'DELETE' })
       const data = await response.json()
       if (data.success) {
         toast.success('Product deleted')
@@ -174,7 +175,7 @@ const ProductManagement = () => {
 
   const handleSave = async (productData) => {
     try {
-      const response = await fetch('/api/admin/products', {
+      const response = await authFetch('/api/admin/products', {
         method: editingProduct ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ proId: editingProduct?.proId, ...productData }),
@@ -231,7 +232,7 @@ const ProductManagement = () => {
       </Box>
 
       {/* Stats */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: `repeat(${STAT_CARDS.length}, 1fr)` }, gap: 2.5, mb: 3 }}>
         {STAT_CARDS.map(({ label, value, color, icon }) => (
           <Card key={label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>

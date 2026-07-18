@@ -1,25 +1,31 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { checkUserAccess } from '@/lib/authHelpers'
+import { useRouter } from 'next/navigation'
+import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import ProductManagement from '@/components/admin/ProductManagement'
-import Box from '@mui/material/Box'
+import DriverManagement from '@/components/admin/DriverManagement'
+
+import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
-import Typography from '@mui/material/Typography'
+import Typography       from '@mui/material/Typography'
 
 const BRAND = '#D70F64'
 
-export default function ProductsPage() {
+export default function DriversPage() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && user) {
       const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
-      if (!access.hasAccess) router.push(access.redirectTo)
+      if (!access.hasAccess) {
+        const role = getUserRole(userData)
+        if (role === 'CUSTOMER')     router.push('/customer')
+        else if (role === 'VENDOR')  router.push('/vendor/dashboard')
+        else                         router.push(access.redirectTo)
+      }
     }
   }, [user, userData, loading, router])
 
@@ -32,12 +38,9 @@ export default function ProductsPage() {
     )
   }
 
-  const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
-  if (!access.hasAccess) return null
-
   return (
     <DashboardLayout>
-      <ProductManagement />
+      <DriverManagement />
     </DashboardLayout>
   )
 }

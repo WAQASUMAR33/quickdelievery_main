@@ -5,20 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkUserAccess } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import ProductManagement from '@/components/admin/ProductManagement'
-import Box from '@mui/material/Box'
+import OrderManagement from '@/components/admin/OrderManagement'
+
+import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
-import Typography from '@mui/material/Typography'
+import Typography       from '@mui/material/Typography'
 
 const BRAND = '#D70F64'
 
-export default function ProductsPage() {
+export default function VendorNewOrdersPage() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!loading) {
-      const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
+      const access = checkUserAccess(user, userData, ['VENDOR', 'ADMIN', 'SUPER_ADMIN'])
       if (!access.hasAccess) router.push(access.redirectTo)
     }
   }, [user, userData, loading, router])
@@ -32,12 +33,11 @@ export default function ProductsPage() {
     )
   }
 
-  const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
-  if (!access.hasAccess) return null
-
   return (
     <DashboardLayout>
-      <ProductManagement />
+      <Box sx={{ p: 3 }}>
+        <OrderManagement defaultStatusFilter="PENDING" vendorId={userData?.uid} />
+      </Box>
     </DashboardLayout>
   )
 }

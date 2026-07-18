@@ -31,6 +31,7 @@ const CartPage = ({ onClose }) => {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [orderSuccess, setOrderSuccess] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     // Load user's default address if available
@@ -48,20 +49,22 @@ const CartPage = ({ onClose }) => {
   }, [])
 
   const handleCheckout = async () => {
+    setError(null)
+
     if (!user || !userData) {
-      alert('Please login to place an order')
+      setError('Please login to place an order')
       return
     }
 
     const isGuestPlaceholder =
       userData.role === 'GUEST' || userData.id === 'guest' || String(userData.id) === 'guest'
     if (isGuestPlaceholder) {
-      alert('Please sign in or create an account to place an order.')
+      setError('Please sign in or create an account to place an order.')
       return
     }
 
     if (!shippingAddress.trim()) {
-      alert('Please enter a shipping address')
+      setError('Please enter a shipping address')
       return
     }
 
@@ -100,15 +103,15 @@ const CartPage = ({ onClose }) => {
         }, 3000)
       } else {
         const errorMessage = data.error || 'Unknown error occurred'
-        const helpMessage = data.help ? `\n\n${data.help}` : ''
-        alert(`Failed to place order: ${errorMessage}${helpMessage}`)
+        const helpMessage = data.help ? ` (${data.help})` : ''
+        setError(`Failed to place order: ${errorMessage}${helpMessage}`)
         
         // Log detailed error for debugging
         console.error('Order placement failed:', data)
       }
     } catch (error) {
       console.error('Error placing order:', error)
-      alert('Failed to place order. Please try again.')
+      setError('Failed to place order. Please try again.')
     } finally {
       setIsCheckingOut(false)
     }
@@ -157,7 +160,7 @@ const CartPage = ({ onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-0 sm:p-4 z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-0 sm:p-4 z-[2000]"
       onClick={onClose}
     >
       <motion.div
@@ -287,8 +290,20 @@ const CartPage = ({ onClose }) => {
 
           {/* Checkout Summary - Sticky */}
           {items.length > 0 && (
-            <div className="w-full sm:w-96 bg-gray-50 p-4 sm:p-6 border-t sm:border-l border-gray-200 flex-shrink-0">
+            <div className="w-full sm:w-96 bg-gray-50 p-4 sm:p-6 border-t sm:border-l border-gray-200 flex-shrink-0 overflow-y-auto max-h-[50vh] sm:max-h-full">
               <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6">Order Summary</h3>
+              
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium text-left">{error}</span>
+                  </div>
+                  <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm sm:text-base">
@@ -323,7 +338,10 @@ const CartPage = ({ onClose }) => {
                 </label>
                 <textarea
                   value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
+                  onChange={(e) => {
+                    setShippingAddress(e.target.value)
+                    if (error) setError(null)
+                  }}
                   placeholder="Enter your shipping address..."
                   className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent resize-none"
                   rows={3}

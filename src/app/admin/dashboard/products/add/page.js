@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkUserVerification } from '@/lib/authHelpers'
+import { authFetch } from '@/lib/apiClient'
 import { uploadMultipleImages } from '@/lib/imageUpload'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import toast from 'react-hot-toast'
@@ -37,7 +38,9 @@ import CloseOutlinedIcon     from '@mui/icons-material/CloseOutlined'
 import DeleteOutlineIcon     from '@mui/icons-material/DeleteOutline'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
+import NotesOutlinedIcon      from '@mui/icons-material/NotesOutlined'
 import SaveOutlinedIcon      from '@mui/icons-material/SaveOutlined'
+import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined'
 import TuneOutlinedIcon      from '@mui/icons-material/TuneOutlined'
 import UploadOutlinedIcon    from '@mui/icons-material/UploadOutlined'
 
@@ -81,6 +84,21 @@ export default function AddProductPage() {
     subCatId:    '',
     images:      [],
     stock:       '0',
+    // Product details
+    brandName:   '',
+    manufacturer: '',
+    productType: '',
+    modelNumber: '',
+    // Physical details
+    sizeName:          '',
+    size:              '',
+    color:             '',
+    conditionType:     '',
+    productDimensions: '',
+    packageWeight:     '',
+    warranty:          '',
+    // Ingredients / notes
+    ingredients:       '',
   })
   const [variations, setVariations] = useState([])
   const [errors,     setErrors]     = useState({})
@@ -161,7 +179,7 @@ export default function AddProductPage() {
 
       const validVariations = variations.filter(v => v.name.trim() && v.price)
 
-      const res = await fetch('/api/products', {
+      const res = await authFetch('/api/products', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -181,6 +199,21 @@ export default function AddProductPage() {
           vendorId:     userData.uid,
           createdById:  userData.uid,
           variations:   validVariations.length > 0 ? validVariations : null,
+          // Product details
+          brandName:    form.brandName    || null,
+          manufacturer: form.manufacturer || null,
+          productType:  form.productType   || null,
+          modelNumber:  form.modelNumber   || null,
+          // Physical details
+          sizeName:          form.sizeName        || null,
+          size:              form.size            || null,
+          color:             form.color           || null,
+          conditionType:     form.conditionType   || null,
+          productDimensions: form.productDimensions || null,
+          packageWeight:     form.packageWeight   || null,
+          warranty:          form.warranty        || null,
+          // Ingredients / notes
+          ingredients:       form.ingredients     || null,
         }),
       })
       const data = await res.json()
@@ -273,6 +306,24 @@ export default function AddProductPage() {
                 </Grid>
               </Grid>
 
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField {...tf} fullWidth label="Brand"
+                    value={form.brandName} onChange={e => set('brandName', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField {...tf} fullWidth label="Manufacturer"
+                    value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField {...tf} fullWidth label="Product Type"
+                    value={form.productType} onChange={e => set('productType', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField {...tf} fullWidth label="Model Number"
+                    value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
+                </Grid>
+              </Grid>
 
             </Stack>
           </SectionCard>
@@ -413,6 +464,47 @@ export default function AddProductPage() {
                 </Box>
               )}
             </Stack>
+          </SectionCard>
+
+          {/* ── Physical Details ── */}
+          <SectionCard icon={<StraightenOutlinedIcon fontSize="small" />} title="Physical Details" subtitle="Size, colour, condition and dimensions">
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField {...tf} fullWidth label="Size Name"
+                  value={form.sizeName} onChange={e => set('sizeName', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField {...tf} fullWidth label="Size"
+                  value={form.size} onChange={e => set('size', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField {...tf} fullWidth label="Color"
+                  value={form.color} onChange={e => set('color', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField {...tf} fullWidth label="Condition"
+                  value={form.conditionType} onChange={e => set('conditionType', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField {...tf} fullWidth label="Dimensions"
+                  value={form.productDimensions} onChange={e => set('productDimensions', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField {...tf} fullWidth label="Weight"
+                  value={form.packageWeight} onChange={e => set('packageWeight', e.target.value)} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField {...tf} fullWidth label="Warranty"
+                  value={form.warranty} onChange={e => set('warranty', e.target.value)} />
+              </Grid>
+            </Grid>
+          </SectionCard>
+
+          {/* ── Ingredients / Notes ── */}
+          <SectionCard icon={<NotesOutlinedIcon fontSize="small" />} title="Ingredients / Notes" subtitle="Ingredients, allergens or preparation notes">
+            <TextField {...tf} fullWidth multiline rows={4} label="Ingredients"
+              value={form.ingredients} onChange={e => set('ingredients', e.target.value)}
+              placeholder="e.g. Chicken, rice, spices, yoghurt…" />
           </SectionCard>
 
           {/* ── Submit (bottom) ── */}

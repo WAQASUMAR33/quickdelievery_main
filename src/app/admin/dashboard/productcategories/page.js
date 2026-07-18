@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { authFetch } from '@/lib/apiClient'
 import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
@@ -111,7 +112,7 @@ export default function ProductCategoriesPage() {
         ? { type: 'productcategory', id: editingPC.productCategoryId, productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description, image: form.image }
         : { type: 'productcategory', productCategoryName: form.name, categoryId: form.categoryId, productCategoryDescription: form.description, image: form.image }
 
-      const res = await fetch('/api/products', {
+      const res = await authFetch('/api/products', {
         method: editingPC ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -131,7 +132,7 @@ export default function ProductCategoriesPage() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this product category?')) return
     try {
-      const res = await fetch(`/api/products?type=productcategory&id=${id}`, { method: 'DELETE' })
+      const res = await authFetch(`/api/products?type=productcategory&id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
         toast.success('Product Category deleted')

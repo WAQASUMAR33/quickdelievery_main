@@ -365,18 +365,16 @@ export default function VendorManagement() {
       </Stack>
 
       {/* ── Stats ── */}
-      <Grid container spacing={2} mb={3}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2.5, mb: 3 }}>
         {[
           { label: 'Total Vendors',  value: stats.total,    sub: `${stats.verified} verified`,    Icon: PeopleOutlinedIcon,         color: '#2563eb' },
           { label: 'Verified',       value: stats.verified, sub: `${stats.pending} still pending`, Icon: VerifiedUserOutlinedIcon,   color: '#16a34a' },
           { label: 'Total Products', value: stats.products, sub: 'across all vendors',             Icon: Inventory2OutlinedIcon,     color: '#7c3aed' },
           { label: 'Est. Revenue',   value: `$${stats.revenue.toLocaleString('en', { maximumFractionDigits: 0 })}`, sub: 'from vendor stock', Icon: AttachMoneyIcon, color: BRAND },
         ].map(c => (
-          <Grid item xs={12} sm={6} lg={3} key={c.label}>
-            <StatCard {...c} />
-          </Grid>
+          <StatCard key={c.label} {...c} />
         ))}
-      </Grid>
+      </Box>
 
       {/* ── Filters ── */}
       <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 0 }}>

@@ -78,7 +78,7 @@ const STAT_CARDS = [
   { key: 'cancelledOrders',  label: 'Cancelled',    color: '#ef4444', icon: <CancelOutlinedIcon /> },
 ]
 
-export default function OrderManagement({ defaultStatusFilter = '' }) {
+export default function OrderManagement({ defaultStatusFilter = '', vendorId = '' }) {
   const router = useRouter()
 
   const [orders,        setOrders]        = useState([])
@@ -100,6 +100,7 @@ export default function OrderManagement({ defaultStatusFilter = '' }) {
         search: searchTerm,
         status: statusFilter,
       })
+      if (vendorId) params.set('vendorId', vendorId)
       const res  = await fetch(`/api/orders?${params}`)
       const data = await res.json()
       if (data.success) {
@@ -112,7 +113,7 @@ export default function OrderManagement({ defaultStatusFilter = '' }) {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchTerm, statusFilter])
+  }, [currentPage, searchTerm, statusFilter, vendorId])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -174,29 +175,27 @@ export default function OrderManagement({ defaultStatusFilter = '' }) {
       </Box>
 
       {/* ── Stats Cards ── */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: `repeat(${STAT_CARDS.length}, 1fr)` }, gap: 2.5, mb: 3 }}>
         {STAT_CARDS.map(({ key, label, color, icon }) => (
-          <Grid item xs={6} sm={4} md={2} key={key}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, height: '100%' }}>
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
-                      {label}
-                    </Typography>
-                    <Typography variant="h5" fontWeight={800} sx={{ color, mt: 0.5 }}>
-                      {stats[key] || 0}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ p: 1, bgcolor: `${color}18`, color, borderRadius: 1, display: 'flex' }}>
-                    {icon}
-                  </Box>
+          <Card key={key} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
+                    {label}
+                  </Typography>
+                  <Typography variant="h5" fontWeight={800} sx={{ color, mt: 0.5 }}>
+                    {stats[key] || 0}
+                  </Typography>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                <Box sx={{ p: 1, bgcolor: `${color}18`, color, borderRadius: 1, display: 'flex' }}>
+                  {icon}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
 
       {/* ── Filters ── */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>

@@ -85,15 +85,15 @@ const VENDOR_ITEMS = [
     label: 'Orders',
     icon: ShoppingBagOutlinedIcon,
     children: [
-      { id: 'new-orders', label: 'New Orders', path: '/admin/dashboard/orders/new' },
-      { id: 'order-history', label: 'Order History', path: '/admin/dashboard/orders/history' },
-      { id: 'pending-orders', label: 'Pending Orders', path: '/admin/dashboard/orders/pending' },
+      { id: 'new-orders', label: 'New Orders', path: '/vendor/dashboard/orders/new' },
+      { id: 'order-history', label: 'Order History', path: '/vendor/dashboard/orders/history' },
+      { id: 'pending-orders', label: 'Pending Orders', path: '/vendor/dashboard/orders/pending' },
     ],
   },
   { id: 'products', label: 'Products', icon: Inventory2OutlinedIcon, path: '/vendor/dashboard/products' },
   { id: 'deals', label: 'Food Deals', icon: LocalOfferOutlinedIcon, path: '/vendor/dashboard/deals' },
   { id: 'profile', label: 'Business Profile', icon: StorefrontOutlinedIcon, path: '/vendor/dashboard/profile' },
-  { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
+  { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/vendor/dashboard/disputes' },
   { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, path: '/admin/dashboard/settings' },
 ]
 

@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
+import { authFetch } from '@/lib/apiClient'
 import { uploadProductImage } from '@/lib/imageUpload'
 
 import Box              from '@mui/material/Box'
@@ -86,7 +87,7 @@ export default function CategoriesPage() {
         ? { type: 'category', id: editingCategory.id, catName: form.name, catCode: form.code, description: form.description, image: form.image, status: 'ACTIVE' }
         : { type: 'category', catName: form.name, catCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), description: form.description, image: form.image, createdBy: userData?.uid || 'admin' }
 
-      const res = await fetch('/api/products', {
+      const res = await authFetch('/api/products', {
         method: editingCategory ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -106,7 +107,7 @@ export default function CategoriesPage() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this category?')) return
     try {
-      const res = await fetch(`/api/products?type=category&id=${id}`, { method: 'DELETE' })
+      const res = await authFetch(`/api/products?type=category&id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) { toast.success('Category deleted'); fetchCategories() }
       else toast.error(data.error || 'Failed to delete')

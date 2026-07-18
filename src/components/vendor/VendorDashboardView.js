@@ -12,23 +12,9 @@ import FoodDealsManagement from '@/components/admin/FoodDealsManagement'
 
 import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
-import Tab              from '@mui/material/Tab'
-import Tabs             from '@mui/material/Tabs'
 import Typography       from '@mui/material/Typography'
 
-import BarChartOutlinedIcon   from '@mui/icons-material/BarChartOutlined'
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
-import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
-
 const BRAND = '#D70F64'
-
-const TAB_ROUTE = {
-  analytics: '/vendor/dashboard',
-  products: '/vendor/dashboard/products',
-  deals: '/vendor/dashboard/deals',
-  profile: '/vendor/dashboard/profile',
-}
 
 function pathnameToTab(pathname) {
   const n = (pathname || '').replace(/\/$/, '')
@@ -61,29 +47,8 @@ export default function VendorDashboardView() {
     )
   }
 
-  const setTabRoute = (_, val) => {
-    router.push(TAB_ROUTE[val] || TAB_ROUTE.analytics)
-  }
-
   return (
     <DashboardLayout>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', px: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={setTabRoute}
-          sx={{
-            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: 14, minHeight: 48 },
-            '& .Mui-selected': { color: BRAND },
-            '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
-          }}
-        >
-          <Tab value="analytics" label="Analytics"        icon={<BarChartOutlinedIcon   fontSize="small" />} iconPosition="start" />
-          <Tab value="products"  label="My Products"      icon={<Inventory2OutlinedIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="deals"     label="Food Deals"       icon={<LocalOfferOutlinedIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="profile"   label="Business Profile" icon={<StorefrontOutlinedIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
-
       <Box sx={{ p: 3 }}>
         {activeTab === 'analytics' && <VendorAnalytics vendorId={userData?.uid} />}
         {activeTab === 'products' && <VendorProductManagement />}

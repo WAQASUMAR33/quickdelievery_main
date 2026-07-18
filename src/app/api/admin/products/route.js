@@ -1,7 +1,13 @@
 import { prisma } from '@/lib/prisma'
+import { requireRole, ADMIN_ROLES } from '@/lib/auth-server'
 
 export async function GET(request) {
   try {
+    const auth = await requireRole(request, ADMIN_ROLES)
+    if (auth.error) {
+      return Response.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page')) || 1
     const limit = parseInt(searchParams.get('limit')) || 10
@@ -68,7 +74,6 @@ export async function GET(request) {
             id: true,
             username: true,
             email: true,
-            businessName: true,
             role: true
           }
         }
@@ -88,9 +93,28 @@ export async function GET(request) {
     const rejectedProducts = await prisma.product.count({ where: { approvalStatus: 'Rejected' } })
     const activeProducts = await prisma.product.count({ where: { status: true } })
 
+    // Parse JSON fields back to arrays/objects
+    const processedProducts = products.map(product => {
+      try {
+        return {
+          ...product,
+          proImages: product.proImages ? JSON.parse(product.proImages) : null,
+          keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
+          variations: product.variations ? JSON.parse(product.variations) : null,
+        }
+      } catch (e) {
+        return {
+          ...product,
+          proImages: null,
+          keyFeatures: null,
+          variations: null
+        }
+      }
+    })
+
     return Response.json({
       success: true,
-      data: products,
+      data: processedProducts,
       pagination: {
         page,
         limit,
@@ -116,6 +140,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const auth = await requireRole(request, ADMIN_ROLES)
+    if (auth.error) {
+      return Response.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const {
       proName,
       description,
@@ -190,7 +219,6 @@ export async function POST(request) {
             id: true,
             username: true,
             email: true,
-            businessName: true,
             role: true
           }
         }
@@ -213,6 +241,11 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
+    const auth = await requireRole(request, ADMIN_ROLES)
+    if (auth.error) {
+      return Response.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const {
       id,
       proId,
@@ -248,9 +281,8 @@ export async function PUT(request) {
     if (description !== undefined) updateData.description = description
     if (price !== undefined) updateData.price = parseFloat(price)
     if (salePrice !== undefined) updateData.salePrice = salePrice ? parseFloat(salePrice) : null
-    if (sku !== undefined) updateData.sku = sku
     if (barcode !== undefined) updateData.barcode = barcode
-    if (stock !== undefined) updateData.stock = parseInt(stock)
+    if (stock !== undefined) updateData.stock = stock ? parseInt(stock) : 0
     if (catId !== undefined) updateData.catId = catId
     if (subCatId !== undefined) updateData.subCatId = subCatId
     if (vendorId !== undefined) updateData.vendorId = vendorId
@@ -301,7 +333,6 @@ export async function PUT(request) {
             id: true,
             username: true,
             email: true,
-            businessName: true,
             role: true
           }
         }
@@ -324,6 +355,11 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
+    const auth = await requireRole(request, ADMIN_ROLES)
+    if (auth.error) {
+      return Response.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const proId = searchParams.get('proId')

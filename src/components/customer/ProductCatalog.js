@@ -95,11 +95,44 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const [detailProduct, setDetailProduct] = useState(null)
   const [modalQty, setModalQty] = useState(1)
   const dealsCarouselRef = useRef(null)
+  const [visibleCatCount, setVisibleCatCount] = useState(5)
+  const [visibleSubcatCount, setVisibleSubcatCount] = useState(10)
+  const [sidebarVisibleCats, setSidebarVisibleCats] = useState(5)
+  const [sidebarVisibleSubs, setSidebarVisibleSubs] = useState(5)
 
-  // Subcategories derived from already-loaded categories (no extra fetch needed)
-  const subcategories = selectedCategory != null
-    ? (categories.find(c => idsEqual(c.id, selectedCategory))?.subCategories || [])
-    : []
+  // Reset sidebar sub-category count when category changes
+  useEffect(() => {
+    setSidebarVisibleSubs(5)
+  }, [selectedCategory])
+
+  // Subcategories derived from already-loaded categories
+  // When "All" is selected (selectedCategory == null), show subcategories from every category
+  const subcategories = useMemo(() => {
+    if (selectedCategory != null) {
+      return categories.find(c => idsEqual(c.id, selectedCategory))?.subCategories || []
+    }
+    // "All" selected — gather every subcategory across all categories
+    const all = []
+    const seen = new Set()
+    for (const cat of categories) {
+      for (const sub of cat.subCategories || []) {
+        if (!seen.has(sub.subCatId)) {
+          seen.add(sub.subCatId)
+          all.push(sub)
+        }
+      }
+    }
+    return all
+  }, [selectedCategory, categories])
+
+  // Reset show-more counters when category/subcategory selection changes
+  useEffect(() => {
+    setVisibleSubcatCount(10)
+  }, [selectedCategory])
+
+  useEffect(() => {
+    setVisibleCatCount(5)
+  }, [categories.length])
 
   /** Load catalogue once; category / subcategory / search / vendor / sort filter on the client (no refetch → no loading flash). */
   useEffect(() => {
@@ -136,7 +169,21 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
             for (const item of order.orderItems || []) {
               if (item.product && !seen.has(item.product.proId)) {
                 seen.add(item.product.proId)
-                items.push(item.product)
+                
+                // Parse proImages since it is stored as JSON string in Prisma
+                let parsedImages = item.product.proImages
+                if (typeof parsedImages === 'string') {
+                  try {
+                    parsedImages = JSON.parse(parsedImages)
+                  } catch {
+                    parsedImages = [parsedImages]
+                  }
+                }
+
+                items.push({
+                  ...item.product,
+                  proImages: parsedImages
+                })
               }
             }
           }
@@ -160,6 +207,18 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   useEffect(() => {
     if (detailProduct) setModalQty(1)
   }, [detailProduct?.proId])
+
+  // Lock body scroll when product detail modal is open
+  useEffect(() => {
+    if (detailProduct) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [detailProduct])
 
   useEffect(() => {
     if (!detailProduct) return
@@ -600,7 +659,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSelectedVendor(''); setPriceRange({ min: 0, max: 100000 }) }}
+            onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSelectedVendor(''); setPriceRange({ min: 0, max: 100000 }); setSidebarVisibleCats(5); setSidebarVisibleSubs(5) }}
             className="text-xs font-bold text-[#D70F64] hover:text-[#C20D5A] uppercase tracking-wide"
           >Reset</button>
           <button type="button" onClick={() => setShowFilters(false)} className="lg:hidden p-1 bg-gray-100 rounded-full hover:bg-gray-200" aria-label="Close filters">
@@ -609,41 +668,8 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
         </div>
       </div>
 
+      {/* ── PRICE RANGE (on top) ── */}
       <div className="mb-6">
-        <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Category</h4>
-        <div className="space-y-1">
-          {[{ id: null, name: 'All' }, ...categories].map(cat => {
-            const active = selectedCategory === cat.id
-            return (
-              <button key={String(cat.id)} type="button" onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory(null) }}
-                className="w-full flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors text-left">
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${active ? 'border-[#D70F64]' : 'border-gray-300'}`}>
-                  {active && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
-                </div>
-                <span className={`text-sm font-medium ${active ? 'text-[#D70F64]' : 'text-gray-600'}`}>{cat.name}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Shops</h4>
-        <div className="space-y-1 max-h-48 overflow-y-auto">
-          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.uid || String(s.id), name: s.businessName || s.username }))].map(v => (
-            <label key={v.id} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center mr-3 ${selectedVendor === v.id ? 'border-[#D70F64] bg-[#D70F64]' : 'border-gray-300'}`}>
-                {selectedVendor === v.id && <div className="w-2 h-2 bg-white rounded-sm" />}
-              </div>
-              <input type="radio" name="vendor" value={v.id} checked={selectedVendor === v.id}
-                onChange={e => setSelectedVendor(e.target.value)} className="hidden" />
-              <span className={`text-sm font-medium truncate flex-1 ${selectedVendor === v.id ? 'text-[#D70F64]' : 'text-gray-600 group-hover:text-gray-900'}`}>{v.name}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
         <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Price Range</h4>
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -663,6 +689,92 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           </div>
         </div>
       </div>
+
+      {/* ── CATEGORY (show 5 at a time) ── */}
+      <div className="mb-6">
+        <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Category</h4>
+        <div className="space-y-1">
+          {[{ id: null, name: 'All' }, ...categories.slice(0, sidebarVisibleCats)].map(cat => {
+            const active = selectedCategory === cat.id
+            return (
+              <button key={String(cat.id)} type="button" onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory(null) }}
+                className="w-full flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors text-left">
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${active ? 'border-[#D70F64]' : 'border-gray-300'}`}>
+                  {active && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
+                </div>
+                <span className={`text-sm font-medium ${active ? 'text-[#D70F64]' : 'text-gray-600'}`}>{cat.name}</span>
+              </button>
+            )
+          })}
+          {categories.length > sidebarVisibleCats && (
+            <button
+              type="button"
+              onClick={() => setSidebarVisibleCats(prev => prev + 5)}
+              className="w-full text-center text-xs font-bold text-[#D70F64] hover:text-[#C20D5A] py-2 hover:bg-[#D70F64]/5 rounded-lg transition-colors"
+            >
+              Show More ({categories.length - sidebarVisibleCats} more)
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── SUBCATEGORY (show 5 at a time, reactive to selected category) ── */}
+      {subcategories.length > 0 && (
+        <div className="mb-6">
+          <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">
+            {selectedCategory != null
+              ? `${categories.find(c => idsEqual(c.id, selectedCategory))?.name || ''} Sub-categories`
+              : 'All Sub-categories'}
+          </h4>
+          <div className="space-y-1">
+            <button type="button" onClick={() => setSelectedSubcategory(null)}
+              className="w-full flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors text-left">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${selectedSubcategory == null ? 'border-[#D70F64]' : 'border-gray-300'}`}>
+                {selectedSubcategory == null && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
+              </div>
+              <span className={`text-sm font-medium ${selectedSubcategory == null ? 'text-[#D70F64]' : 'text-gray-600'}`}>All</span>
+            </button>
+            {subcategories.slice(0, sidebarVisibleSubs).map(sub => {
+              const active = selectedSubcategory === sub.subCatId
+              return (
+                <button key={sub.subCatId} type="button" onClick={() => setSelectedSubcategory(sub.subCatId)}
+                  className="w-full flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors text-left">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${active ? 'border-[#D70F64]' : 'border-gray-300'}`}>
+                    {active && <div className="w-2 h-2 bg-[#D70F64] rounded-full" />}
+                  </div>
+                  <span className={`text-sm font-medium ${active ? 'text-[#D70F64]' : 'text-gray-600'}`}>{sub.subCatName}</span>
+                </button>
+              )
+            })}
+            {subcategories.length > sidebarVisibleSubs && (
+              <button
+                type="button"
+                onClick={() => setSidebarVisibleSubs(prev => prev + 5)}
+                className="w-full text-center text-xs font-bold text-[#D70F64] hover:text-[#C20D5A] py-2 hover:bg-[#D70F64]/5 rounded-lg transition-colors"
+              >
+                Show More ({subcategories.length - sidebarVisibleSubs} more)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── SHOPS ── */}
+      <div className="mb-6">
+        <h4 className="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Shops</h4>
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          {[{ id: '', name: 'All' }, ...topShops.map(s => ({ id: s.uid || String(s.id), name: s.businessName || s.username }))].map(v => (
+            <label key={v.id} className="flex items-center group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center mr-3 ${selectedVendor === v.id ? 'border-[#D70F64] bg-[#D70F64]' : 'border-gray-300'}`}>
+                {selectedVendor === v.id && <div className="w-2 h-2 bg-white rounded-sm" />}
+              </div>
+              <input type="radio" name="vendor" value={v.id} checked={selectedVendor === v.id}
+                onChange={e => setSelectedVendor(e.target.value)} className="hidden" />
+              <span className={`text-sm font-medium truncate flex-1 ${selectedVendor === v.id ? 'text-[#D70F64]' : 'text-gray-600 group-hover:text-gray-900'}`}>{v.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     </>
   )
 
@@ -677,12 +789,12 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
         <div className="flex-1 min-w-0 space-y-2">
 
-        {/* ── 1. CATEGORIES ── */}
+        {/* ── 1. CATEGORIES (show 5 at a time with Show More) ── */}
         {categories.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">What's on your mind?</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">What&apos;s on your mind?</h2>
             <div className="relative">
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              <div className="flex gap-4 flex-wrap pb-4">
                 <button
                   onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null) }}
                   className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] ${
@@ -696,7 +808,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   </div>
                   <span className={`text-xs font-bold text-center ${selectedCategory == null ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
                 </button>
-                {categories.map((cat, idx) => {
+                {categories.slice(0, visibleCatCount).map((cat, idx) => {
                   const image = categoryImages[cat.name] || defaultCatImages[idx % defaultCatImages.length]
                   return (
                     <button
@@ -719,15 +831,25 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   )
                 })}
               </div>
-              <div className="absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
+              {categories.length > visibleCatCount && (
+                <div className="flex justify-center mt-1 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCatCount(prev => prev + 5)}
+                    className="flex items-center gap-1.5 text-sm font-bold text-[#D70F64] hover:text-[#C20D5A] px-5 py-2 rounded-full border-2 border-[#D70F64]/20 hover:border-[#D70F64]/40 bg-white hover:bg-[#D70F64]/5 transition-all duration-200"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Show More Categories ({categories.length - visibleCatCount} more)
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Subcategories — swap when category changes without refetch */}
+            {/* Subcategories — always shown (both for All and specific category), with show-more */}
             <AnimatePresence mode="wait">
-              {selectedCategory != null && subcategories.length > 0 && (
+              {subcategories.length > 0 && (
                 <motion.div
-                  key={selectedCategory}
+                  key={selectedCategory ?? 'all'}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
@@ -735,11 +857,13 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   className="mt-6"
                 >
                   <h3 className="text-lg font-bold text-gray-900 mb-3">
-                    {categories.find(c => c.id === selectedCategory)?.name} — Sub-categories
+                    {selectedCategory != null
+                      ? `${categories.find(c => idsEqual(c.id, selectedCategory))?.name} — Sub-categories`
+                      : 'All Sub-categories'}
                   </h3>
                   <div className="relative">
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                    {/* All sub-categories — same card layout as sub rows */}
+                    <div className="flex gap-4 flex-wrap pb-4">
+                    {/* All sub-categories option */}
                     <button
                       type="button"
                       onClick={() => setSelectedSubcategory(null)}
@@ -763,7 +887,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       </div>
                     </button>
 
-                    {subcategories.map((sub, idx) => {
+                    {subcategories.slice(0, visibleSubcatCount).map((sub, idx) => {
                       const subColors = [
                         'from-orange-400 to-red-400',
                         'from-purple-400 to-pink-400',
@@ -818,8 +942,18 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       )
                     })}
                   </div>
-                    <div className="absolute left-0 top-0 bottom-4 w-6 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none" />
-                    <div className="absolute right-0 top-0 bottom-4 w-6 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
+                  {subcategories.length > visibleSubcatCount && (
+                    <div className="flex justify-center mt-1 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleSubcatCount(prev => prev + 5)}
+                        className="flex items-center gap-1.5 text-sm font-bold text-[#D70F64] hover:text-[#C20D5A] px-5 py-2 rounded-full border-2 border-[#D70F64]/20 hover:border-[#D70F64]/40 bg-white hover:bg-[#D70F64]/5 transition-all duration-200"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                        Show More Sub-categories ({subcategories.length - visibleSubcatCount} more)
+                      </button>
+                    </div>
+                  )}
                   </div>
                 </motion.div>
               )}
@@ -1074,17 +1208,24 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
       </div>
 
       <AnimatePresence>
-        {detailProduct && (
+        {detailProduct && (() => {
+          const avgRatingModal = detailProduct.reviews?.length
+            ? detailProduct.reviews.reduce((s, r) => s + r.rating, 0) / detailProduct.reviews.length
+            : 0
+          const discModal = parseFloat(detailProduct.discount || 0)
+          const vendorName = detailProduct.vendor?.businessName || detailProduct.vendor?.username || detailProduct.category?.name || 'QuickDelivery'
+
+          return (
           <motion.div
             key={`pv-${detailProduct.proId}`}
-            className="fixed inset-0 z-[1400] flex items-end justify-center sm:items-center sm:p-4"
+            className="fixed inset-0 z-[2000] flex items-end justify-center sm:items-center sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1095,55 +1236,89 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               role="dialog"
               aria-modal="true"
               aria-labelledby="product-quick-view-title"
-              className="relative z-10 flex w-full max-h-[min(92vh,720px)] sm:max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl"
-              initial={{ y: 56, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+              className="relative z-10 flex w-full max-h-[min(92vh,780px)] sm:max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl ring-1 ring-black/5"
+              initial={{ y: 80, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 60, opacity: 0, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Close button */}
               <button
                 type="button"
                 onClick={() => setDetailProduct(null)}
-                className="absolute right-3 top-3 z-20 rounded-full bg-white/95 p-2 shadow-md hover:bg-gray-100"
+                className="absolute right-3 top-3 z-20 rounded-full bg-white/90 backdrop-blur-sm p-2.5 shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
                 aria-label="Close"
               >
                 <X className="h-4 w-4 text-gray-700" />
               </button>
-              <div className="relative aspect-[16/10] w-full flex-shrink-0 bg-gray-100 sm:aspect-[2/1]">
+
+              {/* Product image with gradient overlay */}
+              <div className="relative aspect-[16/10] w-full flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 sm:aspect-[2/1] overflow-hidden">
                 <img
                   src={detailProduct.proImages?.[0] || '/placeholder-product.jpg'}
                   alt={detailProduct.proName}
                   className="h-full w-full object-cover"
                 />
-                {(detailProduct.__dealBadge || parseFloat(detailProduct.discount || 0) > 0) && (
-                  <div className="absolute left-3 top-3 rounded-r-full bg-[#D70F64] px-2 py-1 text-xs font-bold text-white shadow-sm">
-                    {detailProduct.__dealBadge || `${Math.round(parseFloat(detailProduct.discount || 0))}% OFF`}
-                  </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                {(detailProduct.__dealBadge || discModal > 0) && (
+                  <motion.div
+                    initial={{ x: -30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                    className="absolute left-0 top-4 bg-gradient-to-r from-[#D70F64] to-[#ff4478] px-4 py-1.5 text-xs font-extrabold text-white shadow-lg rounded-r-full"
+                  >
+                    {detailProduct.__dealBadge || `${Math.round(discModal)}% OFF`}
+                  </motion.div>
                 )}
+                {/* Vendor chip on image */}
+                <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                  <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                    {vendorName}
+                  </span>
+                </div>
               </div>
-              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
+
+              {/* Content area - scrollable */}
+              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6 pt-5">
+                {/* Title & Rating row */}
                 <div>
-                  <h2 id="product-quick-view-title" className="pr-10 text-xl font-black text-gray-900">
+                  <h2 id="product-quick-view-title" className="pr-10 text-2xl font-black text-gray-900 leading-tight">
                     {detailProduct.proName}
                   </h2>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {detailProduct.vendor?.businessName ||
-                      detailProduct.vendor?.username ||
-                      detailProduct.category?.name ||
-                      'QuickDelivery'}
-                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-3.5 h-3.5 ${s <= Math.round(avgRatingModal) ? 'text-amber-400 fill-current' : 'text-gray-200 fill-current'}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">
+                      {avgRatingModal > 0 ? `${avgRatingModal.toFixed(1)} rating` : 'New arrival'}
+                    </span>
+                    {detailProduct.stock > 0 && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        In Stock
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div>
+
+                {/* Description */}
+                <div className="bg-gray-50 rounded-xl px-4 py-3">
                   <p className="text-sm leading-relaxed text-gray-600">
                     {detailProduct.description?.trim?.()
                       ? detailProduct.description
                       : 'No description provided for this item.'}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-baseline gap-2 border-t border-gray-100 pt-4">
+
+                {/* Price section */}
+                <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
                   {detailProduct.__isCustomDeal ? (
-                    <span className="text-lg font-black text-gray-900">
+                    <span className="text-2xl font-black text-gray-900">
                       {detailProduct.customPriceHint?.trim()
                         ? detailProduct.customPriceHint.trim()
                         : 'See catalogue for pricing'}
@@ -1151,28 +1326,30 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   ) : detailProduct.salePrice &&
                     parseFloat(detailProduct.salePrice) < parseFloat(detailProduct.price || 0) ? (
                     <>
-                      <span className="text-lg font-black text-gray-900">
+                      <span className="text-2xl font-black text-gray-900">
                         ${parseFloat(detailProduct.salePrice).toFixed(2)}
                       </span>
-                      <span className="text-sm text-gray-400 line-through">
+                      <span className="text-base text-gray-400 line-through">
                         ${parseFloat(detailProduct.price || 0).toFixed(2)}
                       </span>
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[#D70F64]">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-white bg-[#D70F64] px-2.5 py-1 rounded-full">
                         Sale
                       </span>
                     </>
                   ) : (
-                    <span className="text-lg font-black text-gray-900">
+                    <span className="text-2xl font-black text-gray-900">
                       ${parseFloat(detailProduct.price || 0).toFixed(2)}
                     </span>
                   )}
                   {!detailProduct.__isCustomDeal && (
-                    <span className="text-xs text-gray-500">per unit</span>
+                    <span className="text-xs text-gray-400 font-medium">per unit</span>
                   )}
                 </div>
+
+                {/* Quantity & Add to cart */}
                 {!detailProduct.__isCustomDeal ? (
                   <>
-                    <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 px-5 py-4">
                       <span className="text-sm font-bold text-gray-700">Quantity</span>
                       <div className="flex items-center gap-3">
                         <button
@@ -1180,34 +1357,35 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                           aria-label="Decrease quantity"
                           disabled={modalQty <= 1}
                           onClick={() => setModalQty((q) => Math.max(1, q - 1))}
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-800 shadow-sm hover:border-[#D70F64] hover:text-[#D70F64] transition-colors disabled:pointer-events-none disabled:opacity-30"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
-                        <span className="min-w-[2rem] text-center text-lg font-black tabular-nums">
+                        <span className="min-w-[2.5rem] text-center text-xl font-black tabular-nums">
                           {modalQty}
                         </span>
                         <button
                           type="button"
                           aria-label="Increase quantity"
                           onClick={() => setModalQty((q) => Math.min(99, q + 1))}
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-100"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-800 shadow-sm hover:border-[#D70F64] hover:text-[#D70F64] transition-colors"
                         >
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm font-bold text-gray-800">
-                      <span>Line total</span>
-                      <span className="text-lg tabular-nums text-[#D70F64]">
-                        $
-                        {(getEffectiveUnitPrice(detailProduct) * modalQty).toFixed(2)}
+
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-sm font-bold text-gray-600">Line total</span>
+                      <span className="text-xl font-black tabular-nums text-[#D70F64]">
+                        ${(getEffectiveUnitPrice(detailProduct) * modalQty).toFixed(2)}
                       </span>
                     </div>
+
                     <motion.button
                       type="button"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => {
                         addToCart(detailProduct, modalQty)
                         if (isGuest) {
@@ -1221,10 +1399,10 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                         }
                         setDetailProduct(null)
                       }}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D70F64] py-3.5 text-base font-black text-white shadow-lg shadow-pink-200/50 hover:bg-[#C20D5A]"
+                      className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#D70F64] to-[#ff4478] py-4 text-base font-black text-white shadow-xl shadow-pink-300/30 hover:shadow-pink-400/40 transition-shadow"
                     >
                       <ShoppingBag className="h-5 w-5" />
-                      Add to cart
+                      Add to Cart — ${(getEffectiveUnitPrice(detailProduct) * modalQty).toFixed(2)}
                     </motion.button>
                   </>
                 ) : (
@@ -1235,7 +1413,8 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               </div>
             </motion.div>
           </motion.div>
-        )}
+          )
+        })()}
       </AnimatePresence>
     </div>
   )
