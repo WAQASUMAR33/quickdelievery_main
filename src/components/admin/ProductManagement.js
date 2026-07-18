@@ -513,13 +513,18 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
           </Select>
         </FormControl>
 
-        <FormControl size="small" required sx={{ minWidth: DROP_MIN_W }}>
-          <InputLabel>Vendor *</InputLabel>
-          <Select value={formData.vendorId} label="Vendor *" onChange={e => set('vendorId', e.target.value)} sx={{ borderRadius: 0 }}>
-            <MenuItem value=""><em>Select Vendor</em></MenuItem>
-            {vendors.map(v => <MenuItem key={v.id} value={v.id}>{v.businessName || v.username}</MenuItem>)}
-          </Select>
-        </FormControl>
+        {product ? (
+          <TextField size="small" label="Vendor" value={product.vendor?.username || product.vendorId || ''} 
+            InputProps={{ readOnly: true }} disabled {...tf} />
+        ) : (
+          <FormControl size="small" required sx={{ minWidth: DROP_MIN_W }}>
+            <InputLabel>Vendor *</InputLabel>
+            <Select value={formData.vendorId} label="Vendor *" onChange={e => set('vendorId', e.target.value)} sx={{ borderRadius: 0 }}>
+              <MenuItem value=""><em>Select Vendor</em></MenuItem>
+              {vendors.map(v => <MenuItem key={v.uid} value={v.uid}>{v.businessName || v.username}</MenuItem>)}
+            </Select>
+          </FormControl>
+        )}
 
         <TextField size="small" label="Stock" type="number" value={formData.stock}
           onChange={e => set('stock', e.target.value)} {...tf} />
@@ -529,6 +534,19 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
 
       <TextField size="small" label="Description" multiline rows={4} value={formData.description}
         onChange={e => set('description', e.target.value)} {...tf} fullWidth />
+
+      <TextField size="small" label="Specifications (optional)" multiline rows={3} 
+        value={typeof formData.specifications === 'object' ? JSON.stringify(formData.specifications, null, 2) : formData.specifications}
+        onChange={e => {
+          try { set('specifications', JSON.parse(e.target.value)) } 
+          catch { set('specifications', e.target.value) }
+        }} 
+        placeholder='e.g. {"weight": "500g", "color": "red"}' {...tf} fullWidth />
+
+      <TextField size="small" label="Key Features (optional)" multiline rows={3} 
+        value={Array.isArray(formData.features) ? formData.features.join('\n') : formData.features}
+        onChange={e => set('features', e.target.value.split('\n').filter(f => f.trim()))}
+        placeholder="Enter one feature per line" {...tf} fullWidth />
 
       {/* Images */}
       <Box>

@@ -283,44 +283,23 @@ export async function PUT(request) {
     if (salePrice !== undefined) updateData.salePrice = salePrice ? parseFloat(salePrice) : null
     if (barcode !== undefined) updateData.barcode = barcode
     if (stock !== undefined) updateData.stock = stock ? parseInt(stock) : 0
-    if (catId !== undefined) updateData.catId = catId
-    if (subCatId !== undefined) updateData.subCatId = subCatId
-    if (vendorId !== undefined) updateData.vendorId = vendorId
+    if (catId !== undefined) updateData.category = { connect: { id: catId } }
+    if (subCatId !== undefined) updateData.subCategory = { connect: { subCatId: subCatId } }
+    if (vendorId !== undefined) updateData.vendor = { connect: { uid: vendorId } }
     if (status !== undefined) updateData.status = status
     if (approvalStatus !== undefined) updateData.approvalStatus = approvalStatus
 
-    // Parse JSON fields if provided
+    // Serialize JSON fields to strings before saving (DB columns are String/LongText)
     if (proImages !== undefined) {
-      try {
-        updateData.proImages = typeof proImages === 'string' ? JSON.parse(proImages) : proImages
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: 'Invalid JSON format in proImages'
-        }, { status: 400 })
-      }
+      updateData.proImages = proImages ? (typeof proImages === 'string' ? proImages : JSON.stringify(proImages)) : null
     }
 
     if (specifications !== undefined) {
-      try {
-        updateData.specifications = typeof specifications === 'string' ? JSON.parse(specifications) : specifications
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: 'Invalid JSON format in specifications'
-        }, { status: 400 })
-      }
+      updateData.specifications = specifications ? (typeof specifications === 'string' ? specifications : JSON.stringify(specifications)) : null
     }
 
     if (features !== undefined) {
-      try {
-        updateData.features = typeof features === 'string' ? JSON.parse(features) : features
-      } catch (error) {
-        return Response.json({
-          success: false,
-          error: 'Invalid JSON format in features'
-        }, { status: 400 })
-      }
+      updateData.features = features ? (typeof features === 'string' ? features : JSON.stringify(features)) : null
     }
 
     const updatedProduct = await prisma.product.update({
