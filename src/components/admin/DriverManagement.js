@@ -47,6 +47,8 @@ import SearchIcon                     from '@mui/icons-material/Search'
 import StoreOutlinedIcon              from '@mui/icons-material/StoreOutlined'
 import VerifiedUserOutlinedIcon       from '@mui/icons-material/VerifiedUserOutlined'
 import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutlined'
+import VisibilityOutlinedIcon         from '@mui/icons-material/VisibilityOutlined'
+import DriverProfile                  from '@/components/driver/DriverProfile'
 
 const BRAND      = '#D70F64'
 const DROP_MIN_W = 300
@@ -86,8 +88,10 @@ export default function DriverManagement() {
   const [currentPage,      setCurrentPage]      = useState(1)
   const [totalPages,       setTotalPages]       = useState(1)
   const [stats,            setStats]            = useState({})
-  const [editingDriver,  setEditingDriver]  = useState(null)
+  const [editingDriver,    setEditingDriver]    = useState(null)
   const [showModal,        setShowModal]        = useState(false)
+  const [profileDriver,    setProfileDriver]    = useState(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
 
   const fetchDrivers = useCallback(async () => {
     try {
@@ -287,6 +291,11 @@ export default function DriverManagement() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Tooltip title="View Driver Profile">
+                        <IconButton size="small" sx={{ color: BRAND }} onClick={() => { setProfileDriver(c); setShowProfileModal(true) }}>
+                          <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Edit">
                         <IconButton size="small" sx={{ color: 'info.main' }} onClick={() => { setEditingDriver(c); setShowModal(true) }}>
                           <EditOutlinedIcon sx={{ fontSize: 16 }} />
@@ -321,6 +330,35 @@ export default function DriverManagement() {
           />
         </Box>
       )}
+
+      {/* ── Driver Profile Modal ── */}
+      <Dialog
+        open={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PersonOutlinedIcon sx={{ color: BRAND }} />
+            <Typography variant="h6" fontWeight={700}>Full Driver Profile & Management</Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setShowProfileModal(false)} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, bgcolor: '#f8fafc' }}>
+          {profileDriver && (
+            <DriverProfile
+              driverData={profileDriver}
+              onSaveSuccess={() => {
+                fetchDrivers()
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Edit Dialog ── */}
       <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth

@@ -150,7 +150,7 @@ export default function AuthProvider({ children }) {
       setUserData(dbUser)
 
       toast.success('Account created!')
-      return { success: true, user: firebaseLikeUser }
+      return { success: true, user: firebaseLikeUser, userData: dbUser }
     } catch (error) {
       console.error('Sign up error:', error)
       toast.error(error.message)
@@ -193,7 +193,7 @@ export default function AuthProvider({ children }) {
       setUserData(dbUser)
 
       toast.success('Welcome back!')
-      return { success: true, user: firebaseLikeUser }
+      return { success: true, user: firebaseLikeUser, userData: dbUser }
     } catch (error) {
       console.error('Sign in error:', error)
       toast.error(error.message)

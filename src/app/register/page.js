@@ -206,8 +206,10 @@ export default function RegisterPage() {
       if (result.success) {
         if (formData.role === 'VENDOR') {
           router.push(`/business-register?email=${encodeURIComponent(formData.email)}`)
+        } else if (formData.role === 'DRIVER') {
+          router.push('/driver/profile')
         } else {
-          router.push('/login')
+          router.push('/customer')
         }
       } else {
         setError(result.error || 'Registration failed. Please try again.')

@@ -48,6 +48,7 @@ export default function AdminDashboard() {
         const role = getUserRole(userData)
         if (role === 'CUSTOMER')    router.push('/customer')
         else if (role === 'VENDOR') router.push('/vendor/dashboard')
+        else if (role === 'DRIVER') router.push('/driver/dashboard')
         else                        router.push(access.redirectTo)
       }
     }

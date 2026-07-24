@@ -24,8 +24,10 @@ model Users {
   productsAsApprover Product[] @relation("ApproverProducts")
   productsAsCreator  Product[] @relation("CreatorProducts")
   productsAsVendor   Product[] @relation("VendorProducts")
-  orders             Order[]
+  orders             Order[]   @relation("CustomerOrders")
+  driverOrders       Order[]   @relation("DriverOrders")
   ownedFoodDeals    FoodDeal[] @relation("FoodDealVendorOwner")
+  driverProfile      DriverProfile?
 
   @@map("users")
 }
@@ -165,6 +167,7 @@ model FoodDeal {
 model Order {
   id               Int           @id @default(autoincrement())
   userId           Int           @map("user_id")
+  driverId         Int?          @map("driver_id")
   status           OrderStatus   @default(PENDING)
   shippingAddress  String?       @map("shipping_address") @db.VarChar(500)
   paymentMethod    String?       @map("payment_method") @db.VarChar(50)
@@ -174,10 +177,12 @@ model Order {
   estimatedDelivery DateTime?    @map("estimated_delivery")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
-  user             Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             Users         @relation("CustomerOrders", fields: [userId], references: [id], onDelete: Cascade)
+  driver           Users?        @relation("DriverOrders", fields: [driverId], references: [id], onDelete: SetNull)
   orderItems       OrderItem[]
 
   @@index([userId], map: "orders_user_id_fkey")
+  @@index([driverId], map: "orders_driver_id_fkey")
   @@map("orders")
 }
 
@@ -292,4 +297,42 @@ enum BusinessVerificationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+/// Driver-specific profile details (1-to-1 with Users)
+model DriverProfile {
+  id                    Int        @id @default(autoincrement())
+  userId                Int        @unique @map("user_id")
+  user                  Users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ── REQUIRED FIELDS ──
+  cnicNumber            String     @map("cnic_number") @db.VarChar(20)
+  licenseNumber         String     @map("license_number") @db.VarChar(50)
+  homeAddress           String     @map("home_address") @db.VarChar(500)
+  bankName              String     @map("bank_name") @db.VarChar(150)
+  bankAccountTitle      String     @map("bank_account_title") @db.VarChar(200)
+  bankAccountNumber     String     @map("bank_account_number") @db.VarChar(50)
+  profilePhotoUrl       String     @map("profile_photo_url") @db.VarChar(500)
+  equipmentDepositPaid  Boolean    @default(false) @map("equipment_deposit_paid")
+  smartphoneCompatible  Boolean    @default(false) @map("smartphone_compatible")
+
+  // ── OPTIONAL FIELDS ──
+  vehicleType           String?    @map("vehicle_type") @db.VarChar(50)
+  emergencyContactName  String?    @map("emergency_contact_name") @db.VarChar(150)
+  emergencyContactPhone String?    @map("emergency_contact_phone") @db.VarChar(20)
+  preferredZone         String?    @map("preferred_zone") @db.VarChar(150)
+  shiftSchedule         String?    @map("shift_schedule") @db.VarChar(100)
+
+  // State
+  dutyStatus            DutyStatus @default(OFF_DUTY) @map("duty_status")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+
+  @@map("driver_profiles")
+}
+
+enum DutyStatus {
+  ON_DUTY
+  OFF_DUTY
+  ON_DELIVERY
 }

@@ -59,7 +59,11 @@ export function checkUserAccess(user, userData, allowedRoles) {
     if (userData.role === 'GUEST' && allowedRoles.includes('CUSTOMER')) {
       return { hasAccess: true, reason: 'Guest access granted' }
     }
-    return { hasAccess: false, redirectTo: '/admin/dashboard', reason: 'Insufficient permissions' }
+    const fallbackRedirect = userData.role === 'CUSTOMER' ? '/customer'
+      : userData.role === 'VENDOR' ? '/vendor/dashboard'
+      : userData.role === 'DRIVER' ? '/driver/dashboard'
+      : '/admin/dashboard'
+    return { hasAccess: false, redirectTo: fallbackRedirect, reason: 'Insufficient permissions' }
   }
 
   return { hasAccess: true, reason: 'Access granted' }

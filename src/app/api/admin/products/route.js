@@ -260,8 +260,6 @@ export async function PUT(request) {
       subCatId,
       vendorId,
       proImages,
-      specifications,
-      features,
       status,
       approvalStatus
     } = await request.json()
@@ -292,14 +290,6 @@ export async function PUT(request) {
     // Serialize JSON fields to strings before saving (DB columns are String/LongText)
     if (proImages !== undefined) {
       updateData.proImages = proImages ? (typeof proImages === 'string' ? proImages : JSON.stringify(proImages)) : null
-    }
-
-    if (specifications !== undefined) {
-      updateData.specifications = specifications ? (typeof specifications === 'string' ? specifications : JSON.stringify(specifications)) : null
-    }
-
-    if (features !== undefined) {
-      updateData.features = features ? (typeof features === 'string' ? features : JSON.stringify(features)) : null
     }
 
     const updatedProduct = await prisma.product.update({

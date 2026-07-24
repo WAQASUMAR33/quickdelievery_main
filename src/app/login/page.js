@@ -114,6 +114,7 @@ export default function LoginPage() {
       const role = getUserRole(userData)
       if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
       else if (role === 'VENDOR')   router.push('/vendor/dashboard')
+      else if (role === 'DRIVER')   router.push('/driver/profile')
       else if (role === 'CUSTOMER') router.push('/customer')
     }
   }, [user, userData, authLoading, router])
@@ -124,7 +125,16 @@ export default function LoginPage() {
     setError('')
     try {
       const result = await signIn(email, password)
-      if (!result.success) setError(result.error || 'Login failed. Please check your credentials.')
+      if (result?.success && result?.userData) {
+        const role = getUserRole(result.userData)
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
+        else if (role === 'VENDOR')   router.push('/vendor/dashboard')
+        else if (role === 'DRIVER')   router.push('/driver/profile')
+        else if (role === 'CUSTOMER') router.push('/customer')
+        else                          router.push('/')
+      } else if (!result?.success) {
+        setError(result?.error || 'Login failed. Please check your credentials.')
+      }
     } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {

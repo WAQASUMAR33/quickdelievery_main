@@ -469,8 +469,6 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
     subCatId:       product?.subCatId       || '',
     vendorId:       product?.vendorId       || '',
     proImages:      product?.proImages      || [],
-    specifications: product?.specifications || {},
-    features:       product?.features       || [],
     status:         product?.status !== undefined ? product.status : true,
     approvalStatus: product?.approvalStatus || 'Pending',
   })
@@ -535,18 +533,7 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
       <TextField size="small" label="Description" multiline rows={4} value={formData.description}
         onChange={e => set('description', e.target.value)} {...tf} fullWidth />
 
-      <TextField size="small" label="Specifications (optional)" multiline rows={3} 
-        value={typeof formData.specifications === 'object' ? JSON.stringify(formData.specifications, null, 2) : formData.specifications}
-        onChange={e => {
-          try { set('specifications', JSON.parse(e.target.value)) } 
-          catch { set('specifications', e.target.value) }
-        }} 
-        placeholder='e.g. {"weight": "500g", "color": "red"}' {...tf} fullWidth />
 
-      <TextField size="small" label="Key Features (optional)" multiline rows={3} 
-        value={Array.isArray(formData.features) ? formData.features.join('\n') : formData.features}
-        onChange={e => set('features', e.target.value.split('\n').filter(f => f.trim()))}
-        placeholder="Enter one feature per line" {...tf} fullWidth />
 
       {/* Images */}
       <Box>

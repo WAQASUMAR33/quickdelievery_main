@@ -37,6 +37,8 @@ import FolderOutlinedIcon        from '@mui/icons-material/FolderOutlined'
 import AccountTreeOutlinedIcon   from '@mui/icons-material/AccountTreeOutlined'
 import ExpandLessIcon            from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon            from '@mui/icons-material/ExpandMore'
+import HistoryOutlinedIcon       from '@mui/icons-material/HistoryOutlined'
+import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
 
 const BRAND      = '#D70F64'
 const BG         = '#0f1724'   // deep navy
@@ -97,6 +99,26 @@ const VENDOR_ITEMS = [
   { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, path: '/admin/dashboard/settings' },
 ]
 
+const DRIVER_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/driver/dashboard' },
+  { id: 'order-history', label: 'Order History', icon: HistoryOutlinedIcon, path: '/driver/orders/history' },
+  {
+    id: 'profile',
+    label: 'Driver Profile',
+    icon: PersonOutlinedIcon,
+    path: '/driver/profile',
+    children: [
+      { id: 'personal',     label: 'Personal Info',       path: '/driver/profile?tab=0' },
+      { id: 'vehicle',      label: 'Vehicle & License',   path: '/driver/profile?tab=1' },
+      { id: 'verification', label: 'Verification & Docs', path: '/driver/profile?tab=2' },
+      { id: 'duty',         label: 'Duty & Shift',        path: '/driver/profile?tab=3' },
+      { id: 'payout',       label: 'Payout & Bank',       path: '/driver/profile?tab=4' },
+    ],
+  },
+  { id: 'disputes', label: 'Disputes', icon: WarningAmberOutlinedIcon, path: '/driver/profile?tab=5' },
+  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, path: '/admin/dashboard/settings' },
+]
+
 const DEFAULT_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardOutlinedIcon, path: '/admin/dashboard' },
   { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,  path: '/admin/dashboard/settings' },
@@ -128,7 +150,7 @@ const Sidebar = () => {
   }
 
   const role  = userData?.role || 'CUSTOMER'
-  const items = role === 'ADMIN' ? ADMIN_ITEMS : role === 'VENDOR' ? VENDOR_ITEMS : DEFAULT_ITEMS
+  const items = role === 'ADMIN' ? ADMIN_ITEMS : role === 'VENDOR' ? VENDOR_ITEMS : role === 'DRIVER' ? DRIVER_ITEMS : DEFAULT_ITEMS
 
   // ── NavItem sub-component ──────────────────────────────────────────────────
   const NavItem = ({ item }) => {
