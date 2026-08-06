@@ -4,21 +4,23 @@ import { createContext, useContext, useReducer, useEffect } from 'react'
 
 const CartContext = createContext()
 
+const getItemKey = (item) => `${item.proId}${item.selectedVariation ? '_' + item.selectedVariation.name : ''}`
+
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART': {
       const qtyToAdd = Math.max(1, Math.floor(Number(action.qtyToAdd) || 1))
       const product = action.payload
-      const existingItem = state.items.find(item => item.proId === product.proId)
-      if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map(item =>
-            item.proId === product.proId
-              ? { ...item, quantity: item.quantity + qtyToAdd }
-              : item
-          )
+      const key = getItemKey(product)
+      const existingItemIndex = state.items.findIndex(item => getItemKey(item) === key)
+      
+      if (existingItemIndex >= 0) {
+        const newItems = [...state.items]
+        newItems[existingItemIndex] = {
+          ...newItems[existingItemIndex],
+          quantity: newItems[existingItemIndex].quantity + qtyToAdd
         }
+        return { ...state, items: newItems }
       }
       return {
         ...state,
@@ -29,14 +31,14 @@ const cartReducer = (state, action) => {
     case 'REMOVE_FROM_CART':
       return {
         ...state,
-        items: state.items.filter(item => item.proId !== action.payload)
+        items: state.items.filter(item => getItemKey(item) !== action.payload)
       }
     
     case 'UPDATE_QUANTITY':
       return {
         ...state,
         items: state.items.map(item =>
-          item.proId === action.payload.proId
+          getItemKey(item) === action.payload.key
             ? { ...item, quantity: Math.max(0, action.payload.quantity) }
             : item
         ).filter(item => item.quantity > 0)
@@ -87,12 +89,12 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'ADD_TO_CART', payload: product, qtyToAdd })
   }
 
-  const removeFromCart = (productId) => {
-    dispatch({ type: 'REMOVE_FROM_CART', payload: productId })
+  const removeFromCart = (itemKey) => {
+    dispatch({ type: 'REMOVE_FROM_CART', payload: itemKey })
   }
 
-  const updateQuantity = (productId, quantity) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { proId: productId, quantity } })
+  const updateQuantity = (itemKey, quantity) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { key: itemKey, quantity } })
   }
 
   const clearCart = () => {

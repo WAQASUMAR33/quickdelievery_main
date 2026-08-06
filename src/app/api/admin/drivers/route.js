@@ -24,42 +24,62 @@ export async function GET(request) {
       whereClause.emailVerification = verified === 'true'
     }
 
-    // Get drivers with pagination
+    // Get drivers with pagination including their driver profile
     const drivers = await prisma.users.findMany({
       where: whereClause,
-      select: {
-        id: true,
-        uid: true,
-        username: true,
-        email: true,
-        phoneNumber: true,
-        role: true,
-        emailVerification: true,
-        type: true,
-        createdAt: true,
-        updatedAt: true
+      include: {
+        driverProfile: true
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit
     })
 
+    const formattedDrivers = drivers.map(user => {
+      const dp = user.driverProfile
+      return {
+        id: user.id,
+        uid: user.uid,
+        username: user.username,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        emailVerification: user.emailVerification,
+        type: user.type,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        driverProfile: dp || null,
+
+        // Flattened driver fields
+        cnicNumber: dp?.cnicNumber || '',
+        licenseNumber: dp?.licenseNumber || '',
+        homeAddress: dp?.homeAddress || '',
+        bankName: dp?.bankName || '',
+        bankAccountTitle: dp?.bankAccountTitle || '',
+        bankAccountNumber: dp?.bankAccountNumber || '',
+        profilePhotoUrl: dp?.profilePhotoUrl || '',
+        equipmentDepositPaid: dp?.equipmentDepositPaid || false,
+        smartphoneCompatible: dp?.smartphoneCompatible || false,
+        vehicleType: dp?.vehicleType || '',
+        emergencyContactName: dp?.emergencyContactName || '',
+        emergencyContactPhone: dp?.emergencyContactPhone || '',
+        preferredZone: dp?.preferredZone || '',
+        shiftSchedule: dp?.shiftSchedule || '',
+        dutyStatus: dp?.dutyStatus || 'OFF_DUTY',
+      }
+    })
+
     // Get total count
     const totalCount = await prisma.users.count({ where: whereClause })
 
     // Get statistics
-    const stats = await prisma.users.groupBy({
-      by: ['role'],
-      _count: { role: true }
-    })
-
     const totalDrivers = await prisma.users.count({ where: { role: 'DRIVER' } })
     const verifiedDrivers = await prisma.users.count({ where: { role: 'DRIVER', emailVerification: true } })
     const unverifiedDrivers = await prisma.users.count({ where: { role: 'DRIVER', emailVerification: false } })
 
     return Response.json({
       success: true,
-      data: drivers,
+      data: formattedDrivers,
       pagination: {
         page,
         limit,

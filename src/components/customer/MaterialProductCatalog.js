@@ -35,7 +35,13 @@ import {
   Container,
   Paper,
   Stack,
-  Fab
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Radio,
+  RadioGroup
 } from '@mui/material'
 import {
   Search,
@@ -65,6 +71,9 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
   const [selectedVendor, setSelectedVendor] = useState('')
   const [priceRange, setPriceRange] = useState([0, 100000])
   const [showFilters, setShowFilters] = useState(false)
+  const [variationModalOpen, setVariationModalOpen] = useState(false)
+  const [selectedProductForVariation, setSelectedProductForVariation] = useState(null)
+  const [selectedVariation, setSelectedVariation] = useState(null)
 
   useEffect(() => {
     fetchProducts()
@@ -292,7 +301,22 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
                 <Button
                   variant="contained"
                   startIcon={<ShoppingCart />}
-                  onClick={() => onAddToCart(product)}
+                  onClick={() => {
+                    let parsedVariations = []
+                    try {
+                      parsedVariations = product.variations ? (typeof product.variations === 'string' ? JSON.parse(product.variations) : product.variations) : []
+                    } catch (e) {
+                      console.error('Error parsing variations', e)
+                    }
+
+                    if (parsedVariations && parsedVariations.length > 0) {
+                      setSelectedProductForVariation(product)
+                      setSelectedVariation(parsedVariations[0]) // Select first by default
+                      setVariationModalOpen(true)
+                    } else {
+                      onAddToCart(product)
+                    }
+                  }}
                   size="small"
                 >
                   Add
@@ -540,6 +564,70 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
           )}
         </Box>
       </Box>
+
+      {/* Variations Modal */}
+      <Dialog open={variationModalOpen} onClose={() => setVariationModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Select Variation</DialogTitle>
+        <DialogContent dividers>
+          {selectedProductForVariation && (
+            <Box>
+              <Typography variant="body1" gutterBottom fontWeight={600}>
+                {selectedProductForVariation.proName}
+              </Typography>
+              <RadioGroup
+                value={selectedVariation ? selectedVariation.name : ''}
+                onChange={(e) => {
+                  const parsed = typeof selectedProductForVariation.variations === 'string' ? JSON.parse(selectedProductForVariation.variations) : selectedProductForVariation.variations;
+                  const found = parsed.find(v => v.name === e.target.value);
+                  setSelectedVariation(found);
+                }}
+              >
+                {(typeof selectedProductForVariation.variations === 'string' ? JSON.parse(selectedProductForVariation.variations) : selectedProductForVariation.variations || []).map((variation, index) => (
+                  <FormControlLabel
+                    key={index}
+                    value={variation.name}
+                    control={<Radio />}
+                    label={
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', ml: 1 }}>
+                        <Typography>{variation.name}</Typography>
+                        <Box>
+                          <Typography component="span" fontWeight="bold" color="primary">
+                            ${parseFloat(variation.price).toFixed(2)}
+                          </Typography>
+                          {parseFloat(variation.discount) > 0 && (
+                            <Typography component="span" variant="caption" color="text.secondary" sx={{ textDecoration: 'line-through', ml: 1 }}>
+                              ${(parseFloat(variation.price) + parseFloat(variation.discount)).toFixed(2)}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    }
+                    sx={{ width: '100%', border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 1, p: 1, alignItems: 'center' }}
+                  />
+                ))}
+              </RadioGroup>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVariationModalOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              const productToAdd = { 
+                ...selectedProductForVariation, 
+                selectedVariation,
+                price: selectedVariation.price,
+                salePrice: parseFloat(selectedVariation.discount) > 0 ? (parseFloat(selectedVariation.price) - parseFloat(selectedVariation.discount)) : null
+              }
+              onAddToCart(productToAdd)
+              setVariationModalOpen(false)
+            }}
+          >
+            Add to Cart
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   )
 }

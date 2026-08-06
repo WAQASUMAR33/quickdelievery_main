@@ -161,6 +161,8 @@ const OrderHistory = () => {
             trackingNumber: order.trackingNumber || null,
             estimatedDelivery: order.estimatedDelivery || null,
             paymentMethod: order.paymentMethod || 'N/A',
+            deliveryLatitude: order.deliveryLatitude || null,
+            deliveryLongitude: order.deliveryLongitude || null,
           }
         })
 

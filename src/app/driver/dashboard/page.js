@@ -7,15 +7,19 @@ import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import DriverOrders from '@/components/driver/DriverOrders'
 
+import { useState } from 'react'
 import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography       from '@mui/material/Typography'
+import Tabs             from '@mui/material/Tabs'
+import Tab              from '@mui/material/Tab'
 
 const BRAND = '#D70F64'
 
 export default function DriverDashboardPage() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
+  const [tabValue, setTabValue] = useState(0)
 
   useEffect(() => {
     if (!loading && user) {
@@ -42,13 +46,29 @@ export default function DriverDashboardPage() {
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" fontWeight={700}>Active Deliveries</Typography>
+          <Typography variant="h5" fontWeight={700}>Driver Dashboard</Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            View delivery assignments, pickup & drop-off locations, order details, and update delivery status.
+            Claim available orders or view your active delivery assignments.
           </Typography>
         </Box>
 
-        <DriverOrders />
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={(e, val) => setTabValue(val)}
+            TabIndicatorProps={{ style: { backgroundColor: BRAND } }}
+            sx={{
+              '& .MuiTab-root': { fontWeight: 600 },
+              '& .Mui-selected': { color: `${BRAND} !important` }
+            }}
+          >
+            <Tab label="Available Orders (Pool)" />
+            <Tab label="My Active Deliveries" />
+          </Tabs>
+        </Box>
+
+        {tabValue === 0 && <DriverOrders poolMode={true} />}
+        {tabValue === 1 && <DriverOrders />}
       </Box>
     </DashboardLayout>
   )

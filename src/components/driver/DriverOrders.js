@@ -81,7 +81,7 @@ function getVendorsFromOrder(order) {
   return Array.from(map.values())
 }
 
-export default function DriverOrders({ historyMode = false }) {
+export default function DriverOrders({ historyMode = false, poolMode = false }) {
   const { userData } = useAuth()
   const [orders,       setOrders]       = useState([])
   const [loading,      setLoading]      = useState(true)
@@ -98,6 +98,7 @@ export default function DriverOrders({ historyMode = false }) {
       setLoading(true)
       const params = new URLSearchParams({ page: currentPage.toString(), limit: '20' })
       if (historyMode)  params.set('history', 'true')
+      if (poolMode)     params.set('pool', 'true')
       if (statusFilter) params.set('status', statusFilter)
       if (userData?.id) params.set('driverId', userData.id)
 
@@ -107,6 +108,9 @@ export default function DriverOrders({ historyMode = false }) {
       if (json.success) {
         setOrders(json.data || [])
         setTotalPages(json.pagination?.pages || 1)
+        if (json.stats) {
+          setStats(json.stats)
+        }
       }
     } catch (err) {
       console.error('Error fetching driver orders:', err)
@@ -114,29 +118,26 @@ export default function DriverOrders({ historyMode = false }) {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, statusFilter, historyMode])
+  }, [currentPage, statusFilter, historyMode, poolMode, userData?.id])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
-  /* ── Compute stats ── */
-  useEffect(() => {
-    const all = orders
-    setStats({
-      active:    all.filter(o => ['PENDING', 'PROCESSING', 'SHIPPED'].includes(o.status)).length,
-      delivered: all.filter(o => o.status === 'DELIVERED').length,
-      earnings:  all.filter(o => o.status === 'DELIVERED').reduce((s, o) => s + (parseFloat(o.serviceCharge) || 0), 0),
-      onTime:    all.length ? '98.5%' : '—',
-    })
-  }, [orders])
-
   /* ── Update status ── */
-  const handleStatusUpdate = async (orderId, newStatus) => {
+  const handleStatusUpdate = async (orderId, newStatus, claim = false) => {
     try {
       setUpdatingId(orderId)
+      
+      const payload = { orderId }
+      if (claim) {
+        payload.driverId = userData?.id
+      } else {
+        payload.status = newStatus
+      }
+      
       const res  = await fetch('/api/driver/orders', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, status: newStatus }),
+        body: JSON.stringify(payload),
       })
       const json = await res.json()
       if (json.success) {
@@ -249,7 +250,11 @@ export default function DriverOrders({ historyMode = false }) {
             {historyMode ? 'No delivery history yet' : 'No active deliveries'}
           </Typography>
           <Typography variant="body2" color="text.disabled" mt={1}>
-            {historyMode ? 'Completed and cancelled deliveries will appear here.' : 'New delivery assignments will appear here when orders come in.'}
+            {historyMode 
+              ? 'Completed and cancelled deliveries will appear here.' 
+              : poolMode 
+                ? 'No orders available to claim right now.' 
+                : 'New delivery assignments will appear here when orders come in.'}
           </Typography>
         </Card>
       )}
@@ -460,8 +465,13 @@ export default function DriverOrders({ historyMode = false }) {
                                       {item.product?.proName || `Product #${item.productId}`}
                                     </Typography>
                                     {item.product?.category?.name && (
-                                      <Typography variant="caption" color="text.disabled">
+                                      <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
                                         {item.product.category.name}
+                                      </Typography>
+                                    )}
+                                    {item.variationJson && (
+                                      <Typography variant="caption" sx={{ color: BRAND, fontWeight: 600, display: 'block' }}>
+                                        Var: {JSON.parse(item.variationJson).name}
                                       </Typography>
                                     )}
                                   </Box>
@@ -601,7 +611,23 @@ export default function DriverOrders({ historyMode = false }) {
                             >
                               Decline / Cancel
                             </Button>
-                            {flow && (
+                            {poolMode ? (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => handleStatusUpdate(order.id, 'PROCESSING', true)}
+                                disabled={isUpdating}
+                                startIcon={isUpdating ? <CircularProgress size={16} color="inherit" /> : <PersonOutlinedIcon />}
+                                sx={{
+                                  borderRadius: 0,
+                                  bgcolor: BRAND,
+                                  fontWeight: 700,
+                                  '&:hover': { bgcolor: BRAND, filter: 'brightness(0.9)' },
+                                }}
+                              >
+                                Accept Order
+                              </Button>
+                            ) : flow && (
                               <Button
                                 variant="contained"
                                 size="small"

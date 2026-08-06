@@ -114,7 +114,7 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const { userId, items, shippingAddress, paymentMethod, totalAmount } = body
+    const { userId, items, shippingAddress, paymentMethod, totalAmount, deliveryLatitude, deliveryLongitude } = body
     
     console.log('Order creation request:', { userId, itemCount: items?.length, totalAmount })
     
@@ -242,7 +242,8 @@ export async function POST(request) {
         create: items.map(item => ({
           productId: parseInt(item.proId),
           quantity: parseInt(item.quantity),
-          price: parseFloat(item.price)
+          price: parseFloat(item.price),
+          variationJson: item.selectedVariation ? JSON.stringify(item.selectedVariation) : null
         }))
       }
     }

@@ -440,7 +440,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
                             />
                           )}
-                          <Typography variant="body2" fontWeight={600}>{item.product?.proName || 'Unknown'}</Typography>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>{item.product?.proName || 'Unknown'}</Typography>
+                            {item.variationJson && (
+                              <Typography variant="caption" sx={{ color: BRAND, fontWeight: 600, display: 'block' }}>
+                                Var: {JSON.parse(item.variationJson).name}
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
                       </TableCell>
                       <TableCell>

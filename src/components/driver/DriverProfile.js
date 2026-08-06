@@ -20,6 +20,8 @@ import InputLabel       from '@mui/material/InputLabel'
 import MenuItem         from '@mui/material/MenuItem'
 import Select           from '@mui/material/Select'
 import Switch           from '@mui/material/Switch'
+import Tab              from '@mui/material/Tab'
+import Tabs             from '@mui/material/Tabs'
 import TextField        from '@mui/material/TextField'
 import Typography       from '@mui/material/Typography'
 
@@ -155,28 +157,29 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
   // Populate profile
   const populateProfile = useCallback((data) => {
     setDriver(data)
+    const dp = data.driverProfile || {}
     setFormData({
       username: data.username || '',
       email: data.email || '',
       phoneNumber: data.phoneNumber || '',
       emailVerification: data.emailVerification ?? false,
       
-      cnicNumber: data.cnicNumber || '',
-      licenseNumber: data.licenseNumber || '',
-      homeAddress: data.homeAddress || '',
-      bankName: data.bankName || '',
-      bankAccountTitle: data.bankAccountTitle || '',
-      bankAccountNumber: data.bankAccountNumber || '',
-      profilePhotoUrl: data.profilePhotoUrl || '',
-      equipmentDepositPaid: data.equipmentDepositPaid || false,
-      smartphoneCompatible: data.smartphoneCompatible || false,
+      cnicNumber: data.cnicNumber || dp.cnicNumber || '',
+      licenseNumber: data.licenseNumber || dp.licenseNumber || '',
+      homeAddress: data.homeAddress || dp.homeAddress || '',
+      bankName: data.bankName || dp.bankName || '',
+      bankAccountTitle: data.bankAccountTitle || dp.bankAccountTitle || '',
+      bankAccountNumber: data.bankAccountNumber || dp.bankAccountNumber || '',
+      profilePhotoUrl: data.profilePhotoUrl || dp.profilePhotoUrl || '',
+      equipmentDepositPaid: data.equipmentDepositPaid ?? dp.equipmentDepositPaid ?? false,
+      smartphoneCompatible: data.smartphoneCompatible ?? dp.smartphoneCompatible ?? false,
 
-      vehicleType: data.vehicleType || '',
-      emergencyContactName: data.emergencyContactName || '',
-      emergencyContactPhone: data.emergencyContactPhone || '',
-      preferredZone: data.preferredZone || '',
-      shiftSchedule: data.shiftSchedule || '',
-      dutyStatus: data.dutyStatus || 'OFF_DUTY',
+      vehicleType: data.vehicleType || dp.vehicleType || '',
+      emergencyContactName: data.emergencyContactName || dp.emergencyContactName || '',
+      emergencyContactPhone: data.emergencyContactPhone || dp.emergencyContactPhone || '',
+      preferredZone: data.preferredZone || dp.preferredZone || '',
+      shiftSchedule: data.shiftSchedule || dp.shiftSchedule || '',
+      dutyStatus: data.dutyStatus || dp.dutyStatus || 'OFF_DUTY',
     })
   }, [])
 
@@ -219,10 +222,8 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
   useEffect(() => {
     if (initialDriver) {
       populateProfile(initialDriver)
-      setLoading(false)
-    } else {
-      fetchProfile()
     }
+    fetchProfile()
   }, [initialDriver, fetchProfile, populateProfile])
 
   // Save profile
@@ -481,7 +482,29 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
         ))}
       </Box>
 
-      {/* ── Section Content Card (Full Width - Navigated strictly via Main Left Sidebar) ── */}
+      {/* ── Section Tabs Navigation Bar ── */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': { textTransform: 'none', fontWeight: 700, fontSize: 13, minHeight: 48 },
+            '& .Mui-selected': { color: BRAND },
+            '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
+          }}
+        >
+          <Tab icon={<PersonOutlinedIcon fontSize="small" />} iconPosition="start" label="Personal Info" />
+          <Tab icon={<TwoWheelerOutlinedIcon fontSize="small" />} iconPosition="start" label="Vehicle & Equipment" />
+          <Tab icon={<ShieldOutlinedIcon fontSize="small" />} iconPosition="start" label="Verification & Docs" />
+          <Tab icon={<AccessTimeOutlinedIcon fontSize="small" />} iconPosition="start" label="Duty & Shift" />
+          <Tab icon={<AccountBalanceOutlinedIcon fontSize="small" />} iconPosition="start" label="Payout & Bank" />
+          <Tab icon={<ReportProblemOutlinedIcon fontSize="small" />} iconPosition="start" label="Disputes & Claims" />
+        </Tabs>
+      </Box>
+
+      {/* ── Section Content Card ── */}
       <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
         <CardContent sx={{ p: 3 }}>
           <form onSubmit={handleSaveProfile}>

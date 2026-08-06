@@ -94,6 +94,8 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const [topShops, setTopShops] = useState([])
   const [detailProduct, setDetailProduct] = useState(null)
   const [modalQty, setModalQty] = useState(1)
+  const [selectedVariation, setSelectedVariation] = useState(null)
+  const [parsedVariations, setParsedVariations] = useState([])
   const dealsCarouselRef = useRef(null)
   const [visibleCatCount, setVisibleCatCount] = useState(5)
   const [visibleSubcatCount, setVisibleSubcatCount] = useState(10)
@@ -526,6 +528,16 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   toast.error('This offer is not tied to a catalogue SKU. Add the items you want from search or categories.')
                   return
                 }
+                let parsedVariations = []
+                try {
+                  parsedVariations = product.variations ? (typeof product.variations === 'string' ? JSON.parse(product.variations) : product.variations) : []
+                } catch (e) {}
+
+                if (parsedVariations && parsedVariations.length > 0) {
+                  setDetailProduct(product)
+                  return
+                }
+
                 addToCart(product, 1)
                 if (isGuest) toast.success('Item added! Create an account to save your cart.')
                 else toast.success('Added to cart')
@@ -1341,10 +1353,49 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       ${parseFloat(detailProduct.price || 0).toFixed(2)}
                     </span>
                   )}
-                  {!detailProduct.__isCustomDeal && (
+                  {!detailProduct.__isCustomDeal && !selectedVariation && (
                     <span className="text-xs text-gray-400 font-medium">per unit</span>
                   )}
                 </div>
+
+                {/* Variations UI */}
+                {parsedVariations.length > 0 && (
+                  <div className="flex flex-col gap-2 mt-4">
+                    <span className="text-sm font-bold text-gray-700">Select Variation</span>
+                    <div className="grid gap-2">
+                      {parsedVariations.map((v, i) => (
+                        <label
+                          key={i}
+                          className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-colors ${
+                            selectedVariation?.name === v.name
+                              ? 'border-[#D70F64] bg-pink-50'
+                              : 'border-gray-200 hover:border-pink-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="variation"
+                              value={v.name}
+                              checked={selectedVariation?.name === v.name}
+                              onChange={() => setSelectedVariation(v)}
+                              className="h-4 w-4 text-[#D70F64] focus:ring-[#D70F64]"
+                            />
+                            <span className="font-medium text-gray-800">{v.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#D70F64]">${parseFloat(v.price).toFixed(2)}</span>
+                            {parseFloat(v.discount) > 0 && (
+                              <span className="text-xs text-gray-400 line-through">
+                                ${(parseFloat(v.price) + parseFloat(v.discount)).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Quantity & Add to cart */}
                 {!detailProduct.__isCustomDeal ? (
@@ -1378,7 +1429,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                     <div className="flex items-center justify-between px-1">
                       <span className="text-sm font-bold text-gray-600">Line total</span>
                       <span className="text-xl font-black tabular-nums text-[#D70F64]">
-                        ${(getEffectiveUnitPrice(detailProduct) * modalQty).toFixed(2)}
+                        ${((selectedVariation ? parseFloat(selectedVariation.price) : getEffectiveUnitPrice(detailProduct)) * modalQty).toFixed(2)}
                       </span>
                     </div>
 
@@ -1387,7 +1438,16 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => {
-                        addToCart(detailProduct, modalQty)
+                        const productToAdd = selectedVariation
+                          ? { 
+                              ...detailProduct, 
+                              selectedVariation,
+                              price: selectedVariation.price,
+                              salePrice: parseFloat(selectedVariation.discount) > 0 ? (parseFloat(selectedVariation.price) - parseFloat(selectedVariation.discount)) : null
+                            }
+                          : detailProduct
+
+                        addToCart(productToAdd, modalQty)
                         if (isGuest) {
                           toast.success('Item added! Create an account to save your cart.')
                         } else {

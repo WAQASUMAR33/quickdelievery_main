@@ -98,35 +98,11 @@ export async function PUT(request) {
       return Response.json({ success: false, error: 'User is not a driver' }, { status: 403 })
     }
 
-    // ── STRICT VALIDATIONS ──
+    // ── VALIDATIONS ──
     
-    // CNIC Validation: XXXXX-XXXXXXX-X
-    if (!body.cnicNumber || !/^\d{5}-\d{7}-\d{1}$/.test(body.cnicNumber)) {
-      return Response.json({ success: false, error: 'Valid CNIC in format XXXXX-XXXXXXX-X is required' }, { status: 400 })
-    }
-
-    if (!body.licenseNumber || body.licenseNumber.trim().length < 4) {
-      return Response.json({ success: false, error: 'Valid Driving License is required' }, { status: 400 })
-    }
-
-    if (!body.homeAddress || body.homeAddress.trim().length < 10) {
-      return Response.json({ success: false, error: 'Valid Home Address is required for verification' }, { status: 400 })
-    }
-
-    if (!body.bankName || !body.bankAccountTitle || !body.bankAccountNumber) {
-      return Response.json({ success: false, error: 'Complete Financial Account details are required' }, { status: 400 })
-    }
-
-    if (!body.profilePhotoUrl) {
-      return Response.json({ success: false, error: 'Rider Profile Photo is required' }, { status: 400 })
-    }
-
-    if (body.equipmentDepositPaid !== true) {
-      return Response.json({ success: false, error: 'Equipment Deposit must be paid to complete registration' }, { status: 400 })
-    }
-
-    if (body.smartphoneCompatible !== true) {
-      return Response.json({ success: false, error: 'A compatible smartphone (Android 7.0+ or iOS 9.0+) is required' }, { status: 400 })
+    // CNIC Validation: XXXXX-XXXXXXX-X or 13 digits
+    if (body.cnicNumber && !/^\d{5}-?\d{7}-?\d{1}$/.test(body.cnicNumber.trim())) {
+      return Response.json({ success: false, error: 'Valid CNIC in format XXXXX-XXXXXXX-X or 13 digits is required' }, { status: 400 })
     }
 
 

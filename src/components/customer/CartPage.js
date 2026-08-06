@@ -22,6 +22,7 @@ import {
 
 const CartPage = ({ onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice, getTotalItems } = useCart()
+  const getItemKey = (item) => `${item.proId}${item.selectedVariation ? '_' + item.selectedVariation.name : ''}`
   const subtotalCart = getTotalPrice()
   const serviceChargeAmt = computeServiceCharge(subtotalCart)
   const orderGrandTotal = computeOrderTotalWithService(subtotalCart)
@@ -236,6 +237,11 @@ const CartPage = ({ onClose }) => {
                       <div className="flex-1 min-w-0 flex flex-col gap-1">
                         <h3 className="font-semibold text-gray-800 text-sm truncate">{item.proName}</h3>
                         <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                        {item.selectedVariation && (
+                          <p className="text-xs font-semibold text-[#D70F64] line-clamp-1">
+                            Variation: {item.selectedVariation.name}
+                          </p>
+                        )}
                         <div className="flex items-center justify-between mt-1">
                           <div className="flex items-center space-x-2">
                             <span className="text-base font-bold text-[#F25D49]">
@@ -257,7 +263,7 @@ const CartPage = ({ onClose }) => {
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
                           <button
-                            onClick={() => updateQuantity(item.proId, item.quantity - 1)}
+                            onClick={() => updateQuantity(getItemKey(item), item.quantity - 1)}
                             className="p-1.5 hover:bg-gray-200 rounded-l-lg transition-colors"
                             aria-label="Decrease quantity"
                           >
@@ -265,7 +271,7 @@ const CartPage = ({ onClose }) => {
                           </button>
                           <span className="w-10 text-center font-medium text-sm">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.proId, item.quantity + 1)}
+                            onClick={() => updateQuantity(getItemKey(item), item.quantity + 1)}
                             className="p-1.5 hover:bg-gray-200 rounded-r-lg transition-colors"
                             aria-label="Increase quantity"
                           >
@@ -274,7 +280,7 @@ const CartPage = ({ onClose }) => {
                         </div>
                         
                         <button
-                          onClick={() => removeFromCart(item.proId)}
+                          onClick={() => removeFromCart(getItemKey(item))}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           aria-label="Remove item"
                         >
