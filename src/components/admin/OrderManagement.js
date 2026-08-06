@@ -104,7 +104,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
       const res  = await fetch(`/api/orders?${params}`)
       const data = await res.json()
       if (data.success) {
-        setOrders(data.data || [])
+        setOrders(Array.isArray(data.data) ? data.data : [])
         setTotalPages(data.pagination?.pages || 1)
       }
     } catch (err) {

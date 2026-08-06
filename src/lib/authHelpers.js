@@ -62,7 +62,7 @@ export function checkUserAccess(user, userData, allowedRoles) {
     const fallbackRedirect = userData.role === 'CUSTOMER' ? '/customer'
       : userData.role === 'VENDOR' ? '/vendor/dashboard'
       : userData.role === 'DRIVER' ? '/driver/dashboard'
-      : '/admin/dashboard'
+      : '/login'
     return { hasAccess: false, redirectTo: fallbackRedirect, reason: 'Insufficient permissions' }
   }
 

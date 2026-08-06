@@ -67,18 +67,19 @@ export default function AdminDashboard() {
           customersRes.json(),
           productsRes.json(),
         ])
-        if (customersData.success && productsData.success) {
-          setStats({
-            totalUsers:       customersData.data?.length || 0,
-            totalCustomers:   customersData.data?.filter(u => u.role === 'CUSTOMER').length || 0,
-            totalVendors:     customersData.data?.filter(u => u.role === 'VENDOR').length || 0,
-            verifiedUsers:    customersData.data?.filter(u => u.emailVerification).length || 0,
-            totalProducts:    productsData.data?.length || 0,
-            approvedProducts: productsData.data?.filter(p => p.approvalStatus === 'Approved').length || 0,
-            pendingProducts:  productsData.data?.filter(p => p.approvalStatus === 'Pending').length || 0,
-            activeProducts:   productsData.data?.filter(p => p.status).length || 0,
-          })
-        }
+        const usersList = Array.isArray(customersData?.data) ? customersData.data : []
+        const productsList = Array.isArray(productsData?.data) ? productsData.data : []
+
+        setStats({
+          totalUsers:       usersList.length,
+          totalCustomers:   usersList.filter(u => u.role === 'CUSTOMER').length,
+          totalVendors:     usersList.filter(u => u.role === 'VENDOR').length,
+          verifiedUsers:    usersList.filter(u => u.emailVerification).length,
+          totalProducts:    productsList.length,
+          approvedProducts: productsList.filter(p => p.approvalStatus === 'Approved').length,
+          pendingProducts:  productsList.filter(p => p.approvalStatus === 'Pending').length,
+          activeProducts:   productsList.filter(p => p.status).length,
+        })
       } catch (e) { console.error(e) }
     }
     fetchStats()
