@@ -146,6 +146,10 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
     vehicleNumberFrontUrl: '',
     vehicleRegCertFrontUrl: '',
     vehicleRegCertBackUrl: '',
+    cnicFrontUrl: '',
+    cnicBackUrl: '',
+    licenseFrontUrl: '',
+    licenseBackUrl: '',
     equipmentDepositPaid: false,
     smartphoneCompatible: false,
 
@@ -178,6 +182,10 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
       vehicleNumberFrontUrl: data.vehicleNumberFrontUrl || dp.vehicleNumberFrontUrl || '',
       vehicleRegCertFrontUrl: data.vehicleRegCertFrontUrl || dp.vehicleRegCertFrontUrl || '',
       vehicleRegCertBackUrl: data.vehicleRegCertBackUrl || dp.vehicleRegCertBackUrl || '',
+      cnicFrontUrl: data.cnicFrontUrl || dp.cnicFrontUrl || '',
+      cnicBackUrl: data.cnicBackUrl || dp.cnicBackUrl || '',
+      licenseFrontUrl: data.licenseFrontUrl || dp.licenseFrontUrl || '',
+      licenseBackUrl: data.licenseBackUrl || dp.licenseBackUrl || '',
       equipmentDepositPaid: data.equipmentDepositPaid ?? dp.equipmentDepositPaid ?? false,
       smartphoneCompatible: data.smartphoneCompatible ?? dp.smartphoneCompatible ?? false,
 
@@ -587,18 +595,6 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       </Button>
                     </Box>
                     <TextField
-                      label="Home Address Verification *"
-                      value={formData.homeAddress}
-                      onChange={e => setFormData({ ...formData, homeAddress: e.target.value })}
-                      disabled={!isEditing}
-                      size="small"
-                      required
-                      fullWidth
-                      placeholder="e.g. Utility bill verified address"
-                      sx={{ gridColumn: { md: 'span 2' } }}
-                      {...fieldSx}
-                    />
-                    <TextField
                       label="Preferred Working Zone"
                       value={formData.preferredZone}
                       onChange={e => setFormData({ ...formData, preferredZone: e.target.value })}
@@ -773,26 +769,71 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       fullWidth
                       {...fieldSx}
                     />
+                    <TextField
+                      label="Home Address Verification *"
+                      value={formData.homeAddress}
+                      onChange={e => setFormData({ ...formData, homeAddress: e.target.value })}
+                      disabled={!isEditing}
+                      size="small"
+                      required
+                      fullWidth
+                      placeholder="e.g. 123 Fake Street, Lahore"
+                      sx={{ gridColumn: { md: 'span 2' } }}
+                      {...fieldSx}
+                    />
                   </Box>
 
                   <Divider sx={{ my: 1 }} />
 
                   <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                    Document Upload Checklist
+                    Document Uploads
                   </Typography>
 
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 2 }}>
                     {[
-                      { name: 'CNIC Front & Back', status: 'VERIFIED', icon: <BadgeOutlinedIcon /> },
-                      { name: 'Driving License Copy', status: 'VERIFIED', icon: <ShieldOutlinedIcon /> },
-                      { name: 'Home Address Verification', status: 'VERIFIED', icon: <CheckCircleOutlinedIcon /> },
+                      { key: 'cnicFrontUrl', label: 'CNIC (Front)' },
+                      { key: 'cnicBackUrl', label: 'CNIC (Back)' },
+                      { key: 'licenseFrontUrl', label: 'Driving License (Front)' },
+                      { key: 'licenseBackUrl', label: 'Driving License (Back)' },
                     ].map(doc => (
-                      <Box key={doc.name} sx={{ p: 2, border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Box sx={{ color: BRAND }}>{doc.icon}</Box>
-                          <Typography variant="body2" fontWeight={600}>{doc.name}</Typography>
+                      <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {formData[doc.key] ? (
+                            <Avatar src={formData[doc.key]} sx={{ width: 40, height: 40, borderRadius: 1 }} variant="square" />
+                          ) : (
+                            <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
+                              <Typography variant="caption" color="text.secondary">No Img</Typography>
+                            </Box>
+                          )}
+                          <Box>
+                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>{doc.label} *</Typography>
+                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, readable picture</Typography>
+                          </Box>
                         </Box>
-                        <Chip label="Verified" size="small" color="success" variant="outlined" sx={{ borderRadius: 0, fontSize: 10, fontWeight: 700 }} />
+                        <Button
+                          component="label"
+                          variant="outlined"
+                          size="small"
+                          disabled={!isEditing}
+                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215, 15, 100, 0.04)' } }}
+                        >
+                          Upload
+                          <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0]
+                              if (file) {
+                                const reader = new FileReader()
+                                reader.onload = (ev) => {
+                                  setFormData({ ...formData, [doc.key]: ev.target.result })
+                                }
+                                reader.readAsDataURL(file)
+                              }
+                            }}
+                          />
+                        </Button>
                       </Box>
                     ))}
                   </Box>

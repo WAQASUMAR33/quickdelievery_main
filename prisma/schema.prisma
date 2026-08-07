@@ -321,10 +321,14 @@ model DriverProfile {
 
   // ── OPTIONAL FIELDS ──
   vehicleType           String?    @map("vehicle_type") @db.VarChar(50)
-  vehicleNumberFrontUrl String?    @map("vehicle_number_front_url") @db.VarChar(500)
-  vehicleRegCertFrontUrl String?   @map("vehicle_reg_cert_front_url") @db.VarChar(500)
-  vehicleRegCertBackUrl String?    @map("vehicle_reg_cert_back_url") @db.VarChar(500)
-  emergencyContactName  String?    @map("emergency_contact_name") @db.VarChar(150)
+  vehicleNumberFrontUrl  String?    @map("vehicle_number_front_url") @db.VarChar(500)
+  vehicleRegCertFrontUrl String?    @map("vehicle_reg_cert_front_url") @db.VarChar(500)
+  vehicleRegCertBackUrl  String?    @map("vehicle_reg_cert_back_url") @db.VarChar(500)
+  cnicFrontUrl           String?    @map("cnic_front_url") @db.VarChar(500)
+  cnicBackUrl            String?    @map("cnic_back_url") @db.VarChar(500)
+  licenseFrontUrl        String?    @map("license_front_url") @db.VarChar(500)
+  licenseBackUrl         String?    @map("license_back_url") @db.VarChar(500)
+  emergencyContactName   String?    @map("emergency_contact_name") @db.VarChar(150)
   emergencyContactPhone String?    @map("emergency_contact_phone") @db.VarChar(20)
   preferredZone         String?    @map("preferred_zone") @db.VarChar(150)
   shiftSchedule         String?    @map("shift_schedule") @db.VarChar(100)
