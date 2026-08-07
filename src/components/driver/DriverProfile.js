@@ -31,6 +31,7 @@ import TwoWheelerOutlinedIcon      from '@mui/icons-material/TwoWheelerOutlined'
 import DirectionsCarOutlinedIcon   from '@mui/icons-material/DirectionsCarOutlined'
 import EmailOutlinedIcon           from '@mui/icons-material/EmailOutlined'
 import LocationOnOutlinedIcon      from '@mui/icons-material/LocationOnOutlined'
+import PersonOutlinedIcon          from '@mui/icons-material/PersonOutlined'
 import PhoneOutlinedIcon           from '@mui/icons-material/PhoneOutlined'
 import SaveOutlinedIcon            from '@mui/icons-material/SaveOutlined'
 import ShieldOutlinedIcon          from '@mui/icons-material/ShieldOutlined'
@@ -64,7 +65,7 @@ const VEHICLE_TYPES = [
   { value: 'Van',        label: 'Delivery Van',      icon: <LocalShippingOutlinedIcon fontSize="small" /> },
 ]
 
-function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
+function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOnly = false }) {
   const { user, userData, loadUserData } = useAuth()
   const searchParams = useSearchParams()
   const tabQuery = searchParams?.get('tab')
@@ -392,41 +393,43 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
             </Box>
 
             {/* Quick Action Controls */}
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', alignSelf: { xs: 'stretch', sm: 'center' } }}>
-              <Button
-                variant={isOnDuty ? 'contained' : 'outlined'}
-                color={isOnDuty ? 'success' : 'inherit'}
-                onClick={handleToggleDuty}
-                startIcon={<PowerSettingsNewOutlinedIcon />}
-                size="small"
-                sx={{
-                  borderRadius: 0,
-                  fontWeight: 700,
-                  bgcolor: isOnDuty ? '#16a34a' : 'transparent',
-                  borderColor: isOnDuty ? '#16a34a' : 'rgba(255,255,255,0.3)',
-                  color: 'white',
-                  '&:hover': {
-                    bgcolor: isOnDuty ? '#15803d' : 'rgba(255,255,255,0.1)'
-                  }
-                }}
-              >
-                {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => setIsEditing(!isEditing)}
-                startIcon={isEditing ? <SaveOutlinedIcon /> : <EditOutlinedIcon />}
-                size="small"
-                sx={{
-                  borderRadius: 0,
-                  bgcolor: BRAND,
-                  fontWeight: 700,
-                  '&:hover': { bgcolor: '#b00d52' }
-                }}
-              >
-                {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-              </Button>
-            </Box>
+            {!readOnly && (
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', alignSelf: { xs: 'stretch', sm: 'center' } }}>
+                <Button
+                  variant={isOnDuty ? 'contained' : 'outlined'}
+                  color={isOnDuty ? 'success' : 'inherit'}
+                  onClick={handleToggleDuty}
+                  startIcon={<PowerSettingsNewOutlinedIcon />}
+                  size="small"
+                  sx={{
+                    borderRadius: 0,
+                    fontWeight: 700,
+                    bgcolor: isOnDuty ? '#16a34a' : 'transparent',
+                    borderColor: isOnDuty ? '#16a34a' : 'rgba(255,255,255,0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: isOnDuty ? '#15803d' : 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => setIsEditing(!isEditing)}
+                  startIcon={isEditing ? <SaveOutlinedIcon /> : <EditOutlinedIcon />}
+                  size="small"
+                  sx={{
+                    borderRadius: 0,
+                    bgcolor: BRAND,
+                    fontWeight: 700,
+                    '&:hover': { bgcolor: '#b00d52' }
+                  }}
+                >
+                  {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+                </Button>
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -953,7 +956,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess }) {
             )}
 
             {/* ── Save Bar (when editing) ── */}
-            {isEditing && (
+            {isEditing && !readOnly && (
               <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
                 <Button
                   variant="outlined"

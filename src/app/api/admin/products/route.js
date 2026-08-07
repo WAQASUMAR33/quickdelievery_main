@@ -23,18 +23,30 @@ export async function GET(request) {
     
     if (search) {
       whereClause.OR = [
-        { proName: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } }
+        { proName: { contains: search } },
+        { sku: { contains: search } }
       ]
     }
     
     if (categoryId) {
-      whereClause.catId = categoryId
+      const parsedCatId = parseInt(categoryId, 10)
+      if (!isNaN(parsedCatId)) {
+        whereClause.catId = parsedCatId
+      }
     }
     
     if (vendorId) {
-      whereClause.vendorId = vendorId
+      const parsedVendorId = parseInt(vendorId, 10)
+      if (!isNaN(parsedVendorId)) {
+        whereClause.vendor = {
+          OR: [
+            { uid: vendorId },
+            { id: parsedVendorId }
+          ]
+        }
+      } else {
+        whereClause.vendorId = vendorId
+      }
     }
     
     if (status !== '') {

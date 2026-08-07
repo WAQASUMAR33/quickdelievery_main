@@ -34,6 +34,7 @@ import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
 
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import BlockOutlinedIcon              from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlinedIcon        from '@mui/icons-material/CheckCircleOutlined'
 import CloseIcon                      from '@mui/icons-material/Close'
 import DeleteOutlinedIcon             from '@mui/icons-material/DeleteOutlined'
@@ -92,6 +93,14 @@ export default function DriverManagement() {
   const [showModal,        setShowModal]        = useState(false)
   const [profileDriver,    setProfileDriver]    = useState(null)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    confirmColor: 'primary',
+    onConfirm: null,
+  })
 
   const fetchDrivers = useCallback(async () => {
     try {
@@ -124,7 +133,6 @@ export default function DriverManagement() {
   useEffect(() => { fetchDrivers() }, [fetchDrivers])
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this driver?')) return
     try {
       const res  = await fetch(`/api/admin/drivers?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
@@ -133,23 +141,49 @@ export default function DriverManagement() {
     } catch { toast.error('Error deleting driver') }
   }
 
-  const handleSave = async (formData) => {
+  const handleToggleStatus = async (driver) => {
+    const newVerification = !driver.emailVerification
     try {
-      const res  = await fetch('/api/admin/drivers', {
+      const res = await fetch('/api/admin/drivers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingDriver.id, ...formData }),
+        body: JSON.stringify({ id: driver.id, emailVerification: newVerification }),
       })
       const data = await res.json()
       if (data.success) {
-        toast.success('Driver updated')
-        setShowModal(false)
-        setEditingDriver(null)
+        toast.success(`Driver account ${newVerification ? 'Verified & Activated' : 'Suspended & Deactivated'}`)
         fetchDrivers()
       } else {
-        toast.error('Failed to update driver')
+        toast.error('Failed to update driver status')
       }
-    } catch { toast.error('Error updating driver') }
+    } catch {
+      toast.error('Error updating driver status')
+    }
+  }
+
+  const promptDeleteDriver = (driver) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete Driver Account',
+      message: `Are you sure you want to delete ${driver.username || 'this driver'}? This action is permanent and cannot be undone.`,
+      confirmText: 'Delete Driver',
+      confirmColor: 'error',
+      onConfirm: () => handleDelete(driver.id),
+    })
+  }
+
+  const promptToggleStatus = (driver) => {
+    const isSuspending = driver.emailVerification
+    setConfirmModal({
+      open: true,
+      title: isSuspending ? 'Suspend & Deactivate Driver' : 'Verify & Activate Driver',
+      message: isSuspending
+        ? `Are you sure you want to suspend ${driver.username || 'this driver'}? The driver will not be able to log in or take orders.`
+        : `Are you sure you want to verify and activate ${driver.username || 'this driver'}?`,
+      confirmText: isSuspending ? 'Suspend Account' : 'Activate Account',
+      confirmColor: isSuspending ? 'warning' : 'success',
+      onConfirm: () => handleToggleStatus(driver),
+    })
   }
 
   return (
@@ -291,18 +325,26 @@ export default function DriverManagement() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="View Driver Profile">
+                      <Tooltip title="View Driver Profile (Read-Only)">
                         <IconButton size="small" sx={{ color: BRAND }} onClick={() => { setProfileDriver(c); setShowProfileModal(true) }}>
                           <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton size="small" sx={{ color: 'info.main' }} onClick={() => { setEditingDriver(c); setShowModal(true) }}>
-                          <EditOutlinedIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => handleDelete(c.id)}>
+                      {c.emailVerification ? (
+                        <Tooltip title="Suspend / Deactivate Driver">
+                          <IconButton size="small" sx={{ color: 'warning.main' }} onClick={() => promptToggleStatus(c)}>
+                            <BlockOutlinedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Approve & Verify Driver">
+                          <IconButton size="small" sx={{ color: 'success.main' }} onClick={() => promptToggleStatus(c)}>
+                            <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title="Delete Driver">
+                        <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => promptDeleteDriver(c)}>
                           <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -342,7 +384,7 @@ export default function DriverManagement() {
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PersonOutlinedIcon sx={{ color: BRAND }} />
-            <Typography variant="h6" fontWeight={700}>Full Driver Profile & Management</Typography>
+            <Typography variant="h6" fontWeight={700}>Full Driver Profile (Read-Only)</Typography>
           </Box>
           <IconButton size="small" onClick={() => setShowProfileModal(false)} sx={{ color: 'white' }}>
             <CloseIcon />
@@ -352,33 +394,51 @@ export default function DriverManagement() {
           {profileDriver && (
             <DriverProfile
               driverData={profileDriver}
-              onSaveSuccess={() => {
-                fetchDrivers()
-              }}
+              readOnly={true}
             />
           )}
         </DialogContent>
       </Dialog>
 
-      {/* ── Edit Dialog ── */}
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth
-        PaperProps={{ sx: { borderRadius: 0 } }}>
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PersonOutlinedIcon sx={{ color: BRAND }} />
-            <Typography variant="h6" fontWeight={700}>Edit Driver</Typography>
-          </Box>
-          <IconButton size="small" onClick={() => setShowModal(false)}><CloseIcon /></IconButton>
+      {/* ── Confirmation Dialog ── */}
+      <Dialog
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ ...confirmModal, open: false })}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          {confirmModal.title}
         </DialogTitle>
-        <Divider />
-
-        {editingDriver && (
-          <EditDriverForm
-            driver={editingDriver}
-            onSave={handleSave}
-            onCancel={() => setShowModal(false)}
-          />
-        )}
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {confirmModal.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setConfirmModal({ ...confirmModal, open: false })}
+            sx={{ borderRadius: 0, color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color={confirmModal.confirmColor}
+            size="small"
+            onClick={() => {
+              const action = confirmModal.onConfirm
+              setConfirmModal({ ...confirmModal, open: false })
+              if (action) action()
+            }}
+            sx={{ borderRadius: 0, fontWeight: 700 }}
+          >
+            {confirmModal.confirmText}
+          </Button>
+        </DialogActions>
       </Dialog>
 
     </Box>
@@ -423,7 +483,8 @@ function EditDriverForm({ driver, onSave, onCancel }) {
               <Select value={form.role} label="Role"
                 onChange={e => setForm({ ...form, role: e.target.value })}
                 sx={{ borderRadius: 0 }}>
-                <MenuItem value="CUSTOMER">Driver</MenuItem>
+                <MenuItem value="DRIVER">Driver</MenuItem>
+                <MenuItem value="CUSTOMER">Customer</MenuItem>
                 <MenuItem value="VENDOR">Vendor</MenuItem>
                 <MenuItem value="ADMIN">Admin</MenuItem>
               </Select>

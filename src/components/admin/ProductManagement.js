@@ -11,6 +11,7 @@ import CardContent      from '@mui/material/CardContent'
 import Chip             from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog           from '@mui/material/Dialog'
+import DialogActions    from '@mui/material/DialogActions'
 import DialogContent    from '@mui/material/DialogContent'
 import DialogTitle      from '@mui/material/DialogTitle'
 import Divider          from '@mui/material/Divider'
@@ -30,6 +31,7 @@ import TableContainer   from '@mui/material/TableContainer'
 import TableHead        from '@mui/material/TableHead'
 import TableRow         from '@mui/material/TableRow'
 import TextField        from '@mui/material/TextField'
+import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
 
 import AddOutlinedIcon          from '@mui/icons-material/AddOutlined'
@@ -45,6 +47,7 @@ import SaveOutlinedIcon         from '@mui/icons-material/SaveOutlined'
 import SearchIcon               from '@mui/icons-material/Search'
 import StarOutlineIcon          from '@mui/icons-material/StarOutline'
 import VerifiedOutlinedIcon     from '@mui/icons-material/VerifiedOutlined'
+import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
 
 const BRAND      = '#D70F64'
 const DROP_MIN_W = 300
@@ -80,6 +83,14 @@ const ProductManagement = () => {
   const [statusFilter, setStatusFilter]   = useState('')
   const [approvalFilter, setApprovalFilter] = useState('')
   const [sortBy, setSortBy]               = useState('newest')
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    confirmColor: 'primary',
+    onConfirm: null,
+  })
   const [currentPage, setCurrentPage]     = useState(1)
   const [totalPages, setTotalPages]       = useState(1)
   const [stats, setStats]                 = useState({})
@@ -111,9 +122,14 @@ const ProductManagement = () => {
           rejectedProducts: data.stats?.rejectedProducts || 0,
           activeProducts:   data.stats?.activeProducts   || 0,
         })
+      } else {
+        setProducts([])
+        setTotalPages(1)
       }
     } catch (error) {
       console.error('Error fetching products:', error)
+      setProducts([])
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }
@@ -156,8 +172,18 @@ const ProductManagement = () => {
     setEditingProduct(null)
   }
 
-  const handleDelete = async (productId) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
+  const promptDeleteProduct = (product) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete Product',
+      message: `Are you sure you want to delete "${product.proName || 'this product'}"? This action is permanent and cannot be undone.`,
+      confirmText: 'Delete Product',
+      confirmColor: 'error',
+      onConfirm: () => executeDelete(product.proId),
+    })
+  }
+
+  const executeDelete = async (productId) => {
     try {
       const response = await authFetch(`/api/admin/products?proId=${productId}`, { method: 'DELETE' })
       const data = await response.json()
@@ -176,21 +202,44 @@ const ProductManagement = () => {
   const handleSave = async (productData) => {
     try {
       const response = await authFetch('/api/admin/products', {
-        method: editingProduct ? 'PUT' : 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proId: editingProduct?.proId, ...productData }),
+        body: JSON.stringify({
+          proId: editingProduct?.proId,
+          approvalStatus: productData.approvalStatus,
+          status: productData.status,
+        }),
       })
       const data = await response.json()
       if (data.success) {
-        toast.success(editingProduct ? 'Product updated' : 'Product created')
+        toast.success('Product status updated')
         handleClose()
         fetchProducts()
       } else {
-        toast.error('Failed to save product')
+        toast.error('Failed to save product status')
       }
     } catch (error) {
       console.error(error)
-      toast.error('Failed to save product')
+      toast.error('Failed to save product status')
+    }
+  }
+
+  const handleToggleStatus = async (productId, currentStatus) => {
+    try {
+      const response = await authFetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proId: productId, status: !currentStatus }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success(`Product ${!currentStatus ? 'Activated' : 'Deactivated'}`)
+        fetchProducts()
+      } else {
+        toast.error(data.error || 'Failed to update product status')
+      }
+    } catch {
+      toast.error('Failed to update product status')
     }
   }
 
@@ -200,6 +249,7 @@ const ProductManagement = () => {
     setVendorFilter('')
     setStatusFilter('')
     setApprovalFilter('')
+    setCurrentPage(1)
   }
 
   const STAT_CARDS = [
@@ -218,17 +268,9 @@ const ProductManagement = () => {
         <Box>
           <Typography variant="h5" fontWeight={700}>Product Management</Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Manage all products, categories, and inventory
+            Manage product approval status and active state
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddOutlinedIcon />}
-          onClick={handleAdd}
-          sx={{ bgcolor: BRAND, borderRadius: 0, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#b00d52' } }}
-        >
-          Add Product
-        </Button>
       </Box>
 
       {/* Stats */}
@@ -259,16 +301,16 @@ const ProductManagement = () => {
 
             <TextField
               size="small"
-              placeholder="Search products…"
+              placeholder="Search by Name or SKU…"
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1) }}
               sx={{ minWidth: DROP_MIN_W, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} /></InputAdornment> }}
             />
 
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Category</InputLabel>
-              <Select value={categoryFilter} label="Category" onChange={e => setCategoryFilter(e.target.value)} sx={{ borderRadius: 0 }}>
+              <Select value={categoryFilter} label="Category" onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
                 <MenuItem value=""><em>All Categories</em></MenuItem>
                 {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
               </Select>
@@ -276,15 +318,15 @@ const ProductManagement = () => {
 
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Vendor</InputLabel>
-              <Select value={vendorFilter} label="Vendor" onChange={e => setVendorFilter(e.target.value)} sx={{ borderRadius: 0 }}>
+              <Select value={vendorFilter} label="Vendor" onChange={e => { setVendorFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
                 <MenuItem value=""><em>All Vendors</em></MenuItem>
-                {vendors.map(v => <MenuItem key={v.id} value={v.id}>{v.businessName || v.username}</MenuItem>)}
+                {vendors.map(v => <MenuItem key={v.uid || v.id} value={v.uid || v.id}>{v.businessName || v.username}</MenuItem>)}
               </Select>
             </FormControl>
 
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Status</InputLabel>
-              <Select value={statusFilter} label="Status" onChange={e => setStatusFilter(e.target.value)} sx={{ borderRadius: 0 }}>
+              <Select value={statusFilter} label="Status" onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
                 <MenuItem value=""><em>All Status</em></MenuItem>
                 <MenuItem value="true">Active</MenuItem>
                 <MenuItem value="false">Inactive</MenuItem>
@@ -293,7 +335,7 @@ const ProductManagement = () => {
 
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Approval</InputLabel>
-              <Select value={approvalFilter} label="Approval" onChange={e => setApprovalFilter(e.target.value)} sx={{ borderRadius: 0 }}>
+              <Select value={approvalFilter} label="Approval" onChange={e => { setApprovalFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
                 <MenuItem value=""><em>All Approval</em></MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Pending">Pending</MenuItem>
@@ -386,13 +428,30 @@ const ProductManagement = () => {
                         <ApprovalChip status={product.approvalStatus} />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton size="small" onClick={() => handleEdit(product)} sx={{ color: 'primary.main' }}>
-                            <EditOutlinedIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(product.proId)} sx={{ color: 'error.main' }}>
-                            <DeleteOutlineIcon fontSize="small" />
-                          </IconButton>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Tooltip title="View Details & Approval Status">
+                            <IconButton size="small" onClick={() => handleEdit(product)} sx={{ color: BRAND }}>
+                              <VisibilityOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+
+                          <Tooltip title={product.status ? 'Deactivate Product' : 'Activate Product'}>
+                            <Switch
+                              size="small"
+                              checked={!!product.status}
+                              onChange={() => handleToggleStatus(product.proId, product.status)}
+                              sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND }
+                              }}
+                            />
+                          </Tooltip>
+
+                          <Tooltip title="Delete Product">
+                            <IconButton size="small" onClick={() => promptDeleteProduct(product)} sx={{ color: 'error.main' }}>
+                              <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -425,6 +484,47 @@ const ProductManagement = () => {
         )}
       </Card>
 
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ ...confirmModal, open: false })}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          {confirmModal.title}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {confirmModal.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setConfirmModal({ ...confirmModal, open: false })}
+            sx={{ borderRadius: 0, color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color={confirmModal.confirmColor}
+            size="small"
+            onClick={() => {
+              const action = confirmModal.onConfirm
+              setConfirmModal({ ...confirmModal, open: false })
+              if (action) action()
+            }}
+            sx={{ borderRadius: 0, fontWeight: 700 }}
+          >
+            {confirmModal.confirmText}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Add / Edit Dialog */}
       <Dialog
         open={showModal}
@@ -435,7 +535,7 @@ const ProductManagement = () => {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', py: 1.5 }}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {editingProduct ? 'Edit Product' : 'Add New Product'}
+            Product Details & Approval Status (Read-Only)
           </Typography>
           <IconButton size="small" onClick={handleClose}>
             <CloseOutlinedIcon fontSize="small" />
@@ -492,80 +592,36 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <TextField size="small" label="Product Name *" required value={formData.proName}
-          onChange={e => set('proName', e.target.value)} {...tf} />
-        <TextField size="small" label="SKU" value={formData.sku}
-          onChange={e => set('sku', e.target.value)} {...tf} />
-        <TextField size="small" label="Price *" type="number" inputProps={{ step: '0.01' }} required
-          value={formData.price} onChange={e => set('price', e.target.value)} {...tf} />
-        <TextField size="small" label="Sale Price" type="number" inputProps={{ step: '0.01' }}
-          value={formData.salePrice} onChange={e => set('salePrice', e.target.value)} {...tf} />
+        <TextField size="small" label="Product Name" disabled value={formData.proName} {...tf} />
+        <TextField size="small" label="SKU" disabled value={formData.sku} {...tf} />
+        <TextField size="small" label="Price" disabled value={formData.price} {...tf} />
+        <TextField size="small" label="Sale Price" disabled value={formData.salePrice} {...tf} />
 
-        <FormControl size="small" required sx={{ minWidth: DROP_MIN_W }}>
-          <InputLabel>Category *</InputLabel>
-          <Select value={formData.catId} label="Category *" onChange={e => set('catId', e.target.value)} sx={{ borderRadius: 0 }}>
-            <MenuItem value=""><em>Select Category</em></MenuItem>
-            {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-          </Select>
-        </FormControl>
+        <TextField size="small" label="Category" disabled value={categories.find(c => c.id === formData.catId)?.name || 'N/A'} {...tf} />
+        <TextField size="small" label="Vendor" disabled value={product?.vendor?.businessName || product?.vendor?.username || product?.vendorId || 'N/A'} {...tf} />
 
-        {product ? (
-          <TextField size="small" label="Vendor" value={product.vendor?.username || product.vendorId || ''} 
-            InputProps={{ readOnly: true }} disabled {...tf} />
-        ) : (
-          <FormControl size="small" required sx={{ minWidth: DROP_MIN_W }}>
-            <InputLabel>Vendor *</InputLabel>
-            <Select value={formData.vendorId} label="Vendor *" onChange={e => set('vendorId', e.target.value)} sx={{ borderRadius: 0 }}>
-              <MenuItem value=""><em>Select Vendor</em></MenuItem>
-              {vendors.map(v => <MenuItem key={v.uid} value={v.uid}>{v.businessName || v.username}</MenuItem>)}
-            </Select>
-          </FormControl>
-        )}
-
-        <TextField size="small" label="Stock" type="number" value={formData.stock}
-          onChange={e => set('stock', e.target.value)} {...tf} />
-        <TextField size="small" label="Barcode" value={formData.barcode}
-          onChange={e => set('barcode', e.target.value)} {...tf} />
+        <TextField size="small" label="Stock" disabled value={formData.stock} {...tf} />
+        <TextField size="small" label="Barcode" disabled value={formData.barcode} {...tf} />
       </Box>
 
-      <TextField size="small" label="Description" multiline rows={4} value={formData.description}
-        onChange={e => set('description', e.target.value)} {...tf} fullWidth />
-
-
+      <TextField size="small" label="Description" disabled multiline rows={4} value={formData.description} {...tf} fullWidth />
 
       {/* Images */}
       <Box>
         <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
-          Product Images
+          Product Images (Read-Only)
         </Typography>
-        <Box sx={{ mt: 1 }}>
-          <Button
-            component="label"
-            variant="outlined"
-            size="small"
-            sx={{ borderRadius: 0, textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
-          >
-            Upload Images
-            <input type="file" multiple accept="image/*" hidden onChange={handleImageChange} />
-          </Button>
-        </Box>
-        {formData.proImages.length > 0 && (
+        {formData.proImages.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
             {formData.proImages.map((img, i) => (
               <Box key={i} sx={{ position: 'relative' }}>
-                <img src={img} alt={`Product ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 4 }} />
-                <IconButton
-                  size="small"
-                  onClick={() => removeImage(i)}
-                  sx={{ position: 'absolute', top: -6, right: -6, bgcolor: 'error.main', color: 'white', width: 18, height: 18, '&:hover': { bgcolor: 'error.dark' } }}
-                >
-                  <CloseOutlinedIcon sx={{ fontSize: 11 }} />
-                </IconButton>
+                <img src={img} alt={`Product ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 4, border: '1px solid #e5e7eb' }} />
               </Box>
             ))}
           </Box>
+        ) : (
+          <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', mt: 1 }}>No images provided</Typography>
         )}
       </Box>
 
@@ -592,7 +648,7 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
           startIcon={<SaveOutlinedIcon />}
           sx={{ flex: 1, bgcolor: BRAND, borderRadius: 0, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#b00d52' } }}
         >
-          {product ? 'Update Product' : 'Create Product'}
+          Update Product Status
         </Button>
         <Button
           type="button"

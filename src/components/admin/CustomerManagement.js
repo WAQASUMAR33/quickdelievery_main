@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
+import Avatar            from '@mui/material/Avatar'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Card             from '@mui/material/Card'
@@ -21,7 +22,9 @@ import InputAdornment   from '@mui/material/InputAdornment'
 import InputLabel       from '@mui/material/InputLabel'
 import MenuItem         from '@mui/material/MenuItem'
 import Pagination       from '@mui/material/Pagination'
+import Paper            from '@mui/material/Paper'
 import Select           from '@mui/material/Select'
+import Stack            from '@mui/material/Stack'
 import Switch           from '@mui/material/Switch'
 import Table            from '@mui/material/Table'
 import TableBody        from '@mui/material/TableBody'
@@ -34,6 +37,7 @@ import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
 
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import BlockOutlinedIcon              from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlinedIcon        from '@mui/icons-material/CheckCircleOutlined'
 import CloseIcon                      from '@mui/icons-material/Close'
 import DeleteOutlinedIcon             from '@mui/icons-material/DeleteOutlined'
@@ -46,6 +50,7 @@ import SaveOutlinedIcon               from '@mui/icons-material/SaveOutlined'
 import SearchIcon                     from '@mui/icons-material/Search'
 import StoreOutlinedIcon              from '@mui/icons-material/StoreOutlined'
 import VerifiedUserOutlinedIcon       from '@mui/icons-material/VerifiedUserOutlined'
+import VisibilityOutlinedIcon         from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutlined'
 
 const BRAND      = '#D70F64'
@@ -84,8 +89,16 @@ export default function CustomerManagement() {
   const [currentPage,      setCurrentPage]      = useState(1)
   const [totalPages,       setTotalPages]       = useState(1)
   const [stats,            setStats]            = useState({})
-  const [editingCustomer,  setEditingCustomer]  = useState(null)
-  const [showModal,        setShowModal]        = useState(false)
+  const [viewCustomer,    setViewCustomer]    = useState(null)
+  const [showViewModal,   setShowViewModal]   = useState(false)
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    confirmColor: 'primary',
+    onConfirm: null,
+  })
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -107,10 +120,14 @@ export default function CustomerManagement() {
           totalVendors:   data.stats?.totalVendors   || 0,
           verifiedUsers:  data.stats?.verifiedUsers  || 0,
         })
+      } else {
+        setCustomers([])
+        setTotalPages(1)
       }
     } catch (err) {
       console.error('Error fetching customers:', err)
-      toast.error('Failed to load customers')
+      setCustomers([])
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }
@@ -119,13 +136,57 @@ export default function CustomerManagement() {
   useEffect(() => { fetchCustomers() }, [fetchCustomers])
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this customer?')) return
     try {
       const res  = await fetch(`/api/admin/customers?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) { toast.success('Customer deleted'); fetchCustomers() }
       else toast.error('Failed to delete customer')
     } catch { toast.error('Error deleting customer') }
+  }
+
+  const handleToggleStatus = async (customer) => {
+    const newVerification = !customer.emailVerification
+    try {
+      const res = await fetch('/api/admin/customers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: customer.id, emailVerification: newVerification }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Customer account ${newVerification ? 'Verified & Activated' : 'Suspended & Deactivated'}`)
+        fetchCustomers()
+      } else {
+        toast.error('Failed to update customer status')
+      }
+    } catch {
+      toast.error('Error updating customer status')
+    }
+  }
+
+  const promptDeleteCustomer = (customer) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete Customer Account',
+      message: `Are you sure you want to delete ${customer.username || 'this customer'}? This action is permanent and cannot be undone.`,
+      confirmText: 'Delete Customer',
+      confirmColor: 'error',
+      onConfirm: () => handleDelete(customer.id),
+    })
+  }
+
+  const promptToggleStatus = (customer) => {
+    const isSuspending = customer.emailVerification
+    setConfirmModal({
+      open: true,
+      title: isSuspending ? 'Suspend & Deactivate Customer' : 'Verify & Activate Customer',
+      message: isSuspending
+        ? `Are you sure you want to suspend ${customer.username || 'this customer'}?`
+        : `Are you sure you want to verify and activate ${customer.username || 'this customer'}?`,
+      confirmText: isSuspending ? 'Suspend Account' : 'Activate Account',
+      confirmColor: isSuspending ? 'warning' : 'success',
+      onConfirm: () => handleToggleStatus(customer),
+    })
   }
 
   const handleSave = async (formData) => {
@@ -185,7 +246,7 @@ export default function CustomerManagement() {
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search customers…"
+          placeholder="Search by Name or Email…"
           value={searchTerm}
           onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1) }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
@@ -286,13 +347,26 @@ export default function CustomerManagement() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="Edit">
-                        <IconButton size="small" sx={{ color: 'info.main' }} onClick={() => { setEditingCustomer(c); setShowModal(true) }}>
-                          <EditOutlinedIcon sx={{ fontSize: 16 }} />
+                      <Tooltip title="View Customer Details">
+                        <IconButton size="small" sx={{ color: BRAND }} onClick={() => { setViewCustomer(c); setShowViewModal(true) }}>
+                          <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
+                      {c.emailVerification ? (
+                        <Tooltip title="Suspend / Deactivate Customer">
+                          <IconButton size="small" sx={{ color: 'warning.main' }} onClick={() => promptToggleStatus(c)}>
+                            <BlockOutlinedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Approve & Verify Customer">
+                          <IconButton size="small" sx={{ color: 'success.main' }} onClick={() => promptToggleStatus(c)}>
+                            <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       <Tooltip title="Delete">
-                        <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => handleDelete(c.id)}>
+                        <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => promptDeleteCustomer(c)}>
                           <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -321,103 +395,113 @@ export default function CustomerManagement() {
         </Box>
       )}
 
-      {/* ── Edit Dialog ── */}
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth
-        PaperProps={{ sx: { borderRadius: 0 } }}>
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+      {/* ── View Customer Details Modal ── */}
+      <Dialog
+        open={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PersonOutlinedIcon sx={{ color: BRAND }} />
-            <Typography variant="h6" fontWeight={700}>Edit Customer</Typography>
+            <Typography variant="h6" fontWeight={700}>Customer Details (Read-Only)</Typography>
           </Box>
-          <IconButton size="small" onClick={() => setShowModal(false)}><CloseIcon /></IconButton>
+          <IconButton size="small" onClick={() => setShowViewModal(false)} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <Divider />
+        <DialogContent sx={{ p: 3, bgcolor: '#f8fafc' }}>
+          {viewCustomer && (
+            <Stack spacing={2.5}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ width: 56, height: 56, bgcolor: BRAND, fontSize: 24, fontWeight: 800 }}>
+                  {(viewCustomer.username || 'C').charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>{viewCustomer.username || 'Customer'}</Typography>
+                  <Typography variant="caption" color="text.secondary">UID: {viewCustomer.uid}</Typography>
+                </Box>
+              </Box>
+              <Divider />
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>EMAIL ADDRESS</Typography>
+                  <Typography variant="body2" fontWeight={600}>{viewCustomer.email || '—'}</Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>PHONE NUMBER</Typography>
+                  <Typography variant="body2" fontWeight={600}>{viewCustomer.phoneNumber || '—'}</Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>ACCOUNT ROLE</Typography>
+                  <Typography variant="body2" fontWeight={600}>{viewCustomer.role || 'CUSTOMER'}</Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>VERIFICATION STATUS</Typography>
+                  <Chip
+                    label={viewCustomer.emailVerification ? 'Verified' : 'Unverified'}
+                    size="small"
+                    color={viewCustomer.emailVerification ? 'success' : 'warning'}
+                    variant="outlined"
+                    sx={{ borderRadius: 0, fontWeight: 700 }}
+                  />
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0, gridColumn: 'span 2' }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>JOINED DATE</Typography>
+                  <Typography variant="body2" fontWeight={600}>{new Date(viewCustomer.createdAt).toLocaleDateString('en-US', { dateStyle: 'full' })}</Typography>
+                </Paper>
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, bgcolor: '#f8fafc' }}>
+          <Button onClick={() => setShowViewModal(false)} variant="outlined" sx={{ borderRadius: 0, textTransform: 'none' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
-        {editingCustomer && (
-          <EditCustomerForm
-            customer={editingCustomer}
-            onSave={handleSave}
-            onCancel={() => setShowModal(false)}
-          />
-        )}
+      {/* ── Confirmation Dialog ── */}
+      <Dialog
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ ...confirmModal, open: false })}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          {confirmModal.title}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {confirmModal.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setConfirmModal({ ...confirmModal, open: false })}
+            sx={{ borderRadius: 0, color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color={confirmModal.confirmColor}
+            size="small"
+            onClick={() => {
+              const action = confirmModal.onConfirm
+              setConfirmModal({ ...confirmModal, open: false })
+              if (action) action()
+            }}
+            sx={{ borderRadius: 0, fontWeight: 700 }}
+          >
+            {confirmModal.confirmText}
+          </Button>
+        </DialogActions>
       </Dialog>
 
     </Box>
-  )
-}
-
-function EditCustomerForm({ customer, onSave, onCancel }) {
-  const [form, setForm] = useState({
-    username:          customer.username          || '',
-    email:             customer.email             || '',
-    phoneNumber:       customer.phoneNumber       || '',
-    role:              customer.role              || 'CUSTOMER',
-    emailVerification: customer.emailVerification || false,
-  })
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onSave(form)
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <DialogContent sx={{ pt: 2.5 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextField size="small" fullWidth label="Username" value={form.username}
-              onChange={e => setForm({ ...form, username: e.target.value })}
-              placeholder="Enter username" {...tf} />
-            <TextField size="small" fullWidth label="Email" type="email" value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              placeholder="Enter email" {...tf} />
-          </Box>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextField size="small" fullWidth label="Phone Number" value={form.phoneNumber}
-              onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
-              placeholder="Enter phone" {...tf} />
-
-            <FormControl size="small" fullWidth sx={{ minWidth: DROP_MIN_W }}>
-              <InputLabel>Role</InputLabel>
-              <Select value={form.role} label="Role"
-                onChange={e => setForm({ ...form, role: e.target.value })}
-                sx={{ borderRadius: 0 }}>
-                <MenuItem value="CUSTOMER">Customer</MenuItem>
-                <MenuItem value="VENDOR">Vendor</MenuItem>
-                <MenuItem value="ADMIN">Admin</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.emailVerification}
-                  onChange={e => setForm({ ...form, emailVerification: e.target.checked })}
-                  size="small"
-                  sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND } }}
-                />
-              }
-              label={<Typography variant="body2" fontWeight={600}>Email Verified</Typography>}
-            />
-          </Box>
-
-        </Box>
-      </DialogContent>
-
-      <Divider />
-      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button type="button" onClick={onCancel} variant="outlined" size="small" sx={{ borderRadius: 0 }}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" size="small" startIcon={<SaveOutlinedIcon />}
-          sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}>
-          Save Changes
-        </Button>
-      </DialogActions>
-    </form>
   )
 }

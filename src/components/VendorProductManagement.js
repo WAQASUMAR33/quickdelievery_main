@@ -78,6 +78,7 @@ const VendorProductManagement = () => {
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterApproval, setFilterApproval] = useState('all')
   const [viewMode, setViewMode] = useState('table')
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' })
 
   const [formData, setFormData] = useState({
     proName: '', description: '', catId: '', subCatId: '',
@@ -164,14 +165,17 @@ const VendorProductManagement = () => {
     } catch { alert('Error updating product. Please try again.') }
   }
 
+  const promptDeleteProduct = (product) => {
+    setDeleteConfirm({ open: true, id: product.proId, name: product.proName })
+  }
+
   const handleDeleteProduct = async (productId) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
     try {
       const res = await authFetch(`/api/products?type=product&id=${productId}`, { method: 'DELETE' })
       const r = await res.json()
-      if (r.success) { fetchProducts(); alert('Product deleted successfully!') }
-      else alert(`Failed to delete product: ${r.error}`)
-    } catch { alert('Error deleting product. Please try again.') }
+      if (r.success) { fetchProducts(); toast.success('Product deleted successfully!') }
+      else toast.error(`Failed to delete product: ${r.error}`)
+    } catch { toast.error('Error deleting product. Please try again.') }
   }
 
   const handleEditClick = (product) => {
@@ -1018,6 +1022,27 @@ const VendorProductManagement = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, id: null, name: '' })} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Product</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to delete &quot;{deleteConfirm.name || 'this product'}&quot;? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
+          <Button variant="outlined" size="small" onClick={() => setDeleteConfirm({ open: false, id: null, name: '' })} sx={{ borderRadius: 0, color: 'text.secondary' }}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" size="small" onClick={() => {
+            const id = deleteConfirm.id
+            setDeleteConfirm({ open: false, id: null, name: '' })
+            if (id) handleDeleteProduct(id)
+          }} sx={{ borderRadius: 0, fontWeight: 700 }}>
+            Delete Product
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

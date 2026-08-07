@@ -14,9 +14,9 @@ export async function GET(request) {
 
     if (search) {
       whereClause.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phoneNumber: { contains: search, mode: 'insensitive' } }
+        { username: { contains: search } },
+        { email: { contains: search } },
+        { phoneNumber: { contains: search } }
       ]
     }
 
@@ -103,7 +103,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const { id, username, email, phoneNumber, role, emailVerification } = await request.json()
+    const { id, emailVerification } = await request.json()
     
     if (!id) {
       return Response.json({
@@ -112,15 +112,14 @@ export async function PUT(request) {
       }, { status: 400 })
     }
 
+    const updateData = {}
+    if (typeof emailVerification === 'boolean') {
+      updateData.emailVerification = emailVerification
+    }
+
     const updatedUser = await prisma.users.update({
       where: { id },
-      data: {
-        username,
-        email,
-        phoneNumber,
-        role,
-        emailVerification
-      },
+      data: updateData,
       select: {
         id: true,
         uid: true,
@@ -129,7 +128,6 @@ export async function PUT(request) {
         phoneNumber: true,
         role: true,
         emailVerification: true,
-        type: true,
         updatedAt: true
       }
     })
@@ -137,13 +135,13 @@ export async function PUT(request) {
     return Response.json({
       success: true,
       data: updatedUser,
-      message: 'User updated successfully'
+      message: 'Driver status updated successfully'
     })
   } catch (error) {
-    console.error('Error updating user:', error)
+    console.error('Error updating driver status:', error)
     return Response.json({
       success: false,
-      error: 'Failed to update user'
+      error: 'Failed to update driver status'
     }, { status: 500 })
   }
 }
@@ -151,17 +149,17 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
+    const rawId = searchParams.get('id')
+    const userId = parseInt(rawId)
+    if (!rawId || isNaN(userId)) {
       return Response.json({
         success: false,
-        error: 'User ID is required'
+        error: 'Invalid User ID'
       }, { status: 400 })
     }
 
     await prisma.users.delete({
-      where: { id }
+      where: { id: userId }
     })
 
     return Response.json({

@@ -71,7 +71,6 @@ export async function GET(request) {
         },
       },
       orderBy: { createdAt: 'desc' },
-      orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit
     })

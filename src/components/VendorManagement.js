@@ -473,11 +473,6 @@ export default function VendorManagement() {
                           <DomainOutlinedIcon sx={{ fontSize: 18 }} />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => openEdit(vendor)} sx={{ color: 'text.secondary', '&:hover': { color: BRAND } }}>
-                          <EditOutlinedIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title={vendor.emailVerification ? 'Revoke verification' : 'Mark verified'}>
                         <IconButton size="small" onClick={() => setToggleTarget(vendor)}
                           sx={{ color: 'text.secondary', '&:hover': { color: vendor.emailVerification ? '#a16207' : '#16a34a' } }}>
@@ -510,50 +505,7 @@ export default function VendorManagement() {
         />
       </Paper>
 
-      {/* ── Add / Edit Dialog ── */}
-      <Dialog open={editOpen} onClose={() => !saving && setEditOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
-        <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}>
-          {editTarget ? 'Edit Vendor' : 'Add New Vendor'}
-        </DialogTitle>
-        <DialogContent sx={{ pt: '20px !important' }}>
-          <Stack spacing={2.5}>
-            <TextField autoFocus fullWidth label="Username" value={formData.username}
-              onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} sx={fieldSx}
-              InputProps={{ startAdornment: <InputAdornment position="start"><PersonOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment> }}
-            />
-            <TextField fullWidth label="Email" type="email" value={formData.email}
-              onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} sx={fieldSx}
-              InputProps={{ startAdornment: <InputAdornment position="start"><EmailOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment> }}
-            />
-            <TextField fullWidth label="Phone Number" value={formData.phoneNumber}
-              onChange={e => setFormData(p => ({ ...p, phoneNumber: e.target.value }))} sx={fieldSx}
-              InputProps={{ startAdornment: <InputAdornment position="start"><PhoneOutlinedIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment> }}
-            />
-            <FormControlLabel
-              control={
-                <Switch checked={formData.emailVerification}
-                  onChange={e => setFormData(p => ({ ...p, emailVerification: e.target.checked }))}
-                  sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND } }}
-                />
-              }
-              label={<Typography variant="body2">Mark as Verified</Typography>}
-            />
-            {!editTarget && (
-              <Alert severity="info" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ borderRadius: 0, py: 0.75 }}>
-                <Typography variant="caption">An invitation email will be sent to the vendor to set their password.</Typography>
-              </Alert>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Button onClick={() => setEditOpen(false)} disabled={saving} sx={{ textTransform: 'none', color: 'text.secondary' }}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, textTransform: 'none', fontWeight: 600, minWidth: 100 }}
-            startIcon={saving ? <CircularProgress size={14} color="inherit" /> : null}>
-            {saving ? 'Saving…' : editTarget ? 'Update' : 'Add Vendor'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+
 
       {/* ── View Dialog ── */}
       <Dialog open={!!viewTarget} onClose={() => setViewTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
@@ -597,12 +549,7 @@ export default function VendorManagement() {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Button onClick={() => setViewTarget(null)} sx={{ textTransform: 'none' }}>Close</Button>
-          <Button variant="outlined" onClick={() => { openEdit(viewTarget); setViewTarget(null) }}
-            startIcon={<EditOutlinedIcon />}
-            sx={{ textTransform: 'none', borderRadius: 0, borderColor: BRAND, color: BRAND }}>
-            Edit Vendor
-          </Button>
+          <Button onClick={() => setViewTarget(null)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 0 }}>Close</Button>
         </DialogActions>
       </Dialog>
 
@@ -996,34 +943,10 @@ export default function VendorManagement() {
           })()}
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', gap: 1, flexShrink: 0 }}>
-          <Button onClick={() => setBusinessOpen(false)} sx={{ textTransform: 'none', color: 'text.secondary' }}>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
+          <Button onClick={() => setBusinessOpen(false)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 0 }}>
             Close
           </Button>
-          {businessData && (
-            <>
-              <Box flex={1} />
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => handleVerifyBusiness('REJECTED')}
-                disabled={verifying || businessData.verificationStatus === 'REJECTED'}
-                startIcon={verifying ? <CircularProgress size={14} color="inherit" /> : <ThumbDownOutlinedIcon />}
-                sx={{ textTransform: 'none', borderRadius: 0, fontWeight: 600 }}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => handleVerifyBusiness('APPROVED')}
-                disabled={verifying || businessData.verificationStatus === 'APPROVED'}
-                startIcon={verifying ? <CircularProgress size={14} color="inherit" /> : <ThumbUpOutlinedIcon />}
-                sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, textTransform: 'none', borderRadius: 0, fontWeight: 600 }}
-              >
-                Approve
-              </Button>
-            </>
-          )}
         </DialogActions>
       </Dialog>
 

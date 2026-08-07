@@ -8,7 +8,7 @@ export async function GET(request) {
     const search = searchParams.get('search') || ''
 
     const where = search
-      ? { categoryTitle: { contains: search, mode: 'insensitive' } }
+      ? { categoryTitle: { contains: search } }
       : {}
 
     const [categories, total] = await Promise.all([

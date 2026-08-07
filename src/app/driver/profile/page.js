@@ -18,18 +18,18 @@ export default function DriverProfilePage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading) {
       const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN', 'DRIVER'])
       if (!access.hasAccess) {
         const role = getUserRole(userData)
         if (role === 'CUSTOMER')     router.push('/customer')
         else if (role === 'VENDOR')  router.push('/vendor/dashboard')
-        else                         router.push(access.redirectTo)
+        else                         router.push('/login')
       }
     }
   }, [user, userData, loading, router])
 
-  if (loading) {
+  if (loading || !user || !userData || !['ADMIN', 'SUPER_ADMIN', 'DRIVER'].includes(userData?.role)) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={36} sx={{ color: BRAND }} />

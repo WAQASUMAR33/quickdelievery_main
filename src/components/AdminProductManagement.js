@@ -381,30 +381,28 @@ const AdminProductManagement = () => {
   }
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        const response = await fetch(`/api/products?type=product&id=${id}`, {
-          method: 'DELETE'
-        })
+    try {
+      const response = await fetch(`/api/products?type=product&id=${id}`, {
+        method: 'DELETE'
+      })
 
-        const result = await response.json()
-        
-        if (result.success) {
-          fetchProducts() // Refresh the list
-          if (window.addNotification) {
-            window.addNotification('Product deleted successfully!', 'success')
-          }
-        } else {
-          console.error('Failed to delete product:', result.error)
-          if (window.addNotification) {
-            window.addNotification('Failed to delete product. Please try again.', 'error')
-          }
-        }
-      } catch (error) {
-        console.error('Error deleting product:', error)
+      const result = await response.json()
+      
+      if (result.success) {
+        fetchProducts() // Refresh the list
         if (window.addNotification) {
-          window.addNotification('Error deleting product. Please try again.', 'error')
+          window.addNotification('Product deleted successfully!', 'success')
         }
+      } else {
+        console.error('Failed to delete product:', result.error)
+        if (window.addNotification) {
+          window.addNotification('Failed to delete product. Please try again.', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      if (window.addNotification) {
+        window.addNotification('Error deleting product. Please try again.', 'error')
       }
     }
   }

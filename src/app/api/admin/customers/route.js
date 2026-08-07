@@ -14,9 +14,8 @@ export async function GET(request) {
 
     if (search) {
       whereClause.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phoneNumber: { contains: search, mode: 'insensitive' } }
+        { username: { contains: search } },
+        { email: { contains: search } }
       ]
     }
 
@@ -134,17 +133,17 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
+    const rawId = searchParams.get('id')
+    const userId = parseInt(rawId)
+    if (!rawId || isNaN(userId)) {
       return Response.json({
         success: false,
-        error: 'User ID is required'
+        error: 'Invalid User ID'
       }, { status: 400 })
     }
 
     await prisma.users.delete({
-      where: { id }
+      where: { id: userId }
     })
 
     return Response.json({

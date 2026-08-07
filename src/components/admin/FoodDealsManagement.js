@@ -291,7 +291,6 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
   }
 
   const handleDelete = async (dealId) => {
-    if (!confirm('Remove this deal from the storefront carousel?')) return
     const res = await fetch(`/api/deals/${dealId}`, {
       method: 'DELETE',
       headers: authHeadersJson(),

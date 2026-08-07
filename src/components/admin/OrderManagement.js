@@ -299,35 +299,19 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="View Invoice">
-                        <IconButton size="small" onClick={() => handleViewDetails(order)} sx={{ color: 'info.main' }}>
-                          <OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-
-                      {order.status === 'PENDING' && (
-                        <Tooltip title="Start Processing">
-                          <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: 'success.main' }}>
-                            <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
+                    {order.status === 'CANCELLED' ? (
+                      <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+                        No Invoice
+                      </Typography>
+                    ) : (
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="View Invoice">
+                          <IconButton size="small" onClick={() => handleViewDetails(order)} sx={{ color: 'info.main' }}>
+                            <OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
-                      )}
-                      {order.status === 'PROCESSING' && (
-                        <Tooltip title="Mark as Shipped">
-                          <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'SHIPPED')} sx={{ color: '#8b5cf6' }}>
-                            <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      {order.status === 'SHIPPED' && (
-                        <Tooltip title="Mark as Delivered">
-                          <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')} sx={{ color: 'success.main' }}>
-                            <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
+                      </Box>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -475,34 +459,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 </Box>
               </Box>
 
-              {/* Quick status actions */}
-              <Box sx={{ mt: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ width: '100%', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
-                  Update Status
-                </Typography>
-                {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map(s => {
-                  const cfg = STATUS_CONFIG[s]
-                  const active = selectedOrder.status === s
-                  return (
-                    <Button key={s} size="small" variant={active ? 'contained' : 'outlined'} onClick={() => {
-                      if (!active) {
-                        handleUpdateStatus(selectedOrder.id, s)
-                        setSelectedOrder({ ...selectedOrder, status: s })
-                      }
-                    }}
-                      sx={{
-                        borderRadius: 0,
-                        fontSize: 11,
-                        bgcolor: active ? cfg.color : 'transparent',
-                        borderColor: cfg.color,
-                        color: active ? 'white' : cfg.color,
-                        '&:hover': { bgcolor: cfg.bg, borderColor: cfg.color, color: cfg.color },
-                      }}>
-                      {cfg.label}
-                    </Button>
-                  )
-                })}
-              </Box>
+
 
             </DialogContent>
           </>

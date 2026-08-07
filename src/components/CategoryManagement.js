@@ -124,23 +124,28 @@ const CategoryManagement = () => {
   }
 
   const handleDeleteCategory = async (id) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        const response = await fetch(`/api/products?type=category&id=${id}`, {
-          method: 'DELETE'
-        })
+    try {
+      const response = await fetch(`/api/products?type=category&id=${id}`, {
+        method: 'DELETE'
+      })
 
-        const result = await response.json()
-        
-        if (result.success) {
-          fetchCategories() // Refresh the list
-        } else {
-          console.error('Failed to delete category:', result.error)
-          alert('Failed to delete category. Please try again.')
+      const result = await response.json()
+      
+      if (result.success) {
+        fetchCategories() // Refresh the list
+        if (window.addNotification) {
+          window.addNotification('Category deleted successfully!', 'success')
         }
-      } catch (error) {
-        console.error('Error deleting category:', error)
-        alert('Error deleting category. Please try again.')
+      } else {
+        console.error('Failed to delete category:', result.error)
+        if (window.addNotification) {
+          window.addNotification('Failed to delete category. Please try again.', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      if (window.addNotification) {
+        window.addNotification('Error deleting category. Please try again.', 'error')
       }
     }
   }
