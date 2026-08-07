@@ -55,6 +55,9 @@ export async function GET(request) {
 
       // Driver fields (Optional)
       vehicleType:          dp?.vehicleType || 'Motorcycle',
+      vehicleNumberFrontUrl: dp?.vehicleNumberFrontUrl || '',
+      vehicleRegCertFrontUrl:dp?.vehicleRegCertFrontUrl || '',
+      vehicleRegCertBackUrl: dp?.vehicleRegCertBackUrl || '',
       emergencyContactName: dp?.emergencyContactName || 'Jane Doe',
       emergencyContactPhone:dp?.emergencyContactPhone || '03007654321',
       preferredZone:        dp?.preferredZone || 'Gulberg Area',
@@ -132,6 +135,9 @@ export async function PUT(request) {
       
       // Optional
       vehicleType:           body.vehicleType || null,
+      vehicleNumberFrontUrl: body.vehicleNumberFrontUrl || null,
+      vehicleRegCertFrontUrl:body.vehicleRegCertFrontUrl || null,
+      vehicleRegCertBackUrl: body.vehicleRegCertBackUrl || null,
       emergencyContactName:  body.emergencyContactName || null,
       emergencyContactPhone: body.emergencyContactPhone || null,
       preferredZone:         body.preferredZone || null,

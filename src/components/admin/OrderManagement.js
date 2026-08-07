@@ -304,12 +304,44 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         No Invoice
                       </Typography>
                     ) : (
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                         <Tooltip title="View Invoice">
                           <IconButton size="small" onClick={() => handleViewDetails(order)} sx={{ color: 'info.main' }}>
                             <OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
+
+                        {/* Status update buttons only for vendor */}
+                        {!!vendorId && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                          <>
+                            {order.status === 'PENDING' && (
+                              <Tooltip title="Start Processing">
+                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: 'primary.main' }}>
+                                  <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {order.status === 'PROCESSING' && (
+                              <Tooltip title="Mark as Shipped">
+                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'SHIPPED')} sx={{ color: 'secondary.main' }}>
+                                  <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {order.status === 'SHIPPED' && (
+                              <Tooltip title="Mark as Delivered">
+                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')} sx={{ color: 'success.main' }}>
+                                  <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            <Tooltip title="Cancel Order">
+                              <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'CANCELLED')} sx={{ color: 'error.main' }}>
+                                <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
                       </Box>
                     )}
                   </TableCell>
@@ -450,18 +482,41 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               </Table>
 
               {/* Total row */}
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                
+                {/* Vendor Action Buttons in Modal */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {!!vendorId && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                    <>
+                      {selectedOrder.status === 'PENDING' && (
+                        <Button variant="contained" size="small" color="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'PROCESSING')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
+                          Start Processing
+                        </Button>
+                      )}
+                      {selectedOrder.status === 'PROCESSING' && (
+                        <Button variant="contained" size="small" color="secondary" onClick={() => handleUpdateStatus(selectedOrder.id, 'SHIPPED')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
+                          Mark as Shipped
+                        </Button>
+                      )}
+                      {selectedOrder.status === 'SHIPPED' && (
+                        <Button variant="contained" size="small" color="success" onClick={() => handleUpdateStatus(selectedOrder.id, 'DELIVERED')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
+                          Mark as Delivered
+                        </Button>
+                      )}
+                      <Button variant="outlined" size="small" color="error" onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')} sx={{ borderRadius: 0, textTransform: 'none' }}>
+                        Cancel Order
+                      </Button>
+                    </>
+                  )}
+                </Box>
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, bgcolor: `${BRAND}10`, border: '1px solid', borderColor: `${BRAND}30` }}>
                   <Typography variant="subtitle2" fontWeight={700}>Total Amount:</Typography>
                   <Typography variant="h6" fontWeight={800} sx={{ color: BRAND }}>
                     {formatPrice(selectedOrder.totalAmount)}
                   </Typography>
                 </Box>
-              </Box>
-
-
-
-            </DialogContent>
+              </Box>            </DialogContent>
           </>
         )}
       </Dialog>

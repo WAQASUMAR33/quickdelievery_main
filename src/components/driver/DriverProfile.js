@@ -143,6 +143,9 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
     bankAccountTitle: '',
     bankAccountNumber: '',
     profilePhotoUrl: '',
+    vehicleNumberFrontUrl: '',
+    vehicleRegCertFrontUrl: '',
+    vehicleRegCertBackUrl: '',
     equipmentDepositPaid: false,
     smartphoneCompatible: false,
 
@@ -172,6 +175,9 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
       bankAccountTitle: data.bankAccountTitle || dp.bankAccountTitle || '',
       bankAccountNumber: data.bankAccountNumber || dp.bankAccountNumber || '',
       profilePhotoUrl: data.profilePhotoUrl || dp.profilePhotoUrl || '',
+      vehicleNumberFrontUrl: data.vehicleNumberFrontUrl || dp.vehicleNumberFrontUrl || '',
+      vehicleRegCertFrontUrl: data.vehicleRegCertFrontUrl || dp.vehicleRegCertFrontUrl || '',
+      vehicleRegCertBackUrl: data.vehicleRegCertBackUrl || dp.vehicleRegCertBackUrl || '',
       equipmentDepositPaid: data.equipmentDepositPaid ?? dp.equipmentDepositPaid ?? false,
       smartphoneCompatible: data.smartphoneCompatible ?? dp.smartphoneCompatible ?? false,
 
@@ -677,6 +683,60 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                         }}
                       />
                     </Box>
+                  </Box>
+
+                  <Divider sx={{ my: 1 }} />
+
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                    Vehicle Attachments
+                  </Typography>
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 2 }}>
+                    {[
+                      { key: 'vehicleNumberFrontUrl', label: 'Vehicle Number (Front)' },
+                      { key: 'vehicleRegCertFrontUrl', label: 'Vehicle Registration Certificate (Front)' },
+                      { key: 'vehicleRegCertBackUrl', label: 'Vehicle Registration Certificate (Back)' },
+                    ].map(doc => (
+                      <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {formData[doc.key] ? (
+                            <Avatar src={formData[doc.key]} sx={{ width: 40, height: 40, borderRadius: 1 }} variant="square" />
+                          ) : (
+                            <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
+                              <Typography variant="caption" color="text.secondary">No Img</Typography>
+                            </Box>
+                          )}
+                          <Box>
+                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>{doc.label} *</Typography>
+                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, readable picture</Typography>
+                          </Box>
+                        </Box>
+                        <Button
+                          component="label"
+                          variant="outlined"
+                          size="small"
+                          disabled={!isEditing}
+                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215, 15, 100, 0.04)' } }}
+                        >
+                          Upload
+                          <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0]
+                              if (file) {
+                                const reader = new FileReader()
+                                reader.onload = (ev) => {
+                                  setFormData({ ...formData, [doc.key]: ev.target.result })
+                                }
+                                reader.readAsDataURL(file)
+                              }
+                            }}
+                          />
+                        </Button>
+                      </Box>
+                    ))}
                   </Box>
                 </Box>
               </motion.div>
