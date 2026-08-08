@@ -58,8 +58,9 @@ function InfoRow({ icon, label, value }) {
   )
 }
 
-export default function VendorBusinessProfile() {
+export default function VendorBusinessProfile({ isAdminView = false, vendorData = null }) {
   const { userData } = useAuth()
+  const activeEmail = isAdminView ? vendorData?.email : userData?.email
 
   const [business,       setBusiness]       = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
@@ -82,9 +83,9 @@ export default function VendorBusinessProfile() {
   // Fetch business profile
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!userData?.email) return
+      if (!activeEmail) return
       try {
-        const res  = await fetch(`/api/vendor/profile?email=${encodeURIComponent(userData.email)}`)
+        const res  = await fetch(`/api/vendor/profile?email=${encodeURIComponent(activeEmail)}`)
         const data = await res.json()
         if (data.success && data.data) {
           setBusiness(data.data)
@@ -101,10 +102,11 @@ export default function VendorBusinessProfile() {
       }
     }
     fetchProfile()
-  }, [userData?.email])
+  }, [activeEmail])
 
   // Click on map → place marker
   const handleMapClick = useCallback((e) => {
+    if (isAdminView) return
     const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() }
     setMarkerPos(pos)
     setLocationError('')
@@ -112,8 +114,9 @@ export default function VendorBusinessProfile() {
 
   // Drag marker to fine-tune
   const handleMarkerDragEnd = useCallback((e) => {
+    if (isAdminView) return
     setMarkerPos({ lat: e.latLng.lat(), lng: e.latLng.lng() })
-  }, [])
+  }, [isAdminView])
 
   // Search box → pan + place marker
   const handleSearchPlacesChanged = () => {
@@ -289,35 +292,37 @@ export default function VendorBusinessProfile() {
         )}
 
         {/* Action buttons */}
-        <Stack spacing={1.5}>
-          <Button
-            fullWidth variant="contained" size="large"
-            onClick={handleGetLiveLocation}
-            disabled={locating || !isLoaded}
-            startIcon={locating ? <CircularProgress size={18} color="inherit" /> : <MyLocationIcon />}
-            sx={{
-              bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
-              borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
-              boxShadow: `0 4px 14px ${BRAND}44`,
-            }}
-          >
-            {locating ? 'Detecting…' : 'Use My GPS Location'}
-          </Button>
+        {!isAdminView && (
+          <Stack spacing={1.5}>
+            <Button
+              fullWidth variant="contained" size="large"
+              onClick={handleGetLiveLocation}
+              disabled={locating || !isLoaded}
+              startIcon={locating ? <CircularProgress size={18} color="inherit" /> : <MyLocationIcon />}
+              sx={{
+                bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
+                boxShadow: `0 4px 14px ${BRAND}44`,
+              }}
+            >
+              {locating ? 'Detecting…' : 'Use My GPS Location'}
+            </Button>
 
-          <Button
-            fullWidth variant="outlined" size="large"
-            onClick={handleSaveLocation}
-            disabled={saving || !markerPos}
-            startIcon={saving ? <CircularProgress size={18} /> : <SaveOutlinedIcon />}
-            sx={{
-              borderColor: BRAND, color: BRAND,
-              '&:hover': { borderColor: '#C20D5A', color: '#C20D5A', bgcolor: `${BRAND}08` },
-              borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
-            }}
-          >
-            {saving ? 'Saving…' : 'Save Location'}
-          </Button>
-        </Stack>
+            <Button
+              fullWidth variant="outlined" size="large"
+              onClick={handleSaveLocation}
+              disabled={saving || !markerPos}
+              startIcon={saving ? <CircularProgress size={18} /> : <SaveOutlinedIcon />}
+              sx={{
+                borderColor: BRAND, color: BRAND,
+                '&:hover': { borderColor: '#C20D5A', color: '#C20D5A', bgcolor: `${BRAND}08` },
+                borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
+              }}
+            >
+              {saving ? 'Saving…' : 'Save Location'}
+            </Button>
+          </Stack>
+        )}
 
         {locationError && (
           <Alert severity="error" sx={{ borderRadius: 0 }}>{locationError}</Alert>
@@ -337,23 +342,39 @@ export default function VendorBusinessProfile() {
         </Box>
 
         {/* Search box */}
-        <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-          {isLoaded ? (
-            <StandaloneSearchBox
-              onLoad={ref => (searchBoxRef.current = ref)}
-              onPlacesChanged={handleSearchPlacesChanged}
-            >
+        {!isAdminView && (
+          <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+            {isLoaded ? (
+              <StandaloneSearchBox
+                onLoad={ref => (searchBoxRef.current = ref)}
+                onPlacesChanged={handleSearchPlacesChanged}
+              >
+                <TextField
+                  fullWidth size="small"
+                  placeholder="Search for your business address…"
+                  sx={{
+                    bgcolor: 'background.paper',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 0,
+                      '&:hover fieldset':       { borderColor: BRAND },
+                      '&.Mui-focused fieldset': { borderColor: BRAND },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </StandaloneSearchBox>
+            ) : (
               <TextField
                 fullWidth size="small"
-                placeholder="Search for your business address…"
-                sx={{
-                  bgcolor: 'background.paper',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 0,
-                    '&:hover fieldset':       { borderColor: BRAND },
-                    '&.Mui-focused fieldset': { borderColor: BRAND },
-                  },
-                }}
+                placeholder="Loading map…"
+                disabled
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -362,23 +383,9 @@ export default function VendorBusinessProfile() {
                   ),
                 }}
               />
-            </StandaloneSearchBox>
-          ) : (
-            <TextField
-              fullWidth size="small"
-              placeholder="Loading map…"
-              disabled
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          )}
-        </Box>
+            )}
+          </Box>
+        )}
 
         {/* Map */}
         {!isLoaded ? (
@@ -406,20 +413,22 @@ export default function VendorBusinessProfile() {
             {markerPos && (
               <Marker
                 position={markerPos}
-                draggable
+                draggable={!isAdminView}
                 onDragEnd={handleMarkerDragEnd}
-                title="Your business location — drag to adjust"
+                title={isAdminView ? "Business location" : "Your business location — drag to adjust"}
               />
             )}
           </GoogleMap>
         )}
 
         {/* Footer hint */}
-        <Box sx={{ px: 2.5, py: 1, bgcolor: 'grey.50', borderTop: 1, borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.disabled">
-            💡 Click anywhere on the map to place a pin · Drag the pin to fine-tune · Use search to find your address
-          </Typography>
-        </Box>
+        {!isAdminView && (
+          <Box sx={{ px: 2.5, py: 1, bgcolor: 'grey.50', borderTop: 1, borderColor: 'divider' }}>
+            <Typography variant="caption" color="text.disabled">
+              💡 Click anywhere on the map to place a pin · Drag the pin to fine-tune · Use search to find your address
+            </Typography>
+          </Box>
+        )}
       </Card>
 
     </Box>

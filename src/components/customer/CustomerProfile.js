@@ -19,14 +19,18 @@ import {
   Lock
 } from 'lucide-react'
 
-const CustomerProfile = () => {
+const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
   const { user, userData, loadUserData } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
   const [isSaving, setIsSaving] = useState(false)
+
+  const activeUser = isAdminView ? customerData : userData
+  const activeEmail = isAdminView ? customerData?.email : (user?.email || userData?.email)
+  const activeDisplayName = isAdminView ? customerData?.username : (user?.displayName || userData?.username)
   
   const getNameParts = () => {
-    const rawName = String(userData?.username || user?.displayName || '').trim()
+    const rawName = String(activeDisplayName || '').trim()
     if (!rawName) return { firstName: '', lastName: '' }
     const parts = rawName.split(/\s+/)
     return {
@@ -39,30 +43,48 @@ const CustomerProfile = () => {
   const [profileData, setProfileData] = useState({
     firstName: nameParts.firstName,
     lastName: nameParts.lastName,
-    email: user?.email || '',
-    phone: userData?.phoneNumber || user?.phoneNumber || '',
-    address: userData?.address || '',
-    city: userData?.city || '',
-    state: userData?.state || '',
-    zipCode: userData?.zipCode || '',
-    dateOfBirth: userData?.dateOfBirth || '',
-    gender: userData?.gender || ''
+    email: activeEmail || '',
+    phone: activeUser?.phoneNumber || '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    dateOfBirth: '',
+    gender: ''
   })
 
+  // Fetch full profile data
   useEffect(() => {
-    setProfileData({
-      firstName: nameParts.firstName,
-      lastName: nameParts.lastName,
-      email: user?.email || '',
-      phone: userData?.phoneNumber || user?.phoneNumber || '',
-      address: userData?.address || '',
-      city: userData?.city || '',
-      state: userData?.state || '',
-      zipCode: userData?.zipCode || '',
-      dateOfBirth: userData?.dateOfBirth || '',
-      gender: userData?.gender || ''
-    })
-  }, [nameParts.firstName, nameParts.lastName, user?.email, user?.phoneNumber, userData])
+    const fetchProfile = async () => {
+      const targetUid = activeUser?.uid || activeUser?.id
+      const targetEmail = activeEmail
+      if (!targetUid && !targetEmail) return
+
+      try {
+        const query = targetUid ? `uid=${targetUid}` : `email=${encodeURIComponent(targetEmail)}`
+        const res = await fetch(`/api/customer/profile?${query}`)
+        const data = await res.json()
+        if (data.success && data.data) {
+          const np = getNameParts()
+          setProfileData({
+            firstName: np.firstName,
+            lastName: np.lastName,
+            email: data.data.email || '',
+            phone: data.data.phoneNumber || '',
+            address: data.data.address || '',
+            city: data.data.city || '',
+            state: data.data.state || '',
+            zipCode: data.data.zipCode || '',
+            dateOfBirth: data.data.dateOfBirth || '',
+            gender: data.data.gender || ''
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load profile', err)
+      }
+    }
+    fetchProfile()
+  }, [activeUser, activeEmail])
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -72,7 +94,8 @@ const CustomerProfile = () => {
   ]
 
   const handleSave = async () => {
-    if (!userData?.uid) {
+    const targetUid = activeUser?.uid || activeUser?.id
+    if (!targetUid) {
       toast.error('Unable to update profile right now.')
       return
     }
@@ -80,21 +103,40 @@ const CustomerProfile = () => {
     setIsSaving(true)
     try {
       const username = `${profileData.firstName} ${profileData.lastName}`.trim()
-      const response = await fetch('/api/users', {
+      
+      // Update core user data (username, phone)
+      const userRes = await fetch('/api/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: userData.uid,
+          uid: targetUid,
           username,
           phoneNumber: profileData.phone || ''
         })
       })
-      const result = await response.json()
-      if (!response.ok || !result?.success) {
-        throw new Error(result?.error || 'Failed to update profile')
-      }
+      const userResult = await userRes.json()
+      if (!userRes.ok || !userResult?.success) throw new Error(userResult?.error || 'Failed to update user')
 
-      await loadUserData()
+      // Update customer profile extended data
+      const profileRes = await fetch('/api/customer/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: targetUid,
+          address: profileData.address,
+          city: profileData.city,
+          state: profileData.state,
+          zipCode: profileData.zipCode,
+          dateOfBirth: profileData.dateOfBirth,
+          gender: profileData.gender
+        })
+      })
+      const profileResult = await profileRes.json()
+      if (!profileRes.ok || !profileResult?.success) throw new Error(profileResult?.error || 'Failed to update profile details')
+
+      if (!isAdminView) {
+        await loadUserData()
+      }
       toast.success('Profile updated successfully')
       setIsEditing(false)
     } catch (error) {
@@ -128,18 +170,20 @@ const CustomerProfile = () => {
         <div className="relative">
           <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-2xl">
-              {user?.displayName?.charAt(0) || 'U'}
+              {activeDisplayName?.charAt(0) || 'U'}
             </span>
           </div>
-          <button className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
-            <Camera className="w-4 h-4 text-gray-600" />
-          </button>
+          {!isAdminView && (
+            <button className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
+              <Camera className="w-4 h-4 text-gray-600" />
+            </button>
+          )}
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800">
-            {user?.displayName || 'User'}
+            {activeDisplayName || 'User'}
           </h2>
-          <p className="text-gray-600">Customer since {new Date().getFullYear()}</p>
+          <p className="text-gray-600">Customer</p>
         </div>
       </div>
 
@@ -147,33 +191,35 @@ const CustomerProfile = () => {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Edit Profile</span>
-            </button>
-          ) : (
-            <div className="flex space-x-2">
+          {!isAdminView && (
+            !isEditing ? (
               <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={() => setIsEditing(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <Save className="w-4 h-4" />
-                <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                <Edit className="w-4 h-4" />
+                <span>Edit Profile</span>
               </button>
-              <button
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
-                <span>Cancel</span>
-              </button>
-            </div>
+            ) : (
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Cancel</span>
+                </button>
+              </div>
+            )
           )}
         </div>
 

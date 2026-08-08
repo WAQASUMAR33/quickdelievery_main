@@ -53,6 +53,8 @@ import VerifiedUserOutlinedIcon       from '@mui/icons-material/VerifiedUserOutl
 import VisibilityOutlinedIcon         from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutlined'
 
+import CustomerProfile from '@/components/customer/CustomerProfile'
+
 const BRAND      = '#D70F64'
 const DROP_MIN_W = 300
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
@@ -399,9 +401,9 @@ export default function CustomerManagement() {
       <Dialog
         open={showViewModal}
         onClose={() => setShowViewModal(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 0 } }}
+        PaperProps={{ sx: { borderRadius: 0, minHeight: '80vh' } }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -412,48 +414,11 @@ export default function CustomerManagement() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 3, bgcolor: '#f8fafc' }}>
+        <DialogContent sx={{ p: 0, bgcolor: '#f8fafc' }}>
           {viewCustomer && (
-            <Stack spacing={2.5}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ width: 56, height: 56, bgcolor: BRAND, fontSize: 24, fontWeight: 800 }}>
-                  {(viewCustomer.username || 'C').charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight={700}>{viewCustomer.username || 'Customer'}</Typography>
-                  <Typography variant="caption" color="text.secondary">UID: {viewCustomer.uid}</Typography>
-                </Box>
-              </Box>
-              <Divider />
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>EMAIL ADDRESS</Typography>
-                  <Typography variant="body2" fontWeight={600}>{viewCustomer.email || '—'}</Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>PHONE NUMBER</Typography>
-                  <Typography variant="body2" fontWeight={600}>{viewCustomer.phoneNumber || '—'}</Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>ACCOUNT ROLE</Typography>
-                  <Typography variant="body2" fontWeight={600}>{viewCustomer.role || 'CUSTOMER'}</Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>VERIFICATION STATUS</Typography>
-                  <Chip
-                    label={viewCustomer.emailVerification ? 'Verified' : 'Unverified'}
-                    size="small"
-                    color={viewCustomer.emailVerification ? 'success' : 'warning'}
-                    variant="outlined"
-                    sx={{ borderRadius: 0, fontWeight: 700 }}
-                  />
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 0, gridColumn: 'span 2' }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.5}>JOINED DATE</Typography>
-                  <Typography variant="body2" fontWeight={600}>{new Date(viewCustomer.createdAt).toLocaleDateString('en-US', { dateStyle: 'full' })}</Typography>
-                </Paper>
-              </Box>
-            </Stack>
+            <Box sx={{ width: '100%', overflowX: 'hidden' }}>
+              <CustomerProfile isAdminView={true} customerData={viewCustomer} />
+            </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2, bgcolor: '#f8fafc' }}>

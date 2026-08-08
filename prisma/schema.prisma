@@ -28,6 +28,7 @@ model Users {
   driverOrders       Order[]   @relation("DriverOrders")
   ownedFoodDeals    FoodDeal[] @relation("FoodDealVendorOwner")
   driverProfile      DriverProfile?
+  customerProfile    CustomerProfile?
 
   @@map("users")
 }
@@ -339,6 +340,21 @@ model DriverProfile {
   updatedAt             DateTime   @updatedAt @map("updated_at")
 
   @@map("driver_profiles")
+}
+
+model CustomerProfile {
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique @map("user_id")
+  user        Users    @relation(fields: [userId], references: [uid], onDelete: Cascade)
+  address     String?  @db.VarChar(255)
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(100)
+  zipCode     String?  @map("zip_code") @db.VarChar(20)
+  dateOfBirth String?  @map("date_of_birth") @db.VarChar(50)
+  gender      String?  @db.VarChar(20)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 }
 
 enum DutyStatus {
