@@ -495,12 +495,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                       )}
                       {selectedOrder.status === 'PROCESSING' && (
                         <Button variant="contained" size="small" color="secondary" onClick={() => handleUpdateStatus(selectedOrder.id, 'SHIPPED')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
-                          Mark as Shipped
-                        </Button>
-                      )}
-                      {selectedOrder.status === 'SHIPPED' && (
-                        <Button variant="contained" size="small" color="success" onClick={() => handleUpdateStatus(selectedOrder.id, 'DELIVERED')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
-                          Mark as Delivered
+                          Mark as Ready for Delivery
                         </Button>
                       )}
                       <Button variant="outlined" size="small" color="error" onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')} sx={{ borderRadius: 0, textTransform: 'none' }}>

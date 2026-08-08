@@ -28,6 +28,8 @@ import FormControlLabel  from '@mui/material/FormControlLabel'
 import Switch            from '@mui/material/Switch'
 import Alert             from '@mui/material/Alert'
 import Divider           from '@mui/material/Divider'
+import Card              from '@mui/material/Card'
+import CardContent       from '@mui/material/CardContent'
 import CircularProgress  from '@mui/material/CircularProgress'
 import Table             from '@mui/material/Table'
 import TableHead         from '@mui/material/TableHead'
@@ -358,12 +360,6 @@ export default function VendorManagement() {
           >
             Refresh
           </Button>
-          <Button
-            variant="contained" startIcon={<AddIcon />} onClick={openAdd}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, textTransform: 'none', borderRadius: 0, fontWeight: 600 }}
-          >
-            Add Vendor
-          </Button>
         </Stack>
       </Stack>
 
@@ -615,27 +611,29 @@ export default function VendorManagement() {
         }}
       >
         {/* Title bar */}
-        <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', py: 1.5, flexShrink: 0 }}>
+        <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', py: 1.5, flexShrink: 0, bgcolor: '#0f1724', color: 'white' }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Box sx={{ bgcolor: `${BRAND}15`, p: 0.75, borderRadius: 1, display: 'flex' }}>
+              <Box sx={{ bgcolor: `${BRAND}22`, p: 0.75, borderRadius: 1, display: 'flex' }}>
                 <DomainOutlinedIcon sx={{ color: BRAND, fontSize: 22 }} />
               </Box>
               <Box>
-                <Typography variant="h6" fontWeight={700} lineHeight={1.2}>Business Profile</Typography>
+                <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="white">Vendor Business Profile (Read-Only)</Typography>
                 {businessVendor && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
                     {businessVendor.username} · {businessVendor.email}
                   </Typography>
                 )}
               </Box>
             </Stack>
-            {businessData && <BusinessStatusChip status={businessData.verificationStatus} />}
+            <IconButton size="small" onClick={() => setBusinessOpen(false)} sx={{ color: 'white' }}>
+              <CloseIcon />
+            </IconButton>
           </Stack>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ p: 0, flex: '1 1 auto', overflow: 'auto', minHeight: 0 }}>
-          {/* ── Loading ── */}
+        <DialogContent dividers sx={{ p: 0, flex: '1 1 auto', overflow: 'auto', minHeight: 0, bgcolor: '#f8fafc' }}>
+          {/* Loading */}
           {businessLoading && (
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={10} gap={2}>
               <CircularProgress sx={{ color: BRAND }} />
@@ -643,7 +641,7 @@ export default function VendorManagement() {
             </Box>
           )}
 
-          {/* ── No Profile ── */}
+          {/* No Profile */}
           {!businessLoading && !businessData && (
             <Box py={10} textAlign="center">
               <DomainOutlinedIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
@@ -654,10 +652,15 @@ export default function VendorManagement() {
             </Box>
           )}
 
-          {/* ── Full Profile ── */}
+          {/* Full Profile */}
           {!businessLoading && businessData && (
             <Box sx={{ width: '100%', p: { xs: 2, md: 3 } }}>
-              <VendorBusinessProfile isAdminView={true} vendorData={businessVendor} />
+              <VendorAdminProfileView
+                vendor={businessVendor}
+                business={businessData}
+                onVerify={handleVerifyBusiness}
+                verifying={verifying}
+              />
             </Box>
           )}
         </DialogContent>
@@ -669,6 +672,226 @@ export default function VendorManagement() {
         </DialogActions>
       </Dialog>
 
+    </Box>
+  )
+}
+
+function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
+  if (!business) return null
+
+  let restaurantImages = []
+  if (business.urlRestaurantImages) {
+    try {
+      restaurantImages = typeof business.urlRestaurantImages === 'string'
+        ? JSON.parse(business.urlRestaurantImages)
+        : business.urlRestaurantImages
+    } catch {
+      restaurantImages = business.urlRestaurantImages.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  }
+
+  const statusColor = {
+    APPROVED: '#10b981',
+    PENDING:  '#f59e0b',
+    REJECTED: '#ef4444',
+  }[business.verificationStatus] || '#6b7280'
+
+  return (
+    <Box sx={{ pb: 2 }}>
+      {/* Header Banner */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, mb: 3, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            height: 140,
+            bgcolor: '#0f1724',
+            backgroundImage: business.urlCoverPhoto ? `url(${business.urlCoverPhoto})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative'
+          }}
+        />
+
+        <Box sx={{ p: 3, bgcolor: '#0f1724', color: 'white', mt: -2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+              <Avatar
+                src={business.urlLogo}
+                sx={{
+                  width: 72,
+                  height: 72,
+                  bgcolor: BRAND,
+                  fontSize: 28,
+                  fontWeight: 800,
+                  border: '2px solid white',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}
+              >
+                {(business.businessName || vendor?.username || 'V').charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Typography variant="h5" fontWeight={800} color="white">
+                    {business.businessName}
+                  </Typography>
+                  <Chip
+                    label={business.verificationStatus}
+                    size="small"
+                    sx={{ bgcolor: statusColor, color: 'white', fontWeight: 800, borderRadius: 0, fontSize: 11 }}
+                  />
+                  {business.businessCategory?.name && (
+                    <Chip
+                      label={business.businessCategory.name}
+                      size="small"
+                      sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                    />
+                  )}
+                  {business.businessType?.name && (
+                    <Chip
+                      label={business.businessType.name}
+                      size="small"
+                      sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                    />
+                  )}
+                </Box>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    <EmailOutlinedIcon sx={{ fontSize: 15 }} /> {business.email || vendor?.email}
+                  </Box>
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    <PhoneOutlinedIcon sx={{ fontSize: 15 }} /> {business.phoneNumber1 || vendor?.phoneNumber}
+                  </Box>
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Admin Verification Quick Actions */}
+            <Box sx={{ display: 'flex', gap: 1.5, alignSelf: { xs: 'stretch', sm: 'center' } }}>
+              {business.verificationStatus !== 'APPROVED' && (
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="small"
+                  disabled={verifying}
+                  onClick={() => onVerify('APPROVED')}
+                  startIcon={<CheckCircleOutlineIcon />}
+                  sx={{ borderRadius: 0, fontWeight: 700 }}
+                >
+                  Approve Vendor
+                </Button>
+              )}
+              {business.verificationStatus !== 'REJECTED' && (
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  disabled={verifying}
+                  onClick={() => onVerify('REJECTED')}
+                  startIcon={<BlockOutlinedIcon />}
+                  sx={{ borderRadius: 0, fontWeight: 700 }}
+                >
+                  Reject Vendor
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Sub-bar */}
+        <Box sx={{ px: 3, py: 1.5, bgcolor: 'grey.100', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              NTN: <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.primary' }}>{business.ntnNo || 'N/A'}</Box>
+            </Typography>
+            <Divider orientation="vertical" flexItem />
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              Owner CNIC: <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.primary' }}>{business.cnicNo || 'N/A'}</Box>
+            </Typography>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Registered: {business.createdAt ? new Date(business.createdAt).toLocaleDateString() : 'N/A'}
+          </Typography>
+        </Box>
+      </Card>
+
+      {/* KPI Cards */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
+        {[
+          { label: 'Status', value: business.verificationStatus, color: statusColor },
+          { label: 'Category', value: business.businessCategory?.name || 'N/A', color: '#3b82f6' },
+          { label: 'Business Type', value: business.businessType?.name || 'N/A', color: '#8b5cf6' },
+          { label: 'Bank Name', value: business.bankName || 'N/A', color: '#10b981' },
+          { label: 'City', value: business.city || 'N/A', color: BRAND },
+        ].map(({ label, value, color }) => (
+          <Card key={label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Typography variant="caption" color="text.disabled" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
+                {label}
+              </Typography>
+              <Typography variant="h6" fontWeight={800} sx={{ color, mt: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {value}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+
+      {/* Detailed Sections */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3 }}>
+        {/* Section 1: Owner & Business Info */}
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Business & Owner Details
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+          <TextField label="Business Name" value={business.businessName || ''} disabled size="small" fullWidth />
+          <TextField label="Owner First Name" value={business.firstName || ''} disabled size="small" fullWidth />
+          <TextField label="Owner Last Name" value={business.lastName || ''} disabled size="small" fullWidth />
+          <TextField label="Owner CNIC Number" value={business.cnicNo || ''} disabled size="small" fullWidth />
+          <TextField label="Business Category" value={business.businessCategory?.name || ''} disabled size="small" fullWidth />
+          <TextField label="Business Type" value={business.businessType?.name || ''} disabled size="small" fullWidth />
+          <TextField label="NTN Number" value={business.ntnNo || 'Not provided'} disabled size="small" fullWidth />
+        </Box>
+
+        {/* Section 2: Contact & Location */}
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Contact Information & Location
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+          <TextField label="Primary Phone" value={business.phoneNumber1 || ''} disabled size="small" fullWidth />
+          <TextField label="Secondary Phone" value={business.phoneNumber2 || 'None'} disabled size="small" fullWidth />
+          <TextField label="Business Email" value={business.email || ''} disabled size="small" fullWidth sx={{ gridColumn: { md: 'span 2' } }} />
+          <TextField label="Street Address" value={business.streetAddress || ''} disabled size="small" fullWidth sx={{ gridColumn: { md: 'span 2' } }} />
+          <TextField label="Building / Place Name" value={business.buildingPlaceName || ''} disabled size="small" fullWidth />
+          <TextField label="House / Shop Number" value={business.houseNumber || ''} disabled size="small" fullWidth />
+          <TextField label="City" value={business.city || ''} disabled size="small" fullWidth />
+          <TextField label="State" value={business.state || ''} disabled size="small" fullWidth />
+          <TextField label="Postal Code" value={business.postalCode || ''} disabled size="small" fullWidth />
+          <TextField label="Billing Address" value={business.billingAddress || ''} disabled size="small" fullWidth />
+          <TextField label="Latitude" value={business.latitude || 'Not set'} disabled size="small" fullWidth />
+          <TextField label="Longitude" value={business.longitude || 'Not set'} disabled size="small" fullWidth />
+        </Box>
+
+        {/* Section 3: Financial & Payout */}
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Financial Account & Payout Information
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+          <TextField label="Bank Name" value={business.bankName || ''} disabled size="small" fullWidth />
+          <TextField label="Bank Account Title" value={business.bankAccountTitle || ''} disabled size="small" fullWidth />
+          <TextField label="Bank IBAN / Account Number" value={business.bankIbanNo || ''} disabled size="small" fullWidth sx={{ gridColumn: { md: 'span 2' } }} />
+        </Box>
+
+        {/* Section 4: Document Uploads & Images */}
+        {restaurantImages.length > 0 && (
+          <>
+            <Typography variant="subtitle2" fontWeight={700} mb={1.5}>Restaurant / Business Gallery Photos</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
+              {restaurantImages.map((url, idx) => (
+                <Box key={idx} component="img" src={url} alt={`Gallery ${idx + 1}`} sx={{ width: '100%', height: 120, objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+              ))}
+            </Box>
+          </>
+        )}
+      </Card>
     </Box>
   )
 }

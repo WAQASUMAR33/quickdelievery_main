@@ -58,6 +58,7 @@ export default function SubcategoriesPage() {
   const [subcategories, setSubcategories] = useState([])
   const [loading,       setLoading]       = useState(true)
   const [searchQuery,   setSearchQuery]   = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
   const [showModal,     setShowModal]     = useState(false)
   const [editingSub,    setEditingSub]    = useState(null)
   const [form,           setForm]           = useState({ name: '', code: '', categoryId: '', image: '' })
@@ -98,10 +99,12 @@ export default function SubcategoriesPage() {
     finally { setLoading(false) }
   }
 
+  const generateCode = () => Math.random().toString(36).substring(2, 10).toUpperCase()
+
   const openAdd = () => {
     setEditingSub(null)
     setPendingImageFile(null)
-    setForm({ name: '', code: '', categoryId: '', image: '' })
+    setForm({ name: '', code: generateCode(), categoryId: '', image: '' })
     setShowModal(true)
   }
 
@@ -132,10 +135,13 @@ export default function SubcategoriesPage() {
     try {
       let imageUrl = (form.image && String(form.image).trim()) || null
 
+      if (!imageUrl && !pendingImageFile) { toast.error('Subcategory image is required'); setSaving(false); return }
+
       if (pendingImageFile) {
         const uploadResult = await uploadProductImage(pendingImageFile)
         if (!uploadResult.success) {
           toast.error(uploadResult.error || 'Image upload failed')
+          setSaving(false)
           return
         }
         imageUrl = uploadResult.url
@@ -145,7 +151,7 @@ export default function SubcategoriesPage() {
 
       const body = editingSub
         ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
-        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), catId: parseInt(form.categoryId), image: imageUrl, status: true }
+        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
 
       const res = await authFetch('/api/products', {
         method: editingSub ? 'PUT' : 'POST',
@@ -175,10 +181,11 @@ export default function SubcategoriesPage() {
     } catch { toast.error('Error deleting subcategory') }
   }
 
-  const filtered = subcategories.filter(s =>
-    s.subCatName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filtered = subcategories.filter(s => {
+    const matchesSearch = s.subCatName?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesFilter = filterCategory === 'all' || s.catId === parseInt(filterCategory)
+    return matchesSearch && matchesFilter
+  })
 
   const catColorMap = {}
   const palette = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', BRAND]
@@ -213,13 +220,18 @@ export default function SubcategoriesPage() {
           </Button>
         </Box>
 
-        {/* ── Search ── */}
+        {/* ── Search & Filter ── */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <TextField size="small" placeholder="Search subcategories or parent category…"
+          <TextField size="small" placeholder="Search subcategories by name…"
             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
             sx={{ minWidth: 320, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
           />
+          <TextField select size="small" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
+            sx={{ minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
+            <MenuItem value="all">All Base Categories</MenuItem>
+            {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+          </TextField>
           <Chip label={`${filtered.length} / ${subcategories.length}`} size="small"
             sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
         </Box>
@@ -339,15 +351,15 @@ export default function SubcategoriesPage() {
                 onChange={e => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g., Smartphones" {...tf} />
 
-              <TextField size="small" fullWidth label="Subcategory Code (unique)" value={form.code}
-                onChange={e => setForm({ ...form, code: e.target.value })}
-                placeholder="e.g., smartphones" {...tf} />
+              <TextField size="small" fullWidth label="Subcategory Code (Unique)" value={form.code}
+                disabled
+                helperText="System-generated unique identifier" {...tf} />
 
               {/* Image upload */}
               <Box>
                 <Typography variant="caption" fontWeight={700} color="text.secondary"
                   sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1 }}>
-                  Subcategory Image
+                  Subcategory Image *
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>

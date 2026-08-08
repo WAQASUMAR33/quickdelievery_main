@@ -18,6 +18,158 @@ import {
   Bell,
   Lock
 } from 'lucide-react'
+import Avatar from '@mui/material/Avatar'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
+
+const BRAND = '#D70F64'
+
+function CustomerAdminView({ customerData, profileData }) {
+  const activeUser = customerData
+  const isVerified = activeUser?.emailVerification
+  const activeDisplayName = activeUser?.username || `${profileData.firstName} ${profileData.lastName}`.trim() || 'Customer'
+
+  return (
+    <Box sx={{ pb: 2 }}>
+      {/* Header Banner */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, mb: 3 }}>
+        <Box sx={{ p: 3, bgcolor: '#0f1724', color: 'white' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+              <Avatar
+                src={activeUser?.profilePhotoUrl}
+                sx={{
+                  width: 72,
+                  height: 72,
+                  bgcolor: BRAND,
+                  fontSize: 28,
+                  fontWeight: 800,
+                  border: '2px solid white',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}
+              >
+                {activeDisplayName.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Typography variant="h5" fontWeight={800} color="white">
+                    {activeDisplayName}
+                  </Typography>
+                  <Chip
+                    label="CUSTOMER"
+                    size="small"
+                    sx={{ bgcolor: '#15803d', color: 'white', fontWeight: 700, borderRadius: 0, fontSize: 11 }}
+                  />
+                  <Chip
+                    icon={isVerified ? <VerifiedUserOutlinedIcon sx={{ fontSize: '14px !important', color: 'white !important' }} /> : <WarningAmberOutlinedIcon sx={{ fontSize: '14px !important', color: 'white !important' }} />}
+                    label={isVerified ? 'VERIFIED CUSTOMER' : 'UNVERIFIED'}
+                    size="small"
+                    sx={{
+                      bgcolor: isVerified ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                      color: isVerified ? '#34d399' : '#fbbf24',
+                      border: '1px solid',
+                      borderColor: isVerified ? '#059669' : '#d97706',
+                      fontWeight: 700,
+                      borderRadius: 0,
+                      fontSize: 11
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    <Mail className="w-4 h-4 text-gray-400" /> {activeUser?.email || profileData.email || 'No email'}
+                  </Box>
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    <Phone className="w-4 h-4 text-gray-400" /> {activeUser?.phoneNumber || profileData.phone || 'No phone'}
+                  </Box>
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Sub-bar */}
+        <Box sx={{ px: 3, py: 1.5, bgcolor: 'grey.100', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              UID: <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.primary' }}>{activeUser?.uid || 'N/A'}</Box>
+            </Typography>
+            <Divider orientation="vertical" flexItem />
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              Sign-in Type: <Box component="span" sx={{ fontWeight: 700, color: 'text.primary', textTransform: 'capitalize' }}>{activeUser?.type || 'local'}</Box>
+            </Typography>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Member since: {activeUser?.createdAt ? new Date(activeUser.createdAt).toLocaleDateString() : 'N/A'}
+          </Typography>
+        </Box>
+      </Card>
+
+      {/* KPI Cards */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
+        {[
+          { label: 'Email Status', value: isVerified ? 'Verified' : 'Unverified', color: isVerified ? '#10b981' : '#f59e0b' },
+          { label: 'Account Type', value: (activeUser?.type || 'local').toUpperCase(), color: '#3b82f6' },
+          { label: 'Date of Birth', value: profileData.dateOfBirth || 'Not specified', color: '#8b5cf6' },
+          { label: 'Gender', value: profileData.gender ? (profileData.gender.charAt(0).toUpperCase() + profileData.gender.slice(1)) : 'Not specified', color: BRAND },
+        ].map(({ label, value, color }) => (
+          <Card key={label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Typography variant="caption" color="text.disabled" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
+                {label}
+              </Typography>
+              <Typography variant="h6" fontWeight={800} sx={{ color, mt: 0.5 }}>
+                {value}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+
+      {/* Detailed Fields Card */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3 }}>
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Personal Information
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+          <TextField label="First Name" value={profileData.firstName || ''} disabled size="small" fullWidth />
+          <TextField label="Last Name" value={profileData.lastName || ''} disabled size="small" fullWidth />
+          <TextField label="Email Address" value={profileData.email || activeUser?.email || ''} disabled size="small" fullWidth />
+          <TextField label="Phone Number" value={profileData.phone || activeUser?.phoneNumber || ''} disabled size="small" fullWidth />
+          <TextField label="Date of Birth" value={profileData.dateOfBirth || ''} disabled size="small" fullWidth />
+          <TextField label="Gender" value={profileData.gender || ''} disabled size="small" fullWidth />
+        </Box>
+
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Address & Location Details
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+          <TextField label="Street Address" value={profileData.address || ''} disabled size="small" fullWidth sx={{ gridColumn: { md: 'span 2' } }} />
+          <TextField label="City" value={profileData.city || ''} disabled size="small" fullWidth />
+          <TextField label="State" value={profileData.state || ''} disabled size="small" fullWidth />
+          <TextField label="Zip Code" value={profileData.zipCode || ''} disabled size="small" fullWidth />
+        </Box>
+
+        <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 3 }}>
+          Account Metadata
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+          <TextField label="User ID (DB)" value={activeUser?.id || ''} disabled size="small" fullWidth />
+          <TextField label="Firebase UID" value={activeUser?.uid || ''} disabled size="small" fullWidth />
+          <TextField label="Registration Date" value={activeUser?.createdAt ? new Date(activeUser.createdAt).toLocaleString() : ''} disabled size="small" fullWidth />
+          <TextField label="Last Profile Update" value={activeUser?.updatedAt ? new Date(activeUser.updatedAt).toLocaleString() : ''} disabled size="small" fullWidth />
+        </Box>
+      </Card>
+    </Box>
+  )
+}
 
 const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
   const { user, userData, loadUserData } = useAuth()
@@ -475,6 +627,10 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
       default:
         return renderProfileTab()
     }
+  }
+
+  if (isAdminView) {
+    return <CustomerAdminView customerData={customerData} profileData={profileData} />
   }
 
   return (

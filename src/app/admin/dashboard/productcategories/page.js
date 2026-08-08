@@ -50,6 +50,7 @@ export default function ProductCategoriesPage() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
   const [showModal, setShowModal] = useState(false)
   const [editingPC, setEditingPC] = useState(null)
   const [form, setForm] = useState({ name: '', categoryId: '', description: '', image: '' })
@@ -106,6 +107,7 @@ export default function ProductCategoriesPage() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Product category name is required'); return }
     if (!form.categoryId) { toast.error('Base Category selection is required'); return }
+    if (!form.image) { toast.error('Product category image is required'); return }
     setSaving(true)
     try {
       const body = editingPC
@@ -143,10 +145,11 @@ export default function ProductCategoriesPage() {
     } catch { toast.error('Error deleting product category') }
   }
 
-  const filtered = productCategories.filter(pc =>
-    pc.productCategoryName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pc.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filtered = productCategories.filter(pc => {
+    const matchesSearch = pc.productCategoryName?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesFilter = filterCategory === 'all' || pc.categoryId === parseInt(filterCategory)
+    return matchesSearch && matchesFilter
+  })
 
   const accent = ['#D70F64', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
 
@@ -179,13 +182,20 @@ export default function ProductCategoriesPage() {
           </Button>
         </Box>
 
-        {/* ── Search ── */}
-        <TextField
-          fullWidth size="small" placeholder="Search product categories…"
-          value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-          sx={{ mb: 3, maxWidth: 400, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-        />
+        {/* ── Search & Filter ── */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          <TextField
+            size="small" placeholder="Search product categories by name…"
+            value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+            sx={{ minWidth: 300, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+          />
+          <TextField select size="small" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
+            sx={{ minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
+            <MenuItem value="all">All Base Categories</MenuItem>
+            {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+          </TextField>
+        </Box>
 
         {/* ── Stats Row ── */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
@@ -303,7 +313,7 @@ export default function ProductCategoriesPage() {
 
               <Box>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1, fontWeight: 600 }}>
-                  Product Category Image
+                  Product Category Image *
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   {form.image ? (

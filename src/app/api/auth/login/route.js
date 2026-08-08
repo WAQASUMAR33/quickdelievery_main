@@ -15,7 +15,7 @@ export async function POST(request) {
     })
 
     if (!user) {
-      return Response.json({ success: false, error: 'Invalid credentials' }, { status: 401 })
+      return Response.json({ success: false, error: 'No User Found' }, { status: 401 })
     }
 
     // If user has no password (migrated from Firebase?), we can't login with password

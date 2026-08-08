@@ -49,9 +49,7 @@ const STATUS_CONFIG = {
 }
 
 const STATUS_FLOW = {
-  PENDING:    { next: 'PROCESSING', label: 'Accept Order',          color: '#3b82f6' },
-  PROCESSING: { next: 'SHIPPED',   label: 'Picked Up — En Route',  color: '#8b5cf6' },
-  SHIPPED:    { next: 'DELIVERED',  label: 'Mark Delivered',        color: '#10b981' },
+  SHIPPED:    { next: 'DELIVERED',  label: 'Delivered',        color: '#10b981' },
 }
 
 const formatPrice = (v) =>
@@ -600,17 +598,6 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                         {/* ── Action Buttons ── */}
                         {!historyMode && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              color="error"
-                              onClick={() => handleCancelOrder(order.id)}
-                              disabled={isUpdating}
-                              startIcon={<CancelOutlinedIcon />}
-                              sx={{ borderRadius: 0, fontWeight: 700 }}
-                            >
-                              Decline / Cancel
-                            </Button>
                             {poolMode ? (
                               <Button
                                 variant="contained"

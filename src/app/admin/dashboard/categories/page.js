@@ -67,9 +67,11 @@ export default function CategoriesPage() {
     finally { setLoading(false) }
   }
 
+  const generateCode = () => Math.random().toString(36).substring(2, 10).toUpperCase()
+
   const openAdd = () => {
     setEditingCategory(null)
-    setForm({ name: '', code: '', description: '', image: '' })
+    setForm({ name: '', code: generateCode(), description: '', image: '' })
     setShowModal(true)
   }
 
@@ -81,11 +83,12 @@ export default function CategoriesPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Category name is required'); return }
+    if (!form.image) { toast.error('Category image is required'); return }
     setSaving(true)
     try {
       const body = editingCategory
         ? { type: 'category', id: editingCategory.id, catName: form.name, catCode: form.code, description: form.description, image: form.image, status: 'ACTIVE' }
-        : { type: 'category', catName: form.name, catCode: form.code || form.name.toLowerCase().replace(/\s+/g, '-'), description: form.description, image: form.image, createdBy: userData?.uid || 'admin' }
+        : { type: 'category', catName: form.name, catCode: form.code, description: form.description, image: form.image, createdBy: userData?.uid || 'admin' }
 
       const res = await authFetch('/api/products', {
         method: editingCategory ? 'PUT' : 'POST',
@@ -253,16 +256,16 @@ export default function CategoriesPage() {
               <TextField size="small" fullWidth label="Category Name *" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g., Electronics" {...tf} />
-              <TextField size="small" fullWidth label="Category Code (unique)" value={form.code}
-                onChange={e => setForm({ ...form, code: e.target.value })}
-                placeholder="e.g., electronics" {...tf} />
+              <TextField size="small" fullWidth label="Category Code (Unique)" value={form.code}
+                disabled
+                helperText="System-generated unique identifier" {...tf} />
               <TextField size="small" fullWidth label="Description (optional)" value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="Short description…" multiline rows={3} {...tf} />
 
               <Box>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1, fontWeight: 600 }}>
-                  Category Image
+                  Category Image *
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   {form.image ? (
