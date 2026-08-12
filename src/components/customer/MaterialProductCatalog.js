@@ -231,7 +231,7 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
               sx={{ objectFit: 'cover' }}
             />
             <IconButton
-              onClick={() => onToggleFavorite(product)}
+              onClick={() => onToggleFavorite({ id: product.vendorId || product.vendor_id || product.vendor?.id, uid: product.vendor?.uid })}
               sx={{
                 position: 'absolute',
                 top: 8,

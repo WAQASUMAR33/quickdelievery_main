@@ -358,7 +358,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   }
 
   const DealCarouselCard = ({ product, index }) => {
-    const isFavorite = favorites.find((fav) => fav.proId === product.proId)
+    const inWishlist = isInWishlist(product.proId)
     const avgRating = product.reviews?.length
       ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
       : 4.8
@@ -406,16 +406,18 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              if (isCustomDeal) {
-                toast('Favourites apply to catalogue items.')
-                return
+              if (inWishlist) {
+                removeFromWishlist(product.proId)
+                toast.success('Removed from wishlist')
+              } else {
+                addToWishlist(product)
+                toast.success('Added to wishlist')
               }
-              onToggleFavorite(product)
             }}
             className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center"
-            aria-label="Toggle favorite"
+            aria-label="Toggle wishlist"
           >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'text-[#D70F64] fill-current' : 'text-gray-600'}`} />
+            <Heart className={`w-4 h-4 ${inWishlist ? 'text-[#D70F64] fill-current' : 'text-gray-600'}`} />
           </button>
         </div>
 
@@ -440,7 +442,13 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   }
 
   const ProductCard = ({ product, index }) => {
-    const isFavorite = favorites.find(fav => fav.proId === product.proId)
+    const isFavorite = favorites?.some(fav => {
+      const fKey = fav.uid ? String(fav.uid) : (fav.vendorUid ? String(fav.vendorUid) : `biz_${fav.id}`)
+      const pVendorId = product.vendorId || product.vendor_id || product.vendor?.id
+      const pVendorUid = product.vendor?.uid
+      const pKey = pVendorUid ? String(pVendorUid) : (pVendorId ? `biz_${pVendorId}` : '')
+      return fKey && pKey && fKey === pKey
+    })
     const inWishlist = isInWishlist(product.proId)
     const avgRating = product.reviews?.length
       ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
@@ -464,32 +472,58 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05, duration: 0.3 }}
         whileHover={{ y: -4 }}
-        className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer border border-transparent hover:border-gray-100 overflow-hidden flex-shrink-0"
+        className="group relative flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 overflow-hidden cursor-pointer text-left"
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+        <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
           <img
             src={product.proImages?.[0] || '/placeholder-product.jpg'}
             alt={product.proName}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {(dealBanner || disc > 0) && (
-            <div className="absolute top-3 left-0 bg-[#D70F64] text-white text-xs font-bold px-2 py-1 rounded-r-full shadow-sm z-10">
+            <div className="absolute top-2 left-2 rounded-full bg-[#D70F64] px-2 py-0.5 text-[10px] font-bold text-white shadow-sm z-10">
               {dealBanner || `${disc}% OFF`}
             </div>
           )}
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              if (isCustomDeal) {
-                toast('Favourites apply to shop items. This tile is a highlighted offer.')
-                return
-              }
-              onToggleFavorite(product)
-            }}
-            className="absolute top-3 right-3 p-1.5 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors z-10"
-          >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'text-[#D70F64] fill-current' : 'text-gray-600'}`} />
-          </button>
+          <div className="absolute top-2 right-2 flex gap-1 z-10">
+            {/* Wishlist Button */}
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                if (inWishlist) {
+                  removeFromWishlist(product.proId)
+                  toast.success('Removed from wishlist')
+                } else {
+                  addToWishlist(product)
+                  toast.success('Added to wishlist')
+                }
+              }}
+              title="Add to Wishlist"
+              className="p-1.5 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+            >
+              <Heart className={`w-4 h-4 ${inWishlist ? 'text-[#D70F64] fill-current' : 'text-gray-600'}`} />
+            </button>
+            {/* Favorites (Vendor) Button */}
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                if (isCustomDeal) {
+                  toast('Favourites apply to shop items.')
+                  return
+                }
+                const vendorObj = { id: product.vendorId || product.vendor_id || product.vendor?.id, uid: product.vendor?.uid }
+                if (!vendorObj.id && !vendorObj.uid) {
+                  toast.error('Store information not available for this item.')
+                  return
+                }
+                onToggleFavorite(vendorObj)
+              }}
+              title="Save Store to Favorites"
+              className="p-1.5 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+            >
+              <Star className={`w-4 h-4 ${isFavorite ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} />
+            </button>
+          </div>
         </div>
         <div className="p-3">
           <h3 className="font-bold text-gray-900 line-clamp-1 text-sm group-hover:text-[#D70F64] transition-colors mb-1">
@@ -1178,9 +1212,23 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                     >
                       <div className="relative aspect-[16/9] w-full bg-gray-100 overflow-hidden">
                         <img src={coverImage} alt={shop.businessName || shop.username} className="h-full w-full object-cover" />
-                        <div className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full">
-                          <Heart className="w-4 h-4 text-gray-600" />
-                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (onToggleFavorite) onToggleFavorite(shop)
+                          }}
+                          className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                        >
+                          <Star className={`w-4 h-4 ${favorites?.find(f => {
+                            const getKey = (v) => {
+                              if (v.uid && v.uid !== 'null') return String(v.uid)
+                              if (v.vendorUid) return String(v.vendorUid)
+                              if (v.id) return `biz_${v.id}`
+                              return ''
+                            }
+                            return getKey(f) === getKey(shop)
+                          }) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} />
+                        </button>
                         <div className="absolute bottom-2 right-2 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold text-white">
                           Ad
                         </div>

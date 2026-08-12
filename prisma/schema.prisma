@@ -29,6 +29,9 @@ model Users {
   ownedFoodDeals    FoodDeal[] @relation("FoodDealVendorOwner")
   driverProfile      DriverProfile?
   customerProfile    CustomerProfile?
+  reviews            Review[]
+  wishlists          Wishlist[]
+  favorites          Favorite[] @relation("UserFavorites")
 
   @@map("users")
 }
@@ -131,6 +134,7 @@ model Product {
   productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [productCategoryId], onDelete: SetNull)
   orderItems        OrderItem[]
   foodDeal          FoodDeal?
+  wishlistedBy      Wishlist[]
 
   @@index([approveById], map: "products_approve_by_fkey")
   @@index([catId], map: "products_cat_id_fkey")
@@ -183,6 +187,7 @@ model Order {
   user             Users         @relation("CustomerOrders", fields: [userId], references: [id], onDelete: Cascade)
   driver           Users?        @relation("DriverOrders", fields: [driverId], references: [id], onDelete: SetNull)
   orderItems       OrderItem[]
+  review           Review?
 
   @@index([userId], map: "orders_user_id_fkey")
   @@index([driverId], map: "orders_driver_id_fkey")
@@ -361,4 +366,47 @@ enum DutyStatus {
   ON_DUTY
   OFF_DUTY
   ON_DELIVERY
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?  @db.Text
+  orderId   Int      @unique @map("order_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("reviews")
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int      @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@map("wishlists")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  vendorUid String   @map("vendor_uid")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      Users    @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vendorUid])
+  @@index([vendorUid])
+  @@map("favorites")
 }

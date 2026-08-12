@@ -46,27 +46,23 @@ export const WishlistProvider = ({ children }) => {
     items: []
   })
 
-  // Load wishlist from localStorage on mount
+  // Load wishlist from database on mount
   useEffect(() => {
     if (userData?.id) {
-      const savedWishlist = localStorage.getItem(`wishlist_${userData.id}`)
-      if (savedWishlist) {
+      const fetchWishlist = async () => {
         try {
-          const wishlistData = JSON.parse(savedWishlist)
-          dispatch({ type: 'LOAD_WISHLIST', payload: wishlistData })
+          const res = await fetch(`/api/customer/wishlist?userId=${userData.id}`)
+          const data = await res.json()
+          if (data.success) {
+            dispatch({ type: 'LOAD_WISHLIST', payload: data.data })
+          }
         } catch (error) {
-          console.error('Error loading wishlist from localStorage:', error)
+          console.error('Error fetching wishlist from DB:', error)
         }
       }
+      fetchWishlist()
     }
   }, [userData?.id])
-
-  // Save wishlist to localStorage whenever it changes
-  useEffect(() => {
-    if (userData?.id) {
-      localStorage.setItem(`wishlist_${userData.id}`, JSON.stringify(state.items))
-    }
-  }, [state.items, userData?.id])
 
   // Clear wishlist when user logs out
   useEffect(() => {
@@ -75,21 +71,54 @@ export const WishlistProvider = ({ children }) => {
     }
   }, [user])
 
-  const addToWishlist = (product) => {
+  const addToWishlist = async (product) => {
     if (!user || !userData) {
       alert('Please login to add items to wishlist')
       return false
     }
+    // Optimistic update
     dispatch({ type: 'ADD_TO_WISHLIST', payload: product })
+    
+    // Sync with DB
+    try {
+      await fetch('/api/customer/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userData.id, productId: product.proId, action: 'add' })
+      })
+    } catch (e) {
+      console.error('Failed to save to DB', e)
+    }
     return true
   }
 
-  const removeFromWishlist = (productId) => {
+  const removeFromWishlist = async (productId) => {
+    // Optimistic update
     dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: productId })
+    
+    // Sync with DB
+    if (userData?.id) {
+      try {
+        await fetch('/api/customer/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userData.id, productId, action: 'remove' })
+        })
+      } catch (e) {
+        console.error('Failed to remove from DB', e)
+      }
+    }
   }
 
-  const clearWishlist = () => {
+  const clearWishlist = async () => {
     dispatch({ type: 'CLEAR_WISHLIST' })
+    if (userData?.id) {
+      try {
+        await fetch(`/api/customer/wishlist?userId=${userData.id}`, { method: 'DELETE' })
+      } catch (e) {
+        console.error('Failed to clear DB wishlist', e)
+      }
+    }
   }
 
   const isInWishlist = (productId) => {

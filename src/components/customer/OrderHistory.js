@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCart } from '@/contexts/CartContext'
+import toast from 'react-hot-toast'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import AnimatedCard from '@/components/ui/AnimatedCard'
 import { 
@@ -94,9 +96,13 @@ function printOrderReceipt(order) {
 
 const OrderHistory = () => {
   const { user, userData } = useAuth()
+  const { clearCart, addToCart } = useCart()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [ratingModal, setRatingModal] = useState(null)
+  const [ratingVal, setRatingVal] = useState(5)
+  const [ratingText, setRatingText] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => {
@@ -137,6 +143,8 @@ const OrderHistory = () => {
               img = pi[0]
             }
             return {
+              proId: item.productId || item.product?.proId,
+              product: item.product,
               name: item.product?.proName || 'Unknown Product',
               price: parseFloat(item.price) || 0,
               quantity: item.quantity || 1,
@@ -157,6 +165,7 @@ const OrderHistory = () => {
             subtotal: subRounded,
             serviceCharge,
             items,
+            review: order.review || null,
             shippingAddress: order.shippingAddress || 'N/A',
             trackingNumber: order.trackingNumber || null,
             estimatedDelivery: order.estimatedDelivery || null,
@@ -176,6 +185,42 @@ const OrderHistory = () => {
       setOrders([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleReorder = (order) => {
+    clearCart()
+    order.items.forEach(item => {
+      let p = { proId: item.proId || Date.now(), proName: item.name, price: item.price, proImages: [item.image] }
+      if (item.product) {
+        p = { ...item.product, proImages: [item.image] }
+      }
+      addToCart(p, item.quantity)
+    })
+    window.dispatchEvent(new Event('openCart'))
+    toast.success('Items loaded into cart')
+  }
+
+  const handleRateSubmit = async () => {
+    if (!ratingModal) return
+    try {
+      const res = await fetch(`/api/orders/${ratingModal}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: ratingVal, comment: ratingText })
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Rating submitted successfully!')
+        setOrders(orders.map(o => o.id === ratingModal ? { ...o, review: data.data } : o))
+        setRatingModal(null)
+        setRatingVal(5)
+        setRatingText('')
+      } else {
+        toast.error(data.error || 'Failed to submit rating')
+      }
+    } catch (e) {
+      toast.error('An error occurred')
     }
   }
 
@@ -396,15 +441,23 @@ const OrderHistory = () => {
               <span>View Details</span>
             </motion.button>
             
-            {order.status === 'delivered' && (
+            {order.status === 'delivered' && !order.review && (
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => setRatingModal(order.id)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
               >
                 <Star className="w-4 h-4" />
                 <span>Rate Order</span>
               </motion.button>
+            )}
+
+            {order.review && (
+              <div className="flex items-center space-x-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg shadow-sm border border-gray-200">
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                <span className="font-semibold text-sm">{order.review.rating}/5</span>
+              </div>
             )}
             
             {order.status === 'pending' && (
@@ -422,6 +475,7 @@ const OrderHistory = () => {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => handleReorder(order)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -641,6 +695,55 @@ const OrderHistory = () => {
               onClose={() => setSelectedOrder(null)} 
             />
           )}
+
+          {/* Rating Modal */}
+          <AnimatePresence>
+            {ratingModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setRatingModal(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6"
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Rate Order</h3>
+                    <button onClick={() => setRatingModal(null)} className="text-gray-500 hover:text-black">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex space-x-2 justify-center mb-4">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <button key={s} onClick={() => setRatingVal(s)} className="focus:outline-none">
+                        <Star className={`w-8 h-8 ${s <= ratingVal ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea 
+                    className="w-full border rounded-lg p-3 text-sm mb-4 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                    rows="3" 
+                    placeholder="Leave a review..."
+                    value={ratingText}
+                    onChange={e => setRatingText(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleRateSubmit}
+                    className="w-full py-2 text-white rounded-lg font-bold hover:bg-opacity-90 transition-colors"
+                    style={{ backgroundColor: '#D70F64' }}
+                  >
+                    Submit Rating
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </div>

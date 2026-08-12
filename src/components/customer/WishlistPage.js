@@ -304,6 +304,7 @@ const WishlistPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-block"
+              onClick={() => window.dispatchEvent(new Event('goProducts'))}
             >
               <div className="bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center space-x-2 cursor-pointer">
                 <Package2 className="w-5 h-5" />

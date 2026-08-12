@@ -128,6 +128,20 @@ export default function CustomerDashboard() {
     else router.push(access.redirectTo)
   }, [user, userData, authLoading, router])
 
+  useEffect(() => {
+    const handleOpenCart = () => setShowCart(true)
+    const handleGoProducts = () => setActiveTab('products')
+    
+    window.addEventListener('openCart', handleOpenCart)
+    window.addEventListener('goProducts', handleGoProducts)
+    
+    return () => {
+      window.removeEventListener('openCart', handleOpenCart)
+      window.removeEventListener('goProducts', handleGoProducts)
+    }
+  }, [])
+
+
   const { isGuest, tabs, effectiveTab } = useMemo(() => {
     const guest = userData?.role === 'GUEST'
     const tabDefs = [
@@ -159,6 +173,22 @@ export default function CustomerDashboard() {
     fetchCategories()
   }, [])
 
+  // Fetch Favorites from API
+  useEffect(() => {
+    if (userData?.id) {
+      const fetchFavorites = async () => {
+        try {
+          const res = await fetch(`/api/customer/favorites?userId=${userData.id}`)
+          const data = await res.json()
+          if (data.success) {
+            setFavorites(data.data || [])
+          }
+        } catch (e) { console.error('Error fetching favorites:', e) }
+      }
+      fetchFavorites()
+    }
+  }, [userData?.id])
+
   const heroFirstName = useMemo(() => {
     if (authLoading) return '…'
     const dn = user?.displayName?.trim()
@@ -172,10 +202,47 @@ export default function CustomerDashboard() {
     if (isGuest) toast.success('Item added! Create an account to save your cart.')
   }
 
-  const handleToggleFavorite = (product) => {
+  const getVendorKey = (v) => {
+    if (!v) return ''
+    if (v.vendorUid) return String(v.vendorUid)
+    if (v.uid && v.uid !== 'null') return String(v.uid)
+    if (v.id) return `biz_${v.id}`
+    if (v.vendorId) return `biz_${v.vendorId}`
+    if (v.vendor_id) return `biz_${v.vendor_id}`
+    if (v.email) return `email_${v.email}`
+    if (v.proId) return `product_${v.proId}`
+    return ''
+  }
+
+  const handleToggleFavorite = async (vendor) => {
     if (isGuest) { toast.error('Please sign in to save favorites'); return }
-    const isFav = favorites.find(f => f.proId === product.proId)
-    setFavorites(isFav ? favorites.filter(f => f.proId !== product.proId) : [...favorites, product])
+    const vendorUid = getVendorKey(vendor)
+    if (!vendorUid) {
+      toast.error('Could not identify store/vendor.')
+      return
+    }
+    
+    // Check current state before optimistic update (for API call)
+    const wasFav = favorites.some(f => getVendorKey(f) === vendorUid)
+    
+    // Optimistic update using functional state to prevent stale closures
+    setFavorites(prev => {
+      const exists = prev.some(f => getVendorKey(f) === vendorUid)
+      return exists ? prev.filter(f => getVendorKey(f) !== vendorUid) : [...prev, vendor]
+    })
+    
+    // Sync with DB
+    if (userData?.id) {
+      try {
+        await fetch('/api/customer/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userData.id, vendorUid, action: wasFav ? 'remove' : 'add' })
+        })
+      } catch (e) {
+        console.error('Failed to sync favorite with DB', e)
+      }
+    }
   }
 
   const handleSignOut = async () => {
@@ -211,54 +278,53 @@ export default function CustomerDashboard() {
         return (
           <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <FavoriteIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+              <StarIcon sx={{ fontSize: 64, color: '#facc15', mb: 2 }} />
               <Typography variant="h4" fontWeight={800} gutterBottom>My Favorites</Typography>
-              <Typography color="text.secondary">Products you&apos;ve saved for later</Typography>
+              <Typography color="text.secondary">Your favorite restaurants and shops</Typography>
             </Box>
 
             {favorites.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
-                <FavoriteBorderIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                <StarBorderIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
                 <Typography variant="h6" color="text.secondary" gutterBottom>No favorites yet</Typography>
-                <Typography color="text.disabled">Start adding products to your favorites!</Typography>
+                <Typography color="text.disabled">Start adding shops to your favorites!</Typography>
               </Box>
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 3 }}>
-                {favorites.map(product => (
-                  <Card key={product.proId} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
-                    <Box sx={{ position: 'relative' }}>
-                      <CardMedia
-                        component="img"
-                        height={192}
-                        image={product.proImages?.[0] || '/placeholder-product.jpg'}
-                        alt={product.proName}
-                        sx={{ objectFit: 'cover' }}
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => handleToggleFavorite(product)}
-                        sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'background.paper', '&:hover': { bgcolor: 'error.lighter' } }}
-                      >
-                        <FavoriteIcon sx={{ fontSize: 18, color: 'error.main' }} />
-                      </IconButton>
-                    </Box>
-                    <CardContent sx={{ pb: 1 }}>
-                      <Typography variant="body2" fontWeight={600} sx={{ mb: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {product.proName}
-                      </Typography>
-                      <Typography variant="h6" fontWeight={800} sx={{ color: BRAND }}>${product.price}</Typography>
-                    </CardContent>
-                    <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
-                      <Button
-                        fullWidth variant="contained" size="small"
-                        onClick={() => handleAddToCart(product)}
-                        sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
-                      >
-                        Add to Cart
-                      </Button>
-                    </CardActions>
-                  </Card>
-                ))}
+                {favorites.map(vendor => {
+                  const coverImage = vendor.urlCoverPhoto || vendor.urlLogo || '/placeholder-product.jpg'
+                  const vendorName = vendor.businessName || vendor.username
+                  
+                  return (
+                    <Card key={getVendorKey(vendor)} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', '&:hover': { borderColor: BRAND } }}>
+                      <Box sx={{ position: 'relative' }}>
+                        <CardMedia
+                          component="img"
+                          height={140}
+                          image={coverImage}
+                          alt={vendorName}
+                          sx={{ objectFit: 'cover' }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(vendor) }}
+                          sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'background.paper', '&:hover': { bgcolor: 'grey.100' } }}
+                        >
+                          <StarIcon sx={{ fontSize: 18, color: '#facc15' }} />
+                        </IconButton>
+                      </Box>
+                      <CardContent sx={{ pb: 2 }}>
+                        <Typography variant="body1" fontWeight={700} sx={{ mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {vendorName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <StarIcon sx={{ fontSize: 16, color: '#facc15' }} />
+                          4.8
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
               </Box>
             )}
           </Box>

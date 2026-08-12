@@ -5,8 +5,11 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { uploadProductImage } from '@/lib/imageUpload'
 
 import Alert            from '@mui/material/Alert'
+import Dialog           from '@mui/material/Dialog'
+import IconButton       from '@mui/material/IconButton'
 import Avatar           from '@mui/material/Avatar'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
@@ -26,6 +29,7 @@ import TextField        from '@mui/material/TextField'
 import Typography       from '@mui/material/Typography'
 
 import BadgeOutlinedIcon          from '@mui/icons-material/BadgeOutlined'
+import CloseIcon                  from '@mui/icons-material/Close'
 import CheckCircleOutlinedIcon     from '@mui/icons-material/CheckCircleOutlined'
 import TwoWheelerOutlinedIcon      from '@mui/icons-material/TwoWheelerOutlined'
 import DirectionsCarOutlinedIcon   from '@mui/icons-material/DirectionsCarOutlined'
@@ -75,6 +79,38 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
+  
+  const [pendingImageFiles, setPendingImageFiles] = useState({})
+  const [localPreviews, setLocalPreviews] = useState({})
+
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerUrl, setViewerUrl] = useState('')
+
+  const handleOpenViewer = (url) => {
+    if (!url) return
+    setViewerUrl(url)
+    setViewerOpen(true)
+  }
+
+  useEffect(() => {
+    return () => {
+      Object.values(localPreviews).forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [localPreviews])
+
+  const handleImageFileChosen = (file, key) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file')
+      return
+    }
+    setPendingImageFiles(prev => ({ ...prev, [key]: file }))
+    const objectUrl = URL.createObjectURL(file)
+    setLocalPreviews(prev => {
+      if (prev[key]) URL.revokeObjectURL(prev[key])
+      return { ...prev, [key]: objectUrl }
+    })
+  }
 
   // Dispute form state
   const [disputeForm, setDisputeForm] = useState({
@@ -247,10 +283,27 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
     setSaving(true)
 
     try {
+      let uploadedUrls = {}
+      if (Object.keys(pendingImageFiles).length > 0) {
+        toast.loading('Uploading images...', { id: 'upload-images' })
+        for (const [key, file] of Object.entries(pendingImageFiles)) {
+          const res = await uploadProductImage(file)
+          if (!res.success) {
+            toast.error(`Failed to upload ${key}: ${res.error || 'Unknown error'}`, { id: 'upload-images' })
+            setSaving(false)
+            return
+          }
+          uploadedUrls[key] = res.url
+        }
+        toast.success('Images uploaded successfully', { id: 'upload-images' })
+        setPendingImageFiles({})
+      }
+
       const payload = {
         id: driver?.id,
         uid: driver?.uid || userData?.uid,
-        ...formData
+        ...formData,
+        ...uploadedUrls
       }
 
       const res = await fetch('/api/driver/profile', {
@@ -562,13 +615,17 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       {...fieldSx}
                     />
                     <Box sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar src={formData.profilePhotoUrl} sx={{ width: 40, height: 40, bgcolor: 'grey.200' }} />
-                        <Box>
-                          <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>Profile Photo *</Typography>
-                          <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, recent passport-sized picture</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar 
+                            src={localPreviews.profilePhotoUrl || formData.profilePhotoUrl} 
+                            sx={{ width: 48, height: 48, border: '2px solid', borderColor: BRAND, cursor: 'pointer' }} 
+                            onClick={() => handleOpenViewer(localPreviews.profilePhotoUrl || formData.profilePhotoUrl)}
+                          />
+                          <Box>
+                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>Profile Photo *</Typography>
+                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, recent passport-sized picture</Typography>
+                          </Box>
                         </Box>
-                      </Box>
                       <Button
                         component="label"
                         variant="outlined"
@@ -581,14 +638,11 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                           type="file"
                           hidden
                           accept="image/*"
+                          disabled={!isEditing}
                           onChange={(e) => {
-                            const file = e.target.files[0]
-                            if (file) {
-                              const reader = new FileReader()
-                              reader.onload = (ev) => {
-                                setFormData({ ...formData, profilePhotoUrl: ev.target.result })
-                              }
-                              reader.readAsDataURL(file)
+                            if (e.target.files?.[0]) {
+                              handleImageFileChosen(e.target.files[0], 'profilePhotoUrl')
+                              e.target.value = ''
                             }
                           }}
                         />
@@ -695,8 +749,13 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                     ].map(doc => (
                       <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          {formData[doc.key] ? (
-                            <Avatar src={formData[doc.key]} sx={{ width: 40, height: 40, borderRadius: 1 }} variant="square" />
+                          {(localPreviews[doc.key] || formData[doc.key]) ? (
+                            <Avatar 
+                              src={localPreviews[doc.key] || formData[doc.key]} 
+                              sx={{ width: 40, height: 40, borderRadius: 1, cursor: 'pointer' }} 
+                              variant="square" 
+                              onClick={() => handleOpenViewer(localPreviews[doc.key] || formData[doc.key])}
+                            />
                           ) : (
                             <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
                               <Typography variant="caption" color="text.secondary">No Img</Typography>
@@ -719,14 +778,11 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                             type="file"
                             hidden
                             accept="image/*"
+                            disabled={!isEditing}
                             onChange={(e) => {
-                              const file = e.target.files[0]
-                              if (file) {
-                                const reader = new FileReader()
-                                reader.onload = (ev) => {
-                                  setFormData({ ...formData, [doc.key]: ev.target.result })
-                                }
-                                reader.readAsDataURL(file)
+                              if (e.target.files?.[0]) {
+                                handleImageFileChosen(e.target.files[0], doc.key)
+                                e.target.value = ''
                               }
                             }}
                           />
@@ -798,8 +854,13 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                     ].map(doc => (
                       <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          {formData[doc.key] ? (
-                            <Avatar src={formData[doc.key]} sx={{ width: 40, height: 40, borderRadius: 1 }} variant="square" />
+                          {(localPreviews[doc.key] || formData[doc.key]) ? (
+                            <Avatar 
+                              src={localPreviews[doc.key] || formData[doc.key]} 
+                              sx={{ width: 40, height: 40, borderRadius: 1, cursor: 'pointer' }} 
+                              variant="square" 
+                              onClick={() => handleOpenViewer(localPreviews[doc.key] || formData[doc.key])}
+                            />
                           ) : (
                             <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
                               <Typography variant="caption" color="text.secondary">No Img</Typography>
@@ -822,14 +883,11 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                             type="file"
                             hidden
                             accept="image/*"
+                            disabled={!isEditing}
                             onChange={(e) => {
-                              const file = e.target.files[0]
-                              if (file) {
-                                const reader = new FileReader()
-                                reader.onload = (ev) => {
-                                  setFormData({ ...formData, [doc.key]: ev.target.result })
-                                }
-                                reader.readAsDataURL(file)
+                              if (e.target.files?.[0]) {
+                                handleImageFileChosen(e.target.files[0], doc.key)
+                                e.target.value = ''
                               }
                             }}
                           />
@@ -1087,6 +1145,31 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
           </form>
         </CardContent>
       </Card>
+
+      {/* ── Image Viewer Dialog ── */}
+      <Dialog 
+        open={viewerOpen} 
+        onClose={() => setViewerOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { bgcolor: 'transparent', boxShadow: 'none' } }}
+      >
+        <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <IconButton 
+            onClick={() => setViewerOpen(false)}
+            sx={{ position: 'absolute', top: -16, right: -16, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {viewerUrl && (
+            <img 
+              src={viewerUrl} 
+              alt="Viewer" 
+              style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: 4 }} 
+            />
+          )}
+        </Box>
+      </Dialog>
     </Box>
   )
 }

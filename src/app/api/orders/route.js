@@ -54,6 +54,7 @@ export async function GET(request) {
     const orders = await prisma.order.findMany({
       where: whereClause,
       include: {
+        review: true,
         orderItems: {
           include: {
             product: {
@@ -324,6 +325,7 @@ export async function PUT(request) {
       where: { id: orderId },
       data: updateData,
       include: {
+        review: true,
         orderItems: {
           include: {
             product: {

@@ -112,6 +112,17 @@ export async function PUT(request) {
       return Response.json({ success: false, error: 'Valid CNIC in format XXXXX-XXXXXXX-X or 13 digits is required' }, { status: 400 })
     }
 
+    // Image URL validations: Reject base64 strings
+    const imageFields = [
+      'profilePhotoUrl', 'vehicleNumberFrontUrl', 'vehicleRegCertFrontUrl', 
+      'vehicleRegCertBackUrl', 'cnicFrontUrl', 'cnicBackUrl', 
+      'licenseFrontUrl', 'licenseBackUrl'
+    ]
+    for (const field of imageFields) {
+      if (body[field] && String(body[field]).trim().startsWith('data:image/')) {
+        return Response.json({ success: false, error: 'Base64 image data is not allowed. Please upload via standard process.' }, { status: 400 })
+      }
+    }
 
     // ── Update Users table (common info) ──
     const userUpdate = {}
