@@ -3,8 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary-pink: #D70F64;
-  --primary-pink-hover: #C20D5A;
+  --primary-pink: #39772A;
+  --primary-pink-hover: #2E5F22;
 }
 
 @theme inline {

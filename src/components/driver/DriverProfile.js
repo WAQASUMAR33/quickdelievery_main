@@ -50,7 +50,7 @@ import PowerSettingsNewOutlinedIcon from '@mui/icons-material/PowerSettingsNewOu
 import ReportProblemOutlinedIcon   from '@mui/icons-material/ReportProblemOutlined'
 import SendOutlinedIcon            from '@mui/icons-material/SendOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -631,7 +631,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                         variant="outlined"
                         size="small"
                         disabled={!isEditing}
-                        sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215, 15, 100, 0.04)' } }}
+                        sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
                       >
                         Upload
                         <input
@@ -771,7 +771,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                           variant="outlined"
                           size="small"
                           disabled={!isEditing}
-                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215, 15, 100, 0.04)' } }}
+                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
                         >
                           Upload
                           <input
@@ -876,7 +876,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                           variant="outlined"
                           size="small"
                           disabled={!isEditing}
-                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215, 15, 100, 0.04)' } }}
+                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
                         >
                           Upload
                           <input

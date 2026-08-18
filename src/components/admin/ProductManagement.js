@@ -49,7 +49,7 @@ import StarOutlineIcon          from '@mui/icons-material/StarOutline'
 import VerifiedOutlinedIcon     from '@mui/icons-material/VerifiedOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
 
-const BRAND      = '#D70F64'
+const BRAND      = '#39772A'
 const DROP_MIN_W = 300
 const tf         = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 

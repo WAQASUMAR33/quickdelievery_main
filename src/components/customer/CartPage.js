@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { computeServiceCharge, computeOrderTotalWithService, getServiceChargePercent } from '@/lib/serviceCharge'
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api'
 import { 
   ShoppingCart, 
   Plus, 
@@ -33,6 +34,16 @@ const CartPage = ({ onClose }) => {
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [error, setError] = useState(null)
+  const [deliveryLatitude, setDeliveryLatitude] = useState(null)
+  const [deliveryLongitude, setDeliveryLongitude] = useState(null)
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+  })
+
+  // Default center map to Lahore
+  const defaultMapCenter = { lat: 31.5204, lng: 74.3587 }
 
   useEffect(() => {
     // Load user's default address if available
@@ -68,6 +79,11 @@ const CartPage = ({ onClose }) => {
       setError('Please enter a shipping address')
       return
     }
+    
+    if (deliveryLatitude === null || deliveryLongitude === null) {
+      setError('Please drop a pin on the map to set your exact delivery location for live tracking')
+      return
+    }
 
     setIsCheckingOut(true)
 
@@ -89,7 +105,9 @@ const CartPage = ({ onClose }) => {
           items: orderItems,
           shippingAddress: shippingAddress,
           paymentMethod: paymentMethod,
-          totalAmount: orderGrandTotal
+          totalAmount: orderGrandTotal,
+          deliveryLatitude,
+          deliveryLongitude
         })
       })
 
@@ -336,11 +354,53 @@ const CartPage = ({ onClose }) => {
                 </div>
               </div>
 
+              {/* Delivery Location Map */}
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                  Set Delivery Location (Required)
+                </label>
+                <div className="w-full h-48 sm:h-56 rounded-lg overflow-hidden border border-gray-300 relative">
+                  {isLoaded ? (
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={deliveryLatitude ? { lat: deliveryLatitude, lng: deliveryLongitude } : defaultMapCenter}
+                      zoom={14}
+                      onClick={(e) => {
+                        setDeliveryLatitude(e.latLng.lat())
+                        setDeliveryLongitude(e.latLng.lng())
+                        if (error) setError(null)
+                      }}
+                      options={{
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                      }}
+                    >
+                      {deliveryLatitude && deliveryLongitude && (
+                        <Marker position={{ lat: deliveryLatitude, lng: deliveryLongitude }} />
+                      )}
+                    </GoogleMap>
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <span className="text-sm text-gray-500">Loading map...</span>
+                    </div>
+                  )}
+                  {!deliveryLatitude && (
+                    <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                      <div className="bg-white/90 px-3 py-1.5 rounded-full shadow-sm">
+                        <p className="text-xs font-semibold text-[#F25D49]">Tap on map to place pin</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Shipping Address */}
               <div className="mb-4 sm:mb-6">
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                  Shipping Address
+                  Shipping Address details
                 </label>
                 <textarea
                   value={shippingAddress}

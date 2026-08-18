@@ -40,7 +40,7 @@ import SaveOutlinedIcon       from '@mui/icons-material/SaveOutlined'
 import SearchIcon             from '@mui/icons-material/Search'
 import TagIcon                from '@mui/icons-material/Tag'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 export default function ProductCategoriesPage() {
@@ -151,7 +151,7 @@ export default function ProductCategoriesPage() {
     return matchesSearch && matchesFilter
   })
 
-  const accent = ['#D70F64', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+  const accent = ['#39772A', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
 
   if (authLoading || loading) {
     return (
@@ -199,7 +199,7 @@ export default function ProductCategoriesPage() {
 
         {/* ── Stats Row ── */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <Chip label={`${productCategories.length} Total`} size="small" sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          <Chip label={`${productCategories.length} Total`} size="small" sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
           <Chip label={`${filtered.length} Shown`} size="small" variant="outlined" sx={{ borderRadius: 0 }} />
         </Box>
 
@@ -333,7 +333,7 @@ export default function ProductCategoriesPage() {
                       component="label"
                       disabled={uploadingImage}
                       size="small"
-                      sx={{ borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(215,15,100,0.04)' }, borderRadius: 0 }}
+                      sx={{ borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42,0.04)' }, borderRadius: 0 }}
                     >
                       {uploadingImage ? <CircularProgress size={16} sx={{ mr: 1, color: BRAND }} /> : null}
                       {uploadingImage ? 'Uploading…' : 'Upload Image'}

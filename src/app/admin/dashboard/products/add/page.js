@@ -44,14 +44,14 @@ import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined'
 import TuneOutlinedIcon      from '@mui/icons-material/TuneOutlined'
 import UploadOutlinedIcon    from '@mui/icons-material/UploadOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const tf    = { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 function SectionCard({ icon, title, subtitle, children }) {
   return (
     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
       <Box sx={{ px: 2.5, py: 1.75, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Box sx={{ p: 0.75, bgcolor: '#fce7f3', color: BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
+        <Box sx={{ p: 0.75, bgcolor: '#D8E9D6', color: BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
         <Box>
           <Typography variant="subtitle1" fontWeight={700}>{title}</Typography>
           {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
@@ -404,7 +404,7 @@ export default function AddProductPage() {
 
               <Button variant="outlined" size="small" startIcon={<AddOutlinedIcon />}
                 onClick={addVariation}
-                sx={{ alignSelf: 'flex-start', textTransform: 'none', borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: '#fce7f3', borderColor: BRAND } }}>
+                sx={{ alignSelf: 'flex-start', textTransform: 'none', borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: '#D8E9D6', borderColor: BRAND } }}>
                 Add Variation
               </Button>
             </Stack>
@@ -422,10 +422,10 @@ export default function AddProductPage() {
                 onDrop={e => { e.preventDefault(); setDragOver(false); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); if (files.length) handleImageUpload(files) }}
                 sx={{
                   border: '2px dashed', borderColor: dragOver ? BRAND : 'divider',
-                  bgcolor: dragOver ? '#fce7f3' : 'grey.50',
+                  bgcolor: dragOver ? '#D8E9D6' : 'grey.50',
                   borderRadius: 0, p: 3, textAlign: 'center', cursor: 'pointer',
                   transition: 'all 0.2s',
-                  '&:hover': { borderColor: BRAND, bgcolor: '#fce7f3' },
+                  '&:hover': { borderColor: BRAND, bgcolor: '#D8E9D6' },
                 }}
               >
                 {uploadingImages ? (

@@ -30,7 +30,7 @@ import ShoppingBagOutlinedIcon  from '@mui/icons-material/ShoppingBagOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -197,7 +197,7 @@ export default function LoginPage() {
             {user && userData?.role !== 'GUEST' && (
               <Alert
                 severity="info"
-                sx={{ mb: 3, borderRadius: 0, bgcolor: '#fce7f3', border: `1px solid ${BRAND}33`, color: BRAND, '& .MuiAlert-icon': { color: BRAND } }}
+                sx={{ mb: 3, borderRadius: 0, bgcolor: '#D8E9D6', border: `1px solid ${BRAND}33`, color: BRAND, '& .MuiAlert-icon': { color: BRAND } }}
                 action={
                   <Button size="small" startIcon={<LogoutOutlinedIcon />} onClick={logout}
                     sx={{ color: BRAND, textTransform: 'none', fontWeight: 700 }}>
@@ -236,7 +236,7 @@ export default function LoginPage() {
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
                     <Typography variant="body2" fontWeight={600} color="text.primary">Password</Typography>
-                    <Box component={NextLink} href="#"
+                    <Box component={NextLink} href="/forgot-password"
                       sx={{ fontSize: 12, color: BRAND, fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
                       Forgot Password?
                     </Box>
@@ -273,7 +273,7 @@ export default function LoginPage() {
                   endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />}
                   sx={{
                     py: 1.4, fontWeight: 700, fontSize: '1rem', textTransform: 'none', borderRadius: 0,
-                    bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                    bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
                     boxShadow: `0 6px 20px ${BRAND}44`,
                   }}
                 >

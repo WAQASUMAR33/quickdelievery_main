@@ -64,7 +64,7 @@ import ThumbDownOutlinedIcon    from '@mui/icons-material/ThumbDownOutlined'
 
 import VendorBusinessProfile    from '@/components/vendor/VendorBusinessProfile'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {

@@ -10,7 +10,7 @@ import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 export default function ProductsPage() {
   const { user, userData, loading } = useAuth()

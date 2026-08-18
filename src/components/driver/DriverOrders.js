@@ -37,8 +37,14 @@ import ShoppingBagOutlinedIcon          from '@mui/icons-material/ShoppingBagOut
 import StarIcon                         from '@mui/icons-material/Star'
 import StorefrontOutlinedIcon           from '@mui/icons-material/StorefrontOutlined'
 import TakeoutDiningOutlinedIcon        from '@mui/icons-material/TakeoutDiningOutlined'
+import NavigationOutlinedIcon           from '@mui/icons-material/NavigationOutlined'
+import ChatOutlinedIcon                 from '@mui/icons-material/ChatOutlined'
 
-const BRAND = '#D70F64'
+import IncomingOrderAlertModal from '@/components/driver/IncomingOrderAlertModal'
+import DriverDeliveryNavigation from '@/components/driver/DriverDeliveryNavigation'
+import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
+
+const BRAND = '#39772A'
 
 const STATUS_CONFIG = {
   PENDING:    { label: 'Pending',      bg: '#fff3cd', color: '#856404', icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 16 }} /> },
@@ -89,6 +95,32 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
   const [stats,        setStats]        = useState({})
   const [expandedId,   setExpandedId]   = useState(null)
   const [updatingId,   setUpdatingId]   = useState(null)
+  const [incomingAlertOrder, setIncomingAlertOrder] = useState(null)
+  const [navigatingOrder,    setNavigatingOrder]    = useState(null)
+  const [chattingOrder,      setChattingOrder]      = useState(null)
+
+  // Polling for incoming order dispatch alerts (Vendor accepted order)
+  useEffect(() => {
+    if (historyMode) return
+    const checkAlerts = async () => {
+      try {
+        const res = await fetch('/api/driver/orders/alerts')
+        const json = await res.json()
+        if (json.success && json.data?.length > 0) {
+          // If not currently alerted, pop up the latest available order
+          const latestAvailable = json.data[0]
+          if (!incomingAlertOrder && (!navigatingOrder || navigatingOrder.id !== latestAvailable.id)) {
+            setIncomingAlertOrder(latestAvailable)
+          }
+        }
+      } catch (e) {
+        console.error('Alert poll error:', e)
+      }
+    }
+
+    const alertInterval = setInterval(checkAlerts, 5000)
+    return () => clearInterval(alertInterval)
+  }, [historyMode, incomingAlertOrder, navigatingOrder])
 
   /* ── Fetch orders ── */
   const fetchOrders = useCallback(async () => {
@@ -597,7 +629,45 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
 
                         {/* ── Action Buttons ── */}
                         {!historyMode && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1.5, mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                            {/* Live Chat with Customer */}
+                            {!poolMode && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => setChattingOrder(order)}
+                                startIcon={<ChatOutlinedIcon />}
+                                sx={{
+                                  borderRadius: 0,
+                                  borderColor: '#3b82f6',
+                                  color: '#3b82f6',
+                                  fontWeight: 700,
+                                  '&:hover': { borderColor: '#2563eb', bgcolor: '#eff6ff' },
+                                }}
+                              >
+                                Live Chat
+                              </Button>
+                            )}
+
+                            {/* Live Turn-by-Turn GPS Navigation */}
+                            {!poolMode && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => setNavigatingOrder(order)}
+                                startIcon={<NavigationOutlinedIcon />}
+                                sx={{
+                                  borderRadius: 0,
+                                  bgcolor: '#1e293b',
+                                  color: '#ffffff',
+                                  fontWeight: 700,
+                                  '&:hover': { bgcolor: '#0f172a' },
+                                }}
+                              >
+                                Live Navigation
+                              </Button>
+                            )}
+
                             {poolMode ? (
                               <Button
                                 variant="contained"
@@ -657,6 +727,42 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
             }}
           />
         </Box>
+      )}
+
+      {/* ── Driver Incoming Order Alert Modal (Plays Sound Chime Loop) ── */}
+      {incomingAlertOrder && (
+        <IncomingOrderAlertModal
+          order={incomingAlertOrder}
+          driverId={userData?.id}
+          onAccept={async (ord) => {
+            await handleStatusUpdate(ord.id, 'PROCESSING', true)
+            setIncomingAlertOrder(null)
+            setNavigatingOrder(ord)
+          }}
+          onDecline={() => setIncomingAlertOrder(null)}
+        />
+      )}
+
+      {/* ── Driver Live Turn-by-Turn Delivery Navigation Map Modal ── */}
+      {navigatingOrder && (
+        <DriverDeliveryNavigation
+          open={Boolean(navigatingOrder)}
+          onClose={() => setNavigatingOrder(null)}
+          order={navigatingOrder}
+          driver={userData}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      )}
+
+      {/* ── Driver-Customer Live Chat Drawer ── */}
+      {chattingOrder && (
+        <OrderChatDrawer
+          open={Boolean(chattingOrder)}
+          onClose={() => setChattingOrder(null)}
+          orderId={chattingOrder.id}
+          currentUser={{ id: userData?.id, role: 'DRIVER', username: userData?.username || 'Driver' }}
+          recipientUser={{ name: chattingOrder.user?.username || 'Customer', phone: chattingOrder.user?.phoneNumber, role: 'CUSTOMER' }}
+        />
       )}
     </Box>
   )

@@ -24,7 +24,7 @@ export default function VendorsPage() {
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, bgcolor: 'grey.50' }}>
-        <CircularProgress sx={{ color: '#D70F64' }} />
+        <CircularProgress sx={{ color: '#39772A' }} />
         <Typography color="text.secondary">Loading…</Typography>
       </Box>
     )

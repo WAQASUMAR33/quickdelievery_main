@@ -34,11 +34,16 @@ const createPrismaClient = () => {
   })
 }
 
-export const prisma = globalForPrisma.prisma || createPrismaClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
+export const prisma = (() => {
+  if (globalForPrisma.prisma && globalForPrisma.prisma.driverLocation && globalForPrisma.prisma.orderMessage) {
+    return globalForPrisma.prisma
+  }
+  const client = createPrismaClient()
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client
+  }
+  return client
+})()
 
 // Test connection on initialization
 prisma.$connect()

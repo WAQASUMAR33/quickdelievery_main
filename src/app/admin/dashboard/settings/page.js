@@ -30,7 +30,7 @@ import ShieldOutlinedIcon   from '@mui/icons-material/ShieldOutlined'
 import VisibilityIcon       from '@mui/icons-material/Visibility'
 import VisibilityOffIcon    from '@mui/icons-material/VisibilityOff'
 
-const BRAND      = '#D70F64'
+const BRAND      = '#39772A'
 const DROP_MIN_W = 300
 const tf         = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 

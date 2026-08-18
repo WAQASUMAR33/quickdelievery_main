@@ -33,7 +33,7 @@ import ShoppingCartOutlinedIcon   from '@mui/icons-material/ShoppingCartOutlined
 import StoreOutlinedIcon          from '@mui/icons-material/StoreOutlined'
 import VerifiedOutlinedIcon       from '@mui/icons-material/VerifiedOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 export default function AdminDashboard() {
   const { user, userData, loading } = useAuth()

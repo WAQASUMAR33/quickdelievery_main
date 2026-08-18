@@ -22,7 +22,7 @@ import TrendingUpOutlinedIcon      from '@mui/icons-material/TrendingUpOutlined'
 import LocalOfferOutlinedIcon      from '@mui/icons-material/LocalOfferOutlined'
 import StorefrontOutlinedIcon      from '@mui/icons-material/StorefrontOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const StatCard = ({ label, value, icon, color, bg, sub }) => (
   <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, height: '100%' }}>
@@ -182,7 +182,7 @@ export default function VendorAnalytics({ vendorId }) {
                   </Box>
                   <LinearProgress variant="determinate"
                     value={products.length ? (count / products.length) * 100 : 0}
-                    sx={{ height: 6, borderRadius: 3, bgcolor: '#fce7f3', '& .MuiLinearProgress-bar': { bgcolor: BRAND, borderRadius: 3 } }} />
+                    sx={{ height: 6, borderRadius: 3, bgcolor: '#D8E9D6', '& .MuiLinearProgress-bar': { bgcolor: BRAND, borderRadius: 3 } }} />
                 </Box>
               ))}
             </CardContent>
@@ -202,7 +202,7 @@ export default function VendorAnalytics({ vendorId }) {
                 <Typography color="text.disabled" variant="body2">No products yet.</Typography>
               ) : topProducts.map((p, i) => (
                 <Box key={p.proId} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5,
-                  p: 1.5, bgcolor: i === 0 ? '#fce7f3' : 'grey.50', borderRadius: 1 }}>
+                  p: 1.5, bgcolor: i === 0 ? '#D8E9D6' : 'grey.50', borderRadius: 1 }}>
                   <Box sx={{ width: 44, height: 44, bgcolor: 'white', borderRadius: 1, overflow: 'hidden', flexShrink: 0, border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {p.proImages?.[0]
                       ? <img src={p.proImages[0]} alt={p.proName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

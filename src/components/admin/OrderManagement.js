@@ -44,7 +44,7 @@ import OpenInNewOutlinedIcon    from '@mui/icons-material/OpenInNewOutlined'
 import SearchIcon               from '@mui/icons-material/Search'
 import ShoppingBagOutlinedIcon  from '@mui/icons-material/ShoppingBagOutlined'
 
-const BRAND      = '#D70F64'
+const BRAND      = '#39772A'
 const DROP_MIN_W = 300
 
 const STATUS_CONFIG = {
@@ -233,7 +233,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
         <Chip
           label={`${orders.length} orders`}
           size="small"
-          sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }}
+          sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }}
         />
       </Box>
 
@@ -312,30 +312,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         </Tooltip>
 
                         {/* Status update buttons only for vendor */}
-                        {!!vendorId && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+                        {!!vendorId && order.status === 'PENDING' && (
                           <>
-                            {order.status === 'PENDING' && (
-                              <Tooltip title="Start Processing">
-                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: 'primary.main' }}>
-                                  <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            {order.status === 'PROCESSING' && (
-                              <Tooltip title="Mark as Shipped">
-                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'SHIPPED')} sx={{ color: 'secondary.main' }}>
-                                  <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            {order.status === 'SHIPPED' && (
-                              <Tooltip title="Mark as Delivered">
-                                <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')} sx={{ color: 'success.main' }}>
-                                  <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            <Tooltip title="Cancel Order">
+                            <Tooltip title="Accept Order">
+                              <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: 'primary.main' }}>
+                                <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reject Order">
                               <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'CANCELLED')} sx={{ color: 'error.main' }}>
                                 <CancelOutlinedIcon sx={{ fontSize: 16 }} />
                               </IconButton>
@@ -486,20 +470,13 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 
                 {/* Vendor Action Buttons in Modal */}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  {!!vendorId && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                  {!!vendorId && selectedOrder.status === 'PENDING' && (
                     <>
-                      {selectedOrder.status === 'PENDING' && (
-                        <Button variant="contained" size="small" color="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'PROCESSING')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
-                          Start Processing
-                        </Button>
-                      )}
-                      {selectedOrder.status === 'PROCESSING' && (
-                        <Button variant="contained" size="small" color="secondary" onClick={() => handleUpdateStatus(selectedOrder.id, 'SHIPPED')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
-                          Mark as Ready for Delivery
-                        </Button>
-                      )}
+                      <Button variant="contained" size="small" color="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'PROCESSING')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
+                        Accept Order
+                      </Button>
                       <Button variant="outlined" size="small" color="error" onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')} sx={{ borderRadius: 0, textTransform: 'none' }}>
-                        Cancel Order
+                        Reject Order
                       </Button>
                     </>
                   )}

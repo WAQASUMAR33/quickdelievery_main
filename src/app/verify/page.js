@@ -32,10 +32,10 @@ export default function EmailVerificationPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-12 h-12 bg-[#D70F64] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#39772A] rounded-xl flex items-center justify-center">
                 <span className="text-xl font-bold text-white">FP</span>
               </div>
-              <span className="text-2xl font-bold text-[#D70F64] tracking-tight">foodpanda</span>
+              <span className="text-2xl font-bold text-[#39772A] tracking-tight">foodpanda</span>
             </div>
           </div>
 
@@ -56,7 +56,7 @@ export default function EmailVerificationPage() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Account Created!</h2>
             <p className="text-gray-600 mb-4">Your account has been successfully created.</p>
-            <p className="text-sm text-[#D70F64] font-medium mb-6 flex items-center justify-center gap-2">
+            <p className="text-sm text-[#39772A] font-medium mb-6 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Redirecting to login page...
             </p>
@@ -72,7 +72,7 @@ export default function EmailVerificationPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/login')}
-              className="w-full bg-[#D70F64] text-white py-4 rounded-xl hover:bg-[#C20D5A] transition-all font-bold shadow-lg hover:shadow-xl"
+              className="w-full bg-[#39772A] text-white py-4 rounded-xl hover:bg-[#2E5F22] transition-all font-bold shadow-lg hover:shadow-xl"
             >
               Go to Login Now
             </motion.button>

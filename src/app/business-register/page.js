@@ -70,7 +70,7 @@ const MAP_CONTAINER = { width: '100%', height: '300px' }
 const DEFAULT_CENTER = { lat: 33.6844, lng: 73.0479 } // Islamabad
 
 // ─── Brand colour ─────────────────────────────────────────────────────────────
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 // ─── Steps config ─────────────────────────────────────────────────────────────
 const STEPS = [
@@ -876,7 +876,7 @@ function BusinessRegisterInner() {
                 onClick={handleNext}
                 sx={{
                   textTransform: 'none', fontWeight: 700, px: 3.5,
-                  bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                  bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
                   boxShadow: `0 4px 12px ${BRAND}44`,
                 }}
               >
@@ -893,7 +893,7 @@ function BusinessRegisterInner() {
                 }
                 sx={{
                   textTransform: 'none', fontWeight: 700, px: 3.5,
-                  bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                  bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
                   boxShadow: `0 4px 12px ${BRAND}44`,
                 }}
               >

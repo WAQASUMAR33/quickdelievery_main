@@ -45,7 +45,7 @@ import SaveOutlinedIcon       from '@mui/icons-material/SaveOutlined'
 import SearchIcon             from '@mui/icons-material/Search'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const DROP_MIN_W = 320
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
@@ -233,7 +233,7 @@ export default function SubcategoriesPage() {
             {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
           </TextField>
           <Chip label={`${filtered.length} / ${subcategories.length}`} size="small"
-            sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+            sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
         </Box>
 
         {/* ── Table ── */}
@@ -384,7 +384,7 @@ export default function SubcategoriesPage() {
                       startIcon={<UploadFileOutlinedIcon />}
                       disabled={saving}
                       onClick={() => fileInputRef.current?.click()}
-                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: '#fce7f3' }, mb: 1 }}
+                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: '#D8E9D6' }, mb: 1 }}
                     >
                       {(localPreview || form.image) ? 'Change Image' : 'Choose Image'}
                     </Button>

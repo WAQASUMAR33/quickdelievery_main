@@ -57,7 +57,7 @@ import UploadOutlinedIcon       from '@mui/icons-material/UploadOutlined'
 import ViewListOutlinedIcon     from '@mui/icons-material/ViewListOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const DROP_MIN_W = 300
 
 const VendorProductManagement = () => {
@@ -334,7 +334,7 @@ const VendorProductManagement = () => {
           </FormControl>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip label={`${filteredProducts.length} products`} size="small" sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          <Chip label={`${filteredProducts.length} products`} size="small" sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
           <ToggleButtonGroup value={viewMode} exclusive size="small" onChange={(_, v) => v && setViewMode(v)} sx={{ '& .MuiToggleButton-root': { borderRadius: 0 } }}>
             <ToggleButton value="table"><Tooltip title="Table"><TableRowsOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
             <ToggleButton value="grid"><Tooltip title="Grid"><GridViewOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>

@@ -239,6 +239,8 @@ export async function POST(request) {
       shippingAddress: shippingAddress || '',
       paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
       totalAmount: parseFloat(totalAmount),
+      ...(deliveryLatitude !== undefined && deliveryLatitude !== null ? { deliveryLatitude: parseFloat(deliveryLatitude) } : {}),
+      ...(deliveryLongitude !== undefined && deliveryLongitude !== null ? { deliveryLongitude: parseFloat(deliveryLongitude) } : {}),
       orderItems: {
         create: items.map(item => ({
           productId: parseInt(item.proId),

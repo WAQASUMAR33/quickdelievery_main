@@ -21,7 +21,11 @@ import {
   CreditCard,
   X,
   Printer,
+  MessageCircle,
+  Navigation,
 } from 'lucide-react'
+import CustomerLiveTracking from '@/components/tracking/CustomerLiveTracking'
+import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
 import { computeServiceCharge, getServiceChargePercent } from '@/lib/serviceCharge'
 
 function escapeReceiptHtml(text) {
@@ -60,7 +64,7 @@ function printOrderReceipt(order) {
 <html><head><meta charset="utf-8"/><title>Receipt #${oid}</title>
 <style>
   body{font-family:system-ui,-apple-system,sans-serif;padding:24px;color:#111;max-width:560px;margin:0 auto;font-size:14px;}
-  h1{font-size:20px;margin:0 0 8px;} .muted{color:#666;font-size:12px;} table{width:100%;border-collapse:collapse;margin:16px 0;} th,td{border-bottom:1px solid #e5e5e5;padding:8px 4px;text-align:left;} th{font-size:11px;text-transform:uppercase;color:#666;} .sum{margin-top:12px;} .sum div{display:flex;justify-content:space-between;padding:4px 0;} .grand{font-size:17px;font-weight:800;margin-top:8px;padding-top:8px;border-top:2px solid #111;} .brand{color:#D70F64;font-weight:800;} footer{margin-top:28px;font-size:11px;color:#888;text-align:center;}
+  h1{font-size:20px;margin:0 0 8px;} .muted{color:#666;font-size:12px;} table{width:100%;border-collapse:collapse;margin:16px 0;} th,td{border-bottom:1px solid #e5e5e5;padding:8px 4px;text-align:left;} th{font-size:11px;text-transform:uppercase;color:#666;} .sum{margin-top:12px;} .sum div{display:flex;justify-content:space-between;padding:4px 0;} .grand{font-size:17px;font-weight:800;margin-top:8px;padding-top:8px;border-top:2px solid #111;} .brand{color:#39772A;font-weight:800;} footer{margin-top:28px;font-size:11px;color:#888;text-align:center;}
 </style></head><body>
   <p class="brand">QuickDelivery</p>
   <h1>Bill receipt</h1>
@@ -100,6 +104,8 @@ const OrderHistory = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [trackingOrder, setTrackingOrder] = useState(null)
+  const [chattingOrder, setChattingOrder] = useState(null)
   const [ratingModal, setRatingModal] = useState(null)
   const [ratingVal, setRatingVal] = useState(5)
   const [ratingText, setRatingText] = useState('')
@@ -471,6 +477,31 @@ const OrderHistory = () => {
               </motion.button>
             )}
 
+            {/* Live GPS Tracking & Live Chat for in-progress orders */}
+            {['processing', 'shipped', 'PROCESSING', 'SHIPPED'].includes(order.status) && (
+              <>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setTrackingOrder(order)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-semibold text-sm"
+                >
+                  <Navigation className="w-4 h-4 animate-pulse" />
+                  <span>Live Track Driver</span>
+                </motion.button>
+
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setChattingOrder(order)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-300 font-semibold text-sm"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Live Chat</span>
+                </motion.button>
+              </>
+            )}
+
             {(order.status === 'shipped' || order.status === 'delivered') && (
               <motion.button 
                 whileHover={{ scale: 1.02 }}
@@ -736,7 +767,7 @@ const OrderHistory = () => {
                   <button 
                     onClick={handleRateSubmit}
                     className="w-full py-2 text-white rounded-lg font-bold hover:bg-opacity-90 transition-colors"
-                    style={{ backgroundColor: '#D70F64' }}
+                    style={{ backgroundColor: '#39772A' }}
                   >
                     Submit Rating
                   </button>
@@ -744,6 +775,27 @@ const OrderHistory = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Customer Live GPS Tracking Fullscreen Modal */}
+          {trackingOrder && (
+            <CustomerLiveTracking
+              open={Boolean(trackingOrder)}
+              onClose={() => setTrackingOrder(null)}
+              order={trackingOrder}
+              currentUser={userData}
+            />
+          )}
+
+          {/* Live Chat Drawer */}
+          {chattingOrder && (
+            <OrderChatDrawer
+              open={Boolean(chattingOrder)}
+              onClose={() => setChattingOrder(null)}
+              orderId={chattingOrder.id}
+              currentUser={{ id: userData?.id || chattingOrder.userId, role: 'CUSTOMER', username: userData?.username || 'Customer' }}
+              recipientUser={{ name: chattingOrder.driver?.username || 'Assigned Driver', phone: chattingOrder.driver?.phoneNumber, role: 'DRIVER' }}
+            />
+          )}
         </>
       )}
     </div>

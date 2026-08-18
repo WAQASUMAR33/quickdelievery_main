@@ -17,7 +17,7 @@ import DeleteOutlineIcon       from '@mui/icons-material/DeleteOutline'
 import ErrorOutlineIcon        from '@mui/icons-material/ErrorOutline'
 import ImageOutlinedIcon       from '@mui/icons-material/ImageOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/jpg'
 
 /**

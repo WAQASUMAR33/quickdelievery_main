@@ -27,7 +27,7 @@ import EditOutlinedIcon     from '@mui/icons-material/EditOutlined'
 import DeleteOutlineIcon    from '@mui/icons-material/DeleteOutline'
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {

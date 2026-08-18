@@ -44,7 +44,7 @@ import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
 import SaveOutlinedIcon   from '@mui/icons-material/SaveOutlined'
 import ImageUploadField from '@/components/ui/ImageUploadField'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 function authHeadersJson() {
   if (typeof window === 'undefined') return {}

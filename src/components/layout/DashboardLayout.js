@@ -24,7 +24,7 @@ import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
 import SearchIcon                from '@mui/icons-material/Search'
 import SettingsOutlinedIcon      from '@mui/icons-material/SettingsOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const DashboardLayout = ({ children }) => {
   const { user, userData, logout } = useAuth()

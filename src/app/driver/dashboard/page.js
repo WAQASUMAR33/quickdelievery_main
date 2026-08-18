@@ -14,7 +14,7 @@ import Typography       from '@mui/material/Typography'
 import Tabs             from '@mui/material/Tabs'
 import Tab              from '@mui/material/Tab'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 export default function DriverDashboardPage() {
   const { user, userData, loading } = useAuth()

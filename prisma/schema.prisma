@@ -410,3 +410,44 @@ model Favorite {
   @@index([vendorUid])
   @@map("favorites")
 }
+
+model PasswordResetOtp {
+  id        Int      @id @default(autoincrement())
+  email     String   @db.VarChar(255)
+  otp       String   @db.VarChar(6)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("password_reset_otps")
+}
+
+model OrderMessage {
+  id          Int      @id @default(autoincrement())
+  orderId     Int      @map("order_id")
+  senderId    Int      @map("sender_id")
+  senderRole  String   @map("sender_role") @db.VarChar(50)
+  senderName  String?  @map("sender_name") @db.VarChar(150)
+  message     String   @db.Text
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@index([senderId])
+  @@map("order_messages")
+}
+
+model DriverLocation {
+  id        Int      @id @default(autoincrement())
+  driverId  Int      @unique @map("driver_id")
+  latitude  Float
+  longitude Float
+  heading   Float?   @default(0)
+  speed     Float?   @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("driver_locations")
+}
+
+

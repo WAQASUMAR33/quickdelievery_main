@@ -29,7 +29,7 @@ import SaveOutlinedIcon        from '@mui/icons-material/SaveOutlined'
 import SearchIcon              from '@mui/icons-material/Search'
 import StorefrontOutlinedIcon  from '@mui/icons-material/StorefrontOutlined'
 
-const BRAND        = '#D70F64'
+const BRAND        = '#39772A'
 const MAP_LIBRARIES = ['places']
 const MAP_CONTAINER = { width: '100%', height: '380px' }
 const DEFAULT_CENTER = { lat: 33.6844, lng: 73.0479 } // Islamabad
@@ -300,7 +300,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
               disabled={locating || !isLoaded}
               startIcon={locating ? <CircularProgress size={18} color="inherit" /> : <MyLocationIcon />}
               sx={{
-                bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
                 borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
                 boxShadow: `0 4px 14px ${BRAND}44`,
               }}
@@ -315,7 +315,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
               startIcon={saving ? <CircularProgress size={18} /> : <SaveOutlinedIcon />}
               sx={{
                 borderColor: BRAND, color: BRAND,
-                '&:hover': { borderColor: '#C20D5A', color: '#C20D5A', bgcolor: `${BRAND}08` },
+                '&:hover': { borderColor: '#2E5F22', color: '#2E5F22', bgcolor: `${BRAND}08` },
                 borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 1.4,
               }}
             >

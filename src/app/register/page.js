@@ -39,7 +39,7 @@ import Inventory2Icon                 from '@mui/icons-material/Inventory2'
 import CheckCircleIcon                from '@mui/icons-material/CheckCircle'
 
 // ─── Brand colour ─────────────────────────────────────────────────────────────
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
 const ROLES = [
@@ -356,7 +356,7 @@ export default function RegisterPage() {
                     endIcon={<ArrowForwardIcon />}
                     sx={{
                       py: 1.6, fontWeight: 700, fontSize: '1rem', textTransform: 'none',
-                      bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' },
+                      bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
                       boxShadow: formData.role ? `0 6px 20px ${BRAND}44` : 'none',
                       transition: 'all 0.2s',
                     }}

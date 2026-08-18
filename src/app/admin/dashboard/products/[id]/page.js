@@ -41,14 +41,14 @@ import CameraAltOutlinedIcon    from '@mui/icons-material/CameraAltOutlined'
 import CloseOutlinedIcon        from '@mui/icons-material/CloseOutlined'
 import InfoOutlinedIcon         from '@mui/icons-material/InfoOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const tf = { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 function SectionCard({ icon, title, children }) {
   return (
     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
       <Box sx={{ px: 2.5, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Box sx={{ p: 0.75, bgcolor: '#fce7f3', color: BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
+        <Box sx={{ p: 0.75, bgcolor: '#D8E9D6', color: BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
         <Typography variant="subtitle2" fontWeight={700}>{title}</Typography>
       </Box>
       <CardContent sx={{ p: 2.5 }}>{children}</CardContent>

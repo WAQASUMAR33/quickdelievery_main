@@ -63,7 +63,7 @@ import ShoppingBagIcon         from '@mui/icons-material/ShoppingBag'
 import StarBorderIcon          from '@mui/icons-material/StarBorder'
 import StarIcon                from '@mui/icons-material/Star'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 const SEARCH_PLACEHOLDER = 'Search for shops & restaurants'
 
 function storefrontGreeting() {
@@ -254,7 +254,7 @@ export default function CustomerDashboard() {
     switch (effectiveTab) {
       case 'products':
         return (
-          <Box sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Box id="catalog-section" sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3 } }}>
             <ProductCatalog
               searchQuery={searchQuery}
               onToggleFavorite={handleToggleFavorite}
@@ -429,7 +429,7 @@ export default function CustomerDashboard() {
                   startIcon={<PersonOutlineIcon sx={{ fontSize: 18 }} />}
                   sx={{
                     bgcolor: BRAND,
-                    '&:hover': { bgcolor: '#C20D5A' },
+                    '&:hover': { bgcolor: '#2E5F22' },
                     borderRadius: 999,
                     textTransform: 'none',
                     fontWeight: 800,
@@ -488,7 +488,7 @@ export default function CustomerDashboard() {
       {effectiveTab === 'products' && !authLoading ? (
         <Box
           sx={{
-            background: 'linear-gradient(135deg,#D70F64 0%, #ff4478 50%, #D70F64 110%)',
+            background: 'linear-gradient(135deg,#39772A 0%, #ff4478 50%, #39772A 110%)',
             color: '#fff',
             pt: { xs: 3, md: 4 },
             pb: { xs: 3.5, md: 4 },
@@ -579,7 +579,7 @@ export default function CustomerDashboard() {
             <Button
               component={NextLink} href="/login"
               fullWidth variant="contained"
-              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#C20D5A' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
+              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
             >
               Login / Sign Up
             </Button>

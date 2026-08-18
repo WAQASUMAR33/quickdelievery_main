@@ -43,7 +43,7 @@ const BusinessCategoriesPage = () => {
           bgcolor: 'grey.50',
         }}
       >
-        <CircularProgress sx={{ color: '#D70F64' }} />
+        <CircularProgress sx={{ color: '#39772A' }} />
         <Typography color="text.secondary">Loading…</Typography>
       </Box>
     )

@@ -26,7 +26,7 @@ import PhoneOutlinedIcon          from '@mui/icons-material/PhoneOutlined'
 import PrintOutlinedIcon          from '@mui/icons-material/PrintOutlined'
 import ReceiptLongOutlinedIcon    from '@mui/icons-material/ReceiptLongOutlined'
 
-const BRAND = '#D70F64'
+const BRAND = '#39772A'
 
 const STATUS_STYLES = {
   PENDING:    { bg: '#fff3cd', color: '#856404' },

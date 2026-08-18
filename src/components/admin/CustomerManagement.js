@@ -55,7 +55,7 @@ import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutl
 
 import CustomerProfile from '@/components/customer/CustomerProfile'
 
-const BRAND      = '#D70F64'
+const BRAND      = '#39772A'
 const DROP_MIN_W = 300
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
@@ -270,7 +270,7 @@ export default function CustomerManagement() {
         </Button>
 
         <Chip label={`${customers.length} shown`} size="small"
-          sx={{ bgcolor: '#fce7f3', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
       </Box>
 
       {/* ── Table ── */}
