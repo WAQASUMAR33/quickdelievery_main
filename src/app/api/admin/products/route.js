@@ -16,10 +16,15 @@ export async function GET(request) {
     const vendorId = searchParams.get('vendorId') || ''
     const status = searchParams.get('status') || ''
     const approvalStatus = searchParams.get('approvalStatus') || ''
+    const vertical = searchParams.get('vertical') || ''
     const sortBy = searchParams.get('sortBy') || 'newest'
 
     // Build where clause
     const whereClause = {}
+
+    if (vertical) {
+      whereClause.vertical = vertical
+    }
     
     if (search) {
       whereClause.OR = [
@@ -27,6 +32,7 @@ export async function GET(request) {
         { sku: { contains: search } }
       ]
     }
+
     
     if (categoryId) {
       const parsedCatId = parseInt(categoryId, 10)

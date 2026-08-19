@@ -78,6 +78,7 @@ const ProductManagement = () => {
   const [vendors, setVendors]             = useState([])
   const [loading, setLoading]             = useState(true)
   const [searchTerm, setSearchTerm]       = useState('')
+  const [verticalFilter, setVerticalFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [vendorFilter, setVendorFilter]   = useState('')
   const [statusFilter, setStatusFilter]   = useState('')
@@ -104,12 +105,14 @@ const ProductManagement = () => {
         page: currentPage.toString(),
         limit: '10',
         search: searchTerm,
+        vertical: verticalFilter,
         categoryId: categoryFilter,
         vendorId: vendorFilter,
         status: statusFilter,
         approvalStatus: approvalFilter,
         sortBy,
       })
+
       const response = await authFetch(`/api/admin/products?${params}`)
       const data = await response.json()
       if (data.success) {
@@ -155,7 +158,8 @@ const ProductManagement = () => {
     fetchProducts()
     fetchCategories()
     fetchVendors()
-  }, [currentPage, searchTerm, categoryFilter, vendorFilter, statusFilter, approvalFilter, sortBy])
+  }, [currentPage, searchTerm, verticalFilter, categoryFilter, vendorFilter, statusFilter, approvalFilter, sortBy])
+
 
   const handleEdit = (product) => {
     setEditingProduct(product)
@@ -245,12 +249,14 @@ const ProductManagement = () => {
 
   const clearFilters = () => {
     setSearchTerm('')
+    setVerticalFilter('')
     setCategoryFilter('')
     setVendorFilter('')
     setStatusFilter('')
     setApprovalFilter('')
     setCurrentPage(1)
   }
+
 
   const STAT_CARDS = [
     { label: 'Total Products',   value: stats.totalProducts    || 0, color: '#3b82f6', icon: <Inventory2OutlinedIcon /> },
@@ -308,6 +314,15 @@ const ProductManagement = () => {
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} /></InputAdornment> }}
             />
 
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Vertical</InputLabel>
+              <Select value={verticalFilter} label="Vertical" onChange={e => { setVerticalFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
+                <MenuItem value=""><em>All Types (Food & Grocery)</em></MenuItem>
+                <MenuItem value="FOOD">🍽️ Food / Meals</MenuItem>
+                <MenuItem value="GROCERY">🏬 Grocery / Marts</MenuItem>
+              </Select>
+            </FormControl>
+
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Category</InputLabel>
               <Select value={categoryFilter} label="Category" onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1) }} sx={{ borderRadius: 0 }}>
@@ -315,6 +330,7 @@ const ProductManagement = () => {
                 {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
               </Select>
             </FormControl>
+
 
             <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
               <InputLabel>Vendor</InputLabel>
@@ -370,6 +386,7 @@ const ProductManagement = () => {
                 <TableHead sx={{ bgcolor: 'grey.50' }}>
                   <TableRow>
                     <TH>Product</TH>
+                    <TH>Type</TH>
                     <TH>Category</TH>
                     <TH>Vendor</TH>
                     <TH>Price</TH>
@@ -381,7 +398,7 @@ const ProductManagement = () => {
                 <TableBody>
                   {products.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
+                      <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                         <Typography variant="body2" color="text.secondary">No products found</Typography>
                       </TableCell>
                     </TableRow>
@@ -398,13 +415,29 @@ const ProductManagement = () => {
                           </Box>
                           <Box>
                             <Typography variant="body2" fontWeight={600}>{product.proName}</Typography>
-                            <Typography variant="caption" color="text.secondary">SKU: {product.sku || 'N/A'}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {product.packageWeight ? `${product.packageWeight} • ` : ''}SKU: {product.sku || 'N/A'}
+                            </Typography>
                           </Box>
                         </Box>
                       </TableCell>
                       <TableCell>
+                        <Chip
+                          label={product.vertical === 'GROCERY' ? '🏬 Grocery' : '🍽️ Food'}
+                          size="small"
+                          sx={{
+                            borderRadius: 1,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            bgcolor: product.vertical === 'GROCERY' ? '#FCE4EC' : '#E8F5E9',
+                            color: product.vertical === 'GROCERY' ? '#C2185B' : '#2E7D32'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
                         <Typography variant="body2">{product.category?.name || 'N/A'}</Typography>
                       </TableCell>
+
                       <TableCell>
                         <Typography variant="body2">{product.vendor?.businessName || product.vendor?.username || 'N/A'}</Typography>
                         <Typography variant="caption" color="text.secondary">{product.vendor?.email}</Typography>

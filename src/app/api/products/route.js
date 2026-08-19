@@ -10,14 +10,23 @@ export async function GET(request) {
     const type = searchParams.get('type')
     const categoryId = searchParams.get('categoryId')
     const vendorId = searchParams.get('vendorId')
+    const vertical = searchParams.get('vertical') // 'FOOD' or 'GROCERY'
 
     let whereClause = {}
+    if (vertical) {
+      whereClause.vertical = vertical
+    }
 
     if (type === 'vendors') {
+      const vendorWhere = {
+        verificationStatus: 'APPROVED'
+      }
+      if (vertical) {
+        vendorWhere.vertical = vertical
+      }
+
       const businesses = await prisma.business.findMany({
-        where: {
-          verificationStatus: 'APPROVED'
-        },
+        where: vendorWhere,
         include: {
           businessType: true,
           businessCategory: true
@@ -59,7 +68,13 @@ export async function GET(request) {
     }
 
     if (type === 'categories') {
+      const catWhere = {}
+      if (vertical) {
+        catWhere.vertical = vertical
+      }
+
       const categories = await prisma.category.findMany({
+        where: catWhere,
         include: {
           subCategories: true,
           _count: {
@@ -116,7 +131,10 @@ export async function GET(request) {
 
     if (type === 'products') {
       if (categoryId) {
-        whereClause.catId = categoryId
+        whereClause.catId = parseInt(categoryId) || categoryId
+      }
+      if (vertical) {
+        whereClause.vertical = vertical
       }
 
       // Vendor isolation: a request bearing a VENDOR token is locked to that
@@ -138,6 +156,7 @@ export async function GET(request) {
             productCategory: true,
             vendor: true,
             approver: true,
+
             creator: true
           },
           orderBy: { createdAt: 'desc' }
@@ -254,9 +273,11 @@ export async function POST(request) {
           description: data.description ?? null,
           image: data.image ?? null,
           status: statusEnum,
+          vertical: data.vertical || 'FOOD',
           createdBy: data.createdBy || 'system'
         }
       })
+
 
       return Response.json({
         success: true,
@@ -293,6 +314,7 @@ export async function POST(request) {
           subCatName: data.subCatName,
           image: data.image || null,
           catId: data.catId,
+          vertical: data.vertical || 'FOOD',
           status: (data.status === true || data.status === 'ACTIVE')
         }
       })
@@ -308,12 +330,9 @@ export async function POST(request) {
       const productCategory = await prisma.productCategory.create({
         data: {
           productCategoryName: data.productCategoryName,
-          category: { connect: { id: parseInt(data.categoryId) } },
-          productCategoryDescription: data.productCategoryDescription ?? null,
-          image: data.image ?? null
-        },
-        include: {
-          category: true
+          productCategoryDescription: data.productCategoryDescription || null,
+          image: data.image || null,
+          categoryId: data.categoryId
         }
       })
 
@@ -325,9 +344,27 @@ export async function POST(request) {
     }
 
     if (type === 'product') {
-      const authUser = await getAuthUser(request)
-      if (!authUser) {
-        return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      // Products can be created by ADMIN, SUPER_ADMIN, or VENDOR.
+      const auth = await requireRole(request, ['ADMIN', 'SUPER_ADMIN', 'VENDOR'])
+      if (auth.error) {
+        return Response.json({ success: false, error: auth.error }, { status: auth.status })
+      }
+      const authUser = auth.user
+
+      // Vendors can only create products if they have an approved business
+      if (authUser.role === 'VENDOR') {
+        const business = await prisma.business.findFirst({
+          where: {
+            email: authUser.email,
+            verificationStatus: 'APPROVED'
+          }
+        })
+        if (!business) {
+          return Response.json({
+            success: false,
+            error: 'You must have an approved business registration to add products. Please wait for admin approval or register your business.'
+          }, { status: 403 })
+        }
       }
 
       // Vendors can only create products under their own account. Admins may
@@ -420,6 +457,7 @@ export async function PUT(request) {
           name: data.catName,
           description: data.description,
           image: data.image !== undefined ? (data.image || null) : undefined,
+          vertical: data.vertical || undefined,
           status: (data.status === true || data.status === 'ACTIVE') ? 'ACTIVE' : 'INACTIVE'
         }
       })
@@ -439,9 +477,11 @@ export async function PUT(request) {
           subCatName: data.subCatName,
           image: data.image !== undefined ? (data.image || null) : undefined,
           catId: data.catId,
+          vertical: data.vertical || undefined,
           status: (data.status === true || data.status === 'ACTIVE')
         }
       })
+
 
       return Response.json({
         success: true,
@@ -511,7 +551,9 @@ export async function PUT(request) {
           proImages:         data.proImages ? JSON.stringify(data.proImages) : null,
           vendorId:          nextVendorId,
           status:            !!data.status,
+          vertical:          data.vertical || undefined,
           brandName:         data.brandName         || null,
+
           manufacturer:      data.manufacturer      || null,
           productType:       data.productType       || null,
           modelNumber:       data.modelNumber       || null,

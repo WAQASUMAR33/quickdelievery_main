@@ -1,25 +1,35 @@
 // src/app/api/customer/categories/route.js
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request) {
     try {
-        const categories = await prisma.category.findMany({
-            where: {
-                // Only fetch categories that have active products associated with them
-                products: {
-                    some: {
-                        status: true,
-                        approvalStatus: 'Approved',
-                    },
+        const { searchParams } = new URL(request.url)
+        const vertical = searchParams.get('vertical')
+
+        const where = {
+            products: {
+                some: {
+                    status: true,
+                    approvalStatus: 'Approved',
                 },
             },
+        }
+
+        if (vertical) {
+            where.vertical = vertical
+        }
+
+        const categories = await prisma.category.findMany({
+            where,
             select: {
                 id: true,
                 name: true,
-                // You can add more fields if needed, like an icon field or image
+                code: true,
+                image: true,
+                vertical: true,
             },
             orderBy: {
-                name: 'asc', // Order categories alphabetically
+                name: 'asc',
             },
         })
 

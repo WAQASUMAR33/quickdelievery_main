@@ -55,6 +55,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const scope = searchParams.get('scope') || 'storefront'
+    const vertical = searchParams.get('vertical') // 'FOOD' or 'GROCERY'
 
     const foodDeal = prismaFoodDeal(prisma)
     if (!foodDeal) {
@@ -72,8 +73,13 @@ export async function GET(request) {
     }
 
     if (scope === 'storefront') {
+      const where = storefrontWhereCompound()
+      if (vertical) {
+        where.vertical = vertical
+      }
+
       const deals = await foodDeal.findMany({
-        where: storefrontWhereCompound(),
+        where,
         include: dealIncludeDetailed,
         orderBy: [{ sortOrder: 'asc' }, { dealId: 'asc' }],
       })
@@ -103,6 +109,10 @@ export async function GET(request) {
         return Response.json({ success: false, error: 'Forbidden' }, { status: 403 })
       }
 
+      if (vertical) {
+        where.vertical = vertical
+      }
+
       const deals = await foodDeal.findMany({
         where,
         include: dealIncludeDetailed,
@@ -111,6 +121,7 @@ export async function GET(request) {
       const data = deals.map((d) => serializeDealForManage(d))
       return Response.json({ success: true, data })
     }
+
 
     return Response.json({ success: false, error: 'Invalid scope' }, { status: 400 })
   } catch (e) {

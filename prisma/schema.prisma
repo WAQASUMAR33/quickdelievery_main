@@ -42,6 +42,7 @@ model Category {
   code          String         @unique
   description   String?
   status        CategoryStatus @default(ACTIVE)
+  vertical      String         @default("FOOD") @map("vertical")
   image         String?        @map("image") @db.VarChar(500)
   createdBy     String         @map("createdBy")
   createdAt     DateTime       @default(now()) @map("createdAt")
@@ -59,11 +60,13 @@ model SubCategory {
   subCatName String    @map("sub_cat_name") @db.VarChar(255)
   image      String?   @map("image") @db.VarChar(500)
   status     Boolean   @default(true)
+  vertical   String    @default("FOOD") @map("vertical")
   catId      Int    @map("cat_id")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   products   Product[]
   category   Category  @relation(fields: [catId], references: [id], onDelete: Cascade)
+
 
   @@index([catId], map: "sub_categories_cat_id_fkey")
   @@map("sub_categories")
@@ -91,6 +94,7 @@ model Product {
   sku               String         @unique @db.VarChar(100)
   barcode           String?        @unique @db.VarChar(100)
   status            Boolean        @default(true)
+  vertical          String         @default("FOOD") @map("vertical")
   approvalStatus    ApprovalStatus @default(Pending) @map("approval_status")
   approveById       String?        @map("approve_by")
   catId             Int         @map("cat_id")
@@ -152,6 +156,7 @@ model FoodDeal {
   product          Product?  @relation(fields: [productId], references: [proId], onDelete: Cascade)
   vendorUid        String?   @map("vendor_uid") @db.VarChar(128)
   ownerUser        Users?    @relation("FoodDealVendorOwner", fields: [vendorUid], references: [uid], onDelete: SetNull)
+  vertical         String    @default("FOOD") @map("vertical")
   customTitle      String?   @map("custom_title") @db.VarChar(255)
   customItemsJson  String?   @map("custom_items_json") @db.Text
   customImageUrl   String?   @map("custom_image_url") @db.VarChar(500)
@@ -174,6 +179,7 @@ model Order {
   userId           Int           @map("user_id")
   driverId         Int?          @map("driver_id")
   status           OrderStatus   @default(PENDING)
+  vertical         String        @default("FOOD") @map("vertical")
   shippingAddress  String?       @map("shipping_address") @db.VarChar(500)
   paymentMethod    String?       @map("payment_method") @db.VarChar(50)
   totalAmount      Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
@@ -264,11 +270,13 @@ model Business {
   urlRestaurantImages String?          @map("url_restaurant_images") @db.LongText
   latitude            Float?           @map("latitude")
   longitude           Float?           @map("longitude")
+  vertical            String           @default("FOOD") @map("vertical")
   verificationStatus  BusinessVerificationStatus @default(PENDING) @map("verification_status")
   createdAt           DateTime         @default(now()) @map("created_at")
   updatedAt           DateTime         @updatedAt @map("updated_at")
   businessType        BusinessType     @relation(fields: [businessTypeId], references: [id])
   businessCategory    BusinessCategory @relation(fields: [businessCategoryId], references: [id])
+
 
   @@index([businessTypeId], map: "businesses_business_type_id_fkey")
   @@index([businessCategoryId], map: "businesses_business_category_id_fkey")

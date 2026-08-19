@@ -12,9 +12,14 @@ export async function GET(request) {
     const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page')) || 1
     const limit = parseInt(searchParams.get('limit')) || 10
+    const vertical = searchParams.get('vertical') // 'FOOD' or 'GROCERY'
 
     // Build where clause — orders store numeric users.id; callers may send id or firebase uid string
     const whereClause = {}
+    if (vertical) {
+      whereClause.vertical = vertical
+    }
+
 
     const rawUid = searchParams.get('userId')
     if (rawUid !== null && String(rawUid).trim() !== '') {
@@ -236,6 +241,7 @@ export async function POST(request) {
     const baseOrderCreateData = {
       userId: orderUserDbId,
       status: 'PENDING',
+      vertical: body.vertical || 'FOOD',
       shippingAddress: shippingAddress || '',
       paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
       totalAmount: parseFloat(totalAmount),
@@ -250,6 +256,7 @@ export async function POST(request) {
         }))
       }
     }
+
 
     // Backward-compatible create: production DB/Prisma client may not have serviceCharge yet.
     let order

@@ -85,6 +85,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
   const [loading,       setLoading]       = useState(true)
   const [searchTerm,    setSearchTerm]    = useState('')
   const [statusFilter,  setStatusFilter]  = useState(defaultStatusFilter)
+  const [verticalFilter, setVerticalFilter] = useState('')
   const [currentPage,   setCurrentPage]   = useState(1)
   const [totalPages,    setTotalPages]    = useState(1)
   const [stats,         setStats]         = useState({})
@@ -100,6 +101,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
         search: searchTerm,
         status: statusFilter,
       })
+      if (verticalFilter) params.set('vertical', verticalFilter)
       if (vendorId) params.set('vendorId', vendorId)
       const res  = await fetch(`/api/orders?${params}`)
       const data = await res.json()
@@ -113,7 +115,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchTerm, statusFilter, vendorId])
+  }, [currentPage, searchTerm, statusFilter, verticalFilter, vendorId])
+
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -208,6 +211,20 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
           sx={{ minWidth: 280, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
         />
 
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel>Order Type</InputLabel>
+          <Select
+            value={verticalFilter}
+            label="Order Type"
+            onChange={e => { setVerticalFilter(e.target.value); setCurrentPage(1) }}
+            sx={{ borderRadius: 0 }}
+          >
+            <MenuItem value="">All (Food & Grocery)</MenuItem>
+            <MenuItem value="FOOD">🍽️ Food Orders</MenuItem>
+            <MenuItem value="GROCERY">🏬 Grocery Orders</MenuItem>
+          </Select>
+        </FormControl>
+
         <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
           <InputLabel>Order Status</InputLabel>
           <Select
@@ -242,13 +259,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
-              {['Order ID', 'Customer', 'Email', 'Items', 'Total', 'Status', 'Date', 'Actions'].map(h => (
+              {['Order ID', 'Type', 'Customer', 'Email', 'Items', 'Total', 'Status', 'Date', 'Actions'].map(h => (
                 <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>
                   {h}
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
+
 
           <TableBody>
             {loading ? (
@@ -274,8 +292,22 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     </Typography>
                   </TableCell>
                   <TableCell>
+                    <Chip
+                      label={order.vertical === 'GROCERY' ? '🏬 Grocery' : '🍽️ Food'}
+                      size="small"
+                      sx={{
+                        borderRadius: 1,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        bgcolor: order.vertical === 'GROCERY' ? '#FCE4EC' : '#E8F5E9',
+                        color: order.vertical === 'GROCERY' ? '#C2185B' : '#2E7D32'
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="body2" fontWeight={600}>{order.user?.username || 'N/A'}</Typography>
                   </TableCell>
+
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
                       <EmailOutlinedIcon sx={{ fontSize: 13 }} />
