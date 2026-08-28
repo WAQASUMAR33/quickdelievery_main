@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { computeServiceCharge, computeOrderTotalWithService } from '@/lib/serviceCharge'
+import { sendOrderStatusPushNotification } from '@/lib/firebaseAdmin'
 
 // Test prisma connection
 if (!prisma) {
@@ -277,6 +278,14 @@ export async function POST(request) {
       })
     }
 
+    // Trigger push notification to Customer & Topics upon new order creation
+    sendOrderStatusPushNotification({
+      orderId: order.id,
+      status: 'PENDING',
+      customTitle: '🛍️ Order Placed Successfully!',
+      customBody: `Your order #${order.id} has been received and is being processed.`,
+    }).catch(err => console.error('Order creation push notification error:', err))
+
     return Response.json({
       success: true,
       data: order,
@@ -355,6 +364,14 @@ export async function PUT(request) {
         }
       }
     })
+
+    // Automatically send Push Notification to Flutter app / Web on status update
+    if (status) {
+      sendOrderStatusPushNotification({
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+      }).catch(err => console.error('Push notification trigger error:', err))
+    }
 
     return Response.json({
       success: true,

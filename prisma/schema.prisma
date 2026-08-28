@@ -21,6 +21,7 @@ model Users {
   password           String?
   passwordResetToken String?   @map("password_reset_token")
   verificationToken  String?   @map("verification_token")
+  fcmToken           String?   @map("fcm_token") @db.Text
   productsAsApprover Product[] @relation("ApproverProducts")
   productsAsCreator  Product[] @relation("CreatorProducts")
   productsAsVendor   Product[] @relation("VendorProducts")

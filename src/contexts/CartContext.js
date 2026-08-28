@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect } from 'react'
+import { createContext, useContext, useReducer, useEffect, useState } from 'react'
 
 const CartContext = createContext()
 
@@ -66,7 +66,9 @@ export const CartProvider = ({ children }) => {
     items: []
   })
 
-  // Load cart from localStorage on mount
+  const [heldBills, setHeldBills] = useState([])
+
+  // Load cart & held bills from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart')
     if (savedCart) {
@@ -77,12 +79,27 @@ export const CartProvider = ({ children }) => {
         console.error('Error loading cart from localStorage:', error)
       }
     }
+
+    const savedHeld = localStorage.getItem('quickdelivery_held_bills')
+    if (savedHeld) {
+      try {
+        const parsedHeld = JSON.parse(savedHeld)
+        if (Array.isArray(parsedHeld)) setHeldBills(parsedHeld)
+      } catch (e) {
+        console.error('Error loading held bills:', e)
+      }
+    }
   }, [])
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(state.items))
   }, [state.items])
+
+  // Save held bills to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('quickdelivery_held_bills', JSON.stringify(heldBills))
+  }, [heldBills])
 
   const addToCart = (product, quantity = 1) => {
     const qtyToAdd = Math.max(1, Math.floor(Number(quantity) || 1))
@@ -116,15 +133,72 @@ export const CartProvider = ({ children }) => {
     return state.items.some(item => item.proId === productId)
   }
 
+  /**
+   * Hold Current Bill: Saves current cart items to held bills and clears active cart
+   */
+  const holdCurrentBill = (note = '', customerName = '') => {
+    if (!state.items || state.items.length === 0) return null
+
+    const total = getTotalPrice()
+    const totalCount = getTotalItems()
+    const billId = `HB-${Date.now().toString().slice(-6)}`
+
+    const newHeldBill = {
+      id: billId,
+      billNumber: billId,
+      items: [...state.items],
+      totalAmount: total,
+      totalItems: totalCount,
+      note: note.trim() || 'General Customer',
+      customerName: customerName.trim() || '',
+      heldAt: new Date().toISOString(),
+    }
+
+    setHeldBills(prev => [newHeldBill, ...prev])
+    clearCart()
+    return newHeldBill
+  }
+
+  /**
+   * Recall Held Bill: Restores items from held bill into active cart and removes from held list
+   */
+  const recallHeldBill = (billId) => {
+    const targetBill = heldBills.find(b => b.id === billId)
+    if (!targetBill) return false
+
+    dispatch({ type: 'LOAD_CART', payload: targetBill.items })
+    setHeldBills(prev => prev.filter(b => b.id !== billId))
+    return true
+  }
+
+  /**
+   * Delete a Held Bill
+   */
+  const deleteHeldBill = (billId) => {
+    setHeldBills(prev => prev.filter(b => b.id !== billId))
+  }
+
+  /**
+   * Clear all Held Bills
+   */
+  const clearAllHeldBills = () => {
+    setHeldBills([])
+  }
+
   const value = {
     items: state.items,
+    heldBills,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
     getTotalPrice,
     getTotalItems,
-    isInCart
+    isInCart,
+    holdCurrentBill,
+    recallHeldBill,
+    deleteHeldBill,
+    clearAllHeldBills,
   }
 
   return (
