@@ -451,7 +451,7 @@ export async function PUT(request) {
 
     if (type === 'category') {
       const category = await prisma.category.update({
-        where: { id },
+        where: { id: parseInt(id, 10) },
         data: {
           code: data.catCode,
           name: data.catName,
@@ -643,7 +643,7 @@ export async function DELETE(request) {
 
     if (type === 'category') {
       await prisma.category.delete({
-        where: { id }
+        where: { id: parseInt(id, 10) }
       })
 
       return Response.json({

@@ -20,9 +20,13 @@ import DialogActions    from '@mui/material/DialogActions'
 import DialogContent    from '@mui/material/DialogContent'
 import DialogTitle      from '@mui/material/DialogTitle'
 import Divider          from '@mui/material/Divider'
+import FormControl      from '@mui/material/FormControl'
 import Grid             from '@mui/material/Grid'
 import IconButton       from '@mui/material/IconButton'
 import InputAdornment   from '@mui/material/InputAdornment'
+import InputLabel       from '@mui/material/InputLabel'
+import MenuItem         from '@mui/material/MenuItem'
+import Select           from '@mui/material/Select'
 import TextField        from '@mui/material/TextField'
 import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
@@ -46,7 +50,7 @@ export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
-  const [form, setForm] = useState({ name: '', code: '', description: '', image: '' })
+  const [form, setForm] = useState({ name: '', code: '', description: '', image: '', status: 'ACTIVE', vertical: 'FOOD' })
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
@@ -71,13 +75,20 @@ export default function CategoriesPage() {
 
   const openAdd = () => {
     setEditingCategory(null)
-    setForm({ name: '', code: generateCode(), description: '', image: '' })
+    setForm({ name: '', code: generateCode(), description: '', image: '', status: 'ACTIVE', vertical: 'FOOD' })
     setShowModal(true)
   }
 
   const openEdit = (cat) => {
     setEditingCategory(cat)
-    setForm({ name: cat.name, code: cat.code, description: cat.description || '', image: cat.image || '' })
+    setForm({ 
+      name: cat.name, 
+      code: cat.code, 
+      description: cat.description || '', 
+      image: cat.image || '', 
+      status: cat.status || 'ACTIVE',
+      vertical: cat.vertical || 'FOOD'
+    })
     setShowModal(true)
   }
 
@@ -87,8 +98,26 @@ export default function CategoriesPage() {
     setSaving(true)
     try {
       const body = editingCategory
-        ? { type: 'category', id: editingCategory.id, catName: form.name, catCode: form.code, description: form.description, image: form.image, status: 'ACTIVE' }
-        : { type: 'category', catName: form.name, catCode: form.code, description: form.description, image: form.image, createdBy: userData?.uid || 'admin' }
+        ? { 
+            type: 'category', 
+            id: editingCategory.id, 
+            catName: form.name, 
+            catCode: form.code, 
+            description: form.description, 
+            image: form.image, 
+            status: form.status,
+            vertical: form.vertical 
+          }
+        : { 
+            type: 'category', 
+            catName: form.name, 
+            catCode: form.code, 
+            description: form.description, 
+            image: form.image, 
+            status: form.status,
+            vertical: form.vertical,
+            createdBy: userData?.uid || 'admin' 
+          }
 
       const res = await authFetch('/api/products', {
         method: editingCategory ? 'PUT' : 'POST',
@@ -222,8 +251,28 @@ export default function CategoriesPage() {
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         <Chip label={cat.code} size="small" variant="outlined"
                           sx={{ borderRadius: 0, fontFamily: 'monospace', fontSize: 11 }} />
-                        <Chip label={cat.status || 'ACTIVE'} size="small"
-                          sx={{ borderRadius: 0, bgcolor: `${color}15`, color, fontWeight: 600, fontSize: 11 }} />
+                        <Chip 
+                          label={cat.status === 'INACTIVE' ? '🔴 Inactive' : '🟢 Active'} 
+                          size="small"
+                          sx={{ 
+                            borderRadius: 0, 
+                            bgcolor: cat.status === 'INACTIVE' ? '#fee2e2' : '#dcfce7', 
+                            color: cat.status === 'INACTIVE' ? '#b91c1c' : '#15803d', 
+                            fontWeight: 700, 
+                            fontSize: 11 
+                          }} 
+                        />
+                        <Chip 
+                          label={cat.vertical === 'GROCERY' ? '🏬 Grocery' : '🍽️ Food'} 
+                          size="small"
+                          sx={{ 
+                            borderRadius: 0, 
+                            bgcolor: cat.vertical === 'GROCERY' ? '#FCE4EC' : '#E8F5E9', 
+                            color: cat.vertical === 'GROCERY' ? '#C2185B' : '#2E7D32', 
+                            fontWeight: 600, 
+                            fontSize: 11 
+                          }} 
+                        />
                         {cat.products?.length > 0 && (
                           <Chip label={`${cat.products.length} products`} size="small" variant="outlined"
                             sx={{ borderRadius: 0, fontSize: 11 }} />
@@ -262,6 +311,32 @@ export default function CategoriesPage() {
               <TextField size="small" fullWidth label="Description (optional)" value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="Short description…" multiline rows={3} {...tf} />
+
+              <FormControl size="small" fullWidth sx={{ ...tf.sx }}>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={form.status || 'ACTIVE'}
+                  label="Status"
+                  onChange={e => setForm({ ...form, status: e.target.value })}
+                  sx={{ borderRadius: 0 }}
+                >
+                  <MenuItem value="ACTIVE">🟢 Active</MenuItem>
+                  <MenuItem value="INACTIVE">🔴 Inactive</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" fullWidth sx={{ ...tf.sx }}>
+                <InputLabel>Vertical (Order Type)</InputLabel>
+                <Select
+                  value={form.vertical || 'FOOD'}
+                  label="Vertical (Order Type)"
+                  onChange={e => setForm({ ...form, vertical: e.target.value })}
+                  sx={{ borderRadius: 0 }}
+                >
+                  <MenuItem value="FOOD">🍽️ Food</MenuItem>
+                  <MenuItem value="GROCERY">🏬 Grocery</MenuItem>
+                </Select>
+              </FormControl>
 
               <Box>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1, fontWeight: 600 }}>
