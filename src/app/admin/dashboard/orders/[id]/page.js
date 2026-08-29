@@ -26,6 +26,8 @@ import PhoneOutlinedIcon          from '@mui/icons-material/PhoneOutlined'
 import PrintOutlinedIcon          from '@mui/icons-material/PrintOutlined'
 import ReceiptLongOutlinedIcon    from '@mui/icons-material/ReceiptLongOutlined'
 
+import { formatPrice } from '@/lib/currency'
+
 const BRAND = '#39772A'
 
 const STATUS_STYLES = {
@@ -38,9 +40,6 @@ const STATUS_STYLES = {
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-
-const formatPrice = (price) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price || 0)
 
 export default function OrderDetailsPage() {
   const { id }   = useParams()
@@ -204,11 +203,11 @@ export default function OrderDetailsPage() {
                         <Typography variant="body2">{item.quantity}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">{formatPrice(parseFloat(item.price))}</Typography>
+                        <Typography variant="body2">{formatPrice(parseFloat(item.price), { address: order.shippingAddress })}</Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
-                          {formatPrice(parseFloat(item.price) * item.quantity)}
+                          {formatPrice(parseFloat(item.price) * item.quantity, { address: order.shippingAddress })}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -221,8 +220,8 @@ export default function OrderDetailsPage() {
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Box sx={{ width: { xs: '100%', md: '35%' } }}>
                 {[
-                  { label: 'Subtotal', value: formatPrice(parseFloat(order.totalAmount)) },
-                  { label: 'Tax (0%)', value: '$0.00' },
+                  { label: 'Subtotal', value: formatPrice(parseFloat(order.totalAmount), { address: order.shippingAddress }) },
+                  { label: 'Tax (0%)', value: formatPrice(0, { address: order.shippingAddress }) },
                   { label: 'Shipping', value: 'Free' },
                 ].map(({ label, value }) => (
                   <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75 }}>
@@ -234,7 +233,7 @@ export default function OrderDetailsPage() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" fontWeight={700}>Total</Typography>
                   <Typography variant="h6" fontWeight={800} sx={{ color: BRAND }}>
-                    {formatPrice(parseFloat(order.totalAmount))}
+                    {formatPrice(parseFloat(order.totalAmount), { address: order.shippingAddress })}
                   </Typography>
                 </Box>
               </Box>

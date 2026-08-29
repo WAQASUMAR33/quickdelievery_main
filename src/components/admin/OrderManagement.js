@@ -46,6 +46,8 @@ import SearchIcon               from '@mui/icons-material/Search'
 import SendOutlinedIcon         from '@mui/icons-material/SendOutlined'
 import ShoppingBagOutlinedIcon  from '@mui/icons-material/ShoppingBagOutlined'
 
+import { formatPrice, COUNTRY_CURRENCIES, getActiveCountry, setActiveCountry } from '@/lib/currency'
+
 const BRAND      = '#39772A'
 const DROP_MIN_W = 300
 
@@ -56,9 +58,6 @@ const STATUS_CONFIG = {
   DELIVERED:  { label: 'Delivered',  bg: '#d4edda', color: '#155724', icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18 }} /> },
   CANCELLED:  { label: 'Cancelled',  bg: '#f8d7da', color: '#721c24', icon: <CancelOutlinedIcon sx={{ fontSize: 18 }} /> },
 }
-
-const formatPrice = (v) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(v) || 0)
 
 function StatusChip({ status }) {
   const cfg = STATUS_CONFIG[status] || { label: status, bg: '#f5f5f5', color: '#555' }
@@ -88,11 +87,18 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
   const [searchTerm,    setSearchTerm]    = useState('')
   const [statusFilter,  setStatusFilter]  = useState(defaultStatusFilter)
   const [verticalFilter, setVerticalFilter] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState(getActiveCountry())
   const [currentPage,   setCurrentPage]   = useState(1)
   const [totalPages,    setTotalPages]    = useState(1)
   const [stats,         setStats]         = useState({})
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showModal,     setShowModal]     = useState(false)
+
+  useEffect(() => {
+    const handler = () => setSelectedCountry(getActiveCountry())
+    window.addEventListener('currency_change', handler)
+    return () => window.removeEventListener('currency_change', handler)
+  }, [])
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -292,6 +298,29 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
           </Select>
         </FormControl>
 
+        <FormControl size="small" sx={{ minWidth: 170 }}>
+          <InputLabel>Country / Currency</InputLabel>
+          <Select
+            value={selectedCountry}
+            label="Country / Currency"
+            onChange={e => {
+              const val = e.target.value
+              setSelectedCountry(val)
+              setActiveCountry(val)
+            }}
+            sx={{ borderRadius: 0 }}
+          >
+            <MenuItem value="PK">🇵🇰 Pakistan (Rs. PKR)</MenuItem>
+            <MenuItem value="US">🇺🇸 America ($ USD)</MenuItem>
+            <MenuItem value="AE">🇦🇪 UAE (AED)</MenuItem>
+            <MenuItem value="SA">🇸🇦 Saudi Arabia (SAR)</MenuItem>
+            <MenuItem value="GB">🇬🇧 UK (£ GBP)</MenuItem>
+            <MenuItem value="CA">🇨🇦 Canada (CA$ CAD)</MenuItem>
+            <MenuItem value="IN">🇮🇳 India (₹ INR)</MenuItem>
+            <MenuItem value="EU">🇪🇺 Europe (€ EUR)</MenuItem>
+          </Select>
+        </FormControl>
+
         <Button variant="outlined" size="small" onClick={clearFilters}
           sx={{ borderRadius: 0, color: 'text.secondary', borderColor: 'divider', whiteSpace: 'nowrap' }}>
           Clear Filters
@@ -369,7 +398,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={600} sx={{ color: BRAND }}>
-                      {formatPrice(order.totalAmount)}
+                      {formatPrice(order.totalAmount, { country: selectedCountry, address: order.shippingAddress })}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -463,7 +492,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   { label: 'Status',         value: <StatusChip status={selectedOrder.status} /> },
                   { label: 'Date',           value: new Date(selectedOrder.createdAt).toLocaleString() },
                   { label: 'Payment',        value: selectedOrder.paymentMethod || 'Cash On Delivery' },
-                  { label: 'Total Amount',   value: <Typography variant="body2" fontWeight={700} sx={{ color: BRAND }}>{formatPrice(selectedOrder.totalAmount)}</Typography> },
+                  { label: 'Total Amount',   value: <Typography variant="body2" fontWeight={700} sx={{ color: BRAND }}>{formatPrice(selectedOrder.totalAmount, { country: selectedCountry, address: selectedOrder.shippingAddress })}</Typography> },
                   { label: 'Items',          value: `${selectedOrder.orderItems?.length || 0} item(s)` },
                 ].map(({ label, value }) => (
                   <Box key={label} sx={{ p: 1.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
@@ -536,10 +565,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         <Typography variant="caption" color="text.secondary">{item.product?.category?.name || '—'}</Typography>
                       </TableCell>
                       <TableCell><Typography variant="body2">{item.quantity}</Typography></TableCell>
-                      <TableCell><Typography variant="body2">{formatPrice(item.price)}</Typography></TableCell>
+                      <TableCell><Typography variant="body2">{formatPrice(item.price, { country: selectedCountry, address: selectedOrder.shippingAddress })}</Typography></TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
-                          {formatPrice(parseFloat(item.price) * item.quantity)}
+                          {formatPrice(parseFloat(item.price) * item.quantity, { country: selectedCountry, address: selectedOrder.shippingAddress })}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -697,7 +726,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, bgcolor: `${BRAND}10`, border: '1px solid', borderColor: `${BRAND}30` }}>
                   <Typography variant="subtitle2" fontWeight={700}>Total Amount:</Typography>
                   <Typography variant="h6" fontWeight={800} sx={{ color: BRAND }}>
-                    {formatPrice(selectedOrder.totalAmount)}
+                    {formatPrice(selectedOrder.totalAmount, { country: selectedCountry, address: selectedOrder.shippingAddress })}
                   </Typography>
                 </Box>
               </Box>            </DialogContent>
