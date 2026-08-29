@@ -51,8 +51,15 @@ export async function GET(request) {
     // Vendor scoping: only orders that contain at least one product from this vendor.
     const vendorId = searchParams.get('vendorId')
     if (vendorId !== null && String(vendorId).trim() !== '') {
+      const vTrim = String(vendorId).trim()
+      let vendorUid = vTrim
+      const numericId = Number.parseInt(vTrim, 10)
+      if (Number.isFinite(numericId) && numericId > 0 && vTrim === String(numericId)) {
+        const vUser = await prisma.users.findUnique({ where: { id: numericId }, select: { uid: true } })
+        if (vUser?.uid) vendorUid = vUser.uid
+      }
       whereClause.orderItems = {
-        some: { product: { vendorId: String(vendorId).trim() } }
+        some: { product: { OR: [{ vendorId: vendorUid }, { vendorId: vTrim }] } }
       }
     }
 
@@ -334,13 +341,21 @@ export async function PUT(request) {
       }, { status: 400 })
     }
 
+    const parsedOrderId = parseInt(orderId, 10)
+    if (isNaN(parsedOrderId)) {
+      return Response.json({
+        success: false,
+        error: 'Invalid Order ID'
+      }, { status: 400 })
+    }
+
     const updateData = {}
     if (status) updateData.status = status
     if (shippingAddress) updateData.shippingAddress = shippingAddress
     if (paymentMethod) updateData.paymentMethod = paymentMethod
 
     const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
+      where: { id: parsedOrderId },
       data: updateData,
       include: {
         review: true,
@@ -399,14 +414,22 @@ export async function DELETE(request) {
       }, { status: 400 })
     }
 
+    const parsedOrderId = parseInt(orderId, 10)
+    if (isNaN(parsedOrderId)) {
+      return Response.json({
+        success: false,
+        error: 'Invalid Order ID'
+      }, { status: 400 })
+    }
+
     // Delete order items first (due to foreign key constraints)
     await prisma.orderItem.deleteMany({
-      where: { orderId: orderId }
+      where: { orderId: parsedOrderId }
     })
 
     // Delete the order
     await prisma.order.delete({
-      where: { id: orderId }
+      where: { id: parsedOrderId }
     })
 
     return Response.json({

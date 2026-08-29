@@ -141,7 +141,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
   }, [orders])
 
   const handleViewDetails = (order) => {
-    router.push(`/admin/dashboard/orders/${order.id}`)
+    openModal(order)
   }
 
   const [customPushTitle, setCustomPushTitle] = useState('')
@@ -364,7 +364,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               </TableRow>
             ) : (
               orders.map((order) => (
-                <TableRow key={order.id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                <TableRow
+                  key={order.id}
+                  hover
+                  onClick={() => openModal(order)}
+                  sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
+                >
                   <TableCell>
                     <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
                       #{order.id.toString().padStart(6, '0')}
@@ -409,36 +414,46 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                       {new Date(order.createdAt).toLocaleDateString()}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    {order.status === 'CANCELLED' ? (
-                      <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-                        No Invoice
-                      </Typography>
-                    ) : (
-                      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                        <Tooltip title="View Invoice">
-                          <IconButton size="small" onClick={() => handleViewDetails(order)} sx={{ color: 'info.main' }}>
-                            <OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                      <Tooltip title="Manage Order Details">
+                        <IconButton size="small" onClick={() => openModal(order)} sx={{ color: BRAND }}>
+                          <OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+
+                      {/* Quick Status update buttons for Admin & Vendor */}
+                      {order.status === 'PENDING' && (
+                        <>
+                          <Tooltip title="Mark Preparing">
+                            <IconButton size="small" disabled={updatingStatus} onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: '#004085' }}>
+                              <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Cancel Order">
+                            <IconButton size="small" disabled={updatingStatus} onClick={() => handleUpdateStatus(order.id, 'CANCELLED')} sx={{ color: 'error.main' }}>
+                              <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+
+                      {order.status === 'PROCESSING' && (
+                        <Tooltip title="Mark Dispatched">
+                          <IconButton size="small" disabled={updatingStatus} onClick={() => handleUpdateStatus(order.id, 'SHIPPED')} sx={{ color: '#4a1a8d' }}>
+                            <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
+                      )}
 
-                        {/* Status update buttons only for vendor */}
-                        {!!vendorId && order.status === 'PENDING' && (
-                          <>
-                            <Tooltip title="Accept Order">
-                              <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} sx={{ color: 'primary.main' }}>
-                                <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Reject Order">
-                              <IconButton size="small" onClick={() => handleUpdateStatus(order.id, 'CANCELLED')} sx={{ color: 'error.main' }}>
-                                <CancelOutlinedIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </Box>
-                    )}
+                      {order.status === 'SHIPPED' && (
+                        <Tooltip title="Mark Delivered">
+                          <IconButton size="small" disabled={updatingStatus} onClick={() => handleUpdateStatus(order.id, 'DELIVERED')} sx={{ color: '#155724' }}>
+                            <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -480,7 +495,23 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   #{selectedOrder.id.toString().padStart(6, '0')}
                 </Typography>
               </Box>
-              <IconButton size="small" onClick={() => setShowModal(false)}><CloseIcon /></IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<OpenInNewOutlinedIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => {
+                    const path = vendorId 
+                      ? `/vendor/dashboard/orders/${selectedOrder.id}` 
+                      : `/admin/dashboard/orders/${selectedOrder.id}`
+                    router.push(path)
+                  }}
+                  sx={{ borderRadius: 0, textTransform: 'none', color: BRAND, borderColor: BRAND }}
+                >
+                  Full Invoice
+                </Button>
+                <IconButton size="small" onClick={() => setShowModal(false)}><CloseIcon /></IconButton>
+              </Box>
             </DialogTitle>
             <Divider />
 
@@ -709,17 +740,52 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               {/* Total row */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                 
-                {/* Vendor Action Buttons in Modal */}
+                {/* Action Buttons in Modal */}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  {!!vendorId && selectedOrder.status === 'PENDING' && (
+                  {selectedOrder.status === 'PENDING' && (
                     <>
-                      <Button variant="contained" size="small" color="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'PROCESSING')} sx={{ borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}>
-                        Accept Order
+                      <Button
+                        variant="contained"
+                        size="small"
+                        disabled={updatingStatus}
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'PROCESSING')}
+                        sx={{ bgcolor: '#004085', '&:hover': { bgcolor: '#002752' }, borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}
+                      >
+                        Accept & Prepare
                       </Button>
-                      <Button variant="outlined" size="small" color="error" onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')} sx={{ borderRadius: 0, textTransform: 'none' }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        color="error"
+                        disabled={updatingStatus}
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')}
+                        sx={{ borderRadius: 0, textTransform: 'none' }}
+                      >
                         Reject Order
                       </Button>
                     </>
+                  )}
+                  {selectedOrder.status === 'PROCESSING' && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={updatingStatus}
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'SHIPPED')}
+                      sx={{ bgcolor: '#4a1a8d', '&:hover': { bgcolor: '#320f63' }, borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}
+                    >
+                      🛵 Mark Dispatched
+                    </Button>
+                  )}
+                  {selectedOrder.status === 'SHIPPED' && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={updatingStatus}
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'DELIVERED')}
+                      sx={{ bgcolor: '#155724', '&:hover': { bgcolor: '#0b3514' }, borderRadius: 0, textTransform: 'none', boxShadow: 'none' }}
+                    >
+                      🎉 Mark Delivered
+                    </Button>
                   )}
                 </Box>
 
