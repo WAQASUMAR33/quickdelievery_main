@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer'
 
 function getMailTransporter() {
   const host = process.env.MAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com'
-  const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '587', 10)
+  const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '465', 10)
   const user = process.env.MAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USERNAME
   const rawPass = process.env.MAIL_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASSWORD || ''
   const pass = rawPass.replace(/\s+/g, '')
@@ -11,13 +11,22 @@ function getMailTransporter() {
     throw new Error('SMTP credentials not configured. Please set MAIL_USER and MAIL_PASSWORD in your .env file.')
   }
 
+  const isGmail = host.toLowerCase().includes('gmail')
+
+  const transportOptions = isGmail
+    ? {
+        service: 'gmail',
+        auth: { user, pass },
+      }
+    : {
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      }
+
   return {
-    transporter: nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-    }),
+    transporter: nodemailer.createTransport(transportOptions),
     senderEmail: user,
   }
 }
