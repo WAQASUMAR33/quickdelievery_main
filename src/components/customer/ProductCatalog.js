@@ -843,34 +843,51 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               <div className="flex gap-4 flex-wrap pb-4">
                 <button
                   onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null) }}
-                  className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] ${
+                  className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border transition-all duration-300 min-w-[100px] ${
                     selectedCategory == null
-                      ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md'
-                      : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm'
+                      ? 'border-[#7c3aed] bg-[#7c3aed]/10 shadow-md shadow-[#7c3aed]/20 scale-105'
+                      : 'border-gray-200/80 bg-white/90 hover:border-[#7c3aed]/50 hover:shadow-md hover:scale-105'
                   }`}
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#D70F64] to-[#FF6B5B] rounded-full flex items-center justify-center mb-2 shadow-md">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#6366f1] to-[#a855f7] rounded-full flex items-center justify-center mb-2 shadow-md shadow-indigo-200">
                     <Package className="w-7 h-7 text-white" />
                   </div>
-                  <span className={`text-xs font-bold text-center ${selectedCategory == null ? 'text-[#D70F64]' : 'text-gray-700'}`}>All</span>
+                  <span className={`text-xs font-bold text-center ${selectedCategory == null ? 'text-[#7c3aed]' : 'text-gray-700'}`}>All</span>
                 </button>
                 {categories.slice(0, visibleCatCount).map((cat, idx) => {
-                  const image = categoryImages[cat.name] || defaultCatImages[idx % defaultCatImages.length]
+                  const imageSrc = cat.image || categoryImages[cat.name] || defaultCatImages[idx % defaultCatImages.length]
                   return (
                     <button
                       key={cat.id}
                       onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory(null) }}
-                      className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[100px] group ${
+                      className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border transition-all duration-300 min-w-[100px] group ${
                         selectedCategory === cat.id
-                          ? 'border-[#D70F64] bg-[#D70F64]/5 shadow-md scale-105'
-                          : 'border-gray-200 bg-white hover:border-[#D70F64] hover:shadow-sm hover:scale-105'
+                          ? 'border-[#7c3aed] bg-[#7c3aed]/10 shadow-md shadow-[#7c3aed]/20 scale-105'
+                          : 'border-gray-200/80 bg-white/90 hover:border-[#7c3aed]/50 hover:shadow-md hover:scale-105'
                       }`}
                     >
-                      <div className="relative w-14 h-14 rounded-full overflow-hidden mb-2 shadow-md">
-                        <img src={image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                      <div className="relative w-14 h-14 rounded-full overflow-hidden mb-2 shadow-sm bg-gradient-to-br from-violet-100 to-purple-50 flex items-center justify-center border border-purple-100">
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={cat.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              if (e.currentTarget.nextElementSibling) {
+                                e.currentTarget.nextElementSibling.style.display = 'flex'
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          style={{ display: imageSrc ? 'none' : 'flex' }}
+                          className="w-full h-full items-center justify-center font-bold text-violet-700 text-lg bg-gradient-to-br from-violet-200 to-indigo-100"
+                        >
+                          {cat.name?.charAt(0) || 'C'}
+                        </div>
                       </div>
-                      <span className={`text-xs font-bold text-center leading-tight ${selectedCategory === cat.id ? 'text-[#D70F64]' : 'text-gray-700'}`}>
+                      <span className={`text-xs font-bold text-center leading-tight truncate max-w-[90px] ${selectedCategory === cat.id ? 'text-[#7c3aed]' : 'text-gray-700'}`}>
                         {cat.name}
                       </span>
                     </button>
@@ -882,7 +899,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                   <button
                     type="button"
                     onClick={() => setVisibleCatCount(prev => prev + 5)}
-                    className="flex items-center gap-1.5 text-sm font-bold text-[#D70F64] hover:text-[#C20D5A] px-5 py-2 rounded-full border-2 border-[#D70F64]/20 hover:border-[#D70F64]/40 bg-white hover:bg-[#D70F64]/5 transition-all duration-200"
+                    className="flex items-center gap-1.5 text-sm font-bold text-[#7c3aed] hover:text-[#4f46e5] px-5 py-2 rounded-full border-2 border-[#7c3aed]/20 hover:border-[#7c3aed]/40 bg-white hover:bg-[#7c3aed]/5 transition-all duration-200"
                   >
                     <ChevronDown className="w-4 h-4" />
                     Show More Categories ({categories.length - visibleCatCount} more)

@@ -7,12 +7,7 @@ export async function GET(request) {
         const vertical = searchParams.get('vertical')
 
         const where = {
-            products: {
-                some: {
-                    status: true,
-                    approvalStatus: 'Approved',
-                },
-            },
+            status: 'ACTIVE',
         }
 
         if (vertical) {
@@ -21,12 +16,11 @@ export async function GET(request) {
 
         const categories = await prisma.category.findMany({
             where,
-            select: {
-                id: true,
-                name: true,
-                code: true,
-                image: true,
-                vertical: true,
+            include: {
+                subCategories: true,
+                _count: {
+                    select: { products: true }
+                }
             },
             orderBy: {
                 name: 'asc',

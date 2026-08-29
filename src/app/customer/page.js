@@ -17,17 +17,12 @@ import toast from 'react-hot-toast'
 import AppBar              from '@mui/material/AppBar'
 import Avatar              from '@mui/material/Avatar'
 import Badge               from '@mui/material/Badge'
-import BottomNavigation    from '@mui/material/BottomNavigation'
-import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Box                 from '@mui/material/Box'
-import Chip                from '@mui/material/Chip'
-import Paper               from '@mui/material/Paper'
-import Stack               from '@mui/material/Stack'
 import Button              from '@mui/material/Button'
 import Card                from '@mui/material/Card'
-import CardActions         from '@mui/material/CardActions'
 import CardContent         from '@mui/material/CardContent'
 import CardMedia           from '@mui/material/CardMedia'
+import Chip                from '@mui/material/Chip'
 import CircularProgress    from '@mui/material/CircularProgress'
 import Divider             from '@mui/material/Divider'
 import Drawer              from '@mui/material/Drawer'
@@ -39,32 +34,42 @@ import ListItemIcon        from '@mui/material/ListItemIcon'
 import ListItemText        from '@mui/material/ListItemText'
 import Menu                from '@mui/material/Menu'
 import MenuItem            from '@mui/material/MenuItem'
+import Stack               from '@mui/material/Stack'
 import TextField           from '@mui/material/TextField'
 import Toolbar             from '@mui/material/Toolbar'
+import Tooltip             from '@mui/material/Tooltip'
 import Typography          from '@mui/material/Typography'
 
-import CategoryOutlinedIcon    from '@mui/icons-material/CategoryOutlined'
 import CloseIcon               from '@mui/icons-material/Close'
+import DeliveryDiningIcon      from '@mui/icons-material/DeliveryDining'
 import ExpandMoreIcon          from '@mui/icons-material/ExpandMore'
 import FavoriteIcon            from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon      from '@mui/icons-material/FavoriteBorder'
-import HomeOutlinedIcon        from '@mui/icons-material/HomeOutlined'
+import FlashOnIcon             from '@mui/icons-material/FlashOn'
 import HomeIcon                from '@mui/icons-material/Home'
-import InventoryOutlinedIcon   from '@mui/icons-material/InventoryOutlined'
+import HomeOutlinedIcon        from '@mui/icons-material/HomeOutlined'
+import LocationOnIcon          from '@mui/icons-material/LocationOn'
 import LogoutOutlinedIcon      from '@mui/icons-material/LogoutOutlined'
-import LanguageOutlinedIcon    from '@mui/icons-material/LanguageOutlined'
 import MenuIcon                from '@mui/icons-material/Menu'
-import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
 import PersonIcon              from '@mui/icons-material/Person'
+import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
 import SearchIcon              from '@mui/icons-material/Search'
+import SecurityIcon            from '@mui/icons-material/Security'
 import SettingsOutlinedIcon    from '@mui/icons-material/SettingsOutlined'
-import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import ShoppingBagIcon         from '@mui/icons-material/ShoppingBag'
-import StarBorderIcon          from '@mui/icons-material/StarBorder'
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import StarIcon                from '@mui/icons-material/Star'
+import StarBorderIcon          from '@mui/icons-material/StarBorder'
+import StorefrontIcon          from '@mui/icons-material/Storefront'
 
-const BRAND = '#39772A'
-const SEARCH_PLACEHOLDER = 'Search for shops & restaurants'
+const THEME = {
+  primary: '#6366f1',
+  primaryDark: '#4f46e5',
+  secondary: '#7c3aed',
+  accent: '#a855f7',
+  gradient: 'linear-gradient(135deg, #4338ca 0%, #6366f1 35%, #7c3aed 70%, #9333ea 100%)',
+  cardGradient: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+}
 
 function storefrontGreeting() {
   const h = new Date().getHours()
@@ -73,50 +78,19 @@ function storefrontGreeting() {
   return 'Good evening'
 }
 
-/** Foodpanda-style search: pill on desktop, full-width strip on mobile */
-function HeaderSearch({ value, onChange, compact }) {
-  return (
-    <TextField
-      size="small"
-      fullWidth={compact}
-      value={value}
-      onChange={onChange}
-      placeholder={SEARCH_PLACEHOLDER}
-      sx={{
-        ...(compact ? {} : { flex: 1, maxWidth: 560, mx: 'auto', minWidth: 0 }),
-        '& .MuiOutlinedInput-root': {
-          borderRadius: compact ? '12px' : '9999px',
-          bgcolor: compact ? '#f6f7f8' : 'grey.50',
-          '&:hover fieldset': { borderColor: BRAND },
-          '&.Mui-focused fieldset': { borderColor: BRAND },
-        },
-      }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchIcon sx={{ color: 'action.active', fontSize: 22 }} />
-          </InputAdornment>
-        ),
-      }}
-    />
-  )
-}
-
 export default function CustomerDashboard() {
   const { user, userData, logout, loading: authLoading } = useAuth()
-  const { addToCart, getTotalItems } = useCart()
-
+  const { addToCart, getTotalItems, getTotalPrice } = useCart()
   const router = useRouter()
 
-  const [activeTab,            setActiveTab]            = useState('products')
-  const [searchQuery,          setSearchQuery]          = useState('')
-  const [showMobileMenu,       setShowMobileMenu]       = useState(false)
-  const [showCategoriesSidebar,setShowCategoriesSidebar] = useState(false)
-  const [userMenuAnchor,       setUserMenuAnchor]       = useState(null)
-  const [showCart,             setShowCart]             = useState(false)
-  const [favorites,            setFavorites]            = useState([])
-  const [categories,           setCategories]           = useState([])
-  const [serviceMode,          setServiceMode]          = useState('delivery')
+  const [activeTab, setActiveTab] = useState('products')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null)
+  const [showCart, setShowCart] = useState(false)
+  const [favorites, setFavorites] = useState([])
+  const [categories, setCategories] = useState([])
+  const [serviceMode, setServiceMode] = useState('delivery')
 
   useEffect(() => {
     if (authLoading || !user || !userData) return
@@ -141,26 +115,24 @@ export default function CustomerDashboard() {
     }
   }, [])
 
-
-  const { isGuest, tabs, effectiveTab } = useMemo(() => {
-    const guest = userData?.role === 'GUEST'
+  const { isGuest, navTabs, effectiveTab } = useMemo(() => {
+    const guest = userData?.role === 'GUEST' || !userData
     const tabDefs = [
-      { id: 'orders',    label: 'My Orders',  icon: <ShoppingBagOutlinedIcon fontSize="small" />, protected: true },
-      { id: 'wishlist',  label: 'Wishlist',   icon: <FavoriteBorderIcon      fontSize="small" />, protected: true },
-      { id: 'favorites', label: 'Favorites',  icon: <StarBorderIcon          fontSize="small" />, protected: true },
-      { id: 'profile',   label: 'Profile',    icon: <PersonOutlineIcon       fontSize="small" />, protected: true },
+      { id: 'products',  label: 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
+      { id: 'orders',    label: 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
+      { id: 'favorites', label: 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
+      { id: 'wishlist',  label: 'Wishlist',       icon: <FavoriteBorderIcon />, activeIcon: <FavoriteIcon />, protected: true },
+      { id: 'profile',   label: 'Profile Settings', icon: <PersonOutlineIcon />, activeIcon: <PersonIcon />, protected: true },
     ]
-    const tabList = tabDefs.filter(tab => !guest || !tab.protected)
-    const allowedIds = new Set(tabList.map(t => t.id))
+    const allowed = tabDefs.filter(tab => !guest || !tab.protected)
+    const allowedIds = new Set(allowed.map(t => t.id))
     allowedIds.add('products')
     return {
       isGuest: guest,
-      tabs: tabList,
+      navTabs: tabDefs,
       effectiveTab: allowedIds.has(activeTab) ? activeTab : 'products',
     }
-  }, [userData?.role, activeTab])
-
-
+  }, [userData?.role, activeTab, userData])
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -197,141 +169,258 @@ export default function CustomerDashboard() {
     return 'there'
   }, [authLoading, user?.displayName, userData?.username])
 
-  const handleAddToCart = (product) => {
-    addToCart(product)
-    if (isGuest) toast.success('Item added! Create an account to save your cart.')
-  }
-
-  const getVendorKey = (v) => {
-    if (!v) return ''
-    if (v.vendorUid) return String(v.vendorUid)
-    if (v.uid && v.uid !== 'null') return String(v.uid)
-    if (v.id) return `biz_${v.id}`
-    if (v.vendorId) return `biz_${v.vendorId}`
-    if (v.vendor_id) return `biz_${v.vendor_id}`
-    if (v.email) return `email_${v.email}`
-    if (v.proId) return `product_${v.proId}`
-    return ''
-  }
-
-  const handleToggleFavorite = async (vendor) => {
-    if (isGuest) { toast.error('Please sign in to save favorites'); return }
-    const vendorUid = getVendorKey(vendor)
-    if (!vendorUid) {
-      toast.error('Could not identify store/vendor.')
+  const handleTabSwitch = (tabId) => {
+    const tabDef = navTabs.find(t => t.id === tabId)
+    if (tabDef?.protected && isGuest) {
+      toast.error('Please sign in to access ' + tabDef.label)
       return
     }
-    
-    // Check current state before optimistic update (for API call)
-    const wasFav = favorites.some(f => getVendorKey(f) === vendorUid)
-    
-    // Optimistic update using functional state to prevent stale closures
-    setFavorites(prev => {
-      const exists = prev.some(f => getVendorKey(f) === vendorUid)
-      return exists ? prev.filter(f => getVendorKey(f) !== vendorUid) : [...prev, vendor]
-    })
-    
-    // Sync with DB
-    if (userData?.id) {
-      try {
-        await fetch('/api/customer/favorites', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: userData.id, vendorUid, action: wasFav ? 'remove' : 'add' })
-        })
-      } catch (e) {
-        console.error('Failed to sync favorite with DB', e)
-      }
-    }
+    setActiveTab(tabId)
+    setShowMobileSidebar(false)
   }
 
   const handleSignOut = async () => {
     setUserMenuAnchor(null)
     await logout()
+    toast.success('Signed out successfully')
+    router.push('/')
   }
 
-  const renderContent = () => {
+  const renderSidebarContent = () => (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2.5, bgcolor: '#ffffff' }}>
+      {/* Brand Header */}
+      <Box
+        onClick={() => { setActiveTab('products'); setShowMobileSidebar(false) }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          cursor: 'pointer',
+          mb: 4,
+          p: 1.5,
+          borderRadius: '16px',
+          bgcolor: 'rgba(99, 102, 241, 0.06)',
+          border: '1px solid rgba(99, 102, 241, 0.12)',
+        }}
+      >
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            background: THEME.gradient,
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 16px rgba(99, 102, 241, 0.35)',
+          }}
+        >
+          <DeliveryDiningIcon sx={{ color: '#fff', fontSize: 26 }} />
+        </Box>
+        <Box>
+          <Typography variant="subtitle1" fontWeight={900} sx={{ background: THEME.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: -0.5 }}>
+            QuickDelivery
+          </Typography>
+          <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ fontSize: 10, letterSpacing: 0.5 }}>
+            FOOD & GROCERY
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Navigation List */}
+      <Typography variant="caption" fontWeight={700} color="text.disabled" textTransform="uppercase" letterSpacing={1} sx={{ px: 1.5, mb: 1, fontSize: 11 }}>
+        Main Menu
+      </Typography>
+
+      <List sx={{ p: 0, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+        {navTabs.map((tab) => {
+          const isActive = effectiveTab === tab.id
+          return (
+            <ListItemButton
+              key={tab.id}
+              onClick={() => handleTabSwitch(tab.id)}
+              sx={{
+                borderRadius: '14px',
+                py: 1.25,
+                px: 2,
+                transition: 'all 0.25s ease',
+                bgcolor: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid transparent',
+                color: isActive ? THEME.primaryDark : 'text.secondary',
+                '&:hover': {
+                  bgcolor: isActive ? 'rgba(99, 102, 241, 0.16)' : 'rgba(241, 245, 249, 0.8)',
+                  transform: 'translateX(3px)',
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 38,
+                  color: isActive ? THEME.primaryDark : 'text.secondary',
+                }}
+              >
+                {isActive ? tab.activeIcon : tab.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={tab.label}
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: isActive ? 800 : 600,
+                  letterSpacing: -0.2,
+                }}
+              />
+              {tab.id === 'orders' && !isGuest && (
+                <Chip label="Live" size="small" sx={{ height: 20, fontSize: 10, fontWeight: 800, bgcolor: '#dcfce7', color: '#15803d' }} />
+              )}
+            </ListItemButton>
+          )
+        })}
+      </List>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* Cart Quick Trigger Card */}
+      <Box
+        onClick={() => { setShowCart(true); setShowMobileSidebar(false) }}
+        sx={{
+          p: 2,
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
+          border: '1px solid #e0e7ff',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          '&:hover': { transform: 'scale(1.02)', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.12)' },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Badge badgeContent={getTotalItems()} sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800 } }}>
+              <ShoppingBagIcon sx={{ color: THEME.primaryDark, fontSize: 24 }} />
+            </Badge>
+            <Typography variant="body2" fontWeight={800} color="text.primary">
+              My Basket
+            </Typography>
+          </Box>
+          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: '#ffffff', color: THEME.primaryDark }} />
+        </Box>
+        <Typography variant="caption" color="text.secondary" display="block">
+          Tap to view bill & checkout
+        </Typography>
+      </Box>
+
+      {/* Spacer */}
+      <Box sx={{ flexGrow: 1 }} />
+
+      {/* User Footer / Auth status */}
+      <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        {isGuest ? (
+          <Button
+            component={NextLink}
+            href="/login"
+            fullWidth
+            variant="contained"
+            startIcon={<PersonOutlineIcon />}
+            sx={{
+              background: THEME.gradient,
+              borderRadius: '14px',
+              py: 1.25,
+              textTransform: 'none',
+              fontWeight: 800,
+              boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)',
+            }}
+          >
+            Sign In / Register
+          </Button>
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+              <Avatar sx={{ bgcolor: THEME.primaryDark, width: 38, height: 38, fontWeight: 800, fontSize: 15 }}>
+                {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={800} noWrap>
+                  {user?.displayName || 'My Account'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap display="block">
+                  {user?.email || 'Customer'}
+                </Typography>
+              </Box>
+            </Box>
+            <Tooltip title="Sign Out">
+              <IconButton size="small" onClick={handleSignOut} sx={{ color: 'error.main' }}>
+                <LogoutOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  )
+
+  const renderActiveTabContent = () => {
     switch (effectiveTab) {
       case 'products':
         return (
-          <Box id="catalog-section" sx={{ px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
             <ProductCatalog
               searchQuery={searchQuery}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleFavorite={() => {}}
               favorites={favorites}
             />
           </Box>
         )
       case 'orders':
         return (
-          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
             <OrderHistory />
           </Box>
         )
       case 'wishlist':
         return (
-          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
-            <WishlistPage />
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+            <WishlistPage onAddToCart={(p) => addToCart(p)} />
           </Box>
         )
       case 'favorites':
         return (
-          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <StarIcon sx={{ fontSize: 64, color: '#facc15', mb: 2 }} />
-              <Typography variant="h4" fontWeight={800} gutterBottom>My Favorites</Typography>
-              <Typography color="text.secondary">Your favorite restaurants and shops</Typography>
-            </Box>
-
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+            <Typography variant="h5" fontWeight={800} mb={3}>
+              Favorite Stores & Kitchens
+            </Typography>
             {favorites.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <StarBorderIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>No favorites yet</Typography>
-                <Typography color="text.disabled">Start adding shops to your favorites!</Typography>
+              <Box sx={{ textAlign: 'center', py: 8, bgcolor: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', p: 4 }}>
+                <StarBorderIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h6" fontWeight={700} color="text.secondary">No favorites saved yet</Typography>
+                <Typography variant="body2" color="text.disabled" mb={3}>
+                  Save stores & restaurants by clicking the star on items you love.
+                </Typography>
+                <Button variant="contained" onClick={() => setActiveTab('products')} sx={{ background: THEME.gradient, borderRadius: '12px' }}>
+                  Explore Stores
+                </Button>
               </Box>
             ) : (
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 3 }}>
-                {favorites.map(vendor => {
-                  const coverImage = vendor.urlCoverPhoto || vendor.urlLogo || '/placeholder-product.jpg'
-                  const vendorName = vendor.businessName || vendor.username
-                  
-                  return (
-                    <Card key={getVendorKey(vendor)} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', '&:hover': { borderColor: BRAND } }}>
-                      <Box sx={{ position: 'relative' }}>
-                        <CardMedia
-                          component="img"
-                          height={140}
-                          image={coverImage}
-                          alt={vendorName}
-                          sx={{ objectFit: 'cover' }}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(vendor) }}
-                          sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'background.paper', '&:hover': { bgcolor: 'grey.100' } }}
-                        >
-                          <StarIcon sx={{ fontSize: 18, color: '#facc15' }} />
-                        </IconButton>
-                      </Box>
-                      <CardContent sx={{ pb: 2 }}>
-                        <Typography variant="body1" fontWeight={700} sx={{ mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {vendorName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <StarIcon sx={{ fontSize: 16, color: '#facc15' }} />
-                          4.8
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+                {favorites.map((vendor, idx) => (
+                  <Card key={idx} elevation={0} sx={{ borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    <CardMedia
+                      component="img"
+                      height={140}
+                      image={vendor.urlLogo || vendor.urlCoverPhoto || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&q=80'}
+                      alt="Store"
+                    />
+                    <CardContent>
+                      <Typography variant="subtitle1" fontWeight={800}>{vendor.businessName || 'Verified Store'}</Typography>
+                      <Typography variant="caption" color="text.secondary">Fast delivery ready</Typography>
+                    </CardContent>
+                  </Card>
+                ))}
               </Box>
             )}
           </Box>
         )
       case 'profile':
         return (
-          <Box sx={{ maxWidth: 1400, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
             <CustomerProfile />
           </Box>
         )
@@ -341,80 +430,138 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex' }}>
 
-      {/* Foodpanda-style sticky shell: logo + centered search (md+) + globe / cart / account */}
-      <AppBar
-        position="sticky"
-        elevation={0}
+      {/* Desktop Persistent Sidebar */}
+      <Box
+        component="nav"
         sx={{
-          top: 0,
-          zIndex: t => t.zIndex.appBar,
-          bgcolor: '#fff',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          color: 'text.primary',
+          width: { lg: 280 },
+          flexShrink: { lg: 0 },
+          display: { xs: 'none', lg: 'block' },
         }}
       >
-        <Box sx={{ maxWidth: 1400, width: '100%', mx: 'auto', px: { xs: 2, sm: 2.5 }, pt: 1.25, pb: 0 }}>
-          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, flexWrap: 'nowrap', minHeight: { xs: 48, md: 52 }, px: 0 }}>
-            <Box
-              onClick={() => setActiveTab('products')}
-              sx={{ display: 'flex', alignItems: 'center', gap: 1.25, cursor: 'pointer', flexShrink: 0 }}
-              aria-label="Home"
-            >
-              <Box
-                sx={{
-                  width: 44,
-                  height: 44,
-                  bgcolor: BRAND,
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: `0 4px 14px ${BRAND}40`,
-                }}
+        <Box
+          sx={{
+            width: 280,
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            borderRight: '1px solid #e2e8f0',
+            boxShadow: '4px 0 24px rgba(0,0,0,0.02)',
+            zIndex: 1200,
+          }}
+        >
+          {renderSidebarContent()}
+        </Box>
+      </Box>
+
+      {/* Mobile Drawer Sidebar */}
+      <Drawer
+        variant="temporary"
+        open={showMobileSidebar}
+        onClose={() => setShowMobileSidebar(false)}
+        ModalProps={{ keepMounted: true }}
+        PaperProps={{ sx: { width: 280, border: 'none' } }}
+      >
+        {renderSidebarContent()}
+      </Drawer>
+
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+
+        {/* Top Header Navbar */}
+        <AppBar
+          position="sticky"
+          elevation={0}
+          sx={{
+            top: 0,
+            zIndex: 1100,
+            bgcolor: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid #e2e8f0',
+            color: 'text.primary',
+          }}
+        >
+          <Toolbar sx={{ justifyContent: 'space-between', gap: 2, px: { xs: 2, sm: 3 } }}>
+            
+            {/* Mobile Hamburger & Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <IconButton
+                onClick={() => setShowMobileSidebar(true)}
+                sx={{ display: { lg: 'none' }, color: THEME.primaryDark }}
+                aria-label="open drawer"
               >
-                <Typography variant="body2" fontWeight={900} color="#fff" sx={{ fontSize: 14 }}>
-                  QD
+                <MenuIcon />
+              </IconButton>
+              
+              <Box
+                onClick={() => setActiveTab('products')}
+                sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1, cursor: 'pointer' }}
+              >
+                <Box
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    background: THEME.gradient,
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <DeliveryDiningIcon sx={{ color: '#fff', fontSize: 20 }} />
+                </Box>
+                <Typography variant="subtitle2" fontWeight={900} sx={{ background: THEME.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  QuickDelivery
                 </Typography>
               </Box>
-              <Typography
-                variant="h6"
-                fontWeight={900}
-                sx={{
-                  color: BRAND,
-                  letterSpacing: -0.4,
-                  display: { xs: 'none', sm: 'block' },
-                  fontSize: { sm: '1rem', md: '1.125rem' },
-                }}
-              >
-                QuickDelivery
-              </Typography>
             </Box>
 
-            <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' }, minWidth: 0, px: { md: 1, lg: 3 } }}>
-              <HeaderSearch
+            {/* Centered Top Search (Desktop) */}
+            <Box sx={{ flex: 1, maxWidth: 540, display: { xs: 'none', md: 'block' } }}>
+              <TextField
+                size="small"
+                fullWidth
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                compact={false}
+                placeholder="Search food dishes, groceries, stores & restaurants…"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: THEME.primary, fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '9999px',
+                    bgcolor: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
+                    '&:hover fieldset': { borderColor: THEME.primary },
+                    '&.Mui-focused fieldset': { borderColor: THEME.primary },
+                  },
+                }}
               />
             </Box>
 
-            <Stack direction="row" alignItems="center" spacing={0} sx={{ flexShrink: 0, ml: 'auto' }}>
-              <IconButton size="medium" sx={{ color: 'text.secondary', '&:hover': { color: BRAND } }} title="Language">
-                <LanguageOutlinedIcon fontSize="small" />
-              </IconButton>
-
+            {/* Right Actions */}
+            <Stack direction="row" alignItems="center" spacing={1.5}>
               <IconButton
                 onClick={() => setShowCart(true)}
-                size="medium"
-                sx={{ color: 'text.secondary', '&:hover': { color: BRAND } }}
+                sx={{
+                  p: 1.25,
+                  borderRadius: '14px',
+                  bgcolor: 'rgba(99, 102, 241, 0.08)',
+                  color: THEME.primaryDark,
+                  '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.16)' },
+                }}
                 aria-label="Cart"
               >
                 <Badge
-                  badgeContent={getTotalItems() > 0 ? getTotalItems() : undefined}
-                  sx={{ '& .MuiBadge-badge': { bgcolor: BRAND, color: '#fff', fontWeight: 800 } }}
+                  badgeContent={getTotalItems()}
+                  sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800 } }}
                 >
                   <ShoppingBagOutlinedIcon fontSize="small" />
                 </Badge>
@@ -426,349 +573,261 @@ export default function CustomerDashboard() {
                   href="/login"
                   variant="contained"
                   size="small"
-                  startIcon={<PersonOutlineIcon sx={{ fontSize: 18 }} />}
+                  startIcon={<PersonOutlineIcon />}
                   sx={{
-                    bgcolor: BRAND,
-                    '&:hover': { bgcolor: '#2E5F22' },
-                    borderRadius: 999,
+                    background: THEME.gradient,
+                    borderRadius: '9999px',
                     textTransform: 'none',
                     fontWeight: 800,
-                    px: 2,
-                    display: { xs: 'none', sm: 'inline-flex' },
-                    ml: 0.75,
+                    px: 2.5,
+                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
                   }}
                 >
                   Sign In
                 </Button>
               ) : (
-                <Box
+                <Avatar
                   onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                   sx={{
-                    display: { xs: 'none', sm: 'flex' },
-                    alignItems: 'center',
-                    gap: 0.75,
+                    width: 36,
+                    height: 36,
+                    background: THEME.gradient,
+                    color: '#fff',
+                    fontWeight: 800,
+                    fontSize: 14,
                     cursor: 'pointer',
-                    borderRadius: 999,
-                    pl: 0.5,
-                    pr: 1.25,
-                    py: 0.25,
-                    ml: 0.75,
-                    '&:hover': { bgcolor: 'grey.50' },
+                    boxShadow: '0 4px 10px rgba(99, 102, 241, 0.25)',
                   }}
                 >
-                  <Avatar sx={{ width: 34, height: 34, bgcolor: BRAND, color: '#fff', fontWeight: 800, fontSize: 14 }}>
-                    {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                  </Avatar>
-                  <Box sx={{ textAlign: 'left', maxWidth: 120 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ lineHeight: 1, fontSize: 10 }}>
-                      Account
-                    </Typography>
-                    <Typography variant="body2" fontWeight={800} sx={{ lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user?.displayName}
-                    </Typography>
-                  </Box>
-                  <ExpandMoreIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
-                </Box>
+                  {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                </Avatar>
               )}
-
-              <IconButton onClick={() => setShowMobileMenu(true)} sx={{ display: { xs: 'inline-flex', lg: 'none' }, ml: 0.25, color: BRAND }} aria-label="Menu">
-                <MenuIcon />
-              </IconButton>
             </Stack>
           </Toolbar>
+        </AppBar>
 
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, pb: 1, pt: 0.75 }}>
-            <HeaderSearch value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} compact />
-          </Box>
+        {/* ── HIGH-END HERO SECTION (Matching Violet/Purple Banking UI Theme) ── */}
+        {effectiveTab === 'products' && (
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, pb: 0 }}>
+            <Box
+              sx={{
+                position: 'relative',
+                borderRadius: { xs: '24px', md: '32px' },
+                background: THEME.gradient,
+                overflow: 'hidden',
+                color: '#fff',
+                p: { xs: 3, sm: 4, md: 5 },
+                boxShadow: '0 20px 40px -15px rgba(99, 102, 241, 0.35)',
+              }}
+            >
+              {/* Floating Decorative Glass Orbs (Matching UI Image) */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -40,
+                  right: -40,
+                  width: 220,
+                  height: 220,
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%)',
+                  filter: 'blur(20px)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -60,
+                  left: '35%',
+                  width: 260,
+                  height: 260,
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%)',
+                  filter: 'blur(30px)',
+                  pointerEvents: 'none',
+                }}
+              />
 
+              <Box sx={{ position: 'relative', zIndex: 2, maxWidth: 840 }}>
+                {/* Greeting Badge */}
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 0.75,
+                    borderRadius: '9999px',
+                    bgcolor: 'rgba(255, 255, 255, 0.16)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    mb: 2.5,
+                  }}
+                >
+                  <FlashOnIcon sx={{ fontSize: 18, color: '#fde047' }} />
+                  <Typography variant="caption" fontWeight={800} letterSpacing={0.5}>
+                    {storefrontGreeting()}, {heroFirstName}! Ready for swift delivery?
+                  </Typography>
+                </Box>
 
-        </Box>
-      </AppBar>
+                {/* Hero Title */}
+                <Typography
+                  variant="h3"
+                  fontWeight={900}
+                  sx={{
+                    fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
+                    lineHeight: 1.15,
+                    letterSpacing: -1,
+                    mb: 1.5,
+                  }}
+                >
+                  Fresh Food &amp; Groceries, <br />
+                  <Box component="span" sx={{ color: '#fbcfe8' }}>
+                    Delivered In Minutes.
+                  </Box>
+                </Typography>
 
-      {effectiveTab === 'products' && !authLoading ? (
-        <Box
-          sx={{
-            background: 'linear-gradient(135deg,#39772A 0%, #ff4478 50%, #39772A 110%)',
-            color: '#fff',
-            pt: { xs: 3, md: 4 },
-            pb: { xs: 3.5, md: 4 },
-            px: { xs: 2, sm: 3 },
-          }}
-        >
-          <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-            <Box sx={{ pt: { xs: 0, lg: 0.75 } }}>
-              <Typography
-                variant="h4"
-                fontWeight={900}
-                sx={{ fontSize: { xs: '1.35rem', sm: '2rem', md: '2.25rem' }, mb: 0.85, lineHeight: 1.25 }}
-              >
-                {storefrontGreeting()}, {heroFirstName}! Ready for something delicious?
-              </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.94, mb: 2.25, fontWeight: 500, fontSize: { xs: '0.93rem', md: '1.05rem' } }}>
-                Order from groceries &amp; kitchen — curated deals refreshed daily on QuickDelivery.
-              </Typography>
-              <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap>
-                {[
-                  { id: 'delivery', label: 'Delivery' },
-                  { id: 'pickup', label: 'Pick-up' },
-                  { id: 'shops', label: 'Shops' },
-                  { id: 'dinein', label: 'Dine-in' },
-                ].map((opt) => (
-                  <Chip
-                    key={opt.id}
-                    label={opt.label}
-                    clickable
-                    onClick={() => setServiceMode(opt.id)}
-                    sx={{
-                      fontWeight: 800,
-                      borderRadius: 999,
-                      px: 0.25,
-                      height: 38,
-                      bgcolor: serviceMode === opt.id ? '#fff' : 'rgba(255,255,255,0.16)',
-                      color: serviceMode === opt.id ? BRAND : '#fff',
-                      border:
-                        serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.38)',
-                      '&:hover': {
-                        bgcolor: serviceMode === opt.id ? '#fff8fb' : 'rgba(255,255,255,0.26)',
-                      },
-                    }}
-                  />
-                ))}
-              </Stack>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    opacity: 0.92,
+                    fontSize: { xs: '0.95rem', md: '1.05rem' },
+                    fontWeight: 500,
+                    maxWidth: 580,
+                    mb: 3.5,
+                  }}
+                >
+                  Explore curated restaurant meals, local supermarket essentials, and today’s hottest deals right at your doorstep.
+                </Typography>
+
+                {/* Service Mode Pills */}
+                <Stack direction="row" gap={1.25} flexWrap="wrap" sx={{ mb: 3 }}>
+                  {[
+                    { id: 'delivery', label: '🛵 Instant Delivery' },
+                    { id: 'pickup', label: '🛍️ Store Pick-up' },
+                    { id: 'shops', label: '🏬 Explore Shops' },
+                    { id: 'dinein', label: '🍽️ Dine-in Menu' },
+                  ].map((opt) => (
+                    <Chip
+                      key={opt.id}
+                      label={opt.label}
+                      clickable
+                      onClick={() => setServiceMode(opt.id)}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: '9999px',
+                        px: 1,
+                        height: 40,
+                        bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.18)',
+                        color: serviceMode === opt.id ? THEME.primaryDark : '#ffffff',
+                        backdropFilter: 'blur(8px)',
+                        border: serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.3)',
+                        boxShadow: serviceMode === opt.id ? '0 8px 20px rgba(0,0,0,0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.28)',
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    />
+                  ))}
+                </Stack>
+
+                {/* 3 Floating Benefit Highlights */}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                    gap: 2,
+                    pt: 2,
+                    borderTop: '1px solid rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                      <FlashOnIcon sx={{ fontSize: 20 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" fontWeight={800}>20-Min Delivery</Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Live Rider GPS Tracking</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                      <SecurityIcon sx={{ fontSize: 20 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" fontWeight={800}>100% Guaranteed</Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Verified Vendors Only</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                      <StarIcon sx={{ fontSize: 20, color: '#fde047' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" fontWeight={800}>4.9+ Top Rated</Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Over 50,000+ Orders</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+              </Box>
             </Box>
           </Box>
-        </Box>
-      ) : null}
+        )}
 
-      {/* User dropdown */}
+        {/* Tab View Body */}
+        {renderActiveTabContent()}
+
+        {/* Footer */}
+        <CustomerFooter />
+
+      </Box>
+
+      {/* Cart Drawer */}
+      <Drawer
+        anchor="right"
+        open={showCart}
+        onClose={() => setShowCart(false)}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 460 }, p: 0 } }}
+      >
+        <CartPage onClose={() => setShowCart(false)} />
+      </Drawer>
+
+      {/* User Context Menu */}
       <Menu
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={() => setUserMenuAnchor(null)}
-        PaperProps={{ elevation: 4, sx: { width: 280, borderRadius: 2, mt: 1 } }}
+        PaperProps={{ elevation: 4, sx: { width: 260, borderRadius: '16px', mt: 1 } }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {!isGuest ? [
-          <Box key="user-header" sx={{ px: 2, py: 2, bgcolor: BRAND, color: '#fff' }}>
-            <Typography fontWeight={700} fontSize={16}>{user?.displayName}</Typography>
-            <Typography variant="caption" sx={{ opacity: 0.9 }}>{user?.email}</Typography>
-          </Box>,
-          <MenuItem key="orders" onClick={() => { setActiveTab('orders');   setUserMenuAnchor(null) }}>
-            <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-            <ListItemText>Orders</ListItemText>
-          </MenuItem>,
-          <MenuItem key="wishlist" onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }}>
-            <ListItemIcon><FavoriteBorderIcon sx={{ color: BRAND }} /></ListItemIcon>
-            <ListItemText>Wishlist</ListItemText>
-          </MenuItem>,
-          <MenuItem key="profile" onClick={() => { setActiveTab('profile');  setUserMenuAnchor(null) }}>
-            <ListItemIcon><SettingsOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-            <ListItemText>Settings</ListItemText>
-          </MenuItem>,
-          <Divider key="signout-divider" />,
-          <MenuItem key="signout" onClick={handleSignOut}>
-            <ListItemIcon><LogoutOutlinedIcon /></ListItemIcon>
-            <ListItemText>Sign Out</ListItemText>
-          </MenuItem>,
-        ] : (
-          <Box sx={{ px: 2, py: 2, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Login to access your orders &amp; profile
-            </Typography>
-            <Button
-              component={NextLink} href="/login"
-              fullWidth variant="contained"
-              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}
-            >
-              Login / Sign Up
-            </Button>
-          </Box>
-        )}
+        <Box sx={{ px: 2, py: 1.5, background: THEME.gradient, color: '#fff' }}>
+          <Typography fontWeight={800} fontSize={15}>{user?.displayName}</Typography>
+          <Typography variant="caption" sx={{ opacity: 0.85 }}>{user?.email}</Typography>
+        </Box>
+        <MenuItem onClick={() => { setActiveTab('orders'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
+          <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>My Orders</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
+          <ListItemIcon><FavoriteBorderIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>Wishlist</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => { setActiveTab('profile'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
+          <ListItemIcon><SettingsOutlinedIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>Profile Settings</ListItemText>
+        </MenuItem>
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem onClick={handleSignOut} sx={{ py: 1.25, color: 'error.main' }}>
+          <ListItemIcon><LogoutOutlinedIcon sx={{ color: 'error.main' }} /></ListItemIcon>
+          <ListItemText primaryTypographyProps={{ fontWeight: 700 }}>Sign Out</ListItemText>
+        </MenuItem>
       </Menu>
-
-      <Drawer anchor="left" open={showMobileMenu} onClose={() => setShowMobileMenu(false)} PaperProps={{ sx: { width: 300 } }}>
-        <Box sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h6" fontWeight={700}>Menu</Typography>
-            <IconButton onClick={() => setShowMobileMenu(false)}><CloseIcon /></IconButton>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: `${BRAND}10`, borderRadius: 2, mb: 3 }}>
-            <Avatar sx={{ bgcolor: BRAND, width: 48, height: 48, fontWeight: 700, fontSize: 20 }}>
-              {user?.displayName?.charAt(0) || 'G'}
-            </Avatar>
-            <Box>
-              <Typography fontWeight={600}>{user?.displayName || 'Guest'}</Typography>
-              <Typography variant="caption" color="text.secondary">{isGuest ? 'Guest' : 'Customer'}</Typography>
-            </Box>
-          </Box>
-
-          <List disablePadding>
-            {tabs.map(tab => (
-              <ListItemButton
-                key={tab.id}
-                selected={effectiveTab === tab.id}
-                onClick={() => { setActiveTab(tab.id); setShowMobileMenu(false) }}
-                sx={{
-                  borderRadius: 2, mb: 0.5,
-                  '&.Mui-selected': { bgcolor: `${BRAND}15`, color: BRAND },
-                  '&.Mui-selected .MuiListItemIcon-root': { color: BRAND },
-                }}
-              >
-                <ListItemIcon>{tab.icon}</ListItemIcon>
-                <ListItemText primary={tab.label} primaryTypographyProps={{ fontWeight: 600 }} />
-              </ListItemButton>
-            ))}
-
-            <ListItemButton
-              onClick={() => { setShowCategoriesSidebar(true); setShowMobileMenu(false) }}
-              sx={{ borderRadius: 2, mb: 0.5 }}
-            >
-              <ListItemIcon><CategoryOutlinedIcon /></ListItemIcon>
-              <ListItemText primary="Categories" primaryTypographyProps={{ fontWeight: 600 }} />
-            </ListItemButton>
-
-            <Divider sx={{ my: 1 }} />
-
-            <ListItemButton
-              onClick={() => { isGuest ? router.push('/login') : handleSignOut(); setShowMobileMenu(false) }}
-              sx={{ borderRadius: 2, color: isGuest ? 'primary.main' : 'error.main' }}
-            >
-              <ListItemIcon sx={{ color: 'inherit' }}><LogoutOutlinedIcon /></ListItemIcon>
-              <ListItemText primary={isGuest ? 'Sign In / Register' : 'Sign Out'} primaryTypographyProps={{ fontWeight: 600 }} />
-            </ListItemButton>
-          </List>
-        </Box>
-      </Drawer>
-
-      <Drawer anchor="left" open={showCategoriesSidebar} onClose={() => setShowCategoriesSidebar(false)} PaperProps={{ sx: { width: 300 } }}>
-        <Box sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CategoryOutlinedIcon sx={{ color: BRAND }} />
-              <Typography variant="h6" fontWeight={700}>Categories</Typography>
-            </Box>
-            <IconButton onClick={() => setShowCategoriesSidebar(false)}><CloseIcon /></IconButton>
-          </Box>
-
-          <List disablePadding>
-            <ListItemButton
-              onClick={() => { setSearchQuery(''); setShowCategoriesSidebar(false) }}
-              sx={{ borderRadius: 2, mb: 0.5 }}
-            >
-              <ListItemIcon><InventoryOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-              <ListItemText primary="All Products" primaryTypographyProps={{ fontWeight: 600, fontSize: 15 }} />
-            </ListItemButton>
-
-            {categories.map(cat => (
-              <ListItemButton
-                key={cat.id}
-                onClick={() => { setSearchQuery(cat.name.toLowerCase()); setShowCategoriesSidebar(false) }}
-                sx={{ borderRadius: 2, mb: 0.5 }}
-              >
-                <ListItemIcon><CategoryOutlinedIcon sx={{ color: BRAND }} /></ListItemIcon>
-                <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600, fontSize: 15 }} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
-
-      <Box component="main" sx={{ pb: '72px' }}>
-        {authLoading ? (
-          <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <CircularProgress size={48} sx={{ color: BRAND }} />
-            <Typography color="text.secondary" variant="body2">Loading…</Typography>
-          </Box>
-        ) : (
-          renderContent()
-        )}
-      </Box>
-
-      {showCart && <CartPage onClose={() => setShowCart(false)} />}
-
-      <CustomerFooter />
-
-      {/* ─── Sticky Bottom Navigation Bar ─── */}
-      <Paper
-        elevation={8}
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: (t) => t.zIndex.appBar + 1,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: '#fff',
-        }}
-      >
-        <BottomNavigation
-          value={effectiveTab}
-          onChange={(_, newVal) => {
-            const protectedTabs = ['orders', 'wishlist', 'favorites', 'profile']
-            if (isGuest && protectedTabs.includes(newVal)) {
-              toast.error('Please sign in to access this section')
-              return
-            }
-            setActiveTab(newVal)
-          }}
-          showLabels
-          sx={{
-            maxWidth: 600,
-            mx: 'auto',
-            height: 64,
-            bgcolor: 'transparent',
-            '& .MuiBottomNavigationAction-root': {
-              minWidth: 0,
-              py: 1,
-              color: 'text.secondary',
-              transition: 'color 0.2s, transform 0.2s',
-              '&:hover': { color: BRAND },
-              '& .MuiBottomNavigationAction-label': {
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                mt: 0.25,
-                transition: 'font-size 0.2s',
-              },
-              '&.Mui-selected': {
-                color: BRAND,
-                '& .MuiBottomNavigationAction-label': {
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                },
-              },
-            },
-          }}
-        >
-          <BottomNavigationAction
-            value="products"
-            label="Home"
-            icon={effectiveTab === 'products' ? <HomeIcon /> : <HomeOutlinedIcon />}
-          />
-          <BottomNavigationAction
-            value="orders"
-            label="My Orders"
-            icon={effectiveTab === 'orders' ? <ShoppingBagIcon /> : <ShoppingBagOutlinedIcon />}
-          />
-          <BottomNavigationAction
-            value="favorites"
-            label="Favourites"
-            icon={effectiveTab === 'favorites' ? <StarIcon /> : <StarBorderIcon />}
-          />
-          <BottomNavigationAction
-            value="wishlist"
-            label="Wishlist"
-            icon={effectiveTab === 'wishlist' ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-          />
-          <BottomNavigationAction
-            value="profile"
-            label="Profile"
-            icon={effectiveTab === 'profile' ? <PersonIcon /> : <PersonOutlineIcon />}
-          />
-        </BottomNavigation>
-      </Paper>
 
     </Box>
   )
