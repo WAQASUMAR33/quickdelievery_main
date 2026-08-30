@@ -430,32 +430,7 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex' }}>
-
-      {/* Desktop Persistent Sidebar */}
-      <Box
-        component="nav"
-        sx={{
-          width: { lg: 280 },
-          flexShrink: { lg: 0 },
-          display: { xs: 'none', lg: 'block' },
-        }}
-      >
-        <Box
-          sx={{
-            width: 280,
-            height: '100vh',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            borderRight: '1px solid #e2e8f0',
-            boxShadow: '4px 0 24px rgba(0,0,0,0.02)',
-            zIndex: 1200,
-          }}
-        >
-          {renderSidebarContent()}
-        </Box>
-      </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
 
       {/* Mobile Drawer Sidebar */}
       <Drawer
@@ -463,82 +438,151 @@ export default function CustomerDashboard() {
         open={showMobileSidebar}
         onClose={() => setShowMobileSidebar(false)}
         ModalProps={{ keepMounted: true }}
-        PaperProps={{ sx: { width: 280, border: 'none' } }}
+        PaperProps={{ sx: { width: 290, border: 'none' } }}
       >
         {renderSidebarContent()}
       </Drawer>
 
-      {/* Main Content Area */}
-      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      {/* ── TOP HEADER NAVBAR (FULL-WIDTH MODERN E-COMMERCE NAVBAR) ── */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          top: 0,
+          zIndex: 1100,
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid #e2e8f0',
+          color: 'text.primary',
+        }}
+      >
+        <Box sx={{ maxWidth: 1440, width: '100%', mx: 'auto', px: { xs: 1.5, sm: 2.5, lg: 3.5 } }}>
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 62, md: 72 } }}>
 
-        {/* Top Header Navbar */}
-        <AppBar
-          position="sticky"
-          elevation={0}
-          sx={{
-            top: 0,
-            zIndex: 1100,
-            bgcolor: 'rgba(255, 255, 255, 0.92)',
-            backdropFilter: 'blur(16px)',
-            borderBottom: '1px solid #e2e8f0',
-            color: 'text.primary',
-          }}
-        >
-          <Toolbar sx={{ justifyContent: 'space-between', gap: 2, px: { xs: 2, sm: 3 } }}>
-            
-            {/* Mobile Hamburger & Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* ── Left: Brand Logo & Mobile Toggle ── */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
               <IconButton
                 onClick={() => setShowMobileSidebar(true)}
-                sx={{ display: { lg: 'none' }, color: THEME.primaryDark }}
-                aria-label="open drawer"
+                sx={{ display: { lg: 'none' }, color: THEME.primaryDark, p: 1 }}
+                aria-label="open navigation menu"
               >
                 <MenuIcon />
               </IconButton>
-              
+
               <Box
                 onClick={() => setActiveTab('products')}
-                sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.25,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  transition: 'transform 0.15s ease',
+                  '&:hover': { transform: 'scale(1.02)' }
+                }}
               >
                 <Box
                   sx={{
-                    width: 34,
-                    height: 34,
+                    width: { xs: 36, md: 42 },
+                    height: { xs: 36, md: 42 },
                     background: THEME.gradient,
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    boxShadow: '0 6px 16px rgba(99, 102, 241, 0.3)',
                   }}
                 >
-                  <DeliveryDiningIcon sx={{ color: '#fff', fontSize: 20 }} />
+                  <DeliveryDiningIcon sx={{ color: '#fff', fontSize: { xs: 22, md: 26 } }} />
                 </Box>
-                <Typography variant="subtitle2" fontWeight={900} sx={{ background: THEME.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  QuickDelivery
-                </Typography>
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={900}
+                    sx={{
+                      background: THEME.gradient,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      lineHeight: 1.1,
+                      letterSpacing: -0.5,
+                      fontSize: { sm: '1.1rem', md: '1.25rem' }
+                    }}
+                  >
+                    QuickDelivery
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" sx={{ fontSize: 9.5, letterSpacing: 0.6 }}>
+                    FOOD & GROCERY
+                  </Typography>
+                </Box>
               </Box>
             </Box>
 
-            {/* Centered Top Search (Desktop) */}
-            <Box sx={{ flex: 1, maxWidth: 540, display: { xs: 'none', md: 'block' } }}>
+            {/* ── Center: Navbar Nav Menu Tabs (Desktop) ── */}
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{
+                display: { xs: 'none', lg: 'flex' },
+                alignItems: 'center',
+                bgcolor: '#f1f5f9',
+                p: 0.5,
+                borderRadius: '9999px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              {navTabs.map((tab) => {
+                const isActive = effectiveTab === tab.id
+                return (
+                  <Button
+                    key={tab.id}
+                    onClick={() => handleTabSwitch(tab.id)}
+                    startIcon={isActive ? tab.activeIcon : tab.icon}
+                    size="small"
+                    sx={{
+                      borderRadius: '9999px',
+                      px: 2,
+                      py: 0.75,
+                      textTransform: 'none',
+                      fontWeight: isActive ? 800 : 600,
+                      fontSize: 13.5,
+                      transition: 'all 0.2s ease',
+                      bgcolor: isActive ? '#ffffff' : 'transparent',
+                      color: isActive ? THEME.primaryDark : 'text.secondary',
+                      boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.15)' : 'none',
+                      '&:hover': {
+                        bgcolor: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                        color: THEME.primaryDark,
+                      },
+                    }}
+                  >
+                    {tab.label}
+                  </Button>
+                )
+              })}
+            </Stack>
+
+            {/* ── Search Input (Desktop & Tablet) ── */}
+            <Box sx={{ flex: 1, maxWidth: { xs: '100%', md: 360, lg: 320 }, display: { xs: 'none', sm: 'block' } }}>
               <TextField
                 size="small"
                 fullWidth
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search food dishes, groceries, stores & restaurants…"
+                placeholder="Search food, grocery, dishes…"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: THEME.primary, fontSize: 20 }} />
+                      <SearchIcon sx={{ color: THEME.primary, fontSize: 18 }} />
                     </InputAdornment>
                   ),
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '9999px',
-                    bgcolor: '#f1f5f9',
+                    bgcolor: '#f8fafc',
                     border: '1px solid #e2e8f0',
+                    height: 38,
+                    fontSize: 13,
                     '&:hover fieldset': { borderColor: THEME.primary },
                     '&.Mui-focused fieldset': { borderColor: THEME.primary },
                   },
@@ -546,27 +590,67 @@ export default function CustomerDashboard() {
               />
             </Box>
 
-            {/* Right Actions */}
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <IconButton
+            {/* ── Right Actions: Basket & User Account ── */}
+            <Stack direction="row" alignItems="center" spacing={1.25}>
+              
+              {/* Basket Trigger Button */}
+              <Button
                 onClick={() => setShowCart(true)}
+                variant="outlined"
+                startIcon={
+                  <Badge
+                    badgeContent={getTotalItems()}
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        bgcolor: THEME.secondary,
+                        color: '#fff',
+                        fontWeight: 800,
+                        fontSize: 10,
+                        minWidth: 16,
+                        height: 16,
+                        px: 0.5,
+                      }
+                    }}
+                  >
+                    <ShoppingBagOutlinedIcon sx={{ fontSize: 20 }} />
+                  </Badge>
+                }
                 sx={{
-                  p: 1.25,
-                  borderRadius: '14px',
-                  bgcolor: 'rgba(99, 102, 241, 0.08)',
+                  borderRadius: '9999px',
+                  borderColor: '#e0e7ff',
+                  bgcolor: 'rgba(99, 102, 241, 0.06)',
                   color: THEME.primaryDark,
-                  '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.16)' },
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.75,
+                  fontSize: 13,
+                  '&:hover': {
+                    bgcolor: 'rgba(99, 102, 241, 0.12)',
+                    borderColor: THEME.primary,
+                  },
                 }}
-                aria-label="Cart"
               >
-                <Badge
-                  badgeContent={getTotalItems()}
-                  sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800 } }}
-                >
-                  <ShoppingBagOutlinedIcon fontSize="small" />
-                </Badge>
-              </IconButton>
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, mr: 0.5 }}>
+                  Basket
+                </Box>
+                {getTotalItems() > 0 && (
+                  <Chip
+                    label={`Rs. ${getTotalPrice().toFixed(0)}`}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontWeight: 800,
+                      fontSize: 11,
+                      bgcolor: THEME.primaryDark,
+                      color: '#ffffff',
+                      ml: 0.5,
+                    }}
+                  />
+                )}
+              </Button>
 
+              {/* User Authentication Menu */}
               {isGuest ? (
                 <Button
                   component={NextLink}
@@ -579,32 +663,105 @@ export default function CustomerDashboard() {
                     borderRadius: '9999px',
                     textTransform: 'none',
                     fontWeight: 800,
-                    px: 2.5,
+                    px: { xs: 2, sm: 2.5 },
+                    py: 0.85,
+                    fontSize: 13,
                     boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+                    '&:hover': {
+                      background: THEME.gradient,
+                      opacity: 0.95,
+                    }
                   }}
                 >
                   Sign In
                 </Button>
               ) : (
-                <Avatar
+                <Box
                   onClick={(e) => setUserMenuAnchor(e.currentTarget)}
                   sx={{
-                    width: 36,
-                    height: 36,
-                    background: THEME.gradient,
-                    color: '#fff',
-                    fontWeight: 800,
-                    fontSize: 14,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 0.5,
+                    pr: { xs: 0.5, sm: 1.5 },
+                    borderRadius: '9999px',
+                    bgcolor: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 10px rgba(99, 102, 241, 0.25)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': { bgcolor: '#e2e8f0' }
                   }}
                 >
-                  {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                </Avatar>
+                  <Avatar
+                    src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      background: THEME.gradient,
+                      color: '#fff',
+                      fontWeight: 800,
+                      fontSize: 13,
+                      border: '2px solid #ffffff',
+                    }}
+                  >
+                    {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                  </Avatar>
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 100 }}>
+                    <Typography variant="body2" fontWeight={800} noWrap sx={{ fontSize: 13, lineHeight: 1.1 }}>
+                      {user?.displayName || 'My Account'}
+                    </Typography>
+                  </Box>
+                  <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
+                </Box>
               )}
             </Stack>
+
           </Toolbar>
-        </AppBar>
+        </Box>
+      </AppBar>
+
+      {/* ── Sub-bar for Mobile Navigation Pills (Visible only on xs/sm/md) ── */}
+      <Box
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          px: 2,
+          py: 1,
+          overflowX: 'auto',
+          '&::-webkit-scrollbar': { display: 'none' },
+          scrollbarWidth: 'none',
+        }}
+      >
+        <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
+          {navTabs.map((tab) => {
+            const isActive = effectiveTab === tab.id
+            return (
+              <Chip
+                key={tab.id}
+                icon={isActive ? tab.activeIcon : tab.icon}
+                label={tab.label}
+                clickable
+                onClick={() => handleTabSwitch(tab.id)}
+                sx={{
+                  fontWeight: isActive ? 800 : 600,
+                  fontSize: 12.5,
+                  borderRadius: '9999px',
+                  bgcolor: isActive ? THEME.primaryDark : '#f1f5f9',
+                  color: isActive ? '#ffffff' : 'text.primary',
+                  '& .MuiChip-icon': { color: isActive ? '#ffffff' : 'inherit' },
+                  '&:hover': {
+                    bgcolor: isActive ? THEME.primaryDark : '#e2e8f0',
+                  },
+                }}
+              />
+            )
+          })}
+        </Stack>
+      </Box>
+
+      {/* ── Main Content Area (Full-Width Container) ── */}
+      <Box sx={{ flex: 1, width: '100%', maxWidth: 1440, mx: 'auto', display: 'flex', flexDirection: 'column' }}>
 
         {/* ── HIGH-END HERO SECTION (Matching Violet/Purple Banking UI Theme) ── */}
         {effectiveTab === 'products' && (
