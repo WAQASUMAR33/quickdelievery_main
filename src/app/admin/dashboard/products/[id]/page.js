@@ -63,6 +63,24 @@ const ApprovalChip = ({ status }) => {
   return <Chip label={status || '—'} size="small" variant="outlined" sx={{ borderRadius: 0 }} />
 }
 
+const tf = {
+  size: 'small',
+  sx: {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 0,
+    },
+    '& .MuiInputBase-root': {
+      borderRadius: 0,
+    },
+    '& .MuiSelect-select': {
+      borderRadius: 0,
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderRadius: 0,
+    },
+  },
+}
+
 export default function ProductEditPage() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
@@ -413,7 +431,7 @@ export default function ProductEditPage() {
               <SectionCard icon={<CategoryOutlinedIcon fontSize="small" />} title="Category">
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
-                    <FormControl {...tf} fullWidth required disabled={isAdmin}>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                       <InputLabel>Product Category</InputLabel>
                       <Select label="Product Category" value={form.productCategoryId || form.catId}
                         onChange={e => {
@@ -425,7 +443,8 @@ export default function ProductEditPage() {
                             catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : selectedPCId,
                             subCatId: '',
                           }))
-                        }}>
+                        }}
+                        sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                         {categories.map(c => (
                           <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
                             {c.productCategoryName}
@@ -435,9 +454,10 @@ export default function ProductEditPage() {
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <FormControl {...tf} fullWidth required disabled={isAdmin || (!form.catId && !form.productCategoryId)}>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin || (!form.catId && !form.productCategoryId)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                       <InputLabel>Sub-category</InputLabel>
-                      <Select label="Sub-category" value={form.subCatId} onChange={e => set('subCatId', e.target.value)}>
+                      <Select label="Sub-category" value={form.subCatId} onChange={e => set('subCatId', e.target.value)}
+                        sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                         {filteredSubs.map(s => <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>)}
                       </Select>
                     </FormControl>

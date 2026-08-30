@@ -64,7 +64,23 @@ function SectionCard({ icon, title, subtitle, children }) {
 
 const EMPTY_VARIATION = { name: '', price: '', discount: '0' }
 
-export default function AddProductPage() {
+const tf = {
+  size: 'small',
+  sx: {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 0,
+    },
+    '& .MuiInputBase-root': {
+      borderRadius: 0,
+    },
+    '& .MuiSelect-select': {
+      borderRadius: 0,
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderRadius: 0,
+    },
+  },
+}
   const router = useRouter()
   const { userData, user, loading } = useAuth()
   const fileInputRef = useRef(null)
@@ -282,7 +298,7 @@ export default function AddProductPage() {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <IconButton size="small" onClick={() => router.back()}
-              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
               <ArrowBackOutlinedIcon fontSize="small" />
             </IconButton>
             <Box>
@@ -292,7 +308,7 @@ export default function AddProductPage() {
           </Box>
           <Button type="submit" variant="contained" disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 2, textTransform: 'none', fontWeight: 700, px: 3 }}>
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
             {isSubmitting ? 'Saving…' : 'Save Item'}
           </Button>
         </Box>
@@ -314,10 +330,11 @@ export default function AddProductPage() {
 
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <FormControl {...tf} fullWidth required error={!!errors.catId} sx={{ minWidth: 300 }}>
+                  <FormControl {...tf} fullWidth required error={!!errors.catId} sx={{ minWidth: 300, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                     <InputLabel>Product Category</InputLabel>
                     <Select label="Product Category" value={form.productCategoryId}
-                      onChange={handleCategoryChange}>
+                      onChange={handleCategoryChange}
+                      sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                       <MenuItem value=""><em>Select category…</em></MenuItem>
                       {productCategories.map(c => (
                         <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
@@ -329,10 +346,11 @@ export default function AddProductPage() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <FormControl {...tf} fullWidth required disabled={!form.productCategoryId} error={!!errors.subCatId} sx={{ minWidth: 300 }}>
+                  <FormControl {...tf} fullWidth required disabled={!form.productCategoryId} error={!!errors.subCatId} sx={{ minWidth: 300, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                     <InputLabel>Sub-category</InputLabel>
                     <Select label="Sub-category" value={form.subCatId}
-                      onChange={e => set('subCatId', e.target.value)}>
+                      onChange={e => set('subCatId', e.target.value)}
+                      sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                       <MenuItem value=""><em>Select sub-category…</em></MenuItem>
                       {filteredSubs.map(s => (
                         <MenuItem key={s.subCatId} value={s.subCatId}>
