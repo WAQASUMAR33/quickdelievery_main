@@ -218,25 +218,52 @@ const VendorProductManagement = () => {
 
   const handleEditClick = (product) => {
     setSelectedProduct(product)
+
+    // Match product category or root category
+    let initialCatId = ''
+    if (product.productCategoryId) {
+      const match = categories.find(c => String(c.id) === String(product.productCategoryId))
+      initialCatId = match ? String(match.id) : String(product.productCategoryId)
+    } else if (product.catId) {
+      const match = categories.find(c => String(c.id) === String(product.catId) || String(c.catId) === String(product.catId))
+      initialCatId = match ? String(match.id) : String(product.catId)
+    }
+
     setFormData({
-      proName: product.proName, description: product.description || '',
-      catId: product.catId, subCatId: product.subCatId.toString(),
-      price: product.price.toString(), cost: product.cost.toString(),
-      discount: product.discount.toString(), sku: product.sku,
-      barcode: product.barcode || '', qnty: product.qnty.toString(),
-      stock: product.stock.toString(), status: product.status,
-      images: product.proImages || [], brandName: product.brandName || '',
-      manufacturer: product.manufacturer || '', keyFeatures: product.keyFeatures || [],
-      productType: product.productType || '', variations: product.variations || {},
-      sizeName: product.sizeName || '', modelNumber: product.modelNumber || '',
+      proName: product.proName || '',
+      description: product.description || '',
+      catId: initialCatId,
+      subCatId: product.subCatId != null ? String(product.subCatId) : '',
+      price: product.price != null ? product.price.toString() : '',
+      cost: product.cost != null ? product.cost.toString() : '',
+      discount: product.discount != null ? product.discount.toString() : '0',
+      sku: product.sku || '',
+      barcode: product.barcode || '',
+      qnty: product.qnty != null ? product.qnty.toString() : '',
+      stock: product.stock != null ? product.stock.toString() : '',
+      status: product.status !== undefined ? Boolean(product.status) : true,
+      images: Array.isArray(product.proImages) ? product.proImages : (typeof product.proImages === 'string' ? (JSON.parse(product.proImages || '[]') || []) : []),
+      brandName: product.brandName || '',
+      manufacturer: product.manufacturer || '',
+      keyFeatures: Array.isArray(product.keyFeatures) ? product.keyFeatures : (typeof product.keyFeatures === 'string' ? (JSON.parse(product.keyFeatures || '[]') || []) : []),
+      productType: product.productType || '',
+      variations: product.variations || {},
+      sizeName: product.sizeName || '',
+      modelNumber: product.modelNumber || '',
       productDimensions: product.productDimensions || '',
       packageWeight: product.packageWeight || '',
-      salePrice: product.salePrice ? product.salePrice.toString() : '',
-      saleStartDate: product.saleStartDate || '', saleEndDate: product.saleEndDate || '',
-      currency: product.currency || 'USD', conditionType: product.conditionType || '',
-      warranty: product.warranty || '', ingredients: product.ingredients || '',
-      reviews: product.reviews || [], size: product.size || '', customSize: '',
-      color: product.color || '', customColor: '',
+      salePrice: product.salePrice != null ? product.salePrice.toString() : '',
+      saleStartDate: product.saleStartDate || '',
+      saleEndDate: product.saleEndDate || '',
+      currency: product.currency || 'PKR',
+      conditionType: product.conditionType || '',
+      warranty: product.warranty || '',
+      ingredients: product.ingredients || '',
+      reviews: product.reviews || [],
+      size: product.size || '',
+      customSize: '',
+      color: product.color || '',
+      customColor: '',
     })
     setShowEditModal(true)
   }
@@ -680,28 +707,48 @@ const VendorProductManagement = () => {
                 {/* Category (Product Category) */}
                 <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
                   <InputLabel>Product Category *</InputLabel>
-                  <Select value={formData.catId} label="Product Category *"
+                  <Select
+                    value={formData.catId ? String(formData.catId) : ''}
+                    label="Product Category *"
                     onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
-                    sx={{ borderRadius: 0 }}>
+                    sx={{ borderRadius: 0 }}
+                  >
                     <MenuItem value=""><em>Select Category</em></MenuItem>
-                    {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                    {categories.map(c => <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>)}
+                    {formData.catId && !categories.some(c => String(c.id) === String(formData.catId)) && (
+                      <MenuItem value={String(formData.catId)}>{selectedProduct?.category?.name || `Category #${formData.catId}`}</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
 
                 {/* Subcategory */}
                 <FormControl size="small" fullWidth disabled={!formData.catId} sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
                   <InputLabel>Sub-category *</InputLabel>
-                  <Select value={formData.subCatId} label="Sub-category *"
+                  <Select
+                    value={formData.subCatId ? String(formData.subCatId) : ''}
+                    label="Sub-category *"
                     onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
-                    sx={{ borderRadius: 0 }}>
+                    sx={{ borderRadius: 0 }}
+                  >
                     <MenuItem value=""><em>Select Sub-category</em></MenuItem>
-                    {subcategories.filter(s => {
+                    {(() => {
                       const selCat = categories.find(c => String(c.id) === String(formData.catId))
                       const targetCatId = selCat?.catId || formData.catId
-                      return String(s.catId) === String(targetCatId)
-                    }).map(s => (
-                      <MenuItem key={s.subCatId} value={s.subCatId.toString()}>{s.subCatName}</MenuItem>
-                    ))}
+                      const filtered = subcategories.filter(s => String(s.catId) === String(targetCatId))
+                      const hasCurrent = filtered.some(s => String(s.subCatId) === String(formData.subCatId))
+                      return (
+                        <>
+                          {filtered.map(s => (
+                            <MenuItem key={s.subCatId} value={String(s.subCatId)}>{s.subCatName}</MenuItem>
+                          ))}
+                          {!hasCurrent && formData.subCatId && (
+                            <MenuItem value={String(formData.subCatId)}>
+                              {selectedProduct?.subCategory?.subCatName || `Subcategory #${formData.subCatId}`}
+                            </MenuItem>
+                          )}
+                        </>
+                      )
+                    })()}
                   </Select>
                 </FormControl>
 
@@ -757,13 +804,19 @@ const VendorProductManagement = () => {
                 />
                 <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
                   <InputLabel>Product Type</InputLabel>
-                  <Select value={formData.productType} label="Product Type"
-                    onChange={e => setFormData({ ...formData, productType: e.target.value })} sx={{ borderRadius: 0 }}>
+                  <Select
+                    value={formData.productType || ''}
+                    label="Product Type"
+                    onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                    sx={{ borderRadius: 0 }}
+                  >
                     <MenuItem value=""><em>Select Product Type</em></MenuItem>
-                    <MenuItem value="Physical">Physical Product</MenuItem>
-                    <MenuItem value="Digital">Digital Product</MenuItem>
-                    <MenuItem value="Service">Service</MenuItem>
-                    <MenuItem value="Subscription">Subscription</MenuItem>
+                    {['Physical', 'Digital', 'Service', 'Subscription'].map(t => (
+                      <MenuItem key={t} value={t}>{t} Product</MenuItem>
+                    ))}
+                    {formData.productType && !['Physical', 'Digital', 'Service', 'Subscription'].some(t => t.toLowerCase() === formData.productType.toLowerCase()) && (
+                      <MenuItem value={formData.productType}>{formData.productType}</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
                 <TextField
@@ -779,13 +832,19 @@ const VendorProductManagement = () => {
                 />
                 <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
                   <InputLabel>Condition</InputLabel>
-                  <Select value={formData.conditionType} label="Condition"
-                    onChange={e => setFormData({ ...formData, conditionType: e.target.value })} sx={{ borderRadius: 0 }}>
+                  <Select
+                    value={formData.conditionType || ''}
+                    label="Condition"
+                    onChange={e => setFormData({ ...formData, conditionType: e.target.value })}
+                    sx={{ borderRadius: 0 }}
+                  >
                     <MenuItem value=""><em>Select Condition</em></MenuItem>
-                    <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="Used">Used</MenuItem>
-                    <MenuItem value="Refurbished">Refurbished</MenuItem>
-                    <MenuItem value="Open Box">Open Box</MenuItem>
+                    {['New', 'Used', 'Refurbished', 'Open Box'].map(c => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                    {formData.conditionType && !['New', 'Used', 'Refurbished', 'Open Box'].some(c => c.toLowerCase() === formData.conditionType.toLowerCase()) && (
+                      <MenuItem value={formData.conditionType}>{formData.conditionType}</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
                 <TextField
@@ -806,8 +865,12 @@ const VendorProductManagement = () => {
                 />
                 <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
                   <InputLabel>Currency</InputLabel>
-                  <Select value={formData.currency} label="Currency"
-                    onChange={e => setFormData({ ...formData, currency: e.target.value })} sx={{ borderRadius: 0 }}>
+                  <Select
+                    value={formData.currency || 'PKR'}
+                    label="Currency"
+                    onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                    sx={{ borderRadius: 0 }}
+                  >
                     {[
                       { v: 'PKR', l: 'PKR — Pakistani Rupee' },
                       { v: 'USD', l: 'USD — US Dollar' },
@@ -816,6 +879,9 @@ const VendorProductManagement = () => {
                       { v: 'GBP', l: 'GBP — British Pound' },
                       { v: 'EUR', l: 'EUR — Euro' },
                     ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
+                    {formData.currency && !['PKR', 'USD', 'AED', 'SAR', 'GBP', 'EUR'].includes(formData.currency) && (
+                      <MenuItem value={formData.currency}>{formData.currency}</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
               </Box>
@@ -838,14 +904,19 @@ const VendorProductManagement = () => {
                   </Box>
                   <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
                     <InputLabel>Select Size</InputLabel>
-                    <Select value={formData.size} label="Select Size"
-                      onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                    <Select
+                      value={formData.size || ''}
+                      label="Select Size"
+                      onChange={e => setFormData({ ...formData, size: e.target.value })}
+                      sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                    >
                       <MenuItem value=""><em>None / Standard</em></MenuItem>
-                      <MenuItem value="Small">Small</MenuItem>
-                      <MenuItem value="Medium">Medium</MenuItem>
-                      <MenuItem value="Large">Large</MenuItem>
-                      <MenuItem value="XL">XL</MenuItem>
-                      <MenuItem value="XXL">XXL</MenuItem>
+                      {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                      {formData.size && !['Small', 'Medium', 'Large', 'XL', 'XXL'].includes(formData.size) && (
+                        <MenuItem value={formData.size}>{formData.size}</MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                   {formData.size && (
@@ -872,8 +943,12 @@ const VendorProductManagement = () => {
                   </Box>
                   <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
                     <InputLabel>Select Color</InputLabel>
-                    <Select value={formData.color} label="Select Color"
-                      onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                    <Select
+                      value={formData.color || ''}
+                      label="Select Color"
+                      onChange={e => setFormData({ ...formData, color: e.target.value })}
+                      sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                    >
                       <MenuItem value=""><em>None / Default</em></MenuItem>
                       {predefinedColors.map(c => (
                         <MenuItem key={c.name} value={c.name}>
@@ -883,12 +958,20 @@ const VendorProductManagement = () => {
                           </Box>
                         </MenuItem>
                       ))}
+                      {formData.color && !predefinedColors.some(c => c.name === formData.color) && (
+                        <MenuItem value={formData.color}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
+                            {formData.color}
+                          </Box>
+                        </MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                   {formData.color && (
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }} />
+                        <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
                         <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
                       </Box>
                       <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
