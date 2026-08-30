@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 
+import Alert             from '@mui/material/Alert'
+import Autocomplete     from '@mui/material/Autocomplete'
 import Box               from '@mui/material/Box'
 import Button            from '@mui/material/Button'
 import Chip              from '@mui/material/Chip'
@@ -111,26 +113,27 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
   }, [])
 
   const loadProducts = useCallback(async () => {
-    const res = await fetch('/api/products?type=products')
-    let data = {}
     try {
-      data = await res.json()
+      const headers = { ...authHeadersJson() }
+      const url = mode === 'vendor' && userData?.uid
+        ? `/api/products?type=products&vendorId=${encodeURIComponent(userData.uid)}`
+        : '/api/products?type=products'
+      const res = await fetch(url, { headers })
+      const data = await res.json().catch(() => ({}))
+      if (!data.success || !data.data) {
+        setProducts([])
+        return
+      }
+      let list = data.data
+      if (mode === 'vendor' && userData?.uid) {
+        const uid = userData.uid
+        list = list.filter((p) => String(p.vendorId ?? p.vendor_id ?? '') === String(uid))
+      }
+      const eligible = list.filter((p) => p?.proName && p?.price != null)
+      setProducts(eligible)
     } catch {
-      data = {}
-    }
-    if (!data.success || !data.data) {
       setProducts([])
-      return
     }
-    let list = data.data
-    if (mode === 'vendor') {
-      const uid = userData?.uid
-      if (uid) list = list.filter((p) => String(p.vendorId ?? p.vendor_id ?? '') === String(uid))
-    }
-    const eligible = list.filter(
-      (p) => p.status === true && p.approvalStatus === 'Approved' && p?.proName && p?.price
-    )
-    setProducts(eligible)
   }, [mode, userData?.uid])
 
   useEffect(() => {
@@ -511,23 +514,58 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
               />
             )}
             {!editingId && form.dealKind === 'catalog' && (
-              <FormControl fullWidth size="small">
-                <InputLabel>Product</InputLabel>
-                <Select
-                  label="Product"
-                  value={form.productId}
-                  onChange={(e) => setForm({ ...form, productId: e.target.value })}
-                  sx={{ borderRadius: 0 }}
-                >
-                  {products
-                    .filter((p) => !usedProductIds.has(p.proId))
-                    .map((p) => (
-                      <MenuItem key={p.proId} value={String(p.proId)}>
-                        {p.proName} — ${parseFloat(p.price).toFixed(2)}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                size="small"
+                fullWidth
+                options={products.filter((p) => !usedProductIds.has(p.proId))}
+                getOptionLabel={(option) =>
+                  typeof option === 'string'
+                    ? option
+                    : `${option.proName} (SKU: ${option.sku || 'N/A'}) — Rs. ${parseFloat(option.price || 0).toLocaleString()}`
+                }
+                value={
+                  products.find((p) => String(p.proId) === String(form.productId)) || null
+                }
+                onChange={(_, newValue) => {
+                  setForm((prev) => ({ ...prev, productId: newValue ? String(newValue.proId) : '' }))
+                }}
+                isOptionEqualToValue={(option, value) => String(option.proId) === String(value.proId)}
+                filterOptions={(options, { inputValue }) => {
+                  const q = inputValue.toLowerCase().trim()
+                  return options.filter((p) =>
+                    p.proName?.toLowerCase().includes(q) ||
+                    p.sku?.toLowerCase().includes(q) ||
+                    p.category?.name?.toLowerCase().includes(q) ||
+                    p.productCategory?.productCategoryName?.toLowerCase().includes(q)
+                  )
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search & Select Product *"
+                    placeholder="Type product name, SKU, or category to filter…"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props} key={option.proId} sx={{ py: 1, borderBottom: '1px solid #f1f5f9' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                      <Typography variant="body2" fontWeight={700}>
+                        {option.proName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        SKU: {option.sku || 'N/A'} · Category: {option.productCategory?.productCategoryName || option.category?.name || 'General'} · <Box component="span" sx={{ color: BRAND, fontWeight: 700 }}>Rs. {parseFloat(option.price || 0).toLocaleString()}</Box>
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                PaperComponent={({ children, ...paperProps }) => (
+                  <Paper {...paperProps} sx={{ borderRadius: 0, mt: 0.5 }}>
+                    {children}
+                  </Paper>
+                )}
+                noOptionsText="No products found"
+              />
             )}
             {form.dealKind === 'custom' && (
               <>
