@@ -187,10 +187,7 @@ const AdminProductAnalytics = () => {
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
+    return `Rs. ${Number(amount || 0).toLocaleString()}`
   }
 
   const formatNumber = (num) => {

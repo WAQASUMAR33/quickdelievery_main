@@ -407,7 +407,7 @@ export default function VendorAnalytics({ vendorId }) {
               />
             </Box>
             <Typography variant="h4" fontWeight={800} color="#111827">
-              ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              PKR {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={500} mt={0.5}>
               Total Delivered Revenue
@@ -539,7 +539,7 @@ export default function VendorAnalytics({ vendorId }) {
               />
             </Box>
             <Typography variant="h4" fontWeight={800} color="#111827">
-              ${averageOrderValue.toFixed(2)}
+              PKR {averageOrderValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={500} mt={0.5}>
               Average Basket Size
@@ -648,7 +648,7 @@ export default function VendorAnalytics({ vendorId }) {
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>
-                              ${parseFloat(order.totalAmount || 0).toFixed(2)}
+                              Rs. {parseFloat(order.totalAmount || 0).toLocaleString()}
                             </TableCell>
                             <TableCell>
                               <Chip
@@ -774,7 +774,7 @@ export default function VendorAnalytics({ vendorId }) {
                             {p.category?.name || 'General'} • Stock: {p.stock || 0}
                           </Typography>
                           <Typography variant="body2" fontWeight={800} color={BRAND} mt={0.25}>
-                            ${parseFloat(p.price || 0).toFixed(2)}
+                            Rs. {parseFloat(p.price || 0).toLocaleString()}
                             {parseFloat(p.discount || 0) > 0 && (
                               <Typography component="span" variant="caption" sx={{ color: 'error.main', ml: 1, fontWeight: 700 }}>
                                 {p.discount}% OFF

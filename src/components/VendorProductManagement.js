@@ -282,7 +282,7 @@ const VendorProductManagement = () => {
           { label: 'Total Products', value: products.length,                                                                           icon: <Inventory2OutlinedIcon />, color: '#3b82f6', bg: '#eff6ff' },
           { label: 'Approved',       value: products.filter(p => p.approvalStatus === 'Approved').length,                             icon: <CheckCircleOutlinedIcon />, color: '#10b981', bg: '#f0fdf4' },
           { label: 'Pending',        value: products.filter(p => p.approvalStatus === 'Pending').length,                              icon: <PendingOutlinedIcon />,     color: '#f59e0b', bg: '#fffbeb' },
-          { label: 'Total Value',    value: `$${products.reduce((s, p) => s + (parseFloat(p.price) * p.stock), 0).toFixed(2)}`,      icon: <AttachMoneyIcon />,         color: '#8b5cf6', bg: '#f5f3ff' },
+          { label: 'Total Value',    value: `Rs. ${products.reduce((s, p) => s + (parseFloat(p.price || 0) * (p.stock || 0)), 0).toLocaleString()}`, icon: <AttachMoneyIcon />, color: '#8b5cf6', bg: '#f5f3ff' },
         ].map((stat, i) => (
           <Card key={i} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
             <CardContent>
@@ -382,8 +382,8 @@ const VendorProductManagement = () => {
                     <Typography variant="caption" color="text.secondary">{product.subCategory?.subCatName}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={600}>${product.price}</Typography>
-                    <Typography variant="caption" color="text.secondary">Cost: ${product.cost}</Typography>
+                    <Typography variant="body2" fontWeight={600}>Rs. {product.price}</Typography>
+                    <Typography variant="caption" color="text.secondary">Cost: Rs. {product.cost}</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">{product.stock}</Typography>
@@ -441,7 +441,7 @@ const VendorProductManagement = () => {
                   <Typography variant="caption" color="text.secondary">{product.category?.name} — {product.subCategory?.subCatName}</Typography>
                   <Typography variant="caption" color="text.disabled" display="block">SKU: {product.sku}</Typography>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
-                    <Typography variant="h6" fontWeight={700}>${product.price}</Typography>
+                    <Typography variant="h6" fontWeight={700}>Rs. {product.price}</Typography>
                     <ApprovalChip status={product.approvalStatus} />
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1, mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -464,7 +464,7 @@ const VendorProductManagement = () => {
                     <Typography variant="caption" color="text.disabled" display="block">SKU: {product.sku}</Typography>
                   </Box>
                   <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
-                    <Typography variant="h6" fontWeight={700}>${product.price}</Typography>
+                    <Typography variant="h6" fontWeight={700}>Rs. {product.price}</Typography>
                     <Typography variant="caption" color="text.secondary" display="block">Stock: {product.stock}</Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', mt: 0.5, flexWrap: 'wrap' }}>
                       <Chip label={product.status ? 'Active' : 'Inactive'} size="small" color={product.status ? 'success' : 'error'} variant="outlined" sx={{ borderRadius: 0 }} />

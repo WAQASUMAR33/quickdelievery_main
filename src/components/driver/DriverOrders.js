@@ -59,7 +59,7 @@ const STATUS_FLOW = {
 }
 
 const formatPrice = (v) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(v) || 0)
+  `Rs. ${Number(parseFloat(v) || 0).toLocaleString()}`
 
 function StatusChip({ status }) {
   const cfg = STATUS_CONFIG[status] || { label: status, bg: '#f5f5f5', color: '#555' }

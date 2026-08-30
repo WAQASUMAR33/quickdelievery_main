@@ -375,7 +375,7 @@ export default function VendorManagement() {
           { label: 'Total Vendors',  value: stats.total,    sub: `${stats.verified} verified`,    Icon: PeopleOutlinedIcon,         color: '#2563eb' },
           { label: 'Verified',       value: stats.verified, sub: `${stats.pending} still pending`, Icon: VerifiedUserOutlinedIcon,   color: '#16a34a' },
           { label: 'Total Products', value: stats.products, sub: 'across all vendors',             Icon: Inventory2OutlinedIcon,     color: '#7c3aed' },
-          { label: 'Est. Revenue',   value: `$${stats.revenue.toLocaleString('en', { maximumFractionDigits: 0 })}`, sub: 'from vendor stock', Icon: AttachMoneyIcon, color: BRAND },
+          { label: 'Est. Revenue',   value: `Rs. ${stats.revenue.toLocaleString('en', { maximumFractionDigits: 0 })}`, sub: 'from vendor stock', Icon: AttachMoneyIcon, color: BRAND },
         ].map(c => (
           <StatCard key={c.label} {...c} />
         ))}

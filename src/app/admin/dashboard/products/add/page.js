@@ -375,7 +375,7 @@ export default function AddProductPage() {
                   inputProps={{ step: '0.01', min: 0 }}
                   value={form.price} onChange={e => set('price', e.target.value)}
                   error={!!errors.price} helperText={errors.price}
-                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} />
+                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }} />
               </Grid>
               <Grid item xs={12} sm={4}>
                 <TextField {...tf} fullWidth label="Discount %" type="number"
@@ -403,7 +403,7 @@ export default function AddProductPage() {
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ bgcolor: 'grey.50' }}>
-                        {['Variation Name', 'Price ($)', 'Discount (%)', ''].map(h => (
+                        {['Variation Name', 'Price (Rs.)', 'Discount (%)', ''].map(h => (
                           <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.25 }}>
                             {h}
                           </TableCell>
@@ -421,7 +421,7 @@ export default function AddProductPage() {
                             <TextField {...tf} fullWidth type="number" placeholder="0.00"
                               inputProps={{ step: '0.01', min: 0 }}
                               value={row.price} onChange={e => setVariation(i, 'price', e.target.value)}
-                              InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} />
+                              InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }} />
                           </TableCell>
                           <TableCell sx={{ py: 0.75, minWidth: 110 }}>
                             <TextField {...tf} fullWidth type="number" placeholder="0"

@@ -70,7 +70,7 @@ function ApprovalChip({ status }) {
 }
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
+  `Rs. ${Number(price || 0).toLocaleString()}`
 
 const ProductManagement = () => {
   const [products, setProducts]           = useState([])
