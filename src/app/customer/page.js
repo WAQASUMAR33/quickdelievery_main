@@ -989,15 +989,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
       </Box>
 
-      {/* Cart Drawer */}
-      <Drawer
-        anchor="right"
-        open={showCart}
-        onClose={() => setShowCart(false)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 460 }, p: 0 } }}
-      >
-        <CartPage onClose={() => setShowCart(false)} />
-      </Drawer>
+
 
       {/* User Context Menu */}
       <Menu
