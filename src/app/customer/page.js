@@ -79,16 +79,15 @@ function storefrontGreeting() {
   return 'Good evening'
 }
 
-export default function CustomerDashboard() {
+export default function CustomerDashboard({ initialTab = 'products' }) {
   const { user, userData, logout, loading: authLoading } = useAuth()
   const { addToCart, getTotalItems, getTotalPrice } = useCart()
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState('products')
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [userMenuAnchor, setUserMenuAnchor] = useState(null)
-  const [showCart, setShowCart] = useState(false)
   const [favorites, setFavorites] = useState([])
   const [categories, setCategories] = useState([])
   const [serviceMode, setServiceMode] = useState('delivery')
@@ -104,7 +103,7 @@ export default function CustomerDashboard() {
   }, [user, userData, authLoading, router])
 
   useEffect(() => {
-    const handleOpenCart = () => setShowCart(true)
+    const handleOpenCart = () => setActiveTab('cart')
     const handleGoProducts = () => setActiveTab('products')
     
     window.addEventListener('openCart', handleOpenCart)
@@ -128,6 +127,7 @@ export default function CustomerDashboard() {
     const allowed = tabDefs.filter(tab => !guest || !tab.protected)
     const allowedIds = new Set(allowed.map(t => t.id))
     allowedIds.add('products')
+    allowedIds.add('cart')
     return {
       isGuest: guest,
       navTabs: tabDefs,
@@ -282,7 +282,7 @@ export default function CustomerDashboard() {
 
       {/* Cart Quick Trigger Card */}
       <Box
-        onClick={() => { setShowCart(true); setShowMobileSidebar(false) }}
+        onClick={() => { setActiveTab('cart'); setShowMobileSidebar(false) }}
         sx={{
           p: 2,
           borderRadius: '16px',
@@ -423,6 +423,15 @@ export default function CustomerDashboard() {
         return (
           <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <CustomerProfile />
+          </Box>
+        )
+      case 'cart':
+        return (
+          <Box sx={{ width: '100%', py: { xs: 1, sm: 2 } }}>
+            <CartPage
+              onNavigateExplore={() => setActiveTab('products')}
+              onNavigateOrders={() => setActiveTab('orders')}
+            />
           </Box>
         )
       default:
@@ -596,7 +605,7 @@ export default function CustomerDashboard() {
               
               {/* Basket Trigger Button */}
               <Button
-                onClick={() => setShowCart(true)}
+                onClick={() => handleTabSwitch('cart')}
                 variant="outlined"
                 startIcon={
                   <Badge
@@ -1076,15 +1085,15 @@ export default function CustomerDashboard() {
 
         {/* Center Prominent Cart Button */}
         <Button
-          onClick={() => setShowCart(true)}
+          onClick={() => handleTabSwitch('cart')}
           sx={{
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: THEME.primaryDark,
+            color: effectiveTab === 'cart' ? THEME.primaryDark : 'text.secondary',
             textTransform: 'none',
             fontSize: 10.5,
-            fontWeight: 800,
+            fontWeight: effectiveTab === 'cart' ? 800 : 600,
           }}
         >
           <Badge
