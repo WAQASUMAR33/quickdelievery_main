@@ -94,16 +94,18 @@ export default function ProductEditPage() {
       if (!access.hasAccess) { router.push(access.redirectTo); return }
       Promise.all([
         fetch(`/api/products/${id}`).then(r => r.json()),
-        fetch('/api/products?type=categories').then(r => r.json()),
+        fetch('/api/products?type=productcategories').then(r => r.json()),
         fetch('/api/products?type=subcategories').then(r => r.json()),
-      ]).then(([prod, cats, subs]) => {
+        fetch('/api/products?type=categories').then(r => r.json()),
+      ]).then(([prod, pcData, subs, catsData]) => {
         if (!prod.success) { toast.error('Product not found'); return }
         const p = prod.data
         setForm({
           proName:           p.proName         || '',
           description:       p.description     || '',
-          catId:             p.catId           || '',
-          subCatId:          p.subCatId        || '',
+          productCategoryId: p.productCategoryId ? String(p.productCategoryId) : '',
+          catId:             p.catId           ? String(p.catId) : '',
+          subCatId:          p.subCatId        ? String(p.subCatId) : '',
           price:             p.price           || '',
           cost:              p.cost            || '',
           discount:          p.discount        ?? '0',
@@ -134,7 +136,15 @@ export default function ProductEditPage() {
           creator:           p.creator,
           approver:          p.approver,
         })
-        if (cats.success) setCategories(cats.data || [])
+        if (pcData.success && pcData.data?.length > 0) {
+          setCategories(pcData.data)
+        } else if (catsData.success) {
+          setCategories(catsData.data.map(c => ({
+            productCategoryId: c.id,
+            productCategoryName: c.name,
+            categoryId: c.id,
+          })))
+        }
         if (subs.success) setSubcategories(subs.data || [])
       }).catch(() => toast.error('Failed to load product'))
         .finally(() => setFetching(false))
@@ -143,7 +153,12 @@ export default function ProductEditPage() {
 
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }))
 
-  const filteredSubs = subcategories.filter(s => String(s.catId) === String(form.catId))
+  const filteredSubs = (() => {
+    if (!form.catId && !form.productCategoryId) return []
+    const matched = subcategories.filter(s => String(s.catId) === String(form.catId))
+    if (matched.length > 0) return matched
+    return subcategories
+  })()
 
   const handleSave = async () => {
     if (!form.proName.trim()) { toast.error('Product name is required'); return }
@@ -166,6 +181,7 @@ export default function ProductEditPage() {
           description:       form.description,
           catId:             parsedCatId,
           subCatId:          parsedSubCatId,
+          productCategoryId: form.productCategoryId ? parseInt(form.productCategoryId) : null,
           price:             parseFloat(form.price),
           cost:              parseFloat(form.cost),
           discount:          parseFloat(form.discount) || 0,
@@ -398,15 +414,28 @@ export default function ProductEditPage() {
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControl {...tf} fullWidth required disabled={isAdmin}>
-                      <InputLabel>Category</InputLabel>
-                      <Select label="Category" value={form.catId}
-                        onChange={e => { set('catId', e.target.value); set('subCatId', '') }}>
-                        {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                      <InputLabel>Product Category</InputLabel>
+                      <Select label="Product Category" value={form.productCategoryId || form.catId}
+                        onChange={e => {
+                          const selectedPCId = e.target.value
+                          const selectedPC = categories.find(c => String(c.productCategoryId) === String(selectedPCId))
+                          setForm(p => ({
+                            ...p,
+                            productCategoryId: selectedPCId,
+                            catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : selectedPCId,
+                            subCatId: '',
+                          }))
+                        }}>
+                        {categories.map(c => (
+                          <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
+                            {c.productCategoryName}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <FormControl {...tf} fullWidth required disabled={isAdmin || !form.catId}>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin || (!form.catId && !form.productCategoryId)}>
                       <InputLabel>Sub-category</InputLabel>
                       <Select label="Sub-category" value={form.subCatId} onChange={e => set('subCatId', e.target.value)}>
                         {filteredSubs.map(s => <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>)}

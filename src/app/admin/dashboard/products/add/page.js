@@ -69,26 +69,27 @@ export default function AddProductPage() {
   const { userData, user, loading } = useAuth()
   const fileInputRef = useRef(null)
 
-  const [categories,      setCategories]      = useState([])
-  const [subcategories,   setSubcategories]   = useState([])
-  const [uploadingImages, setUploadingImages] = useState(false)
-  const [isSubmitting,    setIsSubmitting]    = useState(false)
-  const [dragOver,        setDragOver]        = useState(false)
+  const [productCategories, setProductCategories] = useState([])
+  const [subcategories,     setSubcategories]     = useState([])
+  const [uploadingImages,   setUploadingImages]   = useState(false)
+  const [isSubmitting,      setIsSubmitting]      = useState(false)
+  const [dragOver,          setDragOver]          = useState(false)
 
   const [form, setForm] = useState({
-    name:        '',
-    description: '',
-    price:       '',
-    discount:    '0',
-    catId:       '',
-    subCatId:    '',
-    images:      [],
-    stock:       '0',
+    name:              '',
+    description:       '',
+    price:             '',
+    discount:          '0',
+    productCategoryId: '',
+    catId:             '',
+    subCatId:          '',
+    images:            [],
+    stock:             '0',
     // Product details
-    brandName:   '',
-    manufacturer: '',
-    productType: '',
-    modelNumber: '',
+    brandName:         '',
+    manufacturer:      '',
+    productType:       '',
+    modelNumber:       '',
     // Physical details
     sizeName:          '',
     size:              '',
@@ -116,17 +117,40 @@ export default function AddProductPage() {
   useEffect(() => {
     if (!userData?.uid) return
     Promise.all([
-      fetch('/api/products?type=categories').then(r => r.json()),
+      fetch('/api/products?type=productcategories').then(r => r.json()),
       fetch('/api/products?type=subcategories').then(r => r.json()),
-    ]).then(([cats, subs]) => {
-      if (cats.success) setCategories(cats.data || [])
-      if (subs.success) setSubcategories(subs.data || [])
-    }).catch(() => {})
+      fetch('/api/products?type=categories').then(r => r.json()),
+    ]).then(([pcData, subsData, catsData]) => {
+      if (pcData.success && pcData.data?.length > 0) {
+        setProductCategories(pcData.data)
+      } else if (catsData.success) {
+        setProductCategories(catsData.data.map(c => ({
+          productCategoryId: c.id,
+          productCategoryName: c.name,
+          categoryId: c.id,
+        })))
+      }
+      if (subsData.success) setSubcategories(subsData.data || [])
+    }).catch(e => console.error('Categories fetch error:', e))
   }, [userData?.uid])
 
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }))
     if (errors[field]) setErrors(p => ({ ...p, [field]: '' }))
+  }
+
+  const handleCategoryChange = (e) => {
+    const selectedPCId = e.target.value
+    const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(selectedPCId))
+    setForm(p => ({
+      ...p,
+      productCategoryId: selectedPCId,
+      catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : (selectedPCId ? String(selectedPCId) : ''),
+      subCatId: '',
+    }))
+    if (errors.catId || errors.productCategoryId) {
+      setErrors(p => ({ ...p, catId: '', productCategoryId: '' }))
+    }
   }
 
   // ── Variations helpers ──────────────────────────────────────────────────────
@@ -160,10 +184,10 @@ export default function AddProductPage() {
   // ── Validation ──────────────────────────────────────────────────────────────
   const validate = () => {
     const e = {}
-    if (!form.name.trim())                           e.name     = 'Item name is required'
-    if (!form.catId)                                 e.catId    = 'Category is required'
-    if (form.catId && !form.subCatId)                e.subCatId = 'Sub-category is required'
-    if (!form.price || parseFloat(form.price) <= 0) e.price    = 'Valid price is required'
+    if (!form.name.trim())                                           e.name     = 'Item name is required'
+    if (!form.productCategoryId && !form.catId)                      e.catId    = 'Category is required'
+    if ((form.productCategoryId || form.catId) && !form.subCatId)   e.subCatId = 'Sub-category is required'
+    if (!form.price || parseFloat(form.price) <= 0)                  e.price    = 'Valid price is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -183,37 +207,38 @@ export default function AddProductPage() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type:        'product',
-          proName:      form.name,
-          description:  form.description,
-          catId:        parseInt(form.catId),
-          subCatId:     parseInt(form.subCatId),
-          price:        parseFloat(form.price),
-          cost:         parseFloat(form.price),   // cost = price for restaurants
-          discount:     parseFloat(form.discount) || 0,
+          type:              'product',
+          proName:            form.name,
+          description:        form.description,
+          catId:              parseInt(form.catId) || 12,
+          subCatId:           parseInt(form.subCatId),
+          productCategoryId:  form.productCategoryId ? parseInt(form.productCategoryId) : null,
+          price:              parseFloat(form.price),
+          cost:               parseFloat(form.price),   // cost = price for restaurants
+          discount:           parseFloat(form.discount) || 0,
           sku,
-          barcode:      sku,
-          stock:        parseInt(form.stock) || 0,
-          qnty:         parseInt(form.stock) || 0,
-          proImages:    form.images,
-          vendorId:     userData.uid,
-          createdById:  userData.uid,
-          variations:   validVariations.length > 0 ? validVariations : null,
+          barcode:            sku,
+          stock:              parseInt(form.stock) || 0,
+          qnty:               parseInt(form.stock) || 0,
+          proImages:          form.images,
+          vendorId:           userData.uid,
+          createdById:        userData.uid,
+          variations:         validVariations.length > 0 ? validVariations : null,
           // Product details
-          brandName:    form.brandName    || null,
-          manufacturer: form.manufacturer || null,
-          productType:  form.productType   || null,
-          modelNumber:  form.modelNumber   || null,
+          brandName:          form.brandName    || null,
+          manufacturer:       form.manufacturer || null,
+          productType:        form.productType   || null,
+          modelNumber:        form.modelNumber   || null,
           // Physical details
-          sizeName:          form.sizeName        || null,
-          size:              form.size            || null,
-          color:             form.color           || null,
-          conditionType:     form.conditionType   || null,
-          productDimensions: form.productDimensions || null,
-          packageWeight:     form.packageWeight   || null,
-          warranty:          form.warranty        || null,
+          sizeName:           form.sizeName        || null,
+          size:               form.size            || null,
+          color:              form.color           || null,
+          conditionType:      form.conditionType   || null,
+          productDimensions:  form.productDimensions || null,
+          packageWeight:      form.packageWeight   || null,
+          warranty:           form.warranty        || null,
           // Ingredients / notes
-          ingredients:       form.ingredients     || null,
+          ingredients:        form.ingredients     || null,
         }),
       })
       const data = await res.json()
@@ -241,7 +266,13 @@ export default function AddProductPage() {
     )
   }
 
-  const filteredSubs = subcategories.filter(s => String(s.catId) === String(form.catId))
+  // Filter subcategories by catId of the selected product category
+  const filteredSubs = (() => {
+    if (!form.catId && !form.productCategoryId) return []
+    const matched = subcategories.filter(s => String(s.catId) === String(form.catId))
+    if (matched.length > 0) return matched
+    return subcategories
+  })()
 
   return (
     <DashboardLayout>
@@ -251,17 +282,17 @@ export default function AddProductPage() {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <IconButton size="small" onClick={() => router.back()}
-              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
               <ArrowBackOutlinedIcon fontSize="small" />
             </IconButton>
             <Box>
               <Typography variant="h5" fontWeight={700}>Add Menu Item</Typography>
-              <Typography variant="body2" color="text.secondary">Create a new restaurant listing</Typography>
+              <Typography variant="body2" color="text.secondary">Create a new product or restaurant listing</Typography>
             </Box>
           </Box>
           <Button type="submit" variant="contained" disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 2, textTransform: 'none', fontWeight: 700, px: 3 }}>
             {isSubmitting ? 'Saving…' : 'Save Item'}
           </Button>
         </Box>
@@ -284,22 +315,30 @@ export default function AddProductPage() {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <FormControl {...tf} fullWidth required error={!!errors.catId} sx={{ minWidth: 300 }}>
-                    <InputLabel>Category</InputLabel>
-                    <Select label="Category" value={form.catId}
-                      onChange={e => { set('catId', e.target.value); set('subCatId', '') }}>
+                    <InputLabel>Product Category</InputLabel>
+                    <Select label="Product Category" value={form.productCategoryId}
+                      onChange={handleCategoryChange}>
                       <MenuItem value=""><em>Select category…</em></MenuItem>
-                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                      {productCategories.map(c => (
+                        <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
+                          {c.productCategoryName}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {errors.catId && <Typography variant="caption" color="error" mt={0.5}>{errors.catId}</Typography>}
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <FormControl {...tf} fullWidth required disabled={!form.catId} error={!!errors.subCatId} sx={{ minWidth: 300 }}>
+                  <FormControl {...tf} fullWidth required disabled={!form.productCategoryId} error={!!errors.subCatId} sx={{ minWidth: 300 }}>
                     <InputLabel>Sub-category</InputLabel>
                     <Select label="Sub-category" value={form.subCatId}
                       onChange={e => set('subCatId', e.target.value)}>
                       <MenuItem value=""><em>Select sub-category…</em></MenuItem>
-                      {filteredSubs.map(s => <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>)}
+                      {filteredSubs.map(s => (
+                        <MenuItem key={s.subCatId} value={s.subCatId}>
+                          {s.subCatName}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {errors.subCatId && <Typography variant="caption" color="error" mt={0.5}>{errors.subCatId}</Typography>}
                   </FormControl>
