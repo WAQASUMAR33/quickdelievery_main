@@ -34,6 +34,7 @@ import ListItemIcon        from '@mui/material/ListItemIcon'
 import ListItemText        from '@mui/material/ListItemText'
 import Menu                from '@mui/material/Menu'
 import MenuItem            from '@mui/material/MenuItem'
+import Paper               from '@mui/material/Paper'
 import Stack               from '@mui/material/Stack'
 import TextField           from '@mui/material/TextField'
 import Toolbar             from '@mui/material/Toolbar'
@@ -720,52 +721,87 @@ export default function CustomerDashboard() {
         </Box>
       </AppBar>
 
-      {/* ── Sub-bar for Mobile Navigation Pills (Visible only on xs/sm/md) ── */}
+      {/* ── Sub-bar for Mobile Search & Navigation Pills (Visible on xs/sm/md) ── */}
       <Box
         sx={{
           display: { xs: 'block', lg: 'none' },
           bgcolor: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
-          px: 2,
-          py: 1,
-          overflowX: 'auto',
-          '&::-webkit-scrollbar': { display: 'none' },
-          scrollbarWidth: 'none',
+          px: { xs: 1.5, sm: 2 },
+          py: 1.25,
         }}
       >
-        <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
-          {navTabs.map((tab) => {
-            const isActive = effectiveTab === tab.id
-            return (
-              <Chip
-                key={tab.id}
-                icon={isActive ? tab.activeIcon : tab.icon}
-                label={tab.label}
-                clickable
-                onClick={() => handleTabSwitch(tab.id)}
-                sx={{
-                  fontWeight: isActive ? 800 : 600,
-                  fontSize: 12.5,
-                  borderRadius: '9999px',
-                  bgcolor: isActive ? THEME.primaryDark : '#f1f5f9',
-                  color: isActive ? '#ffffff' : 'text.primary',
-                  '& .MuiChip-icon': { color: isActive ? '#ffffff' : 'inherit' },
-                  '&:hover': {
-                    bgcolor: isActive ? THEME.primaryDark : '#e2e8f0',
-                  },
-                }}
-              />
-            )
-          })}
-        </Stack>
+        {/* Mobile Search Input */}
+        <Box sx={{ mb: 1, display: { xs: 'block', sm: 'none' } }}>
+          <TextField
+            size="small"
+            fullWidth
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search food, groceries, stores…"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: THEME.primary, fontSize: 18 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '9999px',
+                bgcolor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                height: 38,
+                fontSize: 13,
+                '&:hover fieldset': { borderColor: THEME.primary },
+                '&.Mui-focused fieldset': { borderColor: THEME.primary },
+              },
+            }}
+          />
+        </Box>
+
+        {/* Swipeable Tabs */}
+        <Box
+          sx={{
+            overflowX: 'auto',
+            '&::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
+          }}
+        >
+          <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
+            {navTabs.map((tab) => {
+              const isActive = effectiveTab === tab.id
+              return (
+                <Chip
+                  key={tab.id}
+                  icon={isActive ? tab.activeIcon : tab.icon}
+                  label={tab.label}
+                  clickable
+                  onClick={() => handleTabSwitch(tab.id)}
+                  sx={{
+                    fontWeight: isActive ? 800 : 600,
+                    fontSize: 12.5,
+                    borderRadius: '9999px',
+                    bgcolor: isActive ? THEME.primaryDark : '#f1f5f9',
+                    color: isActive ? '#ffffff' : 'text.primary',
+                    '& .MuiChip-icon': { color: isActive ? '#ffffff' : 'inherit' },
+                    '&:hover': {
+                      bgcolor: isActive ? THEME.primaryDark : '#e2e8f0',
+                    },
+                  }}
+                />
+              )
+            })}
+          </Stack>
+        </Box>
       </Box>
 
       {/* ── Main Content Area (Full-Width Container) ── */}
-      <Box sx={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, width: '100%', pb: { xs: 8, md: 2 }, display: 'flex', flexDirection: 'column' }}>
 
         {/* ── HIGH-END HERO SECTION (Matching Violet/Purple Banking UI Theme) ── */}
         {effectiveTab === 'products' && (
-          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, pb: 0, width: '100%' }}>
+          <Box sx={{ p: { xs: 1.5, sm: 3, md: 4, lg: 4, xl: 5 }, pb: 0, width: '100%' }}>
             <Box
               sx={{
                 position: 'relative',
@@ -985,6 +1021,113 @@ export default function CustomerDashboard() {
           <ListItemText primaryTypographyProps={{ fontWeight: 700 }}>Sign Out</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* ── Fixed Mobile Bottom Navigation Bar (Visible on phones & tablets < md) ── */}
+      <Paper
+        elevation={10}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1150,
+          display: { xs: 'flex', md: 'none' },
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          py: 0.75,
+          px: 1,
+          bgcolor: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid #e2e8f0',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <Button
+          onClick={() => handleTabSwitch('products')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 56,
+            p: 0.5,
+            color: effectiveTab === 'products' ? THEME.primaryDark : 'text.secondary',
+            textTransform: 'none',
+            fontSize: 10.5,
+            fontWeight: effectiveTab === 'products' ? 800 : 600,
+          }}
+        >
+          {effectiveTab === 'products' ? <HomeIcon sx={{ fontSize: 22 }} /> : <HomeOutlinedIcon sx={{ fontSize: 22 }} />}
+          Explore
+        </Button>
+
+        <Button
+          onClick={() => handleTabSwitch('orders')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 56,
+            p: 0.5,
+            color: effectiveTab === 'orders' ? THEME.primaryDark : 'text.secondary',
+            textTransform: 'none',
+            fontSize: 10.5,
+            fontWeight: effectiveTab === 'orders' ? 800 : 600,
+          }}
+        >
+          {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 22 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />}
+          Orders
+        </Button>
+
+        {/* Center Prominent Cart Button */}
+        <Button
+          onClick={() => setShowCart(true)}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 56,
+            p: 0.5,
+            color: THEME.primaryDark,
+            textTransform: 'none',
+            fontSize: 10.5,
+            fontWeight: 800,
+          }}
+        >
+          <Badge
+            badgeContent={getTotalItems()}
+            sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, fontSize: 9, minWidth: 16, height: 16 } }}
+          >
+            <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />
+          </Badge>
+          Basket
+        </Button>
+
+        <Button
+          onClick={() => handleTabSwitch('wishlist')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 56,
+            p: 0.5,
+            color: effectiveTab === 'wishlist' ? THEME.primaryDark : 'text.secondary',
+            textTransform: 'none',
+            fontSize: 10.5,
+            fontWeight: effectiveTab === 'wishlist' ? 800 : 600,
+          }}
+        >
+          {effectiveTab === 'wishlist' ? <FavoriteIcon sx={{ fontSize: 22 }} /> : <FavoriteBorderIcon sx={{ fontSize: 22 }} />}
+          Wishlist
+        </Button>
+
+        <Button
+          onClick={() => isGuest ? router.push('/login') : handleTabSwitch('profile')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 56,
+            p: 0.5,
+            color: effectiveTab === 'profile' ? THEME.primaryDark : 'text.secondary',
+            textTransform: 'none',
+            fontSize: 10.5,
+            fontWeight: effectiveTab === 'profile' ? 800 : 600,
+          }}
+        >
+          {effectiveTab === 'profile' ? <PersonIcon sx={{ fontSize: 22 }} /> : <PersonOutlineIcon sx={{ fontSize: 22 }} />}
+          {isGuest ? 'Sign In' : 'Account'}
+        </Button>
+      </Paper>
 
     </Box>
   )

@@ -842,7 +842,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">What&apos;s on your mind?</h2>
             <div className="relative">
-              <div className="flex gap-4 flex-wrap pb-4">
+              <div className="flex gap-3 sm:gap-4 overflow-x-auto sm:flex-wrap pb-3 scrollbar-hide">
                 <button
                   onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null) }}
                   className={`flex-shrink-0 flex flex-col items-center p-3 rounded-2xl border transition-all duration-300 min-w-[100px] ${
@@ -927,7 +927,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                       : 'All Sub-categories'}
                   </h3>
                   <div className="relative">
-                    <div className="flex gap-4 flex-wrap pb-4">
+                    <div className="flex gap-3 sm:gap-4 overflow-x-auto sm:flex-wrap pb-3 scrollbar-hide">
                     {/* All sub-categories option */}
                     <button
                       type="button"
