@@ -27,6 +27,7 @@ import InputLabel       from '@mui/material/InputLabel'
 import MenuItem         from '@mui/material/MenuItem'
 import Paper            from '@mui/material/Paper'
 import Select           from '@mui/material/Select'
+import Stack            from '@mui/material/Stack'
 import Table            from '@mui/material/Table'
 import TableBody        from '@mui/material/TableBody'
 import TableCell        from '@mui/material/TableCell'
@@ -38,6 +39,7 @@ import ToggleButton     from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
+import toast            from 'react-hot-toast'
 
 import AddIcon                  from '@mui/icons-material/Add'
 import AttachMoneyIcon          from '@mui/icons-material/AttachMoney'
@@ -57,7 +59,8 @@ import UploadOutlinedIcon       from '@mui/icons-material/UploadOutlined'
 import ViewListOutlinedIcon     from '@mui/icons-material/ViewListOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
 
-const BRAND = '#39772A'
+const BRAND      = '#39772A'
+const BRAND_DARK = '#2E5F22'
 const DROP_MIN_W = 300
 
 const VendorProductManagement = () => {
