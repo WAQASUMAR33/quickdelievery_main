@@ -361,7 +361,7 @@ export default function CustomerDashboard() {
     switch (effectiveTab) {
       case 'products':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <ProductCatalog
               searchQuery={searchQuery}
               onToggleFavorite={() => {}}
@@ -371,19 +371,19 @@ export default function CustomerDashboard() {
         )
       case 'orders':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <OrderHistory />
           </Box>
         )
       case 'wishlist':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <WishlistPage onAddToCart={(p) => addToCart(p)} />
           </Box>
         )
       case 'favorites':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <Typography variant="h5" fontWeight={800} mb={3}>
               Favorite Stores & Kitchens
             </Typography>
@@ -420,7 +420,7 @@ export default function CustomerDashboard() {
         )
       case 'profile':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 } }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
             <CustomerProfile />
           </Box>
         )
@@ -456,7 +456,7 @@ export default function CustomerDashboard() {
           color: 'text.primary',
         }}
       >
-        <Box sx={{ maxWidth: 1440, width: '100%', mx: 'auto', px: { xs: 1.5, sm: 2.5, lg: 3.5 } }}>
+        <Box sx={{ width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 } }}>
           <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 62, md: 72 } }}>
 
             {/* ── Left: Brand Logo & Mobile Toggle ── */}
@@ -761,11 +761,11 @@ export default function CustomerDashboard() {
       </Box>
 
       {/* ── Main Content Area (Full-Width Container) ── */}
-      <Box sx={{ flex: 1, width: '100%', maxWidth: 1440, mx: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column' }}>
 
         {/* ── HIGH-END HERO SECTION (Matching Violet/Purple Banking UI Theme) ── */}
         {effectiveTab === 'products' && (
-          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, pb: 0 }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, pb: 0, width: '100%' }}>
             <Box
               sx={{
                 position: 'relative',
