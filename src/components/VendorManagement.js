@@ -80,16 +80,13 @@ const EMPTY_FORM = { username: '', email: '', phoneNumber: '', emailVerification
 function StatCard({ label, value, sub, Icon, color }) {
   return (
     <Paper
-      elevation={0}
+      variant="outlined"
       sx={{
-        p: 2.5,
-        borderRadius: 2.5,
-        border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: '#ffffff',
+        p: 2,
+        borderRadius: 0,
+        borderTop: `3px solid ${color}`,
         height: '100%',
-        transition: 'all 0.2s ease',
-        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 20px rgba(0,0,0,0.05)' },
+        bgcolor: '#ffffff',
       }}
     >
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
@@ -102,8 +99,8 @@ function StatCard({ label, value, sub, Icon, color }) {
           </Typography>
           <Typography variant="caption" color="text.secondary">{sub}</Typography>
         </Box>
-        <Box sx={{ bgcolor: `${color}15`, color, borderRadius: 2, p: 1.25, display: 'flex' }}>
-          <Icon sx={{ fontSize: 24 }} />
+        <Box sx={{ bgcolor: `${color}15`, color, borderRadius: 0, p: 1, display: 'flex' }}>
+          <Icon sx={{ fontSize: 22 }} />
         </Box>
       </Stack>
     </Paper>
@@ -113,7 +110,7 @@ function StatCard({ label, value, sub, Icon, color }) {
 // ── Profile field ─────────────────────────────────────────────────────────────
 function ProfileField({ label, value }) {
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%', bgcolor: 'grey.50' }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 0, height: '100%', bgcolor: 'grey.50' }}>
       <Typography variant="caption" color="text.disabled" fontWeight={600} textTransform="uppercase" letterSpacing={0.4} display="block" mb={0.5}>
         {label}
       </Typography>
@@ -385,15 +382,15 @@ export default function VendorManagement() {
       </Box>
 
       {/* ── Filters ── */}
-      <Paper elevation={0} sx={{ p: 2.5, mb: 2.5, borderRadius: 2.5, border: '1px solid', borderColor: 'divider' }}>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
           <TextField
             size="small" placeholder="Search by name or email…" value={search}
             onChange={e => { setSearch(e.target.value); setPage(0) }}
-            sx={{ flex: 1, ...fieldSx, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            sx={{ flex: 1, ...fieldSx, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} /></InputAdornment> }}
           />
-          <FormControl size="small" sx={{ minWidth: 160, ...fieldSx, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+          <FormControl size="small" sx={{ minWidth: 160, ...fieldSx, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
             <InputLabel>Verification</InputLabel>
             <Select label="Verification" value={filterVerification} onChange={e => { setFilterVerification(e.target.value); setPage(0) }}>
               <MenuItem value="all">All Vendors</MenuItem>
@@ -404,13 +401,13 @@ export default function VendorManagement() {
           <Chip
             label={`${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
             size="small"
-            sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 700, borderRadius: 1.5, px: 0.5 }}
+            sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 700, borderRadius: 0, px: 0.5 }}
           />
         </Stack>
       </Paper>
 
       {/* ── Table ── */}
-      <Paper elevation={0} sx={{ borderRadius: 2.5, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ borderRadius: 0, overflow: 'hidden' }}>
         <TableContainer>
           <Table size="medium">
             <TableHead>
@@ -516,7 +513,7 @@ export default function VendorManagement() {
 
 
       {/* ── View Dialog ── */}
-      <Dialog open={!!viewTarget} onClose={() => setViewTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+      <Dialog open={!!viewTarget} onClose={() => setViewTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
         <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}>Vendor Details</DialogTitle>
         <DialogContent sx={{ pt: '20px !important' }}>
           {viewTarget && (
@@ -530,8 +527,8 @@ export default function VendorManagement() {
                   <Typography variant="caption" color="text.secondary">UID: {viewTarget.uid}</Typography>
                 </Box>
                 {viewTarget.emailVerification
-                  ? <Chip label="Verified" size="small" sx={{ bgcolor: '#dcfce7', color: '#16a34a', fontWeight: 600, borderRadius: 1 }} />
-                  : <Chip label="Pending"  size="small" sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600, borderRadius: 1 }} />
+                  ? <Chip label="Verified" size="small" sx={{ bgcolor: '#dcfce7', color: '#16a34a', fontWeight: 600, borderRadius: 0 }} />
+                  : <Chip label="Pending"  size="small" sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600, borderRadius: 0 }} />
                 }
               </Stack>
               <Divider />
@@ -543,7 +540,7 @@ export default function VendorManagement() {
                   { label: 'Account Status', value: viewTarget.status !== 'inactive' ? 'Active' : 'Inactive', Icon: VerifiedUserOutlinedIcon },
                 ].map(({ label, value, Icon }) => (
                   <Grid item xs={12} sm={6} key={label}>
-                    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+                    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 0, bgcolor: 'grey.50' }}>
                       <Stack direction="row" spacing={1} alignItems="center" mb={0.25}>
                         <Icon sx={{ fontSize: 14, color: 'text.disabled' }} />
                         <Typography variant="caption" color="text.disabled" fontWeight={600} textTransform="uppercase" letterSpacing={0.4}>{label}</Typography>
@@ -557,12 +554,12 @@ export default function VendorManagement() {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Button onClick={() => setViewTarget(null)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2 }}>Close</Button>
+          <Button onClick={() => setViewTarget(null)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 0 }}>Close</Button>
         </DialogActions>
       </Dialog>
 
       {/* ── Toggle Verification Confirm ── */}
-      <Dialog open={!!toggleTarget} onClose={() => !toggling && setToggleTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+      <Dialog open={!!toggleTarget} onClose={() => !toggling && setToggleTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
         <DialogTitle sx={{ fontWeight: 700 }}>
           {toggleTarget?.emailVerification ? 'Revoke Verification' : 'Verify Vendor'}
         </DialogTitle>
@@ -575,9 +572,9 @@ export default function VendorManagement() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button onClick={() => setToggleTarget(null)} disabled={toggling} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
+          <Button onClick={() => setToggleTarget(null)} disabled={toggling} sx={{ textTransform: 'none', borderRadius: 0 }}>Cancel</Button>
           <Button variant="contained" onClick={handleToggle} disabled={toggling}
-            sx={{ bgcolor: toggleTarget?.emailVerification ? '#b45309' : '#16a34a', '&:hover': { bgcolor: toggleTarget?.emailVerification ? '#92400e' : '#15803d' }, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            sx={{ bgcolor: toggleTarget?.emailVerification ? '#b45309' : '#16a34a', '&:hover': { bgcolor: toggleTarget?.emailVerification ? '#92400e' : '#15803d' }, borderRadius: 0, textTransform: 'none', fontWeight: 600 }}
             startIcon={toggling ? <CircularProgress size={14} color="inherit" /> : null}>
             {toggling ? 'Updating…' : 'Confirm'}
           </Button>
@@ -585,7 +582,7 @@ export default function VendorManagement() {
       </Dialog>
 
       {/* ── Delete Confirm ── */}
-      <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+      <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
         <DialogTitle sx={{ fontWeight: 700 }}>Delete Vendor</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -593,9 +590,9 @@ export default function VendorManagement() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button onClick={() => setDeleteTarget(null)} disabled={deleting} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
+          <Button onClick={() => setDeleteTarget(null)} disabled={deleting} sx={{ textTransform: 'none', borderRadius: 0 }}>Cancel</Button>
           <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 600 }}
             startIcon={deleting ? <CircularProgress size={14} color="inherit" /> : null}>
             {deleting ? 'Deleting…' : 'Delete'}
           </Button>
@@ -609,7 +606,7 @@ export default function VendorManagement() {
         maxWidth="md"
         fullWidth
         scroll="paper"
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 0 } }}
         sx={{
           '& .MuiDialog-paper': {
             height: '90vh',
