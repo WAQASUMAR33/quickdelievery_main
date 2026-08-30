@@ -670,77 +670,73 @@ const VendorProductManagement = () => {
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
                 Basic Information & Category
               </Typography>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth required label="Product Name *" value={formData.proName}
-                    onChange={e => setFormData({ ...formData, proName: e.target.value })}
-                    {...field()} />
-                </Grid>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                <TextField
+                  size="small" fullWidth label="Product Name *" value={formData.proName}
+                  onChange={e => setFormData({ ...formData, proName: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', md: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
 
                 {/* Category (Product Category) */}
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Product Category *</InputLabel>
-                    <Select value={formData.catId} label="Product Category *"
-                      onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
-                      sx={{ borderRadius: 0 }}>
-                      <MenuItem value=""><em>Select Category</em></MenuItem>
-                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
+                  <InputLabel>Product Category *</InputLabel>
+                  <Select value={formData.catId} label="Product Category *"
+                    onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
+                    sx={{ borderRadius: 0 }}>
+                    <MenuItem value=""><em>Select Category</em></MenuItem>
+                    {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                  </Select>
+                </FormControl>
 
                 {/* Subcategory */}
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth required disabled={!formData.catId}>
-                    <InputLabel>Sub-category *</InputLabel>
-                    <Select value={formData.subCatId} label="Sub-category *"
-                      onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
-                      sx={{ borderRadius: 0 }}>
-                      <MenuItem value=""><em>Select Sub-category</em></MenuItem>
-                      {subcategories.filter(s => {
-                        const selCat = categories.find(c => String(c.id) === String(formData.catId))
-                        const targetCatId = selCat?.catId || formData.catId
-                        return String(s.catId) === String(targetCatId)
-                      }).map(s => (
-                        <MenuItem key={s.subCatId} value={s.subCatId.toString()}>{s.subCatName}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                <FormControl size="small" fullWidth disabled={!formData.catId} sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
+                  <InputLabel>Sub-category *</InputLabel>
+                  <Select value={formData.subCatId} label="Sub-category *"
+                    onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
+                    sx={{ borderRadius: 0 }}>
+                    <MenuItem value=""><em>Select Sub-category</em></MenuItem>
+                    {subcategories.filter(s => {
+                      const selCat = categories.find(c => String(c.id) === String(formData.catId))
+                      const targetCatId = selCat?.catId || formData.catId
+                      return String(s.catId) === String(targetCatId)
+                    }).map(s => (
+                      <MenuItem key={s.subCatId} value={s.subCatId.toString()}>{s.subCatName}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
                 {/* Pricing & Inventory: 4 Equal Columns */}
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth required label="Base Price *" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.price}
-                    onChange={e => setFormData({ ...formData, price: e.target.value })}
-                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                    {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Cost Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.cost}
-                    onChange={e => setFormData({ ...formData, cost: e.target.value })}
-                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                    {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Discount %" type="number" inputProps={{ min: 0, max: 100 }} value={formData.discount}
-                    onChange={e => setFormData({ ...formData, discount: e.target.value })}
-                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                    {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth required label="Stock Quantity *" type="number" inputProps={{ min: 0 }} value={formData.stock}
-                    onChange={e => setFormData({ ...formData, stock: e.target.value, qnty: e.target.value })}
-                    {...field()} />
-                </Grid>
+                <TextField
+                  size="small" fullWidth label="Base Price *" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.price}
+                  onChange={e => setFormData({ ...formData, price: e.target.value })}
+                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField
+                  size="small" fullWidth label="Cost Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.cost}
+                  onChange={e => setFormData({ ...formData, cost: e.target.value })}
+                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField
+                  size="small" fullWidth label="Discount %" type="number" inputProps={{ min: 0, max: 100 }} value={formData.discount}
+                  onChange={e => setFormData({ ...formData, discount: e.target.value })}
+                  InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField
+                  size="small" fullWidth label="Stock Quantity *" type="number" inputProps={{ min: 0 }} value={formData.stock}
+                  onChange={e => setFormData({ ...formData, stock: e.target.value, qnty: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
 
                 {/* Full Width Description */}
-                <Grid item xs={12}>
-                  <TextField fullWidth multiline rows={3} label="Product Description" placeholder="Describe the item, ingredients, key highlights…" value={formData.description}
-                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    {...field()} />
-                </Grid>
-              </Grid>
+                <TextField
+                  size="small" fullWidth multiline rows={3} label="Product Description" placeholder="Describe the item, ingredients, key highlights…" value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, gridColumn: '1 / -1', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+              </Box>
             </Card>
 
             {/* ── SECTION 2: Specifications & Attributes ── */}
@@ -748,80 +744,81 @@ const VendorProductManagement = () => {
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
                 Specifications & Attributes
               </Typography>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
-                    onChange={e => setFormData({ ...formData, brandName: e.target.value })} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
-                    onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth>
-                    <InputLabel>Product Type</InputLabel>
-                    <Select value={formData.productType} label="Product Type"
-                      onChange={e => setFormData({ ...formData, productType: e.target.value })} sx={{ borderRadius: 0 }}>
-                      <MenuItem value="">Select Product Type</MenuItem>
-                      <MenuItem value="Physical">Physical Product</MenuItem>
-                      <MenuItem value="Digital">Digital Product</MenuItem>
-                      <MenuItem value="Service">Service</MenuItem>
-                      <MenuItem value="Subscription">Subscription</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
-                    onChange={e => setFormData({ ...formData, modelNumber: e.target.value })} {...field()} />
-                </Grid>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                <TextField
+                  size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
+                  onChange={e => setFormData({ ...formData, brandName: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField
+                  size="small" fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
+                  onChange={e => setFormData({ ...formData, manufacturer: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
+                  <InputLabel>Product Type</InputLabel>
+                  <Select value={formData.productType} label="Product Type"
+                    onChange={e => setFormData({ ...formData, productType: e.target.value })} sx={{ borderRadius: 0 }}>
+                    <MenuItem value=""><em>Select Product Type</em></MenuItem>
+                    <MenuItem value="Physical">Physical Product</MenuItem>
+                    <MenuItem value="Digital">Digital Product</MenuItem>
+                    <MenuItem value="Service">Service</MenuItem>
+                    <MenuItem value="Subscription">Subscription</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small" fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
+                  onChange={e => setFormData({ ...formData, modelNumber: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
 
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
-                    onChange={e => setFormData({ ...formData, sizeName: e.target.value })} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth>
-                    <InputLabel>Condition</InputLabel>
-                    <Select value={formData.conditionType} label="Condition"
-                      onChange={e => setFormData({ ...formData, conditionType: e.target.value })} sx={{ borderRadius: 0 }}>
-                      <MenuItem value="">Select Condition</MenuItem>
-                      <MenuItem value="New">New</MenuItem>
-                      <MenuItem value="Used">Used</MenuItem>
-                      <MenuItem value="Refurbished">Refurbished</MenuItem>
-                      <MenuItem value="Open Box">Open Box</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
-                    onChange={e => setFormData({ ...formData, productDimensions: e.target.value })} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
-                    onChange={e => setFormData({ ...formData, packageWeight: e.target.value })} {...field()} />
-                </Grid>
+                <TextField
+                  size="small" fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
+                  onChange={e => setFormData({ ...formData, sizeName: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
+                  <InputLabel>Condition</InputLabel>
+                  <Select value={formData.conditionType} label="Condition"
+                    onChange={e => setFormData({ ...formData, conditionType: e.target.value })} sx={{ borderRadius: 0 }}>
+                    <MenuItem value=""><em>Select Condition</em></MenuItem>
+                    <MenuItem value="New">New</MenuItem>
+                    <MenuItem value="Used">Used</MenuItem>
+                    <MenuItem value="Refurbished">Refurbished</MenuItem>
+                    <MenuItem value="Open Box">Open Box</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small" fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
+                  onChange={e => setFormData({ ...formData, productDimensions: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField
+                  size="small" fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
+                  onChange={e => setFormData({ ...formData, packageWeight: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
 
-                <Grid item xs={12} sm={6} md={6}>
-                  <TextField fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
-                    onChange={e => setFormData({ ...formData, warranty: e.target.value })} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Currency</InputLabel>
-                    <Select value={formData.currency} label="Currency"
-                      onChange={e => setFormData({ ...formData, currency: e.target.value })} sx={{ borderRadius: 0 }}>
-                      {[
-                        { v: 'PKR', l: 'PKR — Pakistani Rupee' },
-                        { v: 'USD', l: 'USD — US Dollar' },
-                        { v: 'AED', l: 'AED — UAE Dirham' },
-                        { v: 'SAR', l: 'SAR — Saudi Riyal' },
-                        { v: 'GBP', l: 'GBP — British Pound' },
-                        { v: 'EUR', l: 'EUR — Euro' },
-                      ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
+                <TextField
+                  size="small" fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
+                  onChange={e => setFormData({ ...formData, warranty: e.target.value })}
+                  sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                  <InputLabel>Currency</InputLabel>
+                  <Select value={formData.currency} label="Currency"
+                    onChange={e => setFormData({ ...formData, currency: e.target.value })} sx={{ borderRadius: 0 }}>
+                    {[
+                      { v: 'PKR', l: 'PKR — Pakistani Rupee' },
+                      { v: 'USD', l: 'USD — US Dollar' },
+                      { v: 'AED', l: 'AED — UAE Dirham' },
+                      { v: 'SAR', l: 'SAR — Saudi Riyal' },
+                      { v: 'GBP', l: 'GBP — British Pound' },
+                      { v: 'EUR', l: 'EUR — Euro' },
+                    ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Box>
             </Card>
 
             {/* ── SECTION 3: Size & Color Variants (2 Equal Balanced Columns) ── */}
@@ -829,82 +826,78 @@ const VendorProductManagement = () => {
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
                 Product Variations (Size & Color)
               </Typography>
-              <Grid container spacing={3}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                 {/* Left: Size */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', height: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
-                      <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
-                        sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND } }}>
-                        + Add Custom Size
-                      </Button>
-                    </Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Select Size</InputLabel>
-                      <Select value={formData.size} label="Select Size"
-                        onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
-                        <MenuItem value=""><em>None / Standard</em></MenuItem>
-                        <MenuItem value="Small">Small</MenuItem>
-                        <MenuItem value="Medium">Medium</MenuItem>
-                        <MenuItem value="Large">Large</MenuItem>
-                        <MenuItem value="XL">XL</MenuItem>
-                        <MenuItem value="XXL">XXL</MenuItem>
-                      </Select>
-                    </FormControl>
-                    {formData.size && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
-                          <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
-                        </Box>
-                        <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
+                <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
+                    <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
+                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND }, textTransform: 'none', fontWeight: 600 }}>
+                      + Add Custom Size
+                    </Button>
                   </Box>
-                </Grid>
+                  <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
+                    <InputLabel>Select Size</InputLabel>
+                    <Select value={formData.size} label="Select Size"
+                      onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                      <MenuItem value=""><em>None / Standard</em></MenuItem>
+                      <MenuItem value="Small">Small</MenuItem>
+                      <MenuItem value="Medium">Medium</MenuItem>
+                      <MenuItem value="Large">Large</MenuItem>
+                      <MenuItem value="XL">XL</MenuItem>
+                      <MenuItem value="XXL">XXL</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {formData.size && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
+                        <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
+                      </Box>
+                      <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
 
                 {/* Right: Color */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', height: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
-                      <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
-                        sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' } }}>
-                        + Add Custom Color
-                      </Button>
-                    </Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Select Color</InputLabel>
-                      <Select value={formData.color} label="Select Color"
-                        onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
-                        <MenuItem value=""><em>None / Default</em></MenuItem>
-                        {predefinedColors.map(c => (
-                          <MenuItem key={c.name} value={c.name}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
-                              {c.name}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {formData.color && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }} />
-                          <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
-                        </Box>
-                        <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
+                <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
+                    <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
+                      sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' }, textTransform: 'none', fontWeight: 600 }}>
+                      + Add Custom Color
+                    </Button>
                   </Box>
-                </Grid>
-              </Grid>
+                  <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
+                    <InputLabel>Select Color</InputLabel>
+                    <Select value={formData.color} label="Select Color"
+                      onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                      <MenuItem value=""><em>None / Default</em></MenuItem>
+                      {predefinedColors.map(c => (
+                        <MenuItem key={c.name} value={c.name}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
+                            {c.name}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {formData.color && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }} />
+                        <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
+                      </Box>
+                      <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Card>
 
             {/* ── SECTION 4: Features & Ingredients ── */}
@@ -912,18 +905,19 @@ const VendorProductManagement = () => {
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
                 Key Highlights & Ingredients
               </Typography>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                <Box>
                   <Typography variant="subtitle2" fontWeight={700} mb={1}>Key Bullet Features</Typography>
                   <Stack spacing={1}>
                     {formData.keyFeatures.map((feat, i) => (
                       <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <TextField fullWidth size="small" value={feat} placeholder="e.g. 100% Cotton, Organic, Waterproof"
+                        <TextField size="small" fullWidth value={feat} placeholder="e.g. 100% Cotton, Organic, Waterproof"
                           onChange={e => {
                             const f = [...formData.keyFeatures]; f[i] = e.target.value
                             setFormData({ ...formData, keyFeatures: f })
                           }}
-                          {...field()} />
+                          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                        />
                         <IconButton size="small" color="error"
                           onClick={() => setFormData({ ...formData, keyFeatures: formData.keyFeatures.filter((_, j) => j !== i) })}>
                           <CloseIcon fontSize="small" />
@@ -931,18 +925,19 @@ const VendorProductManagement = () => {
                       </Box>
                     ))}
                     <Button size="small" variant="outlined" onClick={() => setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ''] })}
-                      sx={{ alignSelf: 'flex-start', borderRadius: 0, borderColor: BRAND, color: BRAND }}>
+                      sx={{ alignSelf: 'flex-start', borderRadius: 0, borderColor: BRAND, color: BRAND, textTransform: 'none', fontWeight: 600 }}>
                       + Add Feature Bullet
                     </Button>
                   </Stack>
-                </Grid>
-                <Grid item xs={12} md={6}>
+                </Box>
+                <Box>
                   <Typography variant="subtitle2" fontWeight={700} mb={1}>Ingredients / Dietary Info</Typography>
-                  <TextField fullWidth multiline rows={4} label="Ingredients List" placeholder="e.g. Flour, Sugar, Milk, Spices, Cocoa Powder…" value={formData.ingredients}
+                  <TextField size="small" fullWidth multiline rows={4} label="Ingredients List" placeholder="e.g. Flour, Sugar, Milk, Spices, Cocoa Powder…" value={formData.ingredients}
                     onChange={e => setFormData({ ...formData, ingredients: e.target.value })}
-                    {...field()} />
-                </Grid>
-              </Grid>
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                </Box>
+              </Box>
             </Card>
 
             {/* ── SECTION 5: Sale Information ── */}
@@ -950,24 +945,23 @@ const VendorProductManagement = () => {
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
                 Promotional & Sale Pricing
               </Typography>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={4}>
-                  <TextField fullWidth label="Special Sale Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.salePrice}
-                    onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
-                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                    {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField fullWidth label="Sale Start Date" type="date" value={formData.saleStartDate ? formData.saleStartDate.slice(0, 10) : ''}
-                    onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }} {...field()} />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField fullWidth label="Sale End Date" type="date" value={formData.saleEndDate ? formData.saleEndDate.slice(0, 10) : ''}
-                    onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }} {...field()} />
-                </Grid>
-              </Grid>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2.5 }}>
+                <TextField size="small" fullWidth label="Special Sale Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.salePrice}
+                  onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
+                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField size="small" fullWidth label="Sale Start Date" type="date" value={formData.saleStartDate ? formData.saleStartDate.slice(0, 10) : ''}
+                  onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+                <TextField size="small" fullWidth label="Sale End Date" type="date" value={formData.saleEndDate ? formData.saleEndDate.slice(0, 10) : ''}
+                  onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+              </Box>
             </Card>
 
             {/* ── SECTION 6: Product Images ── */}
