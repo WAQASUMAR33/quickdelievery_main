@@ -35,7 +35,10 @@ export default function VendorsPage() {
 
   return (
     <DashboardLayout>
-      <VendorManagement />
+      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <VendorManagement />
+      </Box>
     </DashboardLayout>
   )
 }
+
