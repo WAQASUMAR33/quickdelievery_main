@@ -102,9 +102,19 @@ const VendorProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/products?type=categories')
-      const r = await res.json()
-      setCategories(r.success ? (r.data || []) : [])
+      const [pcRes, catRes] = await Promise.all([
+        fetch('/api/products?type=productcategories').then(r => r.json()),
+        fetch('/api/products?type=categories').then(r => r.json()),
+      ])
+      if (pcRes.success && pcRes.data?.length > 0) {
+        setCategories(pcRes.data.map(c => ({
+          id: c.productCategoryId,
+          name: c.productCategoryName,
+          catId: c.categoryId,
+        })))
+      } else if (catRes.success) {
+        setCategories(catRes.data || [])
+      }
     } catch { setCategories([]) }
   }
 
@@ -138,19 +148,44 @@ const VendorProductManagement = () => {
   const handleEditProduct = async () => {
     if (!selectedProduct) return
     try {
+      const selectedCat = categories.find(c => String(c.id) === String(formData.catId))
       const res = await authFetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'product', id: selectedProduct.proId,
-          proName: formData.proName, description: formData.description,
-          catId: formData.catId, subCatId: parseInt(formData.subCatId),
-          price: parseFloat(formData.price), cost: parseFloat(formData.cost),
-          discount: parseFloat(formData.discount) || 0, sku: formData.sku,
+          type: 'product',
+          id: selectedProduct.proId,
+          proName: formData.proName,
+          description: formData.description,
+          productCategoryId: selectedCat?.id ? parseInt(selectedCat.id) : null,
+          catId: selectedCat?.catId || parseInt(formData.catId),
+          subCatId: parseInt(formData.subCatId),
+          price: parseFloat(formData.price),
+          cost: parseFloat(formData.cost || 0),
+          discount: parseFloat(formData.discount || 0),
+          sku: formData.sku,
           barcode: formData.barcode || formData.sku,
           qnty: parseInt(formData.qnty) || parseInt(formData.stock),
-          stock: parseInt(formData.stock), status: formData.status,
+          stock: parseInt(formData.stock || 0),
+          status: formData.status,
           proImages: formData.images,
+          brandName: formData.brandName || null,
+          manufacturer: formData.manufacturer || null,
+          productType: formData.productType || null,
+          modelNumber: formData.modelNumber || null,
+          sizeName: formData.sizeName || null,
+          conditionType: formData.conditionType || null,
+          productDimensions: formData.productDimensions || null,
+          packageWeight: formData.packageWeight || null,
+          warranty: formData.warranty || null,
+          size: formData.size || null,
+          color: formData.color || null,
+          keyFeatures: formData.keyFeatures?.filter(Boolean) || [],
+          ingredients: formData.ingredients || null,
+          salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
+          saleStartDate: formData.saleStartDate || null,
+          saleEndDate: formData.saleEndDate || null,
+          currency: formData.currency || 'PKR',
         }),
       })
       const r = await res.json()
@@ -158,11 +193,11 @@ const VendorProductManagement = () => {
         setShowEditModal(false)
         setSelectedProduct(null)
         fetchProducts()
-        alert('Product updated successfully!')
+        toast.success('Product updated successfully!')
       } else {
-        alert(`Failed to update product: ${r.error}`)
+        toast.error(`Failed to update product: ${r.error}`)
       }
-    } catch { alert('Error updating product. Please try again.') }
+    } catch { toast.error('Error updating product. Please try again.') }
   }
 
   const promptDeleteProduct = (product) => {
@@ -616,92 +651,111 @@ const VendorProductManagement = () => {
         scroll="paper" maxWidth="lg" fullWidth
         sx={{ '& .MuiDialog-paper': { height: '90vh', maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: 0 } }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <Typography variant="h6" fontWeight={700}>Edit Product</Typography>
-          <IconButton onClick={() => setShowEditModal(false)}><CloseIcon /></IconButton>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 3, py: 2, bgcolor: '#ffffff', borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Box>
+            <Typography variant="h6" fontWeight={800} color="#111827">Edit Product</Typography>
+            <Typography variant="caption" color="text.secondary">SKU: {formData.sku || 'N/A'}</Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setShowEditModal(false)}><CloseIcon /></IconButton>
         </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-            {/* Basic Info */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="Product Name *" value={formData.proName}
-                  onChange={e => setFormData({ ...formData, proName: e.target.value })}
-                  {...field()} />
-              </Grid>
+        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: { xs: 2, md: 3.5 }, bgcolor: 'grey.50' }}>
+          <Stack spacing={3}>
 
-              {/* Category */}
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
-                  <InputLabel>Category *</InputLabel>
-                  <Select value={formData.catId} label="Category *"
-                    onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
-                    sx={{ borderRadius: 0 }}>
-                    <MenuItem value="">Select Category</MenuItem>
-                    {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Subcategory */}
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }} disabled={!formData.catId}>
-                  <InputLabel>Subcategory *</InputLabel>
-                  <Select value={formData.subCatId} label="Subcategory *"
-                    onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
-                    sx={{ borderRadius: 0 }}>
-                    <MenuItem value="">Select Subcategory</MenuItem>
-                    {subcategories.filter(s => s.catId === formData.catId).map(s => (
-                      <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="Price *" type="number" inputProps={{ step: '0.01' }} value={formData.price}
-                  onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
-                  {...field()} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="Cost *" type="number" inputProps={{ step: '0.01' }} value={formData.cost}
-                  onChange={e => setFormData({ ...formData, cost: e.target.value })}
-                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
-                  {...field()} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth label="Stock Quantity *" type="number" value={formData.stock}
-                  onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                  {...field()} />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth multiline rows={4} label="Description" value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  {...field()} />
-              </Grid>
-            </Grid>
-
-            {/* Additional Product Info */}
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} mb={2} sx={{ pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-                Additional Product Information
+            {/* ── SECTION 1: Basic & Category Info ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Basic Information & Category
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={2.5}>
                 <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Brand Name" value={formData.brandName}
+                  <TextField fullWidth required label="Product Name *" value={formData.proName}
+                    onChange={e => setFormData({ ...formData, proName: e.target.value })}
+                    {...field()} />
+                </Grid>
+
+                {/* Category (Product Category) */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Product Category *</InputLabel>
+                    <Select value={formData.catId} label="Product Category *"
+                      onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
+                      sx={{ borderRadius: 0 }}>
+                      <MenuItem value=""><em>Select Category</em></MenuItem>
+                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Subcategory */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth required disabled={!formData.catId}>
+                    <InputLabel>Sub-category *</InputLabel>
+                    <Select value={formData.subCatId} label="Sub-category *"
+                      onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
+                      sx={{ borderRadius: 0 }}>
+                      <MenuItem value=""><em>Select Sub-category</em></MenuItem>
+                      {subcategories.filter(s => {
+                        const selCat = categories.find(c => String(c.id) === String(formData.catId))
+                        const targetCatId = selCat?.catId || formData.catId
+                        return String(s.catId) === String(targetCatId)
+                      }).map(s => (
+                        <MenuItem key={s.subCatId} value={s.subCatId.toString()}>{s.subCatName}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Pricing & Inventory: 4 Equal Columns */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth required label="Base Price *" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.price}
+                    onChange={e => setFormData({ ...formData, price: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                    {...field()} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Cost Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.cost}
+                    onChange={e => setFormData({ ...formData, cost: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                    {...field()} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Discount %" type="number" inputProps={{ min: 0, max: 100 }} value={formData.discount}
+                    onChange={e => setFormData({ ...formData, discount: e.target.value })}
+                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                    {...field()} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth required label="Stock Quantity *" type="number" inputProps={{ min: 0 }} value={formData.stock}
+                    onChange={e => setFormData({ ...formData, stock: e.target.value, qnty: e.target.value })}
+                    {...field()} />
+                </Grid>
+
+                {/* Full Width Description */}
+                <Grid item xs={12}>
+                  <TextField fullWidth multiline rows={3} label="Product Description" placeholder="Describe the item, ingredients, key highlights…" value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    {...field()} />
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* ── SECTION 2: Specifications & Attributes ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Specifications & Attributes
+              </Typography>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
                     onChange={e => setFormData({ ...formData, brandName: e.target.value })} {...field()} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Manufacturer" value={formData.manufacturer}
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
                     onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} {...field()} />
                 </Grid>
-
-                {/* Product Type */}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth>
                     <InputLabel>Product Type</InputLabel>
                     <Select value={formData.productType} label="Product Type"
                       onChange={e => setFormData({ ...formData, productType: e.target.value })} sx={{ borderRadius: 0 }}>
@@ -713,21 +767,19 @@ const VendorProductManagement = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Model Number" value={formData.modelNumber}
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
                     onChange={e => setFormData({ ...formData, modelNumber: e.target.value })} {...field()} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Size Name" placeholder="e.g., Small, Medium, Large" value={formData.sizeName}
+
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
                     onChange={e => setFormData({ ...formData, sizeName: e.target.value })} {...field()} />
                 </Grid>
-
-                {/* Condition Type */}
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
-                    <InputLabel>Condition Type</InputLabel>
-                    <Select value={formData.conditionType} label="Condition Type"
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Condition</InputLabel>
+                    <Select value={formData.conditionType} label="Condition"
                       onChange={e => setFormData({ ...formData, conditionType: e.target.value })} sx={{ borderRadius: 0 }}>
                       <MenuItem value="">Select Condition</MenuItem>
                       <MenuItem value="New">New</MenuItem>
@@ -737,159 +789,190 @@ const VendorProductManagement = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Product Dimensions" placeholder="e.g., 10 x 5 x 3 inches" value={formData.productDimensions}
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
                     onChange={e => setFormData({ ...formData, productDimensions: e.target.value })} {...field()} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Package Weight" placeholder="e.g., 2.5 lbs" value={formData.packageWeight}
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
                     onChange={e => setFormData({ ...formData, packageWeight: e.target.value })} {...field()} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label="Warranty" placeholder="e.g., 1 year manufacturer warranty" value={formData.warranty}
+
+                <Grid item xs={12} sm={6} md={6}>
+                  <TextField fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
                     onChange={e => setFormData({ ...formData, warranty: e.target.value })} {...field()} />
                 </Grid>
-
-                {/* Size */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" fontWeight={500}>Size</Typography>
-                    <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
-                      sx={{ borderRadius: 0 }}>
-                      Add Custom
-                    </Button>
-                  </Box>
-                  <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
-                    <InputLabel>Select Size</InputLabel>
-                    <Select value={formData.size} label="Select Size"
-                      onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0 }}>
-                      <MenuItem value="">Select Size</MenuItem>
-                      <MenuItem value="Small">Small</MenuItem>
-                      <MenuItem value="Medium">Medium</MenuItem>
-                      <MenuItem value="Large">Large</MenuItem>
-                      <MenuItem value="XL">XL</MenuItem>
-                    </Select>
-                  </FormControl>
-                  {formData.size && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, p: 1.5, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200', borderRadius: 1 }}>
-                      <StraightenOutlinedIcon fontSize="small" color="primary" />
-                      <Typography variant="body2" fontWeight={600} color="primary.main">{formData.size}</Typography>
-                      <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })} sx={{ ml: 'auto' }}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Grid>
-
-                {/* Color */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" fontWeight={500}>Color</Typography>
-                    <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
-                      sx={{ borderRadius: 0, color: 'secondary.main', borderColor: 'secondary.main' }}>
-                      Add Custom
-                    </Button>
-                  </Box>
-                  <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
-                    <InputLabel>Select Color</InputLabel>
-                    <Select value={formData.color} label="Select Color"
-                      onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0 }}>
-                      <MenuItem value="">Select Color</MenuItem>
-                      {predefinedColors.slice(0, 4).map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                  {formData.color && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, p: 1.5, bgcolor: '#fdf4ff', border: '1px solid #e9d5ff', borderRadius: 1 }}>
-                      <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid', borderColor: 'grey.300', bgcolor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }} />
-                      <Typography variant="body2" fontWeight={600} color="secondary.main">{formData.color}</Typography>
-                      <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })} sx={{ ml: 'auto' }}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Grid>
-              </Grid>
-
-              {/* Key Features */}
-              <Box mt={3}>
-                <Typography variant="body2" fontWeight={500} mb={1}>Key Product Features</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {formData.keyFeatures.map((feat, i) => (
-                    <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <TextField fullWidth size="small" value={feat} placeholder="Enter feature"
-                        onChange={e => {
-                          const f = [...formData.keyFeatures]; f[i] = e.target.value
-                          setFormData({ ...formData, keyFeatures: f })
-                        }}
-                        {...field()} />
-                      <IconButton size="small" color="error"
-                        onClick={() => setFormData({ ...formData, keyFeatures: formData.keyFeatures.filter((_, j) => j !== i) })}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  ))}
-                  <Button size="small" variant="outlined" onClick={() => setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ''] })}
-                    sx={{ alignSelf: 'flex-start', borderRadius: 0 }}>
-                    + Add Feature
-                  </Button>
-                </Box>
-              </Box>
-
-              {/* Ingredients */}
-              <Box mt={2}>
-                <TextField fullWidth multiline rows={3} label="Ingredients" value={formData.ingredients}
-                  placeholder="Enter ingredients (for food/cosmetics products)"
-                  onChange={e => setFormData({ ...formData, ingredients: e.target.value })}
-                  {...field()} />
-              </Box>
-            </Box>
-
-            {/* Sale Information */}
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} mb={2} sx={{ pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-                Sale Information
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label="Sale Price" type="number" inputProps={{ step: '0.01' }} value={formData.salePrice}
-                    onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
-                    InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
-                    {...field()} />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label="Sale Start Date" type="datetime-local" value={formData.saleStartDate}
-                    onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }} {...field()} />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label="Sale End Date" type="datetime-local" value={formData.saleEndDate}
-                    onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }} {...field()} />
-                </Grid>
-
-                {/* Currency */}
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth sx={{ minWidth: DROP_MIN_W }}>
+                <Grid item xs={12} sm={6} md={6}>
+                  <FormControl fullWidth>
                     <InputLabel>Currency</InputLabel>
                     <Select value={formData.currency} label="Currency"
                       onChange={e => setFormData({ ...formData, currency: e.target.value })} sx={{ borderRadius: 0 }}>
                       {[
-                        { v: 'USD', l: 'USD — US Dollar' }, { v: 'EUR', l: 'EUR — Euro' },
-                        { v: 'GBP', l: 'GBP — British Pound' }, { v: 'CAD', l: 'CAD — Canadian Dollar' },
-                        { v: 'AUD', l: 'AUD — Australian Dollar' }, { v: 'JPY', l: 'JPY — Japanese Yen' },
                         { v: 'PKR', l: 'PKR — Pakistani Rupee' },
+                        { v: 'USD', l: 'USD — US Dollar' },
+                        { v: 'AED', l: 'AED — UAE Dirham' },
+                        { v: 'SAR', l: 'SAR — Saudi Riyal' },
+                        { v: 'GBP', l: 'GBP — British Pound' },
+                        { v: 'EUR', l: 'EUR — Euro' },
                       ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
                     </Select>
                   </FormControl>
                 </Grid>
               </Grid>
-            </Box>
+            </Card>
 
-            {/* Image Upload */}
-            <Box>
-              <Typography variant="body2" fontWeight={500} mb={1}>Product Images</Typography>
-              <Box sx={{ border: '2px dashed', borderColor: uploadingImages ? 'grey.300' : 'grey.400', borderRadius: 0, p: 3, textAlign: 'center', opacity: uploadingImages ? 0.6 : 1 }}>
+            {/* ── SECTION 3: Size & Color Variants (2 Equal Balanced Columns) ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Product Variations (Size & Color)
+              </Typography>
+              <Grid container spacing={3}>
+                {/* Left: Size */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', height: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
+                      <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
+                        sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND } }}>
+                        + Add Custom Size
+                      </Button>
+                    </Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Size</InputLabel>
+                      <Select value={formData.size} label="Select Size"
+                        onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Standard</em></MenuItem>
+                        <MenuItem value="Small">Small</MenuItem>
+                        <MenuItem value="Medium">Medium</MenuItem>
+                        <MenuItem value="Large">Large</MenuItem>
+                        <MenuItem value="XL">XL</MenuItem>
+                        <MenuItem value="XXL">XXL</MenuItem>
+                      </Select>
+                    </FormControl>
+                    {formData.size && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
+                          <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
+                        </Box>
+                        <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
+
+                {/* Right: Color */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', height: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
+                      <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
+                        sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' } }}>
+                        + Add Custom Color
+                      </Button>
+                    </Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Color</InputLabel>
+                      <Select value={formData.color} label="Select Color"
+                        onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Default</em></MenuItem>
+                        {predefinedColors.map(c => (
+                          <MenuItem key={c.name} value={c.name}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
+                              {c.name}
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {formData.color && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }} />
+                          <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
+                        </Box>
+                        <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* ── SECTION 4: Features & Ingredients ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Key Highlights & Ingredients
+              </Typography>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" fontWeight={700} mb={1}>Key Bullet Features</Typography>
+                  <Stack spacing={1}>
+                    {formData.keyFeatures.map((feat, i) => (
+                      <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <TextField fullWidth size="small" value={feat} placeholder="e.g. 100% Cotton, Organic, Waterproof"
+                          onChange={e => {
+                            const f = [...formData.keyFeatures]; f[i] = e.target.value
+                            setFormData({ ...formData, keyFeatures: f })
+                          }}
+                          {...field()} />
+                        <IconButton size="small" color="error"
+                          onClick={() => setFormData({ ...formData, keyFeatures: formData.keyFeatures.filter((_, j) => j !== i) })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                    <Button size="small" variant="outlined" onClick={() => setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ''] })}
+                      sx={{ alignSelf: 'flex-start', borderRadius: 0, borderColor: BRAND, color: BRAND }}>
+                      + Add Feature Bullet
+                    </Button>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" fontWeight={700} mb={1}>Ingredients / Dietary Info</Typography>
+                  <TextField fullWidth multiline rows={4} label="Ingredients List" placeholder="e.g. Flour, Sugar, Milk, Spices, Cocoa Powder…" value={formData.ingredients}
+                    onChange={e => setFormData({ ...formData, ingredients: e.target.value })}
+                    {...field()} />
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* ── SECTION 5: Sale Information ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Promotional & Sale Pricing
+              </Typography>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Special Sale Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.salePrice}
+                    onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                    {...field()} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Sale Start Date" type="date" value={formData.saleStartDate ? formData.saleStartDate.slice(0, 10) : ''}
+                    onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }} {...field()} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Sale End Date" type="date" value={formData.saleEndDate ? formData.saleEndDate.slice(0, 10) : ''}
+                    onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }} {...field()} />
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* ── SECTION 6: Product Images ── */}
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                Product Gallery Images
+              </Typography>
+              <Box sx={{ border: '2px dashed', borderColor: uploadingImages ? 'grey.300' : 'divider', borderRadius: 0, p: 3, textAlign: 'center', bgcolor: 'grey.50' }}>
                 {uploadingImages ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                     <CircularProgress size={28} sx={{ color: BRAND }} />
@@ -898,29 +981,27 @@ const VendorProductManagement = () => {
                 ) : (
                   <>
                     <UploadOutlinedIcon sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary" mb={2}>Upload product images</Typography>
+                    <Typography variant="body2" color="text.secondary" mb={2}>Select JPG, PNG or WebP images to update your product gallery</Typography>
                     <input type="file" multiple accept="image/*" onChange={e => handleImageUpload(e.target.files)}
                       style={{ display: 'none' }} id="edit-image-upload" disabled={uploadingImages} />
                     <label htmlFor="edit-image-upload">
                       <Button component="span" variant="contained" startIcon={<UploadOutlinedIcon />} disabled={uploadingImages}
-                        sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}>
+                        sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}>
                         Choose Images
                       </Button>
                     </label>
                   </>
                 )}
                 {formData.images?.length > 0 && (
-                  <Box mt={2}>
-                    <Typography variant="body2" color="text.secondary" mb={1}>Uploaded Images:</Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 1 }}>
+                  <Box mt={2.5}>
+                    <Typography variant="body2" fontWeight={600} color="text.secondary" mb={1.5} textAlign="left">Gallery Images ({formData.images.length}):</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 1.5 }}>
                       {formData.images.map((url, i) => (
-                        <Box key={i} sx={{ position: 'relative' }}>
-                          <Box sx={{ height: 80, bgcolor: 'grey.100', overflow: 'hidden', borderRadius: 1 }}>
-                            <NextImage src={url} alt={`Upload ${i + 1}`} width={80} height={80} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-                          </Box>
+                        <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: 'divider', height: 90, bgcolor: '#ffffff', overflow: 'hidden' }}>
+                          <NextImage src={url} alt={`Upload ${i + 1}`} width={90} height={90} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                           <IconButton size="small" onClick={() => handleRemoveImage(i)}
-                            sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'error.main', color: 'white', width: 20, height: 20, p: 0, '&:hover': { bgcolor: 'error.dark' } }}>
-                            <CloseIcon sx={{ fontSize: 12 }} />
+                            sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(239, 68, 68, 0.9)', color: 'white', width: 22, height: 22, p: 0, '&:hover': { bgcolor: 'error.dark' } }}>
+                            <CloseIcon sx={{ fontSize: 13 }} />
                           </IconButton>
                         </Box>
                       ))}
@@ -928,14 +1009,18 @@ const VendorProductManagement = () => {
                   </Box>
                 )}
               </Box>
-            </Box>
-          </Box>
+            </Card>
+
+          </Stack>
         </DialogContent>
+
         <Divider />
-        <DialogActions sx={{ flexShrink: 0, px: 3, py: 2, gap: 1 }}>
-          <Button onClick={() => setShowEditModal(false)} variant="outlined" sx={{ borderRadius: 0 }}>Cancel</Button>
+        <DialogActions sx={{ flexShrink: 0, px: 3, py: 2, gap: 1.5, bgcolor: '#ffffff' }}>
+          <Button onClick={() => setShowEditModal(false)} variant="outlined" sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 600 }}>
+            Cancel
+          </Button>
           <Button onClick={handleEditProduct} variant="contained"
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}>
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
             Update Product
           </Button>
         </DialogActions>
