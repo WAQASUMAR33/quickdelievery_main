@@ -81,6 +81,8 @@ const tf = {
     },
   },
 }
+
+export default function AddProductPage() {
   const router = useRouter()
   const { userData, user, loading } = useAuth()
   const fileInputRef = useRef(null)
