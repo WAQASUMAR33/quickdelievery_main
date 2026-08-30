@@ -45,7 +45,6 @@ import TuneOutlinedIcon      from '@mui/icons-material/TuneOutlined'
 import UploadOutlinedIcon    from '@mui/icons-material/UploadOutlined'
 
 const BRAND = '#39772A'
-const tf    = { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 function SectionCard({ icon, title, subtitle, children }) {
   return (

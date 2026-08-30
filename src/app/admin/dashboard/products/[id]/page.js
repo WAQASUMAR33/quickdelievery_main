@@ -42,7 +42,6 @@ import CloseOutlinedIcon        from '@mui/icons-material/CloseOutlined'
 import InfoOutlinedIcon         from '@mui/icons-material/InfoOutlined'
 
 const BRAND = '#39772A'
-const tf = { size: 'small', sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 function SectionCard({ icon, title, children }) {
   return (
