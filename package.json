@@ -8,7 +8,8 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
-    "create-user": "node scripts/create-user.js"
+    "create-user": "node scripts/create-user.js",
+    "seed:business": "node scripts/seed_business_categories.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -207,14 +207,82 @@ function BusinessRegisterInner() {
   useEffect(() => {
     fetch('/api/business-types')
       .then(r => r.json())
-      .then(d => { if (d.success) setBusinessTypes(d.data.map(t => ({ id: t.id, label: t.typeTitle, categoryId: t.businessCategoryId }))) })
+      .then(d => { if (d.success) setBusinessTypes(d.data.map(t => ({ id: String(t.id), label: t.typeTitle, categoryId: String(t.businessCategoryId) }))) })
+      .catch(err => console.error('Failed to fetch business types:', err))
+
+    fetch('/api/customer/categories')
+      .then(r => r.json())
+      .then(d => { if (d.success) setBusinessCategories(d.data.map(c => ({ id: String(c.id), label: c.name }))) })
+      .catch(err => console.error('Failed to fetch categories:', err))
+  }, [])
+
+
+  // Auto-populate user data & existing business profile from database
+  useEffect(() => {
+    if (!vendorEmail) return
+
+    fetch(`/api/users?email=${encodeURIComponent(vendorEmail)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.user) {
+          const u = d.user
+          const nameParts = (u.username || '').trim().split(' ')
+          const firstName = nameParts[0] || ''
+          const lastName = nameParts.slice(1).join(' ') || ''
+          setFormData(p => ({
+            ...p,
+            email: u.email || p.email,
+            firstName: p.firstName || firstName,
+            lastName: p.lastName || lastName,
+            phoneNumber1: p.phoneNumber1 || u.phoneNumber || '',
+          }))
+        }
+      })
       .catch(() => {})
 
-    fetch('/api/business-categories')
+    fetch(`/api/vendor/profile?email=${encodeURIComponent(vendorEmail)}`)
       .then(r => r.json())
-      .then(d => { if (d.success) setBusinessCategories(d.data.map(c => ({ id: c.id, label: c.categoryTitle }))) })
+      .then(d => {
+        if (d.success && d.data) {
+          const b = d.data
+          setFormData(p => ({
+            ...p,
+            businessName: b.businessName || p.businessName,
+            firstName: b.firstName || p.firstName,
+            lastName: b.lastName || p.lastName,
+            cnicNo: b.cnicNo || p.cnicNo,
+            businessCategoryId: b.businessCategoryId ? String(b.businessCategoryId) : p.businessCategoryId,
+            businessTypeId: b.businessTypeId ? String(b.businessTypeId) : p.businessTypeId,
+            phoneNumber1: b.phoneNumber1 || p.phoneNumber1,
+            phoneNumber2: b.phoneNumber2 || p.phoneNumber2,
+            buildingPlaceName: b.buildingPlaceName || p.buildingPlaceName,
+            streetAddress: b.streetAddress || p.streetAddress,
+            houseNumber: b.houseNumber || p.houseNumber,
+            state: b.state || p.state,
+            city: b.city || p.city,
+            postalCode: b.postalCode || p.postalCode,
+            urlCnicFront: b.urlCnicFront || p.urlCnicFront,
+            urlCnicBack: b.urlCnicBack || p.urlCnicBack,
+            ntnNo: b.ntnNo || p.ntnNo,
+            bankName: b.bankName || p.bankName,
+            bankIbanNo: b.bankIbanNo || p.bankIbanNo,
+            bankAccountTitle: b.bankAccountTitle || p.bankAccountTitle,
+            billingAddress: b.billingAddress || p.billingAddress,
+            urlLogo: b.urlLogo || p.urlLogo,
+            urlCoverPhoto: b.urlCoverPhoto || p.urlCoverPhoto,
+            urlRestaurantImages: b.urlRestaurantImages || p.urlRestaurantImages,
+            latitude: b.latitude ?? p.latitude,
+            longitude: b.longitude ?? p.longitude,
+          }))
+          if (b.latitude && b.longitude) {
+            const pos = { lat: b.latitude, lng: b.longitude }
+            setMarkerPos(pos)
+            setMapCenter(pos)
+          }
+        }
+      })
       .catch(() => {})
-  }, [])
+  }, [vendorEmail])
 
   const onChange = e => {
     const { name, value } = e.target
@@ -226,7 +294,7 @@ function BusinessRegisterInner() {
   }
 
   const filteredTypes = formData.businessCategoryId
-    ? businessTypes.filter(t => t.categoryId === parseInt(formData.businessCategoryId))
+    ? businessTypes.filter(t => t.categoryId === String(formData.businessCategoryId))
     : []
 
   const validateStep = () => {
@@ -340,42 +408,6 @@ function BusinessRegisterInner() {
       <Container maxWidth="md" sx={{ py: 4 }}>
 
         {/* ═══════════════ VENDOR ONBOARDING BANNER ════════════════════════ */}
-        {isVendorFlow && (
-          <Paper
-            variant="outlined"
-            sx={{
-              mb: 3, p: 2.5, borderRadius: 3,
-              borderColor: `${BRAND}44`,
-              bgcolor: `${BRAND}08`,
-              display: 'flex', gap: 2, alignItems: 'flex-start',
-            }}
-          >
-            <StorefrontOutlinedIcon sx={{ color: BRAND, mt: 0.25, flexShrink: 0 }} />
-            <Box>
-              <Typography variant="subtitle2" fontWeight={700} color={BRAND} gutterBottom>
-                Complete Your Vendor Profile — Step 2 of 2
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Your account has been created successfully. Now set up your business
-                profile so customers can find and order from your store.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap' }}>
-                {[
-                  'Account created',
-                  'Business details',
-                  'Banking & payout',
-                ].map((label, i) => (
-                  <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: i === 0 ? BRAND : 'text.disabled' }} />
-                    <Typography variant="caption" color={i === 0 ? BRAND : 'text.disabled'} fontWeight={i === 0 ? 700 : 400}>
-                      {label}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </Paper>
-        )}
 
         {/* ════════════════════════ STEPPER ════════════════════════════════ */}
         <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
@@ -503,10 +535,13 @@ function BusinessRegisterInner() {
 
                     {/* ── Business Category (select first) ── */}
                     <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
-                      <InputLabel>Business Category</InputLabel>
+                      <InputLabel id="business-category-select-label">Business Category</InputLabel>
                       <Select
-                        name="businessCategoryId" label="Business Category"
-                        value={formData.businessCategoryId} onChange={onChange}
+                        labelId="business-category-select-label"
+                        name="businessCategoryId"
+                        label="Business Category"
+                        value={formData.businessCategoryId}
+                        onChange={onChange}
                         startAdornment={adornment(CategoryOutlinedIcon)}
                       >
                         <MenuItem value="" disabled><em>Select category…</em></MenuItem>
@@ -522,12 +557,15 @@ function BusinessRegisterInner() {
                       disabled={!formData.businessCategoryId}
                       sx={{ ...fieldSx, minWidth: 240 }}
                     >
-                      <InputLabel>
+                      <InputLabel id="business-type-select-label">
                         {formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
                       </InputLabel>
                       <Select
-                        name="businessTypeId" label={formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
-                        value={formData.businessTypeId} onChange={onChange}
+                        labelId="business-type-select-label"
+                        name="businessTypeId"
+                        label={formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
+                        value={formData.businessTypeId}
+                        onChange={onChange}
                         startAdornment={adornment(BusinessOutlinedIcon)}
                       >
                         <MenuItem value="" disabled><em>Select type…</em></MenuItem>
