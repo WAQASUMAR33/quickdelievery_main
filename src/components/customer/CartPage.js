@@ -225,21 +225,21 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
     return (
       <div className="w-full min-h-[75vh] flex items-center justify-center p-4 sm:p-6 lg:p-10">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="bg-white rounded-3xl p-6 sm:p-10 max-w-xl w-full text-center shadow-xl border border-gray-100"
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="bg-white rounded-none p-6 sm:p-10 max-w-xl w-full text-center shadow-xl border border-gray-100"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.15, type: 'spring', stiffness: 220 }}
-            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200"
+            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-none flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200"
           >
             <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
           </motion.div>
 
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-extrabold uppercase tracking-wider mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-emerald-50 text-emerald-700 text-xs font-extrabold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
             Order Confirmed #{orderSuccess.id}
           </span>
@@ -251,7 +251,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
             The kitchen has received your order and rider dispatch is in progress. Estimated arrival in <span className="font-bold text-gray-900">20-30 minutes</span>.
           </p>
 
-          <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100 text-left space-y-2 text-xs sm:text-sm text-gray-700">
+          <div className="bg-gray-50 rounded-none p-4 mb-6 border border-gray-100 text-left space-y-2 text-xs sm:text-sm text-gray-700">
             <div className="flex justify-between">
               <span className="text-gray-500">Delivery Address:</span>
               <span className="font-bold truncate max-w-[240px]">{shippingAddress}</span>
@@ -269,14 +269,14 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => onNavigateOrders?.()}
-              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all flex items-center justify-center gap-2"
             >
               <Truck className="w-4 h-4" />
               Track Live Order
             </button>
             <button
               onClick={() => onNavigateExplore?.()}
-              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-sm transition-colors"
+              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-none font-bold text-sm transition-colors"
             >
               Continue Exploring
             </button>
@@ -291,11 +291,11 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
     return (
       <div className="w-full min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="max-w-md w-full"
         >
-          <div className="w-24 h-24 bg-gradient-to-tr from-violet-100 to-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-indigo-100 shadow-sm">
+          <div className="w-24 h-24 bg-gradient-to-tr from-violet-100 to-indigo-50 rounded-none flex items-center justify-center mx-auto mb-6 border border-indigo-100 shadow-sm">
             <ShoppingBag className="w-12 h-12 text-[#6366f1]" />
           </div>
           <h2 className="text-2xl font-black text-gray-900 mb-2">Your basket is empty</h2>
@@ -304,7 +304,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </p>
           <button
             onClick={() => onNavigateExplore?.()}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-full font-black text-sm shadow-xl shadow-indigo-200 hover:shadow-indigo-300 hover:scale-105 transition-all"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all"
           >
             <ShoppingBag className="w-4 h-4" />
             Explore Stores &amp; Menus
@@ -322,7 +322,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigateExplore?.()}
-            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#6366f1] transition-colors p-2 -ml-2 rounded-xl hover:bg-gray-100"
+            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#6366f1] transition-colors p-2 -ml-2 rounded-none hover:bg-gray-100"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Menu
@@ -330,20 +330,20 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           <span className="text-gray-300">|</span>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
             Checkout
-            <span className="text-xs font-extrabold bg-indigo-50 text-[#4f46e5] px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-extrabold bg-indigo-50 text-[#4f46e5] px-2.5 py-0.5 rounded-none">
               {getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'}
             </span>
           </h1>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-none bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
           <Clock className="w-3.5 h-3.5 text-emerald-600" />
           <span>Estimated Delivery: 20-30 mins</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+        <div className="mb-6 p-4 rounded-none bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
@@ -356,7 +356,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="lg:col-span-7 space-y-6">
 
           {/* 1. Delivery Address Card */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base sm:text-lg font-black text-gray-900 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#6366f1]" />
@@ -368,7 +368,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     key={tag}
                     type="button"
                     onClick={() => setAddressLabel(tag)}
-                    className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${
+                    className={`text-xs font-bold px-3 py-1 rounded-none transition-all ${
                       addressLabel === tag
                         ? 'bg-[#4f46e5] text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -391,7 +391,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                   value={shippingAddress}
                   onChange={(e) => setShippingAddress(e.target.value)}
                   placeholder="e.g. House #14, Street 8, Block C, Gulberg III, Lahore"
-                  className="w-full p-3 text-sm border border-gray-200 rounded-2xl focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all resize-none"
+                  className="w-full p-3 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all resize-none"
                 />
               </div>
 
@@ -408,7 +408,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="0300-1234567"
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
                     />
                   </div>
                 </div>
@@ -424,7 +424,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                       value={riderNotes}
                       onChange={(e) => setRiderNotes(e.target.value)}
                       placeholder="e.g. Ring bell / Leave at gate"
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
                     />
                   </div>
                 </div>
@@ -441,13 +441,13 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isLocating}
-                    className="text-xs font-bold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-full transition-colors flex items-center gap-1"
+                    className="text-xs font-bold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-none transition-colors flex items-center gap-1"
                   >
                     {isLocating ? 'Locating…' : '📍 Use My GPS Location'}
                   </button>
                 </div>
 
-                <div className="w-full h-44 rounded-2xl overflow-hidden border border-gray-200 relative bg-gray-100">
+                <div className="w-full h-44 rounded-none overflow-hidden border border-gray-200 relative bg-gray-100">
                   {isLoaded ? (
                     <GoogleMap
                       mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -489,10 +489,10 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* 2. Cart Items Review Card */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center text-[#6366f1]">
+                <div className="w-8 h-8 rounded-none bg-violet-50 flex items-center justify-center text-[#6366f1]">
                   <ShoppingBag className="w-4 h-4" />
                 </div>
                 <div>
@@ -506,7 +506,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
               <button
                 type="button"
                 onClick={() => onNavigateExplore?.()}
-                className="text-xs font-extrabold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1"
+                className="text-xs font-extrabold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-none transition-colors flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add More
@@ -523,7 +523,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 return (
                   <div key={itemKey} className="py-4 flex items-center gap-3 sm:gap-4 group">
                     {/* Item Thumbnail */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-none bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
                       <img
                         src={item.proImages?.[0] || '/placeholder-product.jpg'}
                         alt={item.proName}
@@ -537,7 +537,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                         {item.proName}
                       </h3>
                       {item.selectedVariation && (
-                        <span className="inline-block mt-0.5 text-[11px] font-bold text-[#6366f1] bg-indigo-50 px-2 py-0.5 rounded-md">
+                        <span className="inline-block mt-0.5 text-[11px] font-bold text-[#6366f1] bg-indigo-50 px-2 py-0.5 rounded-none">
                           {item.selectedVariation.name}
                         </span>
                       )}
@@ -547,11 +547,11 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 p-1 rounded-full border border-gray-200">
+                    <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 p-1 rounded-none border border-gray-200">
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.proId, item.quantity - 1, item.selectedVariation)}
-                        className="w-7 h-7 rounded-full bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
+                        className="w-7 h-7 rounded-none bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
                         aria-label="Decrease quantity"
                       >
                         {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5 text-rose-500" /> : <Minus className="w-3.5 h-3.5" />}
@@ -562,7 +562,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.proId, item.quantity + 1, item.selectedVariation)}
-                        className="w-7 h-7 rounded-full bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
+                        className="w-7 h-7 rounded-none bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -580,7 +580,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     <button
                       type="button"
                       onClick={() => removeFromCart(item.proId, item.selectedVariation)}
-                      className="p-1.5 text-gray-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-rose-500 rounded-none hover:bg-rose-50 transition-colors"
                       title="Remove item"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -592,7 +592,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* 3. Payment Method Card */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
             <h2 className="text-base sm:text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
               <CreditCard className="w-5 h-5 text-[#6366f1]" />
               3. Payment Method
@@ -610,7 +610,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     key={method.id}
                     type="button"
                     onClick={() => setPaymentMethod(method.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all relative ${
+                    className={`p-4 rounded-none border text-left transition-all relative ${
                       isSelected
                         ? 'border-[#6366f1] bg-indigo-50/40 ring-2 ring-[#6366f1]/20'
                         : 'border-gray-200 bg-white hover:border-gray-300'
@@ -633,14 +633,14 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-24">
 
           {/* Voucher Promo Input */}
-          <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm">
+          <div className="bg-white rounded-none p-5 border border-gray-200 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <Tag className="w-4 h-4 text-[#6366f1]" />
               <h3 className="text-sm font-black text-gray-900">Have a Voucher / Promo Code?</h3>
             </div>
 
             {appliedVoucher ? (
-              <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-2xl">
+              <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-none">
                 <div>
                   <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">
                     {appliedVoucher.code} ({appliedVoucher.label})
@@ -662,11 +662,11 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value)}
                   placeholder="e.g. WELCOME50"
-                  className="flex-1 px-3.5 py-2.5 text-sm uppercase font-bold border border-gray-200 rounded-xl focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                  className="flex-1 px-3.5 py-2.5 text-sm uppercase font-bold border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gray-900 hover:bg-[#4f46e5] text-white text-xs font-extrabold rounded-xl transition-colors"
+                  className="px-5 py-2.5 bg-gray-900 hover:bg-[#4f46e5] text-white text-xs font-extrabold rounded-none transition-colors"
                 >
                   Apply
                 </button>
@@ -675,7 +675,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* Bill Summary Breakdown */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">
+          <div className="bg-white rounded-none p-6 border border-gray-200 shadow-sm space-y-4">
             <h3 className="text-lg font-black text-gray-900 pb-3 border-b border-gray-100">
               Order Summary
             </h3>
@@ -718,7 +718,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
             {isGuest ? (
               <NextLink
                 href="/login"
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01]"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01]"
               >
                 Sign In to Place Order
                 <ChevronRight className="w-5 h-5" />
@@ -728,11 +728,11 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 type="button"
                 disabled={isCheckingOut || items.length === 0}
                 onClick={handlePlaceOrder}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none"
               >
                 {isCheckingOut ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-none animate-spin" />
                     Placing Your Order…
                   </span>
                 ) : (

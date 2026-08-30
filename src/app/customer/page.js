@@ -199,7 +199,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           cursor: 'pointer',
           mb: 4,
           p: 1.5,
-          borderRadius: '16px',
+          borderRadius: 0,
           bgcolor: 'rgba(99, 102, 241, 0.06)',
           border: '1px solid rgba(99, 102, 241, 0.12)',
         }}
@@ -209,7 +209,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             width: 44,
             height: 44,
             background: THEME.gradient,
-            borderRadius: '12px',
+            borderRadius: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -241,7 +241,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               key={tab.id}
               onClick={() => handleTabSwitch(tab.id)}
               sx={{
-                borderRadius: '14px',
+                borderRadius: 0,
                 py: 1.25,
                 px: 2,
                 transition: 'all 0.25s ease',
@@ -250,7 +250,6 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 color: isActive ? THEME.primaryDark : 'text.secondary',
                 '&:hover': {
                   bgcolor: isActive ? 'rgba(99, 102, 241, 0.16)' : 'rgba(241, 245, 249, 0.8)',
-                  transform: 'translateX(3px)',
                 },
               }}
             >
@@ -271,7 +270,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 }}
               />
               {tab.id === 'orders' && !isGuest && (
-                <Chip label="Live" size="small" sx={{ height: 20, fontSize: 10, fontWeight: 800, bgcolor: '#dcfce7', color: '#15803d' }} />
+                <Chip label="Live" size="small" sx={{ height: 20, fontSize: 10, fontWeight: 800, bgcolor: '#dcfce7', color: '#15803d', borderRadius: 0 }} />
               )}
             </ListItemButton>
           )
@@ -285,24 +284,24 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         onClick={() => { setActiveTab('cart'); setShowMobileSidebar(false) }}
         sx={{
           p: 2,
-          borderRadius: '16px',
+          borderRadius: 0,
           background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
           border: '1px solid #e0e7ff',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
-          '&:hover': { transform: 'scale(1.02)', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.12)' },
+          '&:hover': { boxShadow: '0 8px 20px rgba(99, 102, 241, 0.12)' },
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Badge badgeContent={getTotalItems()} sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800 } }}>
+            <Badge badgeContent={getTotalItems()} sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, borderRadius: 0 } }}>
               <ShoppingBagIcon sx={{ color: THEME.primaryDark, fontSize: 24 }} />
             </Badge>
             <Typography variant="body2" fontWeight={800} color="text.primary">
               My Basket
             </Typography>
           </Box>
-          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: '#ffffff', color: THEME.primaryDark }} />
+          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: '#ffffff', color: THEME.primaryDark, borderRadius: 0 }} />
         </Box>
         <Typography variant="caption" color="text.secondary" display="block">
           Tap to view bill & checkout
@@ -323,7 +322,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             startIcon={<PersonOutlineIcon />}
             sx={{
               background: THEME.gradient,
-              borderRadius: '14px',
+              borderRadius: 0,
               py: 1.25,
               textTransform: 'none',
               fontWeight: 800,
@@ -335,7 +334,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-              <Avatar sx={{ bgcolor: THEME.primaryDark, width: 38, height: 38, fontWeight: 800, fontSize: 15 }}>
+              <Avatar sx={{ bgcolor: THEME.primaryDark, width: 38, height: 38, fontWeight: 800, fontSize: 15, borderRadius: 0 }}>
                 {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
@@ -348,7 +347,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               </Box>
             </Box>
             <Tooltip title="Sign Out">
-              <IconButton size="small" onClick={handleSignOut} sx={{ color: 'error.main' }}>
+              <IconButton size="small" onClick={handleSignOut} sx={{ color: 'error.main', borderRadius: 0 }}>
                 <LogoutOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -389,20 +388,20 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               Favorite Stores & Kitchens
             </Typography>
             {favorites.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8, bgcolor: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', p: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 8, bgcolor: '#fff', borderRadius: 0, border: '1px solid #e2e8f0', p: 4 }}>
                 <StarBorderIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 2 }} />
                 <Typography variant="h6" fontWeight={700} color="text.secondary">No favorites saved yet</Typography>
                 <Typography variant="body2" color="text.disabled" mb={3}>
                   Save stores & restaurants by clicking the star on items you love.
                 </Typography>
-                <Button variant="contained" onClick={() => setActiveTab('products')} sx={{ background: THEME.gradient, borderRadius: '12px' }}>
+                <Button variant="contained" onClick={() => setActiveTab('products')} sx={{ background: THEME.gradient, borderRadius: 0 }}>
                   Explore Stores
                 </Button>
               </Box>
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
                 {favorites.map((vendor, idx) => (
-                  <Card key={idx} elevation={0} sx={{ borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                  <Card key={idx} elevation={0} sx={{ borderRadius: 0, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                     <CardMedia
                       component="img"
                       height={140}
@@ -496,7 +495,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     width: { xs: 36, md: 42 },
                     height: { xs: 36, md: 42 },
                     background: THEME.gradient,
-                    borderRadius: '12px',
+                    borderRadius: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -536,7 +535,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 alignItems: 'center',
                 bgcolor: '#f1f5f9',
                 p: 0.5,
-                borderRadius: '9999px',
+                borderRadius: 0,
                 border: '1px solid #e2e8f0',
               }}
             >
@@ -549,7 +548,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     startIcon={isActive ? tab.activeIcon : tab.icon}
                     size="small"
                     sx={{
-                      borderRadius: '9999px',
+                      borderRadius: 0,
                       px: 2,
                       py: 0.75,
                       textTransform: 'none',
@@ -588,7 +587,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: '9999px',
+                    borderRadius: 0,
                     bgcolor: '#f8fafc',
                     border: '1px solid #e2e8f0',
                     height: 38,
@@ -619,6 +618,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         minWidth: 16,
                         height: 16,
                         px: 0.5,
+                        borderRadius: 0,
                       }
                     }}
                   >
@@ -626,7 +626,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   </Badge>
                 }
                 sx={{
-                  borderRadius: '9999px',
+                  borderRadius: 0,
                   borderColor: '#e0e7ff',
                   bgcolor: 'rgba(99, 102, 241, 0.06)',
                   color: THEME.primaryDark,
@@ -655,6 +655,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       bgcolor: THEME.primaryDark,
                       color: '#ffffff',
                       ml: 0.5,
+                      borderRadius: 0,
                     }}
                   />
                 )}
@@ -670,7 +671,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   startIcon={<PersonOutlineIcon />}
                   sx={{
                     background: THEME.gradient,
-                    borderRadius: '9999px',
+                    borderRadius: 0,
                     textTransform: 'none',
                     fontWeight: 800,
                     px: { xs: 2, sm: 2.5 },
@@ -694,7 +695,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     gap: 1,
                     p: 0.5,
                     pr: { xs: 0.5, sm: 1.5 },
-                    borderRadius: '9999px',
+                    borderRadius: 0,
                     bgcolor: '#f1f5f9',
                     border: '1px solid #e2e8f0',
                     cursor: 'pointer',
@@ -712,6 +713,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       fontWeight: 800,
                       fontSize: 13,
                       border: '2px solid #ffffff',
+                      borderRadius: 0,
                     }}
                   >
                     {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
@@ -757,7 +759,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '9999px',
+                borderRadius: 0,
                 bgcolor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 height: 38,
@@ -790,7 +792,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   sx={{
                     fontWeight: isActive ? 800 : 600,
                     fontSize: 12.5,
-                    borderRadius: '9999px',
+                    borderRadius: 0,
                     bgcolor: isActive ? THEME.primaryDark : '#f1f5f9',
                     color: isActive ? '#ffffff' : 'text.primary',
                     '& .MuiChip-icon': { color: isActive ? '#ffffff' : 'inherit' },
@@ -814,7 +816,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             <Box
               sx={{
                 position: 'relative',
-                borderRadius: { xs: '24px', md: '32px' },
+                borderRadius: 0,
                 background: THEME.gradient,
                 overflow: 'hidden',
                 color: '#fff',
@@ -830,7 +832,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   right: -40,
                   width: 220,
                   height: 220,
-                  borderRadius: '50%',
+                  borderRadius: 0,
                   background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%)',
                   filter: 'blur(20px)',
                   pointerEvents: 'none',
@@ -843,7 +845,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   left: '35%',
                   width: 260,
                   height: 260,
-                  borderRadius: '50%',
+                  borderRadius: 0,
                   background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%)',
                   filter: 'blur(30px)',
                   pointerEvents: 'none',
@@ -859,7 +861,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     gap: 1,
                     px: 2,
                     py: 0.75,
-                    borderRadius: '9999px',
+                    borderRadius: 0,
                     bgcolor: 'rgba(255, 255, 255, 0.16)',
                     backdropFilter: 'blur(12px)',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
@@ -917,7 +919,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       onClick={() => setServiceMode(opt.id)}
                       sx={{
                         fontWeight: 800,
-                        borderRadius: '9999px',
+                        borderRadius: 0,
                         px: 1,
                         height: 40,
                         bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.18)',
@@ -928,7 +930,6 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.28)',
-                          transform: 'translateY(-2px)',
                         },
                       }}
                     />
@@ -946,7 +947,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
                       <FlashOnIcon sx={{ fontSize: 20 }} />
                     </Box>
                     <Box>
@@ -956,7 +957,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
                       <SecurityIcon sx={{ fontSize: 20 }} />
                     </Box>
                     <Box>
@@ -966,7 +967,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)' }}>
+                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
                       <StarIcon sx={{ fontSize: 20, color: '#fde047' }} />
                     </Box>
                     <Box>
@@ -996,7 +997,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={() => setUserMenuAnchor(null)}
-        PaperProps={{ elevation: 4, sx: { width: 260, borderRadius: '16px', mt: 1 } }}
+        PaperProps={{ elevation: 4, sx: { width: 260, borderRadius: 0, mt: 1 } }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
@@ -1040,6 +1041,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           bgcolor: 'rgba(255, 255, 255, 0.96)',
           backdropFilter: 'blur(16px)',
           borderTop: '1px solid #e2e8f0',
+          borderRadius: 0,
           boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
         }}
       >
@@ -1053,6 +1055,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'products' ? 800 : 600,
+            borderRadius: 0,
           }}
         >
           {effectiveTab === 'products' ? <HomeIcon sx={{ fontSize: 22 }} /> : <HomeOutlinedIcon sx={{ fontSize: 22 }} />}
@@ -1069,6 +1072,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'orders' ? 800 : 600,
+            borderRadius: 0,
           }}
         >
           {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 22 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />}
@@ -1085,12 +1089,13 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             color: effectiveTab === 'cart' ? THEME.primaryDark : 'text.secondary',
             textTransform: 'none',
             fontSize: 10.5,
-            fontWeight: effectiveTab === 'cart' ? 800 : 600,
+            fontWeight: 800,
+            borderRadius: 0,
           }}
         >
           <Badge
             badgeContent={getTotalItems()}
-            sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, fontSize: 9, minWidth: 16, height: 16 } }}
+            sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, fontSize: 9, minWidth: 16, height: 16, borderRadius: 0 } }}
           >
             <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />
           </Badge>
@@ -1107,6 +1112,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'wishlist' ? 800 : 600,
+            borderRadius: 0,
           }}
         >
           {effectiveTab === 'wishlist' ? <FavoriteIcon sx={{ fontSize: 22 }} /> : <FavoriteBorderIcon sx={{ fontSize: 22 }} />}
@@ -1123,6 +1129,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'profile' ? 800 : 600,
+            borderRadius: 0,
           }}
         >
           {effectiveTab === 'profile' ? <PersonIcon sx={{ fontSize: 22 }} /> : <PersonOutlineIcon sx={{ fontSize: 22 }} />}
