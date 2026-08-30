@@ -323,7 +323,11 @@ const Sidebar = () => {
           display: 'flex', alignItems: 'center', gap: 1.5,
           flexShrink: 0,
         }}>
-          <Avatar sx={{ width: 36, height: 36, bgcolor: BRAND, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+          <Avatar
+            src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
+            alt={userData?.username || user?.displayName || 'User'}
+            sx={{ width: 36, height: 36, bgcolor: BRAND, fontSize: 14, fontWeight: 700, flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }}
+          >
             {(user?.displayName || userData?.username || 'U').charAt(0).toUpperCase()}
           </Avatar>
           <Box flex={1} minWidth={0}>

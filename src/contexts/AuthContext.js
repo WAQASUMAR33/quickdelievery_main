@@ -88,6 +88,7 @@ export default function AuthProvider({ children }) {
           displayName: dbUser.username,
           emailVerified: dbUser.emailVerification,
           phoneNumber: dbUser.phoneNumber,
+          photoURL: dbUser.photoURL || dbUser.urlLogo || dbUser.avatarUrl || null,
           getIdToken: async () => token // Mock getIdToken
         }
 

@@ -87,7 +87,11 @@ const DashboardLayout = ({ children }) => {
               sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', px: 1, py: 0.5, '&:hover': { bgcolor: 'grey.100' } }}
               onClick={e => setAnchorEl(e.currentTarget)}
             >
-              <Avatar sx={{ width: 30, height: 30, bgcolor: BRAND, fontSize: 13, fontWeight: 700 }}>
+              <Avatar
+                src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
+                alt={displayName}
+                sx={{ width: 32, height: 32, bgcolor: BRAND, fontSize: 13, fontWeight: 700, border: '1px solid #e2e8f0' }}
+              >
                 {initials}
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
