@@ -780,93 +780,77 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 {/* Selected products table */}
                 {form.selectedProducts.length > 0 && (
                   <Paper variant="outlined" sx={{ borderRadius: 0, overflow: 'hidden' }}>
-                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                       <Typography variant="subtitle2" fontWeight={800}>
                         Products Included in Deal ({form.selectedProducts.length})
-                      </Typography>
-                      <Typography variant="caption" fontWeight={700} color="text.secondary">
-                        Regular Total: <Box component="span" sx={{ color: 'text.primary', fontWeight: 800 }}>Rs. {selectedProductsSum.toLocaleString()}</Box>
                       </Typography>
                     </Box>
                     <Table size="small">
                       <TableHead>
                         <TableRow sx={{ bgcolor: '#fafafa' }}>
                           <TableCell sx={{ fontWeight: 700, fontSize: 12 }}>Product</TableCell>
-                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="center">Quantity</TableCell>
-                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="right">Unit Price</TableCell>
-                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="right">Subtotal</TableCell>
-                          <TableCell sx={{ width: 40 }}></TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: 12, width: 140 }} align="center">Quantity</TableCell>
+                          <TableCell sx={{ width: 48 }} align="right"></TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {form.selectedProducts.map((p) => {
-                          const subtotal = parseFloat(p.price || 0) * (p.quantity || 1)
-                          return (
-                            <TableRow key={p.proId || p.proName}>
-                              <TableCell>
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                  {p.image && (
-                                    <Box
-                                      component="img"
-                                      src={p.image}
-                                      alt={p.proName}
-                                      sx={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #e2e8f0' }}
-                                    />
-                                  )}
-                                  <Box>
-                                    <Typography variant="body2" fontWeight={700}>
-                                      {p.proName}
-                                    </Typography>
-                                    {p.sku && (
-                                      <Typography variant="caption" color="text.secondary">
-                                        SKU: {p.sku}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Stack>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) - 1)}
-                                    disabled={p.quantity <= 1}
-                                    sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
-                                  >
-                                    <RemoveIcon sx={{ fontSize: 14 }} />
-                                  </IconButton>
-                                  <Typography variant="body2" fontWeight={700} sx={{ minWidth: 24, textAlign: 'center' }}>
-                                    {p.quantity || 1}
+                        {form.selectedProducts.map((p) => (
+                          <TableRow key={p.proId || p.proName}>
+                            <TableCell>
+                              <Stack direction="row" spacing={1.5} alignItems="center">
+                                {p.image && (
+                                  <Box
+                                    component="img"
+                                    src={p.image}
+                                    alt={p.proName}
+                                    sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid #e2e8f0', flexShrink: 0 }}
+                                  />
+                                )}
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Typography variant="body2" fontWeight={700}>
+                                    {p.proName}
                                   </Typography>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) + 1)}
-                                    sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
-                                  >
-                                    <AddIcon sx={{ fontSize: 14 }} />
-                                  </IconButton>
-                                </Stack>
-                              </TableCell>
-                              <TableCell align="right">
-                                <Typography variant="body2">Rs. {parseFloat(p.price || 0).toLocaleString()}</Typography>
-                              </TableCell>
-                              <TableCell align="right">
-                                <Typography variant="body2" fontWeight={700} color={BRAND}>
-                                  Rs. {subtotal.toLocaleString()}
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="right">
+                                  {p.sku && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      SKU: {p.sku}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
                                 <IconButton
                                   size="small"
-                                  onClick={() => handleRemoveProductFromDeal(p.proId)}
-                                  sx={{ color: 'error.main' }}
+                                  onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) - 1)}
+                                  disabled={p.quantity <= 1}
+                                  sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
                                 >
-                                  <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                                  <RemoveIcon sx={{ fontSize: 14 }} />
                                 </IconButton>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })}
+                                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 28, textAlign: 'center' }}>
+                                  {p.quantity || 1}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) + 1)}
+                                  sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
+                                >
+                                  <AddIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="right">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleRemoveProductFromDeal(p.proId)}
+                                sx={{ color: 'error.main' }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </Paper>
@@ -886,11 +870,11 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 <TextField
                   size="small"
                   label="Deal Price / Special Offer Price (PKR)"
-                  placeholder={`e.g. Rs. ${(selectedProductsSum * 0.8).toFixed(0)} or Save 20%`}
+                  placeholder="e.g. Rs. 990 or 20% OFF"
                   value={form.customPriceLabel}
                   onChange={(e) => setForm({ ...form, customPriceLabel: e.target.value })}
                   fullWidth
-                  helperText={selectedProductsSum > 0 ? `Regular Total: Rs. ${selectedProductsSum.toLocaleString()}` : ''}
+                  helperText="Special discounted price for this deal/combo."
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                 />
 
