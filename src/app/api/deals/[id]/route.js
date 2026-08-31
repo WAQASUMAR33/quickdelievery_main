@@ -59,6 +59,11 @@ export async function PUT(request, context) {
     if (startAt !== undefined) data.startAt = startAt ? new Date(startAt) : null
     if (endAt !== undefined) data.endAt = endAt ? new Date(endAt) : null
 
+    if (body.customImageUrl !== undefined) {
+      const u = body.customImageUrl != null ? String(body.customImageUrl).trim().slice(0, 500) || null : null
+      data.customImageUrl = u
+    }
+
     const isCustomRow = deal.productId == null
 
     if (isCustomRow) {
@@ -78,10 +83,6 @@ export async function PUT(request, context) {
           )
         }
         data.customItemsJson = JSON.stringify(items)
-      }
-      if (body.customImageUrl !== undefined) {
-        const u = body.customImageUrl != null ? String(body.customImageUrl).trim().slice(0, 500) || null : null
-        data.customImageUrl = u
       }
       if (body.customPriceLabel !== undefined) {
         const u = body.customPriceLabel != null ? String(body.customPriceLabel).trim().slice(0, 64) || null : null

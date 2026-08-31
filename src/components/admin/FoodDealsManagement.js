@@ -224,7 +224,6 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
         endAt: form.endAt ? new Date(form.endAt).toISOString() : null,
       }
 
-      if (!editingId) {
         const body =
           form.dealKind === 'custom'
             ? {
@@ -238,7 +237,12 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 customPriceLabel: form.customPriceLabel.trim() || null,
                 ...(mode === 'admin' ? { vendorUid: form.vendorUid.trim() || null } : {}),
               }
-            : { ...payload, dealKind: 'catalog', productId: Number(form.productId) }
+            : {
+                ...payload,
+                dealKind: 'catalog',
+                productId: Number(form.productId),
+                customImageUrl: form.customImageUrl.trim() || null,
+              }
 
         const res = await fetch('/api/deals', {
           method: 'POST',
@@ -257,13 +261,15 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
         }
         toast.success('Deal created')
       } else {
-        const putBody = { ...payload }
+        const putBody = {
+          ...payload,
+          customImageUrl: form.customImageUrl.trim() || null,
+        }
         if (form.dealKind === 'custom') {
           putBody.customTitle = form.customTitle.trim()
           putBody.customItems = form.customLines
             .map((l) => ({ name: String(l.name || '').trim() }))
             .filter((l) => l.name.length > 0)
-          putBody.customImageUrl = form.customImageUrl.trim() || null
           putBody.customPriceLabel = form.customPriceLabel.trim() || null
           if (mode === 'admin') putBody.vendorUid = form.vendorUid.trim() || null
         }
@@ -403,28 +409,48 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 <TableRow key={row.dealId} hover>
                   <TableCell sx={{ fontVariantNumeric: 'tabular-nums' }}>{row.sortOrder}</TableCell>
                   <TableCell>
-                    {row.isCustom ? (
-                      <>
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {row.customTitle || '—'}
-                          </Typography>
-                          <Chip label="Custom" size="small" sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700 }} />
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
-                          {(row.customItems || []).map((x) => x.name).join(' · ')}
-                        </Typography>
-                      </>
-                    ) : (
-                      <>
-                        <Typography variant="body2" fontWeight={600}>
-                          {row.product?.proName || '—'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                          SKU {row.product?.sku}
-                        </Typography>
-                      </>
-                    )}
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        component="img"
+                        src={row.customImageUrl || row.product?.proImages?.[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'}
+                        alt="Deal"
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          objectFit: 'cover',
+                          border: '1px solid #e2e8f0',
+                          bgcolor: '#f8fafc',
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'
+                        }}
+                      />
+                      <Box sx={{ minWidth: 0 }}>
+                        {row.isCustom ? (
+                          <>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                              <Typography variant="body2" fontWeight={700}>
+                                {row.customTitle || '—'}
+                              </Typography>
+                              <Chip label="Custom" size="small" sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700 }} />
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+                              {(row.customItems || []).map((x) => x.name).join(' · ')}
+                            </Typography>
+                          </>
+                        ) : (
+                          <>
+                            <Typography variant="body2" fontWeight={700}>
+                              {row.product?.proName || '—'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                              SKU: {row.product?.sku || 'N/A'} · Rs. {parseFloat(row.product?.price || 0).toLocaleString()}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    </Stack>
                   </TableCell>
                   {mode === 'admin' && (
                     <TableCell>
@@ -565,6 +591,27 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 )}
                 noOptionsText="No products found"
               />
+            )}
+            {form.dealKind === 'catalog' && (
+              <>
+                <ImageUploadField
+                  label="Deal Banner / Image (optional — defaults to product photo if empty)"
+                  value={form.customImageUrl}
+                  onChange={(url) => setForm({ ...form, customImageUrl: url })}
+                  disabled={saving}
+                  helperText="Upload a promotional deal image or banner for this deal."
+                />
+                <TextField
+                  size="small"
+                  label="Or paste image URL (optional)"
+                  placeholder="https://…"
+                  value={form.customImageUrl}
+                  onChange={(e) => setForm({ ...form, customImageUrl: e.target.value })}
+                  fullWidth
+                  helperText="Use this if the promotional image is already hosted elsewhere."
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+              </>
             )}
             {form.dealKind === 'custom' && (
               <>

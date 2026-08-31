@@ -198,10 +198,13 @@ export async function POST(request) {
         )
       }
 
+      const img = body.customImageUrl != null ? String(body.customImageUrl).trim().slice(0, 500) || null : null
+
       const deal = await foodDealDelegate.create({
         data: {
           productId: pid,
           vendorUid: product.vendorId,
+          customImageUrl: img,
           sortOrder: parseInt(sortOrder, 10) || 0,
           active: !!active,
           badgeLabel: badgeLabel ? String(badgeLabel).slice(0, 64) : null,
