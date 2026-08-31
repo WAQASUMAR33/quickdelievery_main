@@ -7,6 +7,7 @@ import { checkUserVerification } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
 import { uploadMultipleImages } from '@/lib/imageUpload'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { isRestaurantVendor } from '@/lib/vendorHelpers'
 import toast from 'react-hot-toast'
 
 import Box              from '@mui/material/Box'
@@ -91,6 +92,18 @@ export default function AddProductPage() {
   const [uploadingImages,   setUploadingImages]   = useState(false)
   const [isSubmitting,      setIsSubmitting]      = useState(false)
   const [dragOver,          setDragOver]          = useState(false)
+  const [vendorBusiness,    setVendorBusiness]    = useState(userData?.business || null)
+
+  useEffect(() => {
+    if (userData?.email) {
+      fetch(`/api/vendor/profile?email=${encodeURIComponent(userData.email)}`)
+        .then(r => r.json())
+        .then(d => { if (d.success && d.data) setVendorBusiness(d.data) })
+        .catch(() => {})
+    }
+  }, [userData?.email])
+
+  const isRestaurant = isRestaurantVendor(userData, vendorBusiness)
 
   const [form, setForm] = useState({
     name:              '',
@@ -242,26 +255,26 @@ export default function AddProductPage() {
           createdById:        userData.uid,
           variations:         validVariations.length > 0 ? validVariations : null,
           // Product details
-          brandName:          form.brandName    || null,
-          manufacturer:       form.manufacturer || null,
-          productType:        form.productType   || null,
-          modelNumber:        form.modelNumber   || null,
+          brandName:          !isRestaurant ? (form.brandName || null) : null,
+          manufacturer:       !isRestaurant ? (form.manufacturer || null) : null,
+          productType:        !isRestaurant ? (form.productType || null) : null,
+          modelNumber:        !isRestaurant ? (form.modelNumber || null) : null,
           // Physical details
-          sizeName:           form.sizeName        || null,
-          size:               form.size            || null,
-          color:              form.color           || null,
-          conditionType:      form.conditionType   || null,
-          productDimensions:  form.productDimensions || null,
-          packageWeight:      form.packageWeight   || null,
-          warranty:           form.warranty        || null,
+          sizeName:           !isRestaurant ? (form.sizeName || null) : null,
+          size:               !isRestaurant ? (form.size || null) : null,
+          color:              !isRestaurant ? (form.color || null) : null,
+          conditionType:      !isRestaurant ? (form.conditionType || null) : null,
+          productDimensions:  !isRestaurant ? (form.productDimensions || null) : null,
+          packageWeight:      !isRestaurant ? (form.packageWeight || null) : null,
+          warranty:           !isRestaurant ? (form.warranty || null) : null,
           // Ingredients / notes
           ingredients:        form.ingredients     || null,
         }),
       })
       const data = await res.json()
       if (data.success) {
-        toast.success('Item added successfully!')
-        router.push('/admin/dashboard/products')
+        toast.success(isRestaurant ? 'Food item added successfully!' : 'Product added successfully!')
+        router.push(userData?.role === 'VENDOR' ? '/vendor/dashboard/products' : '/admin/dashboard/products')
       } else {
         toast.error(data.error || 'Failed to add item')
       }
@@ -303,31 +316,35 @@ export default function AddProductPage() {
               <ArrowBackOutlinedIcon fontSize="small" />
             </IconButton>
             <Box>
-              <Typography variant="h5" fontWeight={700}>Add Menu Item</Typography>
-              <Typography variant="body2" color="text.secondary">Create a new product or restaurant listing</Typography>
+              <Typography variant="h5" fontWeight={700}>
+                {isRestaurant ? 'Add Food Item' : 'Add Product'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isRestaurant ? 'Create a new dish or food item for your restaurant menu' : 'Create a new product listing for your store'}
+              </Typography>
             </Box>
           </Box>
           <Button type="submit" variant="contained" disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
             sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
-            {isSubmitting ? 'Saving…' : 'Save Item'}
+            {isSubmitting ? 'Saving…' : (isRestaurant ? 'Save Food Item' : 'Save Product')}
           </Button>
         </Box>
 
         <Stack spacing={2.5}>
 
           {/* ── Basic Info ── */}
-          <SectionCard icon={<Inventory2OutlinedIcon fontSize="small" />} title="Basic Information" subtitle="Name, description and category">
+          <SectionCard icon={<Inventory2OutlinedIcon fontSize="small" />} title="Basic Information" subtitle={isRestaurant ? "Item name, description and category" : "Name, description, brand and category"}>
             <Stack spacing={2}>
 
-              <TextField {...tf} fullWidth required label="Item Name"
+              <TextField {...tf} fullWidth required label={isRestaurant ? "Food / Item Name" : "Product Name"}
                 value={form.name} onChange={e => set('name', e.target.value)}
                 error={!!errors.name} helperText={errors.name}
-                placeholder="e.g. Chicken Biryani" />
+                placeholder={isRestaurant ? "e.g. Chicken Biryani, Zinger Burger" : "e.g. Wireless Headphones"} />
 
               <TextField {...tf} fullWidth multiline rows={3} label="Description"
                 value={form.description} onChange={e => set('description', e.target.value)}
-                placeholder="Describe the item, ingredients, serving size…" />
+                placeholder={isRestaurant ? "Describe the dish, preparation, taste, serving size…" : "Describe the product features…"} />
 
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -364,24 +381,26 @@ export default function AddProductPage() {
                 </Grid>
               </Grid>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Brand"
-                    value={form.brandName} onChange={e => set('brandName', e.target.value)} />
+              {!isRestaurant && (
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField {...tf} fullWidth label="Brand"
+                      value={form.brandName} onChange={e => set('brandName', e.target.value)} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField {...tf} fullWidth label="Manufacturer"
+                      value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField {...tf} fullWidth label="Product Type"
+                      value={form.productType} onChange={e => set('productType', e.target.value)} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField {...tf} fullWidth label="Model Number"
+                      value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Manufacturer"
-                    value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Product Type"
-                    value={form.productType} onChange={e => set('productType', e.target.value)} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Model Number"
-                    value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
-                </Grid>
-              </Grid>
+              )}
 
             </Stack>
           </SectionCard>
@@ -403,7 +422,7 @@ export default function AddProductPage() {
                   InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField {...tf} fullWidth label="Stock / Quantity" type="number"
+                <TextField {...tf} fullWidth label={isRestaurant ? "Daily Available Stock" : "Stock / Quantity"} type="number"
                   inputProps={{ min: 0 }}
                   value={form.stock} onChange={e => set('stock', e.target.value)} />
               </Grid>
@@ -413,8 +432,8 @@ export default function AddProductPage() {
           {/* ── Variations ── */}
           <SectionCard
             icon={<TuneOutlinedIcon fontSize="small" />}
-            title="Variations"
-            subtitle="Add sizes or options with individual pricing (e.g. Small, Medium, Large)"
+            title={isRestaurant ? "Portions / Variations" : "Variations"}
+            subtitle={isRestaurant ? "Add sizes or portions with individual pricing (e.g. Half, Full, Large, Spicy)" : "Add sizes or options with individual pricing (e.g. Small, Medium, Large)"}
           >
             <Stack spacing={1.5}>
               {variations.length > 0 && (
@@ -422,7 +441,7 @@ export default function AddProductPage() {
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ bgcolor: 'grey.50' }}>
-                        {['Variation Name', 'Price (Rs.)', 'Discount (%)', ''].map(h => (
+                        {[isRestaurant ? 'Portion / Option Name' : 'Variation Name', 'Price (Rs.)', 'Discount (%)', ''].map(h => (
                           <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.25 }}>
                             {h}
                           </TableCell>
@@ -433,7 +452,7 @@ export default function AddProductPage() {
                       {variations.map((row, i) => (
                         <TableRow key={i} sx={{ '&:last-child td': { border: 0 } }}>
                           <TableCell sx={{ py: 0.75, minWidth: 180 }}>
-                            <TextField {...tf} fullWidth placeholder="e.g. Small, Large, Spicy"
+                            <TextField {...tf} fullWidth placeholder={isRestaurant ? "e.g. Half Portion, Full, Extra Cheese" : "e.g. Small, Large, Blue"}
                               value={row.name} onChange={e => setVariation(i, 'name', e.target.value)} />
                           </TableCell>
                           <TableCell sx={{ py: 0.75, minWidth: 120 }}>
@@ -463,13 +482,13 @@ export default function AddProductPage() {
               <Button variant="outlined" size="small" startIcon={<AddOutlinedIcon />}
                 onClick={addVariation}
                 sx={{ alignSelf: 'flex-start', textTransform: 'none', borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: '#D8E9D6', borderColor: BRAND } }}>
-                Add Variation
+                {isRestaurant ? 'Add Portion / Variation' : 'Add Variation'}
               </Button>
             </Stack>
           </SectionCard>
 
           {/* ── Images ── */}
-          <SectionCard icon={<CameraAltOutlinedIcon fontSize="small" />} title="Images" subtitle="Upload photos of this item">
+          <SectionCard icon={<CameraAltOutlinedIcon fontSize="small" />} title="Images" subtitle={isRestaurant ? "Upload delicious photos of this dish" : "Upload photos of this item"}>
             <Stack spacing={2}>
 
               {/* Upload zone */}
@@ -524,53 +543,55 @@ export default function AddProductPage() {
             </Stack>
           </SectionCard>
 
-          {/* ── Physical Details ── */}
-          <SectionCard icon={<StraightenOutlinedIcon fontSize="small" />} title="Physical Details" subtitle="Size, colour, condition and dimensions">
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField {...tf} fullWidth label="Size Name"
-                  value={form.sizeName} onChange={e => set('sizeName', e.target.value)} />
+          {/* ── Physical Details (Only for Shop / Retail Vendors) ── */}
+          {!isRestaurant && (
+            <SectionCard icon={<StraightenOutlinedIcon fontSize="small" />} title="Physical Details" subtitle="Size, colour, condition and dimensions">
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField {...tf} fullWidth label="Size Name"
+                    value={form.sizeName} onChange={e => set('sizeName', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField {...tf} fullWidth label="Size"
+                    value={form.size} onChange={e => set('size', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField {...tf} fullWidth label="Color"
+                    value={form.color} onChange={e => set('color', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField {...tf} fullWidth label="Condition"
+                    value={form.conditionType} onChange={e => set('conditionType', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField {...tf} fullWidth label="Dimensions"
+                    value={form.productDimensions} onChange={e => set('productDimensions', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField {...tf} fullWidth label="Weight"
+                    value={form.packageWeight} onChange={e => set('packageWeight', e.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField {...tf} fullWidth label="Warranty"
+                    value={form.warranty} onChange={e => set('warranty', e.target.value)} />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField {...tf} fullWidth label="Size"
-                  value={form.size} onChange={e => set('size', e.target.value)} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField {...tf} fullWidth label="Color"
-                  value={form.color} onChange={e => set('color', e.target.value)} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField {...tf} fullWidth label="Condition"
-                  value={form.conditionType} onChange={e => set('conditionType', e.target.value)} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField {...tf} fullWidth label="Dimensions"
-                  value={form.productDimensions} onChange={e => set('productDimensions', e.target.value)} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField {...tf} fullWidth label="Weight"
-                  value={form.packageWeight} onChange={e => set('packageWeight', e.target.value)} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField {...tf} fullWidth label="Warranty"
-                  value={form.warranty} onChange={e => set('warranty', e.target.value)} />
-              </Grid>
-            </Grid>
-          </SectionCard>
+            </SectionCard>
+          )}
 
           {/* ── Ingredients / Notes ── */}
-          <SectionCard icon={<NotesOutlinedIcon fontSize="small" />} title="Ingredients / Notes" subtitle="Ingredients, allergens or preparation notes">
-            <TextField {...tf} fullWidth multiline rows={4} label="Ingredients"
+          <SectionCard icon={<NotesOutlinedIcon fontSize="small" />} title={isRestaurant ? "Ingredients & Preparation Notes" : "Ingredients / Notes"} subtitle={isRestaurant ? "Ingredients, allergens, dietary information or serving notes" : "Ingredients, allergens or preparation notes"}>
+            <TextField {...tf} fullWidth multiline rows={4} label="Ingredients / Notes"
               value={form.ingredients} onChange={e => set('ingredients', e.target.value)}
-              placeholder="e.g. Chicken, rice, spices, yoghurt…" />
+              placeholder={isRestaurant ? "e.g. Basmati rice, fresh chicken, yogurt, saffron, spices (Halal, Gluten-free)" : "e.g. Material composition, ingredients, or notes…"} />
           </SectionCard>
 
           {/* ── Submit (bottom) ── */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', pb: 2 }}>
             <Button type="submit" variant="contained" disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
-              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 4, py: 1.2 }}>
-              {isSubmitting ? 'Saving…' : 'Save Item'}
+              sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 4, py: 1.2 }}>
+              {isSubmitting ? 'Saving…' : (isRestaurant ? 'Save Food Item' : 'Save Product')}
             </Button>
           </Box>
 

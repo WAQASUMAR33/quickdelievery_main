@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { checkUserAccess } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { isRestaurantVendor } from '@/lib/vendorHelpers'
 import toast from 'react-hot-toast'
 
 import Box              from '@mui/material/Box'
@@ -90,6 +91,18 @@ export default function ProductEditPage() {
   const [saving,    setSaving]    = useState(false)
   const [approving, setApproving] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
+  const [vendorBusiness, setVendorBusiness] = useState(userData?.business || null)
+
+  useEffect(() => {
+    if (userData?.email) {
+      fetch(`/api/vendor/profile?email=${encodeURIComponent(userData.email)}`)
+        .then(r => r.json())
+        .then(d => { if (d.success && d.data) setVendorBusiness(d.data) })
+        .catch(() => {})
+    }
+  }, [userData?.email])
+
+  const isRestaurant = isRestaurantVendor(userData, vendorBusiness)
 
   const [categories,    setCategories]    = useState([])
   const [subcategories, setSubcategories] = useState([])
@@ -208,18 +221,18 @@ export default function ProductEditPage() {
           stock:             parseInt(form.stock) || 0,
           status:            form.status,
           proImages:         form.proImages,
-          brandName:         form.brandName       || null,
-          manufacturer:      form.manufacturer    || null,
-          productType:       form.productType     || null,
-          modelNumber:       form.modelNumber     || null,
-          productDimensions: form.productDimensions || null,
-          packageWeight:     form.packageWeight   || null,
-          conditionType:     form.conditionType   || null,
-          warranty:          form.warranty        || null,
+          brandName:         !isRestaurant ? (form.brandName || null) : null,
+          manufacturer:      !isRestaurant ? (form.manufacturer || null) : null,
+          productType:       !isRestaurant ? (form.productType || null) : null,
+          modelNumber:       !isRestaurant ? (form.modelNumber || null) : null,
+          productDimensions: !isRestaurant ? (form.productDimensions || null) : null,
+          packageWeight:     !isRestaurant ? (form.packageWeight || null) : null,
+          conditionType:     !isRestaurant ? (form.conditionType || null) : null,
+          warranty:          !isRestaurant ? (form.warranty || null) : null,
           ingredients:       form.ingredients     || null,
-          sizeName:          form.sizeName        || null,
-          size:              form.size            || null,
-          color:             form.color           || null,
+          sizeName:          !isRestaurant ? (form.sizeName || null) : null,
+          size:              !isRestaurant ? (form.size || null) : null,
+          color:             !isRestaurant ? (form.color || null) : null,
           salePrice:         form.salePrice ? parseFloat(form.salePrice) : null,
           saleStartDate:     form.saleStartDate   || null,
           saleEndDate:       form.saleEndDate     || null,
@@ -403,26 +416,30 @@ export default function ProductEditPage() {
                       </Grid>
                     </Grid>
                   )}
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Brand" disabled={isAdmin}
-                        value={form.brandName} onChange={e => set('brandName', e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Manufacturer" disabled={isAdmin}
-                        value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Product Type" disabled={isAdmin}
-                        value={form.productType} onChange={e => set('productType', e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField {...tf} fullWidth label="Model Number" disabled={isAdmin}
-                        value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
-                    </Grid>
-                  </Grid>
+                  {!isRestaurant && (
+                    <>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField {...tf} fullWidth label="Brand" disabled={isAdmin}
+                            value={form.brandName} onChange={e => set('brandName', e.target.value)} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField {...tf} fullWidth label="Manufacturer" disabled={isAdmin}
+                            value={form.manufacturer} onChange={e => set('manufacturer', e.target.value)} />
+                        </Grid>
+                      </Grid>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField {...tf} fullWidth label="Product Type" disabled={isAdmin}
+                            value={form.productType} onChange={e => set('productType', e.target.value)} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField {...tf} fullWidth label="Model Number" disabled={isAdmin}
+                            value={form.modelNumber} onChange={e => set('modelNumber', e.target.value)} />
+                        </Grid>
+                      </Grid>
+                    </>
+                  )}
                 </Stack>
               </SectionCard>
 
@@ -472,7 +489,7 @@ export default function ProductEditPage() {
                     { label: 'Cost',       field: 'cost',     type: 'number' },
                     { label: 'Discount %', field: 'discount', type: 'number' },
                     { label: 'Sale Price', field: 'salePrice',type: 'number' },
-                    { label: 'Stock',      field: 'stock',    type: 'number' },
+                    { label: isRestaurant ? 'Daily Stock' : 'Stock', field: 'stock', type: 'number' },
                     { label: 'Quantity',   field: 'qnty',     type: 'number' },
                   ].map(({ label, field, type, required }) => (
                     <Grid item xs={6} sm={4} key={field}>
@@ -501,29 +518,31 @@ export default function ProductEditPage() {
                 </Grid>
               </SectionCard>
 
-              {/* Physical Details */}
-              <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title="Physical Details">
-                <Grid container spacing={2}>
-                  {[
-                    { label: 'Size Name',   field: 'sizeName' },
-                    { label: 'Size',        field: 'size' },
-                    { label: 'Color',       field: 'color' },
-                    { label: 'Condition',   field: 'conditionType' },
-                    { label: 'Dimensions',  field: 'productDimensions' },
-                    { label: 'Weight',      field: 'packageWeight' },
-                    { label: 'Warranty',    field: 'warranty' },
-                  ].map(({ label, field }) => (
-                    <Grid item xs={12} sm={6} key={field}>
-                      <TextField {...tf} fullWidth label={label} disabled={isAdmin}
-                        value={form[field]} onChange={e => set(field, e.target.value)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </SectionCard>
+              {/* Physical Details (Only for Shop / Retail Vendors) */}
+              {!isRestaurant && (
+                <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title="Physical Details">
+                  <Grid container spacing={2}>
+                    {[
+                      { label: 'Size Name',   field: 'sizeName' },
+                      { label: 'Size',        field: 'size' },
+                      { label: 'Color',       field: 'color' },
+                      { label: 'Condition',   field: 'conditionType' },
+                      { label: 'Dimensions',  field: 'productDimensions' },
+                      { label: 'Weight',      field: 'packageWeight' },
+                      { label: 'Warranty',    field: 'warranty' },
+                    ].map(({ label, field }) => (
+                      <Grid item xs={12} sm={6} key={field}>
+                        <TextField {...tf} fullWidth label={label} disabled={isAdmin}
+                          value={form[field]} onChange={e => set(field, e.target.value)} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </SectionCard>
+              )}
 
               {/* Ingredients */}
-              <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title="Ingredients / Notes">
-                <TextField {...tf} fullWidth multiline rows={3} label="Ingredients" disabled={isAdmin}
+              <SectionCard icon={<InfoOutlinedIcon fontSize="small" />} title={isRestaurant ? "Ingredients & Notes" : "Ingredients / Notes"}>
+                <TextField {...tf} fullWidth multiline rows={3} label={isRestaurant ? "Ingredients & Preparation Notes" : "Ingredients"} disabled={isAdmin}
                   value={form.ingredients} onChange={e => set('ingredients', e.target.value)} />
               </SectionCard>
 

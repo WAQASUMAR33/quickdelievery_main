@@ -58,6 +58,7 @@ import TableRowsOutlinedIcon    from '@mui/icons-material/TableRowsOutlined'
 import UploadOutlinedIcon       from '@mui/icons-material/UploadOutlined'
 import ViewListOutlinedIcon     from '@mui/icons-material/ViewListOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
+import { isRestaurantVendor }    from '@/lib/vendorHelpers'
 
 const BRAND      = '#39772A'
 const BRAND_DARK = '#2E5F22'
@@ -82,6 +83,18 @@ const VendorProductManagement = () => {
   const [filterApproval, setFilterApproval] = useState('all')
   const [viewMode, setViewMode] = useState('table')
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' })
+  const [vendorBusiness, setVendorBusiness] = useState(userData?.business || null)
+
+  useEffect(() => {
+    if (userData?.email) {
+      fetch(`/api/vendor/profile?email=${encodeURIComponent(userData.email)}`)
+        .then(r => r.json())
+        .then(d => { if (d.success && d.data) setVendorBusiness(d.data) })
+        .catch(() => {})
+    }
+  }, [userData?.email])
+
+  const isRestaurant = isRestaurantVendor(userData, vendorBusiness)
 
   const [formData, setFormData] = useState({
     proName: '', description: '', catId: '', subCatId: '',
@@ -172,23 +185,23 @@ const VendorProductManagement = () => {
           stock: parseInt(formData.stock || 0),
           status: formData.status,
           proImages: formData.images,
-          brandName: formData.brandName || null,
-          manufacturer: formData.manufacturer || null,
-          productType: formData.productType || null,
-          modelNumber: formData.modelNumber || null,
-          sizeName: formData.sizeName || null,
-          conditionType: formData.conditionType || null,
-          productDimensions: formData.productDimensions || null,
-          packageWeight: formData.packageWeight || null,
-          warranty: formData.warranty || null,
-          size: formData.size || null,
-          color: formData.color || null,
-          keyFeatures: formData.keyFeatures?.filter(Boolean) || [],
-          ingredients: formData.ingredients || null,
-          salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
-          saleStartDate: formData.saleStartDate || null,
-          saleEndDate: formData.saleEndDate || null,
-          currency: formData.currency || 'PKR',
+          brandName:         !isRestaurant ? (formData.brandName || null) : null,
+          manufacturer:      !isRestaurant ? (formData.manufacturer || null) : null,
+          productType:       !isRestaurant ? (formData.productType || null) : null,
+          modelNumber:       !isRestaurant ? (formData.modelNumber || null) : null,
+          sizeName:          !isRestaurant ? (formData.sizeName || null) : null,
+          conditionType:     !isRestaurant ? (formData.conditionType || null) : null,
+          productDimensions: !isRestaurant ? (formData.productDimensions || null) : null,
+          packageWeight:     !isRestaurant ? (formData.packageWeight || null) : null,
+          warranty:          !isRestaurant ? (formData.warranty || null) : null,
+          size:              !isRestaurant ? (formData.size || null) : null,
+          color:             !isRestaurant ? (formData.color || null) : null,
+          keyFeatures:       formData.keyFeatures?.filter(Boolean) || [],
+          ingredients:       formData.ingredients || null,
+          salePrice:         formData.salePrice ? parseFloat(formData.salePrice) : null,
+          saleStartDate:     formData.saleStartDate || null,
+          saleEndDate:       formData.saleEndDate || null,
+          currency:          formData.currency || 'PKR',
         }),
       })
       const r = await res.json()
@@ -196,9 +209,9 @@ const VendorProductManagement = () => {
         setShowEditModal(false)
         setSelectedProduct(null)
         fetchProducts()
-        toast.success('Product updated successfully!')
+        toast.success(isRestaurant ? 'Food item updated successfully!' : 'Product updated successfully!')
       } else {
-        toast.error(`Failed to update product: ${r.error}`)
+        toast.error(`Failed to update: ${r.error}`)
       }
     } catch { toast.error('Error updating product. Please try again.') }
   }
@@ -327,9 +340,11 @@ const VendorProductManagement = () => {
       {/* ── Header ── */}
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>My Products</Typography>
+          <Typography variant="h5" fontWeight={700}>
+            {isRestaurant ? 'My Food Items' : 'My Products'}
+          </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Manage your product listings and track approval status
+            {isRestaurant ? 'Manage your restaurant menu items and track approval status' : 'Manage your product listings and track approval status'}
           </Typography>
         </Box>
         <Button
@@ -337,7 +352,7 @@ const VendorProductManagement = () => {
           onClick={() => router.push('/admin/dashboard/products/add')}
           sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, px: 3, py: 1.5 }}
         >
-          Add Product
+          {isRestaurant ? 'Add Food Item' : 'Add Product'}
         </Button>
       </Box>
 
@@ -613,8 +628,8 @@ const VendorProductManagement = () => {
                 </Box>
               </Grid>
 
-              {/* Additional Info */}
-              {[selectedProduct.brandName, selectedProduct.manufacturer, selectedProduct.productType, selectedProduct.modelNumber, selectedProduct.sizeName, selectedProduct.conditionType, selectedProduct.productDimensions, selectedProduct.packageWeight, selectedProduct.warranty].some(Boolean) && (
+              {/* Additional Info (Only for Shop / Retail Vendors) */}
+              {!isRestaurant && [selectedProduct.brandName, selectedProduct.manufacturer, selectedProduct.productType, selectedProduct.modelNumber, selectedProduct.sizeName, selectedProduct.conditionType, selectedProduct.productDimensions, selectedProduct.packageWeight, selectedProduct.warranty].some(Boolean) && (
                 <Grid item xs={12}>
                   <Divider sx={{ mb: 2 }} />
                   <Typography variant="subtitle1" fontWeight={700} mb={2}>Additional Information</Typography>
@@ -683,7 +698,9 @@ const VendorProductManagement = () => {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 3, py: 2, bgcolor: '#ffffff', borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box>
-            <Typography variant="h6" fontWeight={800} color="#111827">Edit Product</Typography>
+            <Typography variant="h6" fontWeight={800} color="#111827">
+              {isRestaurant ? 'Edit Food Item' : 'Edit Product'}
+            </Typography>
             <Typography variant="caption" color="text.secondary">SKU: {formData.sku || 'N/A'}</Typography>
           </Box>
           <IconButton size="small" onClick={() => setShowEditModal(false)}><CloseIcon /></IconButton>
@@ -695,11 +712,11 @@ const VendorProductManagement = () => {
             {/* ── SECTION 1: Basic & Category Info ── */}
             <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
               <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Basic Information & Category
+                {isRestaurant ? 'Basic Information & Category' : 'Basic Information & Category'}
               </Typography>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
                 <TextField
-                  size="small" fullWidth label="Product Name *" value={formData.proName}
+                  size="small" fullWidth label={isRestaurant ? 'Food / Item Name *' : 'Product Name *'} value={formData.proName}
                   onChange={e => setFormData({ ...formData, proName: e.target.value })}
                   sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', md: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                 />
@@ -786,202 +803,206 @@ const VendorProductManagement = () => {
               </Box>
             </Card>
 
-            {/* ── SECTION 2: Specifications & Attributes ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Specifications & Attributes
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-                <TextField
-                  size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
-                  onChange={e => setFormData({ ...formData, brandName: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small" fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
-                  onChange={e => setFormData({ ...formData, manufacturer: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
-                  <InputLabel>Product Type</InputLabel>
-                  <Select
-                    value={formData.productType || ''}
-                    label="Product Type"
-                    onChange={e => setFormData({ ...formData, productType: e.target.value })}
-                    sx={{ borderRadius: 0 }}
-                  >
-                    <MenuItem value=""><em>Select Product Type</em></MenuItem>
-                    {['Physical', 'Digital', 'Service', 'Subscription'].map(t => (
-                      <MenuItem key={t} value={t}>{t} Product</MenuItem>
-                    ))}
-                    {formData.productType && !['Physical', 'Digital', 'Service', 'Subscription'].some(t => t.toLowerCase() === formData.productType.toLowerCase()) && (
-                      <MenuItem value={formData.productType}>{formData.productType}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-                <TextField
-                  size="small" fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
-                  onChange={e => setFormData({ ...formData, modelNumber: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-
-                <TextField
-                  size="small" fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
-                  onChange={e => setFormData({ ...formData, sizeName: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
-                  <InputLabel>Condition</InputLabel>
-                  <Select
-                    value={formData.conditionType || ''}
-                    label="Condition"
-                    onChange={e => setFormData({ ...formData, conditionType: e.target.value })}
-                    sx={{ borderRadius: 0 }}
-                  >
-                    <MenuItem value=""><em>Select Condition</em></MenuItem>
-                    {['New', 'Used', 'Refurbished', 'Open Box'].map(c => (
-                      <MenuItem key={c} value={c}>{c}</MenuItem>
-                    ))}
-                    {formData.conditionType && !['New', 'Used', 'Refurbished', 'Open Box'].some(c => c.toLowerCase() === formData.conditionType.toLowerCase()) && (
-                      <MenuItem value={formData.conditionType}>{formData.conditionType}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-                <TextField
-                  size="small" fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
-                  onChange={e => setFormData({ ...formData, productDimensions: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small" fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
-                  onChange={e => setFormData({ ...formData, packageWeight: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-
-                <TextField
-                  size="small" fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
-                  onChange={e => setFormData({ ...formData, warranty: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                  <InputLabel>Currency</InputLabel>
-                  <Select
-                    value={formData.currency || 'PKR'}
-                    label="Currency"
-                    onChange={e => setFormData({ ...formData, currency: e.target.value })}
-                    sx={{ borderRadius: 0 }}
-                  >
-                    {[
-                      { v: 'PKR', l: 'PKR — Pakistani Rupee' },
-                      { v: 'USD', l: 'USD — US Dollar' },
-                      { v: 'AED', l: 'AED — UAE Dirham' },
-                      { v: 'SAR', l: 'SAR — Saudi Riyal' },
-                      { v: 'GBP', l: 'GBP — British Pound' },
-                      { v: 'EUR', l: 'EUR — Euro' },
-                    ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
-                    {formData.currency && !['PKR', 'USD', 'AED', 'SAR', 'GBP', 'EUR'].includes(formData.currency) && (
-                      <MenuItem value={formData.currency}>{formData.currency}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Card>
-
-            {/* ── SECTION 3: Size & Color Variants (2 Equal Balanced Columns) ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Product Variations (Size & Color)
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                {/* Left: Size */}
-                <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
-                    <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
-                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND }, textTransform: 'none', fontWeight: 600 }}>
-                      + Add Custom Size
-                    </Button>
-                  </Box>
-                  <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
-                    <InputLabel>Select Size</InputLabel>
+            {/* ── SECTION 2: Specifications & Attributes (Only for Shop / Retail Vendors) ── */}
+            {!isRestaurant && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  Specifications & Attributes
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                  <TextField
+                    size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
+                    onChange={e => setFormData({ ...formData, brandName: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <TextField
+                    size="small" fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
+                    onChange={e => setFormData({ ...formData, manufacturer: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
+                    <InputLabel>Product Type</InputLabel>
                     <Select
-                      value={formData.size || ''}
-                      label="Select Size"
-                      onChange={e => setFormData({ ...formData, size: e.target.value })}
-                      sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                      value={formData.productType || ''}
+                      label="Product Type"
+                      onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                      sx={{ borderRadius: 0 }}
                     >
-                      <MenuItem value=""><em>None / Standard</em></MenuItem>
-                      {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => (
-                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      <MenuItem value=""><em>Select Product Type</em></MenuItem>
+                      {['Physical', 'Digital', 'Service', 'Subscription'].map(t => (
+                        <MenuItem key={t} value={t}>{t} Product</MenuItem>
                       ))}
-                      {formData.size && !['Small', 'Medium', 'Large', 'XL', 'XXL'].includes(formData.size) && (
-                        <MenuItem value={formData.size}>{formData.size}</MenuItem>
+                      {formData.productType && !['Physical', 'Digital', 'Service', 'Subscription'].some(t => t.toLowerCase() === formData.productType.toLowerCase()) && (
+                        <MenuItem value={formData.productType}>{formData.productType}</MenuItem>
                       )}
                     </Select>
                   </FormControl>
-                  {formData.size && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
-                        <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
-                      </Box>
-                      <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Box>
+                  <TextField
+                    size="small" fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
+                    onChange={e => setFormData({ ...formData, modelNumber: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
 
-                {/* Right: Color */}
-                <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
-                    <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
-                      sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' }, textTransform: 'none', fontWeight: 600 }}>
-                      + Add Custom Color
-                    </Button>
-                  </Box>
-                  <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
-                    <InputLabel>Select Color</InputLabel>
+                  <TextField
+                    size="small" fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
+                    onChange={e => setFormData({ ...formData, sizeName: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
+                    <InputLabel>Condition</InputLabel>
                     <Select
-                      value={formData.color || ''}
-                      label="Select Color"
-                      onChange={e => setFormData({ ...formData, color: e.target.value })}
-                      sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                      value={formData.conditionType || ''}
+                      label="Condition"
+                      onChange={e => setFormData({ ...formData, conditionType: e.target.value })}
+                      sx={{ borderRadius: 0 }}
                     >
-                      <MenuItem value=""><em>None / Default</em></MenuItem>
-                      {predefinedColors.map(c => (
-                        <MenuItem key={c.name} value={c.name}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
-                            {c.name}
-                          </Box>
-                        </MenuItem>
+                      <MenuItem value=""><em>Select Condition</em></MenuItem>
+                      {['New', 'Used', 'Refurbished', 'Open Box'].map(c => (
+                        <MenuItem key={c} value={c}>{c}</MenuItem>
                       ))}
-                      {formData.color && !predefinedColors.some(c => c.name === formData.color) && (
-                        <MenuItem value={formData.color}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
-                            {formData.color}
-                          </Box>
-                        </MenuItem>
+                      {formData.conditionType && !['New', 'Used', 'Refurbished', 'Open Box'].some(c => c.toLowerCase() === formData.conditionType.toLowerCase()) && (
+                        <MenuItem value={formData.conditionType}>{formData.conditionType}</MenuItem>
                       )}
                     </Select>
                   </FormControl>
-                  {formData.color && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
-                        <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
-                      </Box>
-                      <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
+                  <TextField
+                    size="small" fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
+                    onChange={e => setFormData({ ...formData, productDimensions: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <TextField
+                    size="small" fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
+                    onChange={e => setFormData({ ...formData, packageWeight: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
+                    onChange={e => setFormData({ ...formData, warranty: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Currency</InputLabel>
+                    <Select
+                      value={formData.currency || 'PKR'}
+                      label="Currency"
+                      onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {[
+                        { v: 'PKR', l: 'PKR — Pakistani Rupee' },
+                        { v: 'USD', l: 'USD — US Dollar' },
+                        { v: 'AED', l: 'AED — UAE Dirham' },
+                        { v: 'SAR', l: 'SAR — Saudi Riyal' },
+                        { v: 'GBP', l: 'GBP — British Pound' },
+                        { v: 'EUR', l: 'EUR — Euro' },
+                      ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
+                      {formData.currency && !['PKR', 'USD', 'AED', 'SAR', 'GBP', 'EUR'].includes(formData.currency) && (
+                        <MenuItem value={formData.currency}>{formData.currency}</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
                 </Box>
-              </Box>
-            </Card>
+              </Card>
+            )}
+
+            {/* ── SECTION 3: Size & Color Variants (Only for Shop / Retail Vendors) ── */}
+            {!isRestaurant && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  Product Variations (Size & Color)
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                  {/* Left: Size */}
+                  <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
+                      <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
+                        sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND }, textTransform: 'none', fontWeight: 600 }}>
+                        + Add Custom Size
+                      </Button>
+                    </Box>
+                    <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
+                      <InputLabel>Select Size</InputLabel>
+                      <Select
+                        value={formData.size || ''}
+                        label="Select Size"
+                        onChange={e => setFormData({ ...formData, size: e.target.value })}
+                        sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                      >
+                        <MenuItem value=""><em>None / Standard</em></MenuItem>
+                        {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => (
+                          <MenuItem key={s} value={s}>{s}</MenuItem>
+                        ))}
+                        {formData.size && !['Small', 'Medium', 'Large', 'XL', 'XXL'].includes(formData.size) && (
+                          <MenuItem value={formData.size}>{formData.size}</MenuItem>
+                        )}
+                      </Select>
+                    </FormControl>
+                    {formData.size && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
+                          <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
+                        </Box>
+                        <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Right: Color */}
+                  <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
+                      <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
+                        sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' }, textTransform: 'none', fontWeight: 600 }}>
+                        + Add Custom Color
+                      </Button>
+                    </Box>
+                    <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
+                      <InputLabel>Select Color</InputLabel>
+                      <Select
+                        value={formData.color || ''}
+                        label="Select Color"
+                        onChange={e => setFormData({ ...formData, color: e.target.value })}
+                        sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
+                      >
+                        <MenuItem value=""><em>None / Default</em></MenuItem>
+                        {predefinedColors.map(c => (
+                          <MenuItem key={c.name} value={c.name}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
+                              {c.name}
+                            </Box>
+                          </MenuItem>
+                        ))}
+                        {formData.color && !predefinedColors.some(c => c.name === formData.color) && (
+                          <MenuItem value={formData.color}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
+                              {formData.color}
+                            </Box>
+                          </MenuItem>
+                        )}
+                      </Select>
+                    </FormControl>
+                    {formData.color && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
+                          <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
+                        </Box>
+                        <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              </Card>
+            )}
 
             {/* ── SECTION 4: Features & Ingredients ── */}
             <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
