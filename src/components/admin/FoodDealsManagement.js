@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { authFetch } from '@/lib/apiClient'
 
 import Alert             from '@mui/material/Alert'
 import Autocomplete     from '@mui/material/Autocomplete'
@@ -38,12 +39,13 @@ import Tooltip           from '@mui/material/Tooltip'
 import Typography        from '@mui/material/Typography'
 
 import AddIcon            from '@mui/icons-material/Add'
+import RemoveIcon         from '@mui/icons-material/Remove'
 import CloseIcon          from '@mui/icons-material/Close'
 import DeleteOutlineIcon  from '@mui/icons-material/DeleteOutline'
 import EditOutlinedIcon   from '@mui/icons-material/EditOutlined'
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
 import SaveOutlinedIcon   from '@mui/icons-material/SaveOutlined'
-import ImageUploadField from '@/components/ui/ImageUploadField'
+import ImageUploadField   from '@/components/ui/ImageUploadField'
 
 const BRAND = '#39772A'
 
@@ -71,9 +73,13 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
+
+  // Search input state for the product picker autocomplete
+  const [productSearchValue, setProductSearchValue] = useState(null)
+
   const [form, setForm] = useState({
-    dealKind: 'catalog',
-    productId: '',
+    dealKind: 'catalog', // 'catalog' (products bundle) or 'custom' (typed lines)
+    selectedProducts: [], // array of { proId, proName, sku, price, image, quantity }
     sortOrder: 0,
     active: true,
     badgeLabel: '',
@@ -87,50 +93,55 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
   })
 
   const loadDeals = useCallback(async () => {
-    const res = await fetch('/api/deals?scope=manage', {
-      headers: { ...authHeadersJson(), 'Content-Type': 'application/json' },
-    })
-    let data = {}
     try {
-      data = await res.json()
-    } catch {
-      data = {}
-    }
-    if (!res.ok) {
-      if (data.code === 'MISSING_DEALS_TABLE') {
-        setSchemaWarning(data.error || 'Run database migrations to enable food deals.')
+      const res = await fetch('/api/deals?scope=manage', {
+        headers: { ...authHeadersJson(), 'Content-Type': 'application/json' },
+      })
+      let data = {}
+      try {
+        data = await res.json()
+      } catch {
+        data = {}
+      }
+      if (!res.ok) {
+        if (data.code === 'MISSING_DEALS_TABLE') {
+          setSchemaWarning(data.error || 'Run database migrations to enable food deals.')
+          setDeals([])
+          return
+        }
+        setSchemaWarning(null)
+        toast.error(data.error || 'Failed to load deals')
         setDeals([])
         return
       }
       setSchemaWarning(null)
-      toast.error(data.error || 'Failed to load deals')
+      setDeals(data.data || [])
+    } catch (err) {
+      console.error('Error loading deals:', err)
       setDeals([])
-      return
     }
-    setSchemaWarning(null)
-    setDeals(data.data || [])
   }, [])
 
   const loadProducts = useCallback(async () => {
     try {
       const headers = { ...authHeadersJson() }
-      const url = mode === 'vendor' && userData?.uid
-        ? `/api/products?type=products&vendorId=${encodeURIComponent(userData.uid)}`
-        : '/api/products?type=products'
-      const res = await fetch(url, { headers })
+      const res = await fetch('/api/products?type=products', { headers })
       const data = await res.json().catch(() => ({}))
-      if (!data.success || !data.data) {
+      if (!data.success || !Array.isArray(data.data)) {
         setProducts([])
         return
       }
       let list = data.data
       if (mode === 'vendor' && userData?.uid) {
-        const uid = userData.uid
-        list = list.filter((p) => String(p.vendorId ?? p.vendor_id ?? '') === String(uid))
+        const vendorList = list.filter((p) => String(p.vendorId || p.creatorId || '') === String(userData.uid))
+        if (vendorList.length > 0) {
+          list = vendorList
+        }
       }
-      const eligible = list.filter((p) => p?.proName && p?.price != null)
+      const eligible = list.filter((p) => p && (p.proName || p.name))
       setProducts(eligible)
-    } catch {
+    } catch (err) {
+      console.error('Error loading products for deals:', err)
       setProducts([])
     }
   }, [mode, userData?.uid])
@@ -151,11 +162,19 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
     }
   }, [loadDeals, loadProducts])
 
+  // Reload products whenever auth status changes or dialog opens
+  useEffect(() => {
+    if (userData?.uid) {
+      loadProducts()
+    }
+  }, [userData?.uid, loadProducts])
+
   const openCreate = () => {
     setEditingId(null)
+    setProductSearchValue(null)
     setForm({
       dealKind: 'catalog',
-      productId: '',
+      selectedProducts: [],
       sortOrder: 0,
       active: true,
       badgeLabel: '',
@@ -167,40 +186,124 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
       customPriceLabel: '',
       vendorUid: '',
     })
+    loadProducts()
     setDialogOpen(true)
   }
 
   const openEdit = (row) => {
     setEditingId(row.dealId)
+    setProductSearchValue(null)
     const custom = row.isCustom
+
+    // Rebuild selectedProducts for catalog / multi-product deals
+    let selProducts = []
+    if (row.customItems && row.customItems.length > 0) {
+      selProducts = row.customItems.map((item) => ({
+        proId: item.proId || null,
+        proName: item.name || '',
+        sku: item.sku || '',
+        price: item.price != null ? Number(item.price) : 0,
+        image: item.image || '',
+        quantity: item.quantity ? Number(item.quantity) : 1,
+      }))
+    } else if (row.productId != null && row.product) {
+      selProducts = [{
+        proId: row.productId,
+        proName: row.product.proName || 'Product',
+        sku: row.product.sku || '',
+        price: parseFloat(row.product.price || 0),
+        image: Array.isArray(row.product.proImages) ? row.product.proImages[0] : (row.product.proImages || ''),
+        quantity: 1,
+      }]
+    }
+
     setForm({
-      dealKind: custom ? 'custom' : 'catalog',
-      productId: row.productId != null ? String(row.productId) : '',
+      dealKind: custom && (!selProducts.length || selProducts.every(p => !p.proId)) ? 'custom' : 'catalog',
+      selectedProducts: selProducts,
       sortOrder: row.sortOrder ?? 0,
       active: !!row.active,
       badgeLabel: row.badgeLabel || '',
       startAt: toLocalInputValue(row.startAt),
       endAt: toLocalInputValue(row.endAt),
-      customTitle: row.customTitle || '',
+      customTitle: row.customTitle || (row.product?.proName || ''),
       customLines:
         custom && row.customItems?.length
           ? row.customItems.map((x) => ({ name: x.name || '' }))
           : [{ name: '' }],
-      customImageUrl: row.customImageUrl || '',
+      customImageUrl: row.customImageUrl || (row.product?.proImages?.[0] || ''),
       customPriceLabel: row.customPriceLabel || '',
       vendorUid: row.vendorUid || '',
     })
+    loadProducts()
     setDialogOpen(true)
   }
 
-  const handleSave = async () => {
-    const creatingCatalog = !editingId && form.dealKind === 'catalog'
-    if (creatingCatalog && !form.productId) {
-      toast.error('Select a product')
-      return
+  // Handle adding a product to the multi-product deal
+  const handleAddProductToDeal = (product) => {
+    if (!product) return
+    const existingIndex = form.selectedProducts.findIndex((p) => String(p.proId) === String(product.proId))
+    let nextList
+    if (existingIndex >= 0) {
+      nextList = [...form.selectedProducts]
+      nextList[existingIndex].quantity = (nextList[existingIndex].quantity || 1) + 1
+    } else {
+      const img = Array.isArray(product.proImages) ? product.proImages[0] : (product.proImages || '')
+      nextList = [
+        ...form.selectedProducts,
+        {
+          proId: product.proId,
+          proName: product.proName,
+          sku: product.sku || '',
+          price: parseFloat(product.price || 0),
+          image: img,
+          quantity: 1,
+        },
+      ]
     }
-    const savingCustom = form.dealKind === 'custom'
-    if (savingCustom) {
+
+    // Auto-fill title and image if empty
+    const autoTitle = form.customTitle.trim()
+      ? form.customTitle
+      : nextList.map((p) => `${p.quantity > 1 ? `${p.quantity}x ` : ''}${p.proName}`).join(' + ')
+
+    const autoImg = form.customImageUrl.trim()
+      ? form.customImageUrl
+      : (nextList[0]?.image || '')
+
+    setForm((prev) => ({
+      ...prev,
+      selectedProducts: nextList,
+      customTitle: autoTitle,
+      customImageUrl: autoImg,
+    }))
+    setProductSearchValue(null)
+  }
+
+  const handleUpdateProductQuantity = (proId, newQty) => {
+    const qty = Math.max(1, parseInt(newQty, 10) || 1)
+    const nextList = form.selectedProducts.map((p) =>
+      String(p.proId) === String(proId) ? { ...p, quantity: qty } : p
+    )
+    setForm((prev) => ({ ...prev, selectedProducts: nextList }))
+  }
+
+  const handleRemoveProductFromDeal = (proId) => {
+    const nextList = form.selectedProducts.filter((p) => String(p.proId) !== String(proId))
+    setForm((prev) => ({ ...prev, selectedProducts: nextList }))
+  }
+
+  // Calculate sum of regular prices of all selected products
+  const selectedProductsSum = useMemo(() => {
+    return form.selectedProducts.reduce((acc, p) => acc + (parseFloat(p.price || 0) * (p.quantity || 1)), 0)
+  }, [form.selectedProducts])
+
+  const handleSave = async () => {
+    if (form.dealKind === 'catalog') {
+      if (form.selectedProducts.length === 0) {
+        toast.error('Add at least one product to the deal')
+        return
+      }
+    } else if (form.dealKind === 'custom') {
       if (!form.customTitle.trim()) {
         toast.error('Enter an offer title')
         return
@@ -222,28 +325,54 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
         badgeLabel: form.badgeLabel.trim() || null,
         startAt: form.startAt ? new Date(form.startAt).toISOString() : null,
         endAt: form.endAt ? new Date(form.endAt).toISOString() : null,
+        customImageUrl: form.customImageUrl.trim() || null,
       }
 
       if (!editingId) {
-        const body =
-          form.dealKind === 'custom'
-            ? {
-                ...payload,
-                dealKind: 'custom',
-                customTitle: form.customTitle.trim(),
-                customItems: form.customLines
-                  .map((l) => ({ name: String(l.name || '').trim() }))
-                  .filter((l) => l.name.length > 0),
-                customImageUrl: form.customImageUrl.trim() || null,
-                customPriceLabel: form.customPriceLabel.trim() || null,
-                ...(mode === 'admin' ? { vendorUid: form.vendorUid.trim() || null } : {}),
-              }
-            : {
-                ...payload,
-                dealKind: 'catalog',
-                productId: Number(form.productId),
-                customImageUrl: form.customImageUrl.trim() || null,
-              }
+        let body
+        if (form.dealKind === 'custom') {
+          body = {
+            ...payload,
+            dealKind: 'custom',
+            customTitle: form.customTitle.trim(),
+            customItems: form.customLines
+              .map((l) => ({ name: String(l.name || '').trim() }))
+              .filter((l) => l.name.length > 0),
+            customPriceLabel: form.customPriceLabel.trim() || null,
+            ...(mode === 'admin' ? { vendorUid: form.vendorUid.trim() || null } : {}),
+          }
+        } else {
+          // Multi-product or single catalog deal
+          const title = form.customTitle.trim() || form.selectedProducts.map((p) => `${p.quantity > 1 ? `${p.quantity}x ` : ''}${p.proName}`).join(' + ')
+          const dealItems = form.selectedProducts.map((p) => ({
+            proId: p.proId,
+            name: p.proName,
+            price: p.price,
+            quantity: p.quantity || 1,
+            image: p.image || null,
+            sku: p.sku || null,
+          }))
+
+          if (form.selectedProducts.length === 1 && !form.customTitle.trim()) {
+            // Single product deal
+            body = {
+              ...payload,
+              dealKind: 'catalog',
+              productId: Number(form.selectedProducts[0].proId),
+              customPriceLabel: form.customPriceLabel.trim() || null,
+            }
+          } else {
+            // Multi-product combo deal
+            body = {
+              ...payload,
+              dealKind: 'custom',
+              customTitle: title,
+              customItems: dealItems,
+              customPriceLabel: form.customPriceLabel.trim() || `Rs. ${selectedProductsSum.toLocaleString()}`,
+              ...(mode === 'admin' ? { vendorUid: form.vendorUid.trim() || null } : {}),
+            }
+          }
+        }
 
         const res = await fetch('/api/deals', {
           method: 'POST',
@@ -260,13 +389,27 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
           toast.error(data.error || 'Create failed')
           return
         }
-        toast.success('Deal created')
+        toast.success('Deal created successfully')
       } else {
         const putBody = {
           ...payload,
           customImageUrl: form.customImageUrl.trim() || null,
         }
-        if (form.dealKind === 'custom') {
+
+        if (form.dealKind === 'catalog') {
+          const title = form.customTitle.trim() || form.selectedProducts.map((p) => `${p.quantity > 1 ? `${p.quantity}x ` : ''}${p.proName}`).join(' + ')
+          const dealItems = form.selectedProducts.map((p) => ({
+            proId: p.proId,
+            name: p.proName,
+            price: p.price,
+            quantity: p.quantity || 1,
+            image: p.image || null,
+            sku: p.sku || null,
+          }))
+          putBody.customTitle = title
+          putBody.customItems = dealItems
+          putBody.customPriceLabel = form.customPriceLabel.trim() || null
+        } else {
           putBody.customTitle = form.customTitle.trim()
           putBody.customItems = form.customLines
             .map((l) => ({ name: String(l.name || '').trim() }))
@@ -290,7 +433,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
           toast.error(data.error || 'Update failed')
           return
         }
-        toast.success('Deal updated')
+        toast.success('Deal updated successfully')
       }
       setDialogOpen(false)
       await loadDeals()
@@ -300,6 +443,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
   }
 
   const handleDelete = async (dealId) => {
+    if (!confirm('Are you sure you want to delete this deal?')) return
     const res = await fetch(`/api/deals/${dealId}`, {
       method: 'DELETE',
       headers: authHeadersJson(),
@@ -314,29 +458,25 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
       toast.error(data.error || 'Delete failed')
       return
     }
-    toast.success('Deal removed')
-    loadDeals()
+    toast.success('Deal deleted')
+    await loadDeals()
   }
 
-  const usedProductIds = new Set(
-    deals.filter((d) => d.productId != null).map((d) => d.productId),
-  )
-
   const vendorOptions = useMemo(() => {
-    const m = new Map()
-    for (const p of products) {
-      const vid = p.vendorId ?? p.vendor?.uid
-      if (!vid) continue
-      const label = p.vendor?.username || p.vendor?.email || String(vid)
-      if (!m.has(String(vid))) m.set(String(vid), label)
-    }
-    return [...m.entries()].map(([uid, label]) => ({ uid, label }))
-  }, [products])
+    const map = new Map()
+    deals.forEach((d) => {
+      if (d.vendorUid && d.ownerUsername) map.set(d.vendorUid, d.ownerUsername)
+      if (d.product?.vendorId && d.product?.vendor?.username) {
+        map.set(d.product.vendorId, d.product.vendor.username)
+      }
+    })
+    return Array.from(map.entries()).map(([uid, label]) => ({ uid, label }))
+  }, [deals])
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 240, gap: 2 }}>
-        <CircularProgress size={32} sx={{ color: BRAND }} />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 280, gap: 2 }}>
+        <CircularProgress size={28} sx={{ color: BRAND }} />
         <Typography color="text.secondary">Loading food deals…</Typography>
       </Box>
     )
@@ -344,8 +484,8 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
 
   const headCells =
     mode === 'admin'
-      ? ['Order', 'Deal', 'Vendor', 'Badge', 'Schedule', 'Active', '']
-      : ['Order', 'Deal', 'Badge', 'Schedule', 'Active', '']
+      ? ['Order', 'Deal', 'Vendor', 'Price / Badge', 'Schedule', 'Active', '']
+      : ['Order', 'Deal', 'Price / Badge', 'Schedule', 'Active', '']
 
   const colSpan = mode === 'admin' ? 7 : 6
 
@@ -365,8 +505,8 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {mode === 'admin'
-                ? 'Pick an approved catalogue product or a custom offer with your own lines (shown in Today’s Deals).'
-                : 'Feature an approved product or advertise a typed bundle — no SKU required.'}
+                ? 'Create multi-product bundles, catalog deals, and custom promotional offers.'
+                : 'Feature single or multi-product combos and special meal deals.'}
             </Typography>
           </Box>
         </Box>
@@ -375,13 +515,13 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
           startIcon={<AddIcon />}
           onClick={openCreate}
           disabled={Boolean(schemaWarning)}
-          sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, fontWeight: 700 }}
+          sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, fontWeight: 700 }}
         >
           Add deal
         </Button>
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 0 }}>
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
@@ -406,100 +546,131 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 </TableCell>
               </TableRow>
             ) : (
-              deals.map((row) => (
-                <TableRow key={row.dealId} hover>
-                  <TableCell sx={{ fontVariantNumeric: 'tabular-nums' }}>{row.sortOrder}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box
-                        component="img"
-                        src={row.customImageUrl || row.product?.proImages?.[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'}
-                        alt="Deal"
+              deals.map((row) => {
+                const dealThumbnail =
+                  row.customImageUrl ||
+                  (row.customItems?.[0]?.image) ||
+                  (row.product?.proImages?.[0]) ||
+                  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'
+
+                return (
+                  <TableRow key={row.dealId} hover>
+                    <TableCell sx={{ fontVariantNumeric: 'tabular-nums' }}>{row.sortOrder}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                          component="img"
+                          src={dealThumbnail}
+                          alt="Deal"
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            objectFit: 'cover',
+                            border: '1px solid #e2e8f0',
+                            bgcolor: '#f8fafc',
+                            flexShrink: 0,
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'
+                          }}
+                        />
+                        <Box sx={{ minWidth: 0 }}>
+                          {row.isCustom ? (
+                            <>
+                              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                                <Typography variant="body2" fontWeight={700}>
+                                  {row.customTitle || '—'}
+                                </Typography>
+                                <Chip
+                                  label={row.customItems?.length > 1 ? `${row.customItems.length} Items Combo` : 'Combo'}
+                                  size="small"
+                                  sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#e0e7ff', color: '#4338ca' }}
+                                />
+                              </Stack>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+                                {(row.customItems || []).map((x) => `${x.quantity > 1 ? `${x.quantity}x ` : ''}${x.name}`).join(' + ')}
+                              </Typography>
+                            </>
+                          ) : (
+                            <>
+                              <Typography variant="body2" fontWeight={700}>
+                                {row.product?.proName || '—'}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                                SKU: {row.product?.sku || 'N/A'} · Rs. {parseFloat(row.product?.price || 0).toLocaleString()}
+                              </Typography>
+                            </>
+                          )}
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    {mode === 'admin' && (
+                      <TableCell>
+                        <Typography variant="body2">
+                          {row.isCustom
+                            ? row.ownerUsername || row.vendorUid || 'Platform'
+                            : row.product?.vendor?.username || row.product?.vendorId || '—'}
+                        </Typography>
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <Stack spacing={0.5}>
+                        {row.customPriceLabel && (
+                          <Typography variant="body2" fontWeight={700} color={BRAND}>
+                            {row.customPriceLabel}
+                          </Typography>
+                        )}
+                        {row.badgeLabel && (
+                          <Chip
+                            label={row.badgeLabel}
+                            size="small"
+                            sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#fef3c7', color: '#b45309', alignSelf: 'flex-start' }}
+                          />
+                        )}
+                        {!row.customPriceLabel && !row.badgeLabel && !row.isCustom && (
+                          <Typography variant="caption" color="text.secondary">
+                            {parseFloat(row.product?.discount || 0)}% OFF
+                          </Typography>
+                        )}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {row.startAt ? new Date(row.startAt).toLocaleString() : 'Always'}
+                      </Typography>
+                      {row.endAt && (
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          → {new Date(row.endAt).toLocaleString()}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={row.active ? 'Active' : 'Inactive'}
+                        size="small"
                         sx={{
-                          width: 44,
-                          height: 44,
-                          objectFit: 'cover',
-                          border: '1px solid #e2e8f0',
-                          bgcolor: '#f8fafc',
-                          flexShrink: 0,
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'
+                          borderRadius: 0,
+                          fontWeight: 700,
+                          bgcolor: row.active ? '#dcfce7' : '#f1f5f9',
+                          color: row.active ? '#166534' : '#64748b',
                         }}
                       />
-                      <Box sx={{ minWidth: 0 }}>
-                        {row.isCustom ? (
-                          <>
-                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                              <Typography variant="body2" fontWeight={700}>
-                                {row.customTitle || '—'}
-                              </Typography>
-                              <Chip label="Custom" size="small" sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700 }} />
-                            </Stack>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
-                              {(row.customItems || []).map((x) => x.name).join(' · ')}
-                            </Typography>
-                          </>
-                        ) : (
-                          <>
-                            <Typography variant="body2" fontWeight={700}>
-                              {row.product?.proName || '—'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                              SKU: {row.product?.sku || 'N/A'} · Rs. {parseFloat(row.product?.price || 0).toLocaleString()}
-                            </Typography>
-                          </>
-                        )}
-                      </Box>
-                    </Stack>
-                  </TableCell>
-                  {mode === 'admin' && (
-                    <TableCell>
-                      <Typography variant="body2">
-                        {row.isCustom
-                          ? row.ownerUsername || row.vendorUid || 'Platform'
-                          : row.product?.vendor?.username || row.product?.vendorId || '—'}
-                      </Typography>
                     </TableCell>
-                  )}
-                  <TableCell>
-                    {(typeof row.badgeLabel === 'string' && row.badgeLabel.trim()) ||
-                      (row.customPriceLabel && String(row.customPriceLabel).trim()) ||
-                      (row.isCustom ? '—' : `${parseFloat(row.product?.discount || 0)}%`)}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption" display="block" color="text.secondary">
-                      {row.startAt ? new Date(row.startAt).toLocaleString() : '—'}
-                    </Typography>
-                    <Typography variant="caption" display="block" color="text.secondary">
-                      → {row.endAt ? new Date(row.endAt).toLocaleString() : '—'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={row.active ? 'Yes' : 'No'}
-                      size="small"
-                      sx={{
-                        borderRadius: 0,
-                        fontWeight: 700,
-                        bgcolor: row.active ? 'success.lighter' : 'grey.200',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => openEdit(row)} sx={{ color: 'info.main' }}>
-                        <EditOutlinedIcon sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" onClick={() => handleDelete(row.dealId)} sx={{ color: 'error.main' }}>
-                        <DeleteOutlineIcon sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell align="right">
+                      <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => openEdit(row)} sx={{ color: 'info.main' }}>
+                          <EditOutlinedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton size="small" onClick={() => handleDelete(row.dealId)} sx={{ color: 'error.main' }}>
+                          <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
@@ -508,7 +679,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
       <Dialog open={dialogOpen} onClose={() => !saving && setDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 0 } }}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" fontWeight={800}>
-            {editingId ? 'Edit deal' : 'Add deal'}
+            {editingId ? 'Edit Deal' : 'Create Deal'}
           </Typography>
           <IconButton size="small" onClick={() => setDialogOpen(false)} disabled={saving}>
             <CloseIcon />
@@ -520,112 +691,232 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
             {!editingId && (
               <FormControl component="fieldset" variant="standard">
                 <FormLabel component="legend" sx={{ fontWeight: 700, fontSize: 13 }}>
-                  Deal type
+                  Deal Type
                 </FormLabel>
                 <RadioGroup
                   row
                   value={form.dealKind}
                   onChange={(e) => setForm({ ...form, dealKind: e.target.value })}
                 >
-                  <FormControlLabel value="catalog" control={<Radio size="small" />} label="Catalog product" />
-                  <FormControlLabel value="custom" control={<Radio size="small" />} label="Custom offer (typed lines)" />
+                  <FormControlLabel value="catalog" control={<Radio size="small" />} label="Select Catalog Products (Single / Multi-Product Combo)" />
+                  <FormControlLabel value="custom" control={<Radio size="small" />} label="Custom Offer (Typed lines)" />
                 </RadioGroup>
               </FormControl>
             )}
-            {editingId && (
-              <Chip
-                label={form.dealKind === 'custom' ? 'Custom offer' : 'Catalog product'}
-                size="small"
-                sx={{ borderRadius: 0, fontWeight: 700, alignSelf: 'flex-start' }}
-              />
-            )}
-            {!editingId && form.dealKind === 'catalog' && (
-              <Autocomplete
-                size="small"
-                fullWidth
-                options={products.filter((p) => !usedProductIds.has(p.proId))}
-                getOptionLabel={(option) =>
-                  typeof option === 'string'
-                    ? option
-                    : `${option.proName} (SKU: ${option.sku || 'N/A'}) — Rs. ${parseFloat(option.price || 0).toLocaleString()}`
-                }
-                value={
-                  products.find((p) => String(p.proId) === String(form.productId)) || null
-                }
-                onChange={(_, newValue) => {
-                  setForm((prev) => ({ ...prev, productId: newValue ? String(newValue.proId) : '' }))
-                }}
-                isOptionEqualToValue={(option, value) => String(option.proId) === String(value.proId)}
-                filterOptions={(options, { inputValue }) => {
-                  const q = inputValue.toLowerCase().trim()
-                  return options.filter((p) =>
-                    p.proName?.toLowerCase().includes(q) ||
-                    p.sku?.toLowerCase().includes(q) ||
-                    p.category?.name?.toLowerCase().includes(q) ||
-                    p.productCategory?.productCategoryName?.toLowerCase().includes(q)
-                  )
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Search & Select Product *"
-                    placeholder="Type product name, SKU, or category to filter…"
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+
+            {/* ── CATALOG MULTI-PRODUCT SELECTION ── */}
+            {form.dealKind === 'catalog' && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box>
+                  <FormLabel sx={{ fontWeight: 700, fontSize: 13, mb: 0.5, display: 'block' }}>
+                    Search & Add Products to this Deal
+                  </FormLabel>
+                  <Autocomplete
+                    size="small"
+                    fullWidth
+                    options={products}
+                    value={productSearchValue}
+                    getOptionLabel={(option) =>
+                      typeof option === 'string'
+                        ? option
+                        : `${option.proName} (SKU: ${option.sku || 'N/A'}) — Rs. ${parseFloat(option.price || 0).toLocaleString()}`
+                    }
+                    onChange={(_, newValue) => {
+                      if (newValue) {
+                        handleAddProductToDeal(newValue)
+                      }
+                    }}
+                    filterOptions={(options, { inputValue }) => {
+                      const q = inputValue.toLowerCase().trim()
+                      if (!q) return options
+                      return options.filter((p) =>
+                        p.proName?.toLowerCase().includes(q) ||
+                        p.sku?.toLowerCase().includes(q) ||
+                        p.category?.name?.toLowerCase().includes(q) ||
+                        p.productCategory?.productCategoryName?.toLowerCase().includes(q)
+                      )
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={products.length === 0 ? "Loading products..." : "Click or type to search and add products to deal…"}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                    )}
+                    renderOption={(props, option) => {
+                      const img = Array.isArray(option.proImages) ? option.proImages[0] : (option.proImages || '')
+                      return (
+                        <Box component="li" {...props} key={option.proId} sx={{ py: 1, borderBottom: '1px solid #f1f5f9' }}>
+                          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%' }}>
+                            {img && (
+                              <Box
+                                component="img"
+                                src={img}
+                                alt={option.proName}
+                                sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                              />
+                            )}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="body2" fontWeight={700}>
+                                {option.proName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                SKU: {option.sku || 'N/A'} · Category: {option.productCategory?.productCategoryName || option.category?.name || 'General'} · <Box component="span" sx={{ color: BRAND, fontWeight: 700 }}>Rs. {parseFloat(option.price || 0).toLocaleString()}</Box>
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      )
+                    }}
+                    PaperComponent={({ children, ...paperProps }) => (
+                      <Paper {...paperProps} sx={{ borderRadius: 0, mt: 0.5 }}>
+                        {children}
+                      </Paper>
+                    )}
+                    noOptionsText={products.length === 0 ? "No products found in catalog" : "No matching products found"}
                   />
-                )}
-                renderOption={(props, option) => (
-                  <Box component="li" {...props} key={option.proId} sx={{ py: 1, borderBottom: '1px solid #f1f5f9' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                      <Typography variant="body2" fontWeight={700}>
-                        {option.proName}
+                </Box>
+
+                {/* Selected products table */}
+                {form.selectedProducts.length > 0 && (
+                  <Paper variant="outlined" sx={{ borderRadius: 0, overflow: 'hidden' }}>
+                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="subtitle2" fontWeight={800}>
+                        Products Included in Deal ({form.selectedProducts.length})
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        SKU: {option.sku || 'N/A'} · Category: {option.productCategory?.productCategoryName || option.category?.name || 'General'} · <Box component="span" sx={{ color: BRAND, fontWeight: 700 }}>Rs. {parseFloat(option.price || 0).toLocaleString()}</Box>
+                      <Typography variant="caption" fontWeight={700} color="text.secondary">
+                        Regular Total: <Box component="span" sx={{ color: 'text.primary', fontWeight: 800 }}>Rs. {selectedProductsSum.toLocaleString()}</Box>
                       </Typography>
                     </Box>
-                  </Box>
-                )}
-                PaperComponent={({ children, ...paperProps }) => (
-                  <Paper {...paperProps} sx={{ borderRadius: 0, mt: 0.5 }}>
-                    {children}
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: '#fafafa' }}>
+                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }}>Product</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="center">Quantity</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="right">Unit Price</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: 12 }} align="right">Subtotal</TableCell>
+                          <TableCell sx={{ width: 40 }}></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {form.selectedProducts.map((p) => {
+                          const subtotal = parseFloat(p.price || 0) * (p.quantity || 1)
+                          return (
+                            <TableRow key={p.proId || p.proName}>
+                              <TableCell>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                  {p.image && (
+                                    <Box
+                                      component="img"
+                                      src={p.image}
+                                      alt={p.proName}
+                                      sx={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                    />
+                                  )}
+                                  <Box>
+                                    <Typography variant="body2" fontWeight={700}>
+                                      {p.proName}
+                                    </Typography>
+                                    {p.sku && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        SKU: {p.sku}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Stack>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) - 1)}
+                                    disabled={p.quantity <= 1}
+                                    sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
+                                  >
+                                    <RemoveIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                  <Typography variant="body2" fontWeight={700} sx={{ minWidth: 24, textAlign: 'center' }}>
+                                    {p.quantity || 1}
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) + 1)}
+                                    sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
+                                  >
+                                    <AddIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Stack>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2">Rs. {parseFloat(p.price || 0).toLocaleString()}</Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight={700} color={BRAND}>
+                                  Rs. {subtotal.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleRemoveProductFromDeal(p.proId)}
+                                  sx={{ color: 'error.main' }}
+                                >
+                                  <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
                   </Paper>
                 )}
-                noOptionsText="No products found"
-              />
-            )}
-            {form.dealKind === 'catalog' && (
-              <>
+
+                <TextField
+                  size="small"
+                  label="Deal Title / Offer Name"
+                  placeholder="e.g. Mega Combo: Zinger Burger + Fries + Drink"
+                  value={form.customTitle}
+                  onChange={(e) => setForm({ ...form, customTitle: e.target.value })}
+                  fullWidth
+                  helperText="Leave empty to automatically use the product names combo."
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+
+                <TextField
+                  size="small"
+                  label="Deal Price / Special Offer Price (PKR)"
+                  placeholder={`e.g. Rs. ${(selectedProductsSum * 0.8).toFixed(0)} or Save 20%`}
+                  value={form.customPriceLabel}
+                  onChange={(e) => setForm({ ...form, customPriceLabel: e.target.value })}
+                  fullWidth
+                  helperText={selectedProductsSum > 0 ? `Regular Total: Rs. ${selectedProductsSum.toLocaleString()}` : ''}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                />
+
                 <ImageUploadField
-                  label="Deal Banner / Image (optional — defaults to product photo if empty)"
+                  label="Deal Promotional Banner / Image"
                   value={form.customImageUrl}
                   onChange={(url) => setForm({ ...form, customImageUrl: url })}
                   disabled={saving}
-                  helperText="Upload a promotional deal image or banner for this deal."
+                  helperText="Upload a promotional deal banner or combo photo."
                 />
-                <TextField
-                  size="small"
-                  label="Or paste image URL (optional)"
-                  placeholder="https://…"
-                  value={form.customImageUrl}
-                  onChange={(e) => setForm({ ...form, customImageUrl: e.target.value })}
-                  fullWidth
-                  helperText="Use this if the promotional image is already hosted elsewhere."
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-              </>
+              </Box>
             )}
+
+            {/* ── CUSTOM OFFER (TYPED LINES) ── */}
             {form.dealKind === 'custom' && (
               <>
                 <TextField
                   size="small"
-                  label="Offer title"
+                  label="Offer title *"
                   placeholder="e.g. Family lunch combo"
                   value={form.customTitle}
                   onChange={(e) => setForm({ ...form, customTitle: e.target.value })}
                   fullWidth
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                 />
-                <FormLabel sx={{ fontWeight: 700, fontSize: 13 }}>What&apos;s included (one line each)</FormLabel>
+                <FormLabel sx={{ fontWeight: 700, fontSize: 13 }}>What&apos;s included in this deal (one line each)</FormLabel>
                 <Stack spacing={1}>
                   {form.customLines.map((line, idx) => (
                     <Stack key={`line-${idx}`} direction="row" spacing={1} alignItems="center">
@@ -665,26 +956,16 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                   </Button>
                 </Stack>
                 <ImageUploadField
-                  label="Deal image (optional)"
+                  label="Deal image"
                   value={form.customImageUrl}
                   onChange={(url) => setForm({ ...form, customImageUrl: url })}
                   disabled={saving}
-                  helperText="Upload JPEG, PNG or WebP — same pipeline as catalogue product images."
+                  helperText="Upload JPEG, PNG or WebP image."
                 />
                 <TextField
                   size="small"
-                  label="Or paste image URL"
-                  placeholder="https://…"
-                  value={form.customImageUrl}
-                  onChange={(e) => setForm({ ...form, customImageUrl: e.target.value })}
-                  fullWidth
-                  helperText="Use this if the image is already hosted elsewhere."
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small"
-                  label="Price hint (optional)"
-                  placeholder="e.g. $12.99, from $8"
+                  label="Price hint / Deal Price"
+                  placeholder="e.g. Rs. 990 or from Rs. 450"
                   value={form.customPriceLabel}
                   onChange={(e) => setForm({ ...form, customPriceLabel: e.target.value })}
                   fullWidth
@@ -712,11 +993,10 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 )}
               </>
             )}
-            {editingId && form.dealKind === 'catalog' && (
-              <Typography variant="body2" color="text.secondary">
-                Switching product is not supported. Delete this deal and create a new one if you need a different SKU.
-              </Typography>
-            )}
+
+            {/* ── COMMON DEAL SETTINGS ── */}
+            <Divider sx={{ my: 0.5 }} />
+
             <TextField
               size="small"
               label="Sort order"
@@ -729,33 +1009,35 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
             />
             <TextField
               size="small"
-              label="Badge label"
-              placeholder="e.g. 10% OFF, Lunch special"
+              label="Badge label (e.g. 20% OFF, Mega Combo, Limited Time)"
+              placeholder="e.g. 20% OFF, Super Saver"
               value={form.badgeLabel}
               onChange={(e) => setForm({ ...form, badgeLabel: e.target.value })}
               fullWidth
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
             />
-            <TextField
-              size="small"
-              label="Start"
-              type="datetime-local"
-              value={form.startAt}
-              onChange={(e) => setForm({ ...form, startAt: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-            />
-            <TextField
-              size="small"
-              label="End"
-              type="datetime-local"
-              value={form.endAt}
-              onChange={(e) => setForm({ ...form, endAt: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                size="small"
+                label="Start Time (Optional)"
+                type="datetime-local"
+                value={form.startAt}
+                onChange={(e) => setForm({ ...form, startAt: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+              />
+              <TextField
+                size="small"
+                label="End Time (Optional)"
+                type="datetime-local"
+                value={form.endAt}
+                onChange={(e) => setForm({ ...form, endAt: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+              />
+            </Stack>
             <FormControlLabel
               control={
                 <Switch
@@ -780,9 +1062,9 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
             onClick={handleSave}
             disabled={saving}
             startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveOutlinedIcon />}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0 }}
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, fontWeight: 700 }}
           >
-            {editingId ? 'Update' : 'Create'}
+            {editingId ? 'Update Deal' : 'Create Deal'}
           </Button>
         </DialogActions>
       </Dialog>

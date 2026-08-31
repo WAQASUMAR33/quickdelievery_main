@@ -54,8 +54,19 @@ export function parseCustomItemsJson(customItemsJson) {
     const arr = typeof customItemsJson === 'string' ? JSON.parse(customItemsJson) : customItemsJson
     if (!Array.isArray(arr)) return []
     return arr
-      .map((x) => ({ name: String(x?.name ?? '').trim() }))
-      .filter((x) => x.name.length > 0)
+      .map((x) => {
+        if (typeof x === 'string') return { name: x.trim() }
+        const name = String(x?.name || x?.proName || '').trim()
+        return {
+          proId: x?.proId != null ? Number(x.proId) : null,
+          name,
+          price: x?.price != null ? Number(x.price) : null,
+          quantity: x?.quantity != null ? Number(x.quantity) : 1,
+          image: x?.image || null,
+          sku: x?.sku || null,
+        }
+      })
+      .filter((x) => x.name && x.name.length > 0)
   } catch {
     return []
   }
@@ -67,14 +78,25 @@ function coerceCustomItemsPayload(bodyItems) {
     const arr = typeof bodyItems === 'string' ? JSON.parse(bodyItems) : bodyItems
     if (!Array.isArray(arr)) return []
     return arr
-      .map((x) => ({ name: String(x?.name ?? x ?? '').trim() }))
-      .filter((x) => x.name.length > 0)
+      .map((x) => {
+        if (typeof x === 'string') return { name: x.trim() }
+        const name = String(x?.name || x?.proName || '').trim()
+        return {
+          proId: x?.proId != null ? Number(x.proId) : null,
+          name,
+          price: x?.price != null ? Number(x.price) : null,
+          quantity: x?.quantity != null ? Number(x.quantity) : 1,
+          image: x?.image || null,
+          sku: x?.sku || null,
+        }
+      })
+      .filter((x) => x.name && x.name.length > 0)
   } catch {
     return []
   }
 }
 
-/** Validate and normalize `{ name }[]`; returns null if invalid. */
+/** Validate and normalize `{ name, proId, price, quantity }[]`; returns null if invalid. */
 export function normalizeCustomDealItems(bodyItems, { minLines = 1 } = {}) {
   const lines = coerceCustomItemsPayload(bodyItems)
   if (lines.length < minLines) return null
