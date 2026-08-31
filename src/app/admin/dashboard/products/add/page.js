@@ -87,6 +87,7 @@ export default function AddProductPage() {
   const { userData, user, loading } = useAuth()
   const fileInputRef = useRef(null)
 
+  const [categories,        setCategories]        = useState([])
   const [productCategories, setProductCategories] = useState([])
   const [subcategories,     setSubcategories]     = useState([])
   const [uploadingImages,   setUploadingImages]   = useState(false)
@@ -147,22 +148,75 @@ export default function AddProductPage() {
   useEffect(() => {
     if (!userData?.uid) return
     Promise.all([
+      fetch('/api/products?type=categories').then(r => r.json()),
       fetch('/api/products?type=productcategories').then(r => r.json()),
       fetch('/api/products?type=subcategories').then(r => r.json()),
-      fetch('/api/products?type=categories').then(r => r.json()),
-    ]).then(([pcData, subsData, catsData]) => {
-      if (pcData.success && pcData.data?.length > 0) {
-        setProductCategories(pcData.data)
-      } else if (catsData.success) {
-        setProductCategories(catsData.data.map(c => ({
-          productCategoryId: c.id,
-          productCategoryName: c.name,
-          categoryId: c.id,
-        })))
-      }
+    ]).then(([catsData, pcData, subsData]) => {
+      if (catsData.success) setCategories(catsData.data || [])
+      if (pcData.success)   setProductCategories(pcData.data || [])
       if (subsData.success) setSubcategories(subsData.data || [])
     }).catch(e => console.error('Categories fetch error:', e))
   }, [userData?.uid])
+
+  // Resolve the vendor's parent category
+  const vendorCategory = categories.find(c => {
+    const cName = c.name.trim().toLowerCase()
+    const cCode = (c.code || '').trim().toLowerCase()
+    const bizCatTitle = (
+      vendorBusiness?.businessCategory?.categoryTitle ||
+      vendorBusiness?.businessCategory?.categoryName ||
+      userData?.business?.businessCategory?.categoryTitle ||
+      userData?.business?.businessCategory?.categoryName ||
+      ''
+    ).trim().toLowerCase()
+    const bizTypeTitle = (
+      vendorBusiness?.businessType?.name ||
+      vendorBusiness?.businessType?.title ||
+      userData?.business?.businessType?.name ||
+      userData?.business?.businessType?.title ||
+      ''
+    ).trim().toLowerCase()
+    const bizVertical = (vendorBusiness?.vertical || userData?.business?.vertical || '').trim().toLowerCase()
+
+    if (bizCatTitle && (cName === bizCatTitle || cName.includes(bizCatTitle) || bizCatTitle.includes(cName))) {
+      return true
+    }
+    if (bizTypeTitle && (cName === bizTypeTitle || cName.includes(bizTypeTitle) || bizTypeTitle.includes(cName))) {
+      return true
+    }
+    if (bizVertical && (cName === bizVertical || cName.includes(bizVertical) || bizVertical.includes(cName))) {
+      return true
+    }
+    if (isRestaurant) {
+      return cName.includes('restaurant') || cName.includes('food') || cCode.includes('restaurant') || cCode.includes('food')
+    } else {
+      return cName.includes('shop') || cName.includes('grocery') || cName.includes('store') || cCode.includes('shop') || cCode.includes('grocery')
+    }
+  })
+
+  const activeCategoryId = vendorCategory?.id || (isRestaurant ? 12 : 13)
+
+  // Filter product categories to ONLY show product categories under this vendor's category
+  const availableProductCategories = productCategories.filter(pc => {
+    if (!activeCategoryId) return true
+    return String(pc.categoryId) === String(activeCategoryId)
+  })
+
+  // Filter subcategories strictly based on the selected product category
+  const filteredSubs = (() => {
+    if (!form.productCategoryId) return []
+    // 1. Match by productCategoryId
+    const matchedByProdCat = subcategories.filter(s => String(s.productCategoryId) === String(form.productCategoryId))
+    if (matchedByProdCat.length > 0) return matchedByProdCat
+
+    // 2. Fallback for legacy subcategories: match by catId of the selected product category
+    const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(form.productCategoryId))
+    const targetCatId = selectedPC?.categoryId || form.catId || activeCategoryId
+    if (targetCatId) {
+      return subcategories.filter(s => String(s.catId) === String(targetCatId))
+    }
+    return []
+  })()
 
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }))
@@ -172,10 +226,11 @@ export default function AddProductPage() {
   const handleCategoryChange = (e) => {
     const selectedPCId = e.target.value
     const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(selectedPCId))
+    const resolvedCatId = selectedPC?.categoryId ? String(selectedPC.categoryId) : (activeCategoryId ? String(activeCategoryId) : '')
     setForm(p => ({
       ...p,
       productCategoryId: selectedPCId,
-      catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : (selectedPCId ? String(selectedPCId) : ''),
+      catId: resolvedCatId,
       subCatId: '',
     }))
     if (errors.catId || errors.productCategoryId) {
@@ -240,7 +295,7 @@ export default function AddProductPage() {
           type:              'product',
           proName:            form.name,
           description:        form.description,
-          catId:              parseInt(form.catId) || 12,
+          catId:              parseInt(form.catId) || activeCategoryId || 12,
           subCatId:           parseInt(form.subCatId),
           productCategoryId:  form.productCategoryId ? parseInt(form.productCategoryId) : null,
           price:              parseFloat(form.price),
@@ -296,14 +351,6 @@ export default function AddProductPage() {
     )
   }
 
-  // Filter subcategories by catId of the selected product category
-  const filteredSubs = (() => {
-    if (!form.catId && !form.productCategoryId) return []
-    const matched = subcategories.filter(s => String(s.catId) === String(form.catId))
-    if (matched.length > 0) return matched
-    return subcategories
-  })()
-
   return (
     <DashboardLayout>
       <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 900, mx: 'auto', px: 3, py: 3 }}>
@@ -327,7 +374,7 @@ export default function AddProductPage() {
           <Button type="submit" variant="contained" disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
             sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
-            {isSubmitting ? 'Saving…' : (isRestaurant ? 'Save Food Item' : 'Save Product')}
+            {isSubmitting ? 'Saving…' : 'Save Item'}
           </Button>
         </Box>
 
@@ -354,7 +401,7 @@ export default function AddProductPage() {
                       onChange={handleCategoryChange}
                       sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                       <MenuItem value=""><em>Select category…</em></MenuItem>
-                      {productCategories.map(c => (
+                      {availableProductCategories.map(c => (
                         <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
                           {c.productCategoryName}
                         </MenuItem>
@@ -591,7 +638,7 @@ export default function AddProductPage() {
             <Button type="submit" variant="contained" disabled={isSubmitting}
               startIcon={isSubmitting ? <CircularProgress size={14} color="inherit" /> : <SaveOutlinedIcon />}
               sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e5f22' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 4, py: 1.2 }}>
-              {isSubmitting ? 'Saving…' : (isRestaurant ? 'Save Food Item' : 'Save Product')}
+              {isSubmitting ? 'Saving…' : 'Save Item'}
             </Button>
           </Box>
 

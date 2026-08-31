@@ -104,8 +104,9 @@ export default function ProductEditPage() {
 
   const isRestaurant = isRestaurantVendor(userData, vendorBusiness)
 
-  const [categories,    setCategories]    = useState([])
-  const [subcategories, setSubcategories] = useState([])
+  const [baseCategories,    setBaseCategories]    = useState([])
+  const [productCategories, setProductCategories] = useState([])
+  const [subcategories,     setSubcategories]     = useState([])
 
   const [form, setForm] = useState({
     proName: '', description: '', catId: '', subCatId: '',
@@ -124,10 +125,10 @@ export default function ProductEditPage() {
       if (!access.hasAccess) { router.push(access.redirectTo); return }
       Promise.all([
         fetch(`/api/products/${id}`).then(r => r.json()),
+        fetch('/api/products?type=categories').then(r => r.json()),
         fetch('/api/products?type=productcategories').then(r => r.json()),
         fetch('/api/products?type=subcategories').then(r => r.json()),
-        fetch('/api/products?type=categories').then(r => r.json()),
-      ]).then(([prod, pcData, subs, catsData]) => {
+      ]).then(([prod, catsData, pcData, subs]) => {
         if (!prod.success) { toast.error('Product not found'); return }
         const p = prod.data
         setForm({
@@ -166,16 +167,9 @@ export default function ProductEditPage() {
           creator:           p.creator,
           approver:          p.approver,
         })
-        if (pcData.success && pcData.data?.length > 0) {
-          setCategories(pcData.data)
-        } else if (catsData.success) {
-          setCategories(catsData.data.map(c => ({
-            productCategoryId: c.id,
-            productCategoryName: c.name,
-            categoryId: c.id,
-          })))
-        }
-        if (subs.success) setSubcategories(subs.data || [])
+        if (catsData.success) setBaseCategories(catsData.data || [])
+        if (pcData.success)   setProductCategories(pcData.data || [])
+        if (subs.success)     setSubcategories(subs.data || [])
       }).catch(() => toast.error('Failed to load product'))
         .finally(() => setFetching(false))
     }
@@ -183,11 +177,49 @@ export default function ProductEditPage() {
 
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }))
 
+  // Resolve the vendor's parent category
+  const vendorCategory = baseCategories.find(c => {
+    const cName = c.name.trim().toLowerCase()
+    const cCode = (c.code || '').trim().toLowerCase()
+    const bizCatTitle = (
+      vendorBusiness?.businessCategory?.categoryTitle ||
+      vendorBusiness?.businessCategory?.categoryName ||
+      userData?.business?.businessCategory?.categoryTitle ||
+      userData?.business?.businessCategory?.categoryName ||
+      ''
+    ).trim().toLowerCase()
+    if (bizCatTitle && (cName === bizCatTitle || cName.includes(bizCatTitle) || bizCatTitle.includes(cName))) {
+      return true
+    }
+    if (isRestaurant) {
+      return cName.includes('restaurant') || cName.includes('food') || cCode.includes('restaurant') || cCode.includes('food')
+    } else {
+      return cName.includes('shop') || cName.includes('grocery') || cName.includes('store') || cCode.includes('shop') || cCode.includes('grocery')
+    }
+  })
+
+  const activeCategoryId = vendorCategory?.id || (isRestaurant ? 12 : 13)
+
+  // Filter product categories to ONLY show product categories under this vendor's category
+  const availableProductCategories = productCategories.filter(pc => {
+    if (!activeCategoryId) return true
+    return String(pc.categoryId) === String(activeCategoryId)
+  })
+
+  // Filter subcategories strictly based on the selected product category
   const filteredSubs = (() => {
-    if (!form.catId && !form.productCategoryId) return []
-    const matched = subcategories.filter(s => String(s.catId) === String(form.catId))
-    if (matched.length > 0) return matched
-    return subcategories
+    if (!form.productCategoryId) return []
+    // 1. Match by productCategoryId
+    const matchedByProdCat = subcategories.filter(s => String(s.productCategoryId) === String(form.productCategoryId))
+    if (matchedByProdCat.length > 0) return matchedByProdCat
+
+    // 2. Fallback for legacy subcategories: match by catId of the selected product category
+    const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(form.productCategoryId))
+    const targetCatId = selectedPC?.categoryId || form.catId || activeCategoryId
+    if (targetCatId) {
+      return subcategories.filter(s => String(s.catId) === String(targetCatId))
+    }
+    return []
   })()
 
   const handleSave = async () => {
@@ -452,16 +484,16 @@ export default function ProductEditPage() {
                       <Select label="Product Category" value={form.productCategoryId || form.catId}
                         onChange={e => {
                           const selectedPCId = e.target.value
-                          const selectedPC = categories.find(c => String(c.productCategoryId) === String(selectedPCId))
+                          const selectedPC = productCategories.find(c => String(c.productCategoryId) === String(selectedPCId))
                           setForm(p => ({
                             ...p,
                             productCategoryId: selectedPCId,
-                            catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : selectedPCId,
+                            catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : (activeCategoryId ? String(activeCategoryId) : selectedPCId),
                             subCatId: '',
                           }))
                         }}
                         sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
-                        {categories.map(c => (
+                        {availableProductCategories.map(c => (
                           <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
                             {c.productCategoryName}
                           </MenuItem>
