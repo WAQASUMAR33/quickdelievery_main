@@ -64,58 +64,38 @@ export async function PUT(request, context) {
       data.customImageUrl = u
     }
 
-    const isCustomRow = deal.productId == null
+    if (body.customTitle !== undefined) {
+      const t = String(body.customTitle ?? '').trim()
+      data.customTitle = t ? t.slice(0, 255) : null
+    }
+    if (body.customItems !== undefined || body.lines !== undefined) {
+      const items = normalizeCustomDealItems(body.customItems ?? body.lines, { minLines: 0 })
+      data.customItemsJson = items && items.length > 0 ? JSON.stringify(items) : null
+    }
+    if (body.customPriceLabel !== undefined) {
+      const u = body.customPriceLabel != null ? String(body.customPriceLabel).trim().slice(0, 64) || null : null
+      data.customPriceLabel = u
+    }
+    if (body.productId !== undefined) {
+      const pid = parseInt(body.productId, 10)
+      data.productId = Number.isFinite(pid) ? pid : null
+    }
 
-    if (isCustomRow) {
-      if (body.customTitle !== undefined) {
-        const t = String(body.customTitle ?? '').trim()
-        if (!t) {
-          return Response.json({ success: false, error: 'customTitle cannot be empty' }, { status: 400 })
+    if (
+      body.vendorUid !== undefined &&
+      (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+    ) {
+      const v =
+        body.vendorUid && String(body.vendorUid).trim()
+          ? String(body.vendorUid).trim().slice(0, 128)
+          : null
+      if (v) {
+        const owner = await prisma.users.findUnique({ where: { uid: v }, select: { uid: true } })
+        if (!owner) {
+          return Response.json({ success: false, error: 'vendorUid does not match a user' }, { status: 400 })
         }
-        data.customTitle = t.slice(0, 255)
       }
-      if (body.customItems !== undefined || body.lines !== undefined) {
-        const items = normalizeCustomDealItems(body.customItems ?? body.lines, { minLines: 1 })
-        if (!items || items.length === 0) {
-          return Response.json(
-            { success: false, error: 'At least one valid line item ({ name }) is required' },
-            { status: 400 },
-          )
-        }
-        data.customItemsJson = JSON.stringify(items)
-      }
-      if (body.customPriceLabel !== undefined) {
-        const u = body.customPriceLabel != null ? String(body.customPriceLabel).trim().slice(0, 64) || null : null
-        data.customPriceLabel = u
-      }
-
-      if (
-        body.vendorUid !== undefined &&
-        (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
-      ) {
-        const v =
-          body.vendorUid && String(body.vendorUid).trim()
-            ? String(body.vendorUid).trim().slice(0, 128)
-            : null
-        if (v) {
-          const owner = await prisma.users.findUnique({ where: { uid: v }, select: { uid: true } })
-          if (!owner) {
-            return Response.json({ success: false, error: 'vendorUid does not match a user' }, { status: 400 })
-          }
-        }
-        data.vendorUid = v
-      }
-    } else {
-      if (
-        Object.prototype.hasOwnProperty.call(body, 'customTitle') ||
-        Object.prototype.hasOwnProperty.call(body, 'customItems') ||
-        Object.prototype.hasOwnProperty.call(body, 'lines')
-      ) {
-        return Response.json(
-          { success: false, error: 'Catalog deals cannot be switched to custom in-place. Delete and recreate.' },
-          { status: 400 },
-        )
-      }
+      data.vendorUid = v
     }
 
     const fd = prismaFoodDeal(prisma)
