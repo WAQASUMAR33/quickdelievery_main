@@ -204,6 +204,9 @@ export async function POST(request) {
         data: {
           productId: pid,
           vendorUid: product.vendorId,
+          customTitle: body.customTitle ? String(body.customTitle).trim().slice(0, 255) : null,
+          customPriceLabel: body.customPriceLabel ? String(body.customPriceLabel).trim().slice(0, 64) : null,
+          customItemsJson: body.customItems ? JSON.stringify(body.customItems) : null,
           customImageUrl: img,
           sortOrder: parseInt(sortOrder, 10) || 0,
           active: !!active,

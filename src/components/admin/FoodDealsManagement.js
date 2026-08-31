@@ -353,12 +353,14 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
             sku: p.sku || null,
           }))
 
-          if (form.selectedProducts.length === 1 && !form.customTitle.trim()) {
+          if (form.selectedProducts.length === 1) {
             // Single product deal
             body = {
               ...payload,
               dealKind: 'catalog',
               productId: Number(form.selectedProducts[0].proId),
+              customTitle: title,
+              customItems: dealItems,
               customPriceLabel: form.customPriceLabel.trim() || null,
             }
           } else {
@@ -368,7 +370,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
               dealKind: 'custom',
               customTitle: title,
               customItems: dealItems,
-              customPriceLabel: form.customPriceLabel.trim() || `Rs. ${selectedProductsSum.toLocaleString()}`,
+              customPriceLabel: form.customPriceLabel.trim() || null,
               ...(mode === 'admin' ? { vendorUid: form.vendorUid.trim() || null } : {}),
             }
           }
@@ -484,8 +486,8 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
 
   const headCells =
     mode === 'admin'
-      ? ['Order', 'Deal', 'Vendor', 'Price / Badge', 'Schedule', 'Active', '']
-      : ['Order', 'Deal', 'Price / Badge', 'Schedule', 'Active', '']
+      ? ['Order', 'Deal Name', 'Vendor', 'Price / Badge', 'Schedule', 'Active', '']
+      : ['Order', 'Deal Name', 'Price / Badge', 'Schedule', 'Active', '']
 
   const colSpan = mode === 'admin' ? 7 : 6
 
@@ -553,6 +555,13 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                   (row.product?.proImages?.[0]) ||
                   'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80'
 
+                const dealDisplayName =
+                  row.customTitle ||
+                  row.badgeLabel ||
+                  (row.customItems?.length ? row.customItems.map((x) => x.name).join(' + ') : '') ||
+                  row.product?.proName ||
+                  'Special Deal'
+
                 return (
                   <TableRow key={row.dealId} hover>
                     <TableCell sx={{ fontVariantNumeric: 'tabular-nums' }}>{row.sortOrder}</TableCell>
@@ -575,32 +584,27 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                           }}
                         />
                         <Box sx={{ minWidth: 0 }}>
-                          {row.isCustom ? (
-                            <>
-                              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                                <Typography variant="body2" fontWeight={700}>
-                                  {row.customTitle || '—'}
-                                </Typography>
-                                <Chip
-                                  label={row.customItems?.length > 1 ? `${row.customItems.length} Items Combo` : 'Combo'}
-                                  size="small"
-                                  sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#e0e7ff', color: '#4338ca' }}
-                                />
-                              </Stack>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
-                                {(row.customItems || []).map((x) => `${x.quantity > 1 ? `${x.quantity}x ` : ''}${x.name}`).join(' + ')}
-                              </Typography>
-                            </>
-                          ) : (
-                            <>
-                              <Typography variant="body2" fontWeight={700}>
-                                {row.product?.proName || '—'}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                                SKU: {row.product?.sku || 'N/A'} · Rs. {parseFloat(row.product?.price || 0).toLocaleString()}
-                              </Typography>
-                            </>
-                          )}
+                          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                            <Typography variant="body2" fontWeight={700}>
+                              {dealDisplayName}
+                            </Typography>
+                            {row.customItems?.length > 1 && (
+                              <Chip
+                                label={`${row.customItems.length} Items Combo`}
+                                size="small"
+                                sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#e0e7ff', color: '#4338ca' }}
+                              />
+                            )}
+                          </Stack>
+                          {row.customItems && row.customItems.length > 0 ? (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+                              Includes: {row.customItems.map((x) => `${x.quantity > 1 ? `${x.quantity}x ` : ''}${x.name}`).join(' + ')}
+                            </Typography>
+                          ) : row.product ? (
+                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                              Product: {row.product.proName} (SKU: {row.product.sku || 'N/A'})
+                            </Typography>
+                          ) : null}
                         </Box>
                       </Stack>
                     </TableCell>
