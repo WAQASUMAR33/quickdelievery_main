@@ -224,6 +224,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
         endAt: form.endAt ? new Date(form.endAt).toISOString() : null,
       }
 
+      if (!editingId) {
         const body =
           form.dealKind === 'custom'
             ? {
