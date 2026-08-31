@@ -19,6 +19,7 @@ import {
 const SubcategoryManagement = () => {
   const [subcategories, setSubcategories] = useState([])
   const [categories, setCategories] = useState([])
+  const [productCategories, setProductCategories] = useState([])
   const [loading, setLoading] = useState(true)
   
   const [showAddModal, setShowAddModal] = useState(false)
@@ -32,9 +33,9 @@ const SubcategoryManagement = () => {
     subCatCode: '',
     subCatName: '',
     catId: '',
+    productCategoryId: '',
     status: true
   })
-
 
   // Fetch subcategories from database
   const fetchSubcategories = async () => {
@@ -57,15 +58,18 @@ const SubcategoryManagement = () => {
     }
   }
 
-  // Fetch categories for dropdown
+  // Fetch categories and product categories for dropdowns
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/products?type=categories')
-      const result = await response.json()
+      const [catRes, prodCatRes] = await Promise.all([
+        fetch('/api/products?type=categories'),
+        fetch('/api/products?type=productcategories')
+      ])
+      const catData = await catRes.json()
+      const prodCatData = await prodCatRes.json()
       
-      if (result.success) {
-        setCategories(result.data || [])
-      }
+      if (catData.success) setCategories(catData.data || [])
+      if (prodCatData.success) setProductCategories(prodCatData.data || [])
     } catch (error) {
       console.error('Error fetching categories:', error)
     }
@@ -87,7 +91,8 @@ const SubcategoryManagement = () => {
           type: 'subcategory',
           subCatCode: formData.subCatCode,
           subCatName: formData.subCatName,
-          catId: formData.catId,
+          catId: formData.catId ? parseInt(formData.catId) : null,
+          productCategoryId: formData.productCategoryId ? parseInt(formData.productCategoryId) : null,
           status: formData.status
         })
       })
@@ -96,7 +101,7 @@ const SubcategoryManagement = () => {
       
       if (result.success) {
         setShowAddModal(false)
-        setFormData({ subCatCode: '', subCatName: '', catId: '', status: true })
+        setFormData({ subCatCode: '', subCatName: '', catId: '', productCategoryId: '', status: true })
         fetchSubcategories() // Refresh the list
       } else {
         console.error('Failed to add subcategory:', result.error)
@@ -120,7 +125,8 @@ const SubcategoryManagement = () => {
           id: selectedSubcategory.subCatId,
           subCatCode: formData.subCatCode,
           subCatName: formData.subCatName,
-          catId: formData.catId,
+          catId: formData.catId ? parseInt(formData.catId) : null,
+          productCategoryId: formData.productCategoryId ? parseInt(formData.productCategoryId) : null,
           status: formData.status
         })
       })
@@ -130,7 +136,7 @@ const SubcategoryManagement = () => {
       if (result.success) {
         setShowEditModal(false)
         setSelectedSubcategory(null)
-        setFormData({ subCatCode: '', subCatName: '', catId: '', status: true })
+        setFormData({ subCatCode: '', subCatName: '', catId: '', productCategoryId: '', status: true })
         fetchSubcategories() // Refresh the list
       } else {
         console.error('Failed to update subcategory:', result.error)
@@ -164,10 +170,13 @@ const SubcategoryManagement = () => {
 
   const handleEditClick = (subcategory) => {
     setSelectedSubcategory(subcategory)
+    const catId = (subcategory.catId || subcategory.productCategory?.categoryId || '').toString()
+    const productCategoryId = (subcategory.productCategoryId || '').toString()
     setFormData({
       subCatCode: subcategory.subCatCode,
       subCatName: subcategory.subCatName,
-      catId: subcategory.catId,
+      catId,
+      productCategoryId,
       status: subcategory.status
     })
     setShowEditModal(true)
@@ -464,21 +473,10 @@ const SubcategoryManagement = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory Name</label>
-                  <input
-                    type="text"
-                    value={formData.subCatName}
-                    onChange={(e) => setFormData({ ...formData, subCatName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
-                    placeholder="Enter subcategory name"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">1. Parent Category *</label>
                   <select
                     value={formData.catId}
-                    onChange={(e) => setFormData({ ...formData, catId: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, catId: e.target.value, productCategoryId: '' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
                   >
                     <option value="">Select Category</option>
@@ -486,6 +484,34 @@ const SubcategoryManagement = () => {
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">2. Product Category *</label>
+                  <select
+                    value={formData.productCategoryId}
+                    onChange={(e) => setFormData({ ...formData, productCategoryId: e.target.value })}
+                    disabled={!formData.catId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">{formData.catId ? 'Select Product Category' : 'Select Parent Category First'}</option>
+                    {productCategories
+                      .filter(pc => !formData.catId || String(pc.categoryId) === String(formData.catId))
+                      .map(pc => (
+                        <option key={pc.productCategoryId} value={pc.productCategoryId}>{pc.productCategoryName}</option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">3. Subcategory Name *</label>
+                  <input
+                    type="text"
+                    value={formData.subCatName}
+                    onChange={(e) => setFormData({ ...formData, subCatName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
+                    placeholder="Enter subcategory name"
+                  />
                 </div>
                 
                 <div className="flex items-center space-x-3">
@@ -556,6 +582,37 @@ const SubcategoryManagement = () => {
               
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">1. Parent Category *</label>
+                  <select
+                    value={formData.catId}
+                    onChange={(e) => setFormData({ ...formData, catId: e.target.value, productCategoryId: '' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">2. Product Category *</label>
+                  <select
+                    value={formData.productCategoryId}
+                    onChange={(e) => setFormData({ ...formData, productCategoryId: e.target.value })}
+                    disabled={!formData.catId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">{formData.catId ? 'Select Product Category' : 'Select Parent Category First'}</option>
+                    {productCategories
+                      .filter(pc => !formData.catId || String(pc.categoryId) === String(formData.catId))
+                      .map(pc => (
+                        <option key={pc.productCategoryId} value={pc.productCategoryId}>{pc.productCategoryName}</option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory Code</label>
                   <input
                     type="text"
@@ -566,27 +623,13 @@ const SubcategoryManagement = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">3. Subcategory Name *</label>
                   <input
                     type="text"
                     value={formData.subCatName}
                     onChange={(e) => setFormData({ ...formData, subCatName: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
                   />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
-                  <select
-                    value={formData.catId}
-                    onChange={(e) => setFormData({ ...formData, catId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-gray-900"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
                 </div>
                 
                 <div className="flex items-center space-x-3">

@@ -54,17 +54,19 @@ export default function SubcategoriesPage() {
   const router = useRouter()
   const fileInputRef = useRef(null)
 
-  const [categories,    setCategories]    = useState([])
-  const [subcategories, setSubcategories] = useState([])
-  const [loading,       setLoading]       = useState(true)
-  const [searchQuery,   setSearchQuery]   = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [showModal,     setShowModal]     = useState(false)
-  const [editingSub,    setEditingSub]    = useState(null)
-  const [form,           setForm]           = useState({ name: '', code: '', categoryId: '', image: '' })
-  const [pendingImageFile, setPendingImageFile] = useState(null)
-  const [localPreview,    setLocalPreview]    = useState(null)
-  const [saving,          setSaving]          = useState(false)
+  const [categories,         setCategories]         = useState([])
+  const [productCategories,  setProductCategories]  = useState([])
+  const [subcategories,      setSubcategories]      = useState([])
+  const [loading,            setLoading]            = useState(true)
+  const [searchQuery,        setSearchQuery]        = useState('')
+  const [filterCategory,     setFilterCategory]     = useState('all')
+  const [filterProductCat,   setFilterProductCat]   = useState('all')
+  const [showModal,          setShowModal]          = useState(false)
+  const [editingSub,         setEditingSub]         = useState(null)
+  const [form,               setForm]               = useState({ name: '', code: '', categoryId: '', productCategoryId: '', image: '' })
+  const [pendingImageFile,   setPendingImageFile]   = useState(null)
+  const [localPreview,       setLocalPreview]       = useState(null)
+  const [saving,             setSaving]             = useState(false)
 
   /** Blob preview for a newly chosen file (cleaned up on change/unmount). */
   useEffect(() => {
@@ -87,14 +89,17 @@ export default function SubcategoriesPage() {
 
   const fetchData = async () => {
     try {
-      const [catRes, subRes] = await Promise.all([
+      const [catRes, prodCatRes, subRes] = await Promise.all([
         fetch('/api/products?type=categories'),
+        fetch('/api/products?type=productcategories'),
         fetch('/api/products?type=subcategories'),
       ])
-      const catData = await catRes.json()
-      const subData = await subRes.json()
-      if (catData.success) setCategories(catData.data || [])
-      if (subData.success) setSubcategories(subData.data || [])
+      const catData     = await catRes.json()
+      const prodCatData = await prodCatRes.json()
+      const subData     = await subRes.json()
+      if (catData.success)     setCategories(catData.data || [])
+      if (prodCatData.success) setProductCategories(prodCatData.data || [])
+      if (subData.success)     setSubcategories(subData.data || [])
     } catch { toast.error('Failed to load data') }
     finally { setLoading(false) }
   }
@@ -104,17 +109,20 @@ export default function SubcategoriesPage() {
   const openAdd = () => {
     setEditingSub(null)
     setPendingImageFile(null)
-    setForm({ name: '', code: generateCode(), categoryId: '', image: '' })
+    setForm({ name: '', code: generateCode(), categoryId: '', productCategoryId: '', image: '' })
     setShowModal(true)
   }
 
   const openEdit = (sub) => {
     setEditingSub(sub)
     setPendingImageFile(null)
+    const catId = (sub.catId || sub.productCategory?.categoryId || sub.category?.id || '').toString()
+    const productCategoryId = (sub.productCategoryId || '').toString()
     setForm({
       name: sub.subCatName,
       code: sub.subCatCode,
-      categoryId: sub.catId.toString(),
+      categoryId: catId,
+      productCategoryId,
       image: sub.image || '',
     })
     setShowModal(true)
@@ -130,6 +138,7 @@ export default function SubcategoriesPage() {
 
   const handleSave = async () => {
     if (!form.categoryId) { toast.error('Please select a parent category'); return }
+    if (!form.productCategoryId) { toast.error('Please select a product category'); return }
     if (!form.name.trim()) { toast.error('Subcategory name is required'); return }
     setSaving(true)
     try {
@@ -150,8 +159,25 @@ export default function SubcategoriesPage() {
       }
 
       const body = editingSub
-        ? { type: 'subcategory', id: editingSub.subCatId, subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
-        : { type: 'subcategory', subCatName: form.name, subCatCode: form.code, catId: parseInt(form.categoryId), image: imageUrl, status: true }
+        ? {
+            type: 'subcategory',
+            id: editingSub.subCatId,
+            subCatName: form.name,
+            subCatCode: form.code,
+            catId: parseInt(form.categoryId),
+            productCategoryId: parseInt(form.productCategoryId),
+            image: imageUrl,
+            status: true,
+          }
+        : {
+            type: 'subcategory',
+            subCatName: form.name,
+            subCatCode: form.code,
+            catId: parseInt(form.categoryId),
+            productCategoryId: parseInt(form.productCategoryId),
+            image: imageUrl,
+            status: true,
+          }
 
       const res = await authFetch('/api/products', {
         method: editingSub ? 'PUT' : 'POST',
@@ -181,10 +207,25 @@ export default function SubcategoriesPage() {
     } catch { toast.error('Error deleting subcategory') }
   }
 
+  // Filter product categories available in the modal based on selected parent category
+  const modalProductCategories = productCategories.filter(pc =>
+    !form.categoryId || String(pc.categoryId) === String(form.categoryId)
+  )
+
+  // Filter product categories for the filter bar based on selected base category
+  const filterBarProductCategories = productCategories.filter(pc =>
+    filterCategory === 'all' || String(pc.categoryId) === String(filterCategory)
+  )
+
   const filtered = subcategories.filter(s => {
-    const matchesSearch = s.subCatName?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filterCategory === 'all' || s.catId === parseInt(filterCategory)
-    return matchesSearch && matchesFilter
+    const matchesSearch = s.subCatName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.subCatCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.productCategory?.productCategoryName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    const subCatId = s.catId || s.productCategory?.categoryId
+    const matchesFilterCat = filterCategory === 'all' || subCatId === parseInt(filterCategory)
+    const matchesFilterProdCat = filterProductCat === 'all' || s.productCategoryId === parseInt(filterProductCat)
+    return matchesSearch && matchesFilterCat && matchesFilterProdCat
   })
 
   const catColorMap = {}
@@ -220,17 +261,27 @@ export default function SubcategoriesPage() {
           </Button>
         </Box>
 
-        {/* ── Search & Filter ── */}
+        {/* ── Search & Filters ── */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <TextField size="small" placeholder="Search subcategories by name…"
+          <TextField size="small" placeholder="Search subcategories by name, code or category…"
             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-            sx={{ minWidth: 320, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+            sx={{ minWidth: 280, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
           />
-          <TextField select size="small" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
-            sx={{ minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
+          <TextField select size="small" value={filterCategory} onChange={e => {
+            setFilterCategory(e.target.value)
+            setFilterProductCat('all')
+          }}
+            sx={{ minWidth: 180, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
             <MenuItem value="all">All Base Categories</MenuItem>
             {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+          </TextField>
+          <TextField select size="small" value={filterProductCat} onChange={e => setFilterProductCat(e.target.value)}
+            sx={{ minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
+            <MenuItem value="all">All Product Categories</MenuItem>
+            {filterBarProductCategories.map(pc => (
+              <MenuItem key={pc.productCategoryId} value={pc.productCategoryId}>{pc.productCategoryName}</MenuItem>
+            ))}
           </TextField>
           <Chip label={`${filtered.length} / ${subcategories.length}`} size="small"
             sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
@@ -242,7 +293,7 @@ export default function SubcategoriesPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: 'grey.50' }}>
-                {['#', 'Image', 'Subcategory Name', 'Parent Category', 'Code', 'Actions'].map(h => (
+                {['#', 'Image', 'Subcategory Name', 'Product Category', 'Parent Category', 'Code', 'Actions'].map(h => (
                   <TableCell key={h} sx={{ fontWeight: 700, fontSize: 11, textTransform: 'uppercase', color: 'text.secondary', letterSpacing: 0.5, py: 1.5 }}>
                     {h}
                   </TableCell>
@@ -252,14 +303,18 @@ export default function SubcategoriesPage() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 8 }}>
+                  <TableCell colSpan={7} sx={{ textAlign: 'center', py: 8 }}>
                     <AccountTreeOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                     <Typography variant="body2" color="text.secondary">No subcategories found</Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((sub, idx) => {
-                  const color = catColorMap[sub.catId] || '#6b7280'
+                  const effectiveCatId = sub.catId || sub.productCategory?.categoryId
+                  const color = catColorMap[effectiveCatId] || '#6b7280'
+                  const parentCatName = sub.category?.name || sub.productCategory?.category?.name || '—'
+                  const prodCatName = sub.productCategory?.productCategoryName || '—'
+
                   return (
                     <TableRow key={sub.subCatId} hover sx={{ '&:last-child td': { border: 0 } }}>
                       <TableCell sx={{ color: 'text.disabled', fontSize: 12, width: 40 }}>{idx + 1}</TableCell>
@@ -267,7 +322,7 @@ export default function SubcategoriesPage() {
                       {/* Image thumbnail */}
                       <TableCell sx={{ width: 64, py: 1 }}>
                         <Box sx={{
-                          width: 48, height: 48, borderRadius: 1, overflow: 'hidden',
+                          width: 48, height: 48, borderRadius: 0, overflow: 'hidden',
                           border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                         }}>
@@ -286,15 +341,29 @@ export default function SubcategoriesPage() {
                           <Typography variant="body2" fontWeight={600}>{sub.subCatName}</Typography>
                         </Box>
                       </TableCell>
+
                       <TableCell>
-                        <Chip label={sub.category?.name || 'Unknown'} size="small"
-                          sx={{ bgcolor: `${color}18`, color, fontWeight: 600, borderRadius: 0, fontSize: 11 }} />
+                        <Chip
+                          label={prodCatName}
+                          size="small"
+                          sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                        />
                       </TableCell>
+
                       <TableCell>
-                        <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: 'grey.100', px: 1, py: 0.25, borderRadius: 0.5 }}>
+                        <Chip
+                          label={parentCatName}
+                          size="small"
+                          sx={{ bgcolor: `${color}18`, color, fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                        />
+                      </TableCell>
+
+                      <TableCell>
+                        <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: 'grey.100', px: 1, py: 0.25, borderRadius: 0 }}>
                           {sub.subCatCode}
                         </Typography>
                       </TableCell>
+
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <Tooltip title="Edit">
@@ -334,11 +403,20 @@ export default function SubcategoriesPage() {
           <DialogContent sx={{ pt: 2.5 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 
-              {/* Parent Category */}
+              {/* Step 1: Parent Category (Base Category) */}
               <FormControl size="small" fullWidth sx={{ minWidth: DROP_MIN_W }}>
                 <InputLabel>Parent Category *</InputLabel>
-                <Select value={form.categoryId} label="Parent Category *"
-                  onChange={e => setForm({ ...form, categoryId: e.target.value })}
+                <Select
+                  value={form.categoryId}
+                  label="Parent Category *"
+                  onChange={e => {
+                    const newCatId = e.target.value
+                    setForm(prev => ({
+                      ...prev,
+                      categoryId: newCatId,
+                      productCategoryId: '', // reset product category when base category changes
+                    }))
+                  }}
                   sx={{ borderRadius: 0 }}>
                   <MenuItem value=""><em>Select a category</em></MenuItem>
                   {categories.map(c => (
@@ -347,15 +425,34 @@ export default function SubcategoriesPage() {
                 </Select>
               </FormControl>
 
+              {/* Step 2: Product Category (under selected Category) */}
+              <FormControl size="small" fullWidth sx={{ minWidth: DROP_MIN_W }} disabled={!form.categoryId}>
+                <InputLabel>{form.categoryId ? 'Product Category *' : 'Product Category (Select Parent Category First) *'}</InputLabel>
+                <Select
+                  value={form.productCategoryId}
+                  label={form.categoryId ? 'Product Category *' : 'Product Category (Select Parent Category First) *'}
+                  onChange={e => setForm(prev => ({ ...prev, productCategoryId: e.target.value }))}
+                  sx={{ borderRadius: 0 }}>
+                  <MenuItem value=""><em>Select product category</em></MenuItem>
+                  {modalProductCategories.map(pc => (
+                    <MenuItem key={pc.productCategoryId} value={pc.productCategoryId.toString()}>
+                      {pc.productCategoryName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Step 3: Subcategory Name */}
               <TextField size="small" fullWidth label="Subcategory Name *" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g., Smartphones" {...tf} />
+                placeholder="e.g., Fast Food, Smartphones, Bakery Items" {...tf} />
 
+              {/* Step 4: Subcategory Code */}
               <TextField size="small" fullWidth label="Subcategory Code (Unique)" value={form.code}
                 disabled
                 helperText="System-generated unique identifier" {...tf} />
 
-              {/* Image upload */}
+              {/* Step 5: Subcategory Image upload */}
               <Box>
                 <Typography variant="caption" fontWeight={700} color="text.secondary"
                   sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1 }}>
@@ -365,7 +462,7 @@ export default function SubcategoriesPage() {
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                   {/* Preview */}
                   <Box sx={{
-                    width: 88, height: 88, flexShrink: 0, borderRadius: 1,
+                    width: 88, height: 88, flexShrink: 0, borderRadius: 0,
                     border: '2px dashed', borderColor: (localPreview || form.image) ? BRAND : 'divider',
                     overflow: 'hidden', bgcolor: 'grey.50',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',

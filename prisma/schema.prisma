@@ -56,20 +56,22 @@ model Category {
 }
 
 model SubCategory {
-  subCatId   Int       @id @default(autoincrement()) @map("sub_cat_id")
-  subCatCode String    @unique @map("sub_cat_code") @db.VarChar(50)
-  subCatName String    @map("sub_cat_name") @db.VarChar(255)
-  image      String?   @map("image") @db.VarChar(500)
-  status     Boolean   @default(true)
-  vertical   String    @default("FOOD") @map("vertical")
-  catId      Int    @map("cat_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  products   Product[]
-  category   Category  @relation(fields: [catId], references: [id], onDelete: Cascade)
-
+  subCatId          Int              @id @default(autoincrement()) @map("sub_cat_id")
+  subCatCode        String           @unique @map("sub_cat_code") @db.VarChar(50)
+  subCatName        String           @map("sub_cat_name") @db.VarChar(255)
+  image             String?          @map("image") @db.VarChar(500)
+  status            Boolean          @default(true)
+  vertical          String           @default("FOOD") @map("vertical")
+  catId             Int?             @map("cat_id")
+  productCategoryId Int?             @map("product_category_id")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  products          Product[]
+  category          Category?        @relation(fields: [catId], references: [id], onDelete: Cascade)
+  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [productCategoryId], onDelete: Cascade)
 
   @@index([catId], map: "sub_categories_cat_id_fkey")
+  @@index([productCategoryId], map: "sub_categories_product_category_id_fkey")
   @@map("sub_categories")
 }
 
@@ -84,6 +86,7 @@ model ProductCategory {
   
   category                   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products                   Product[]
+  subCategories              SubCategory[]
 
   @@index([categoryId], map: "product_categories_category_id_fkey")
   @@map("product_categories")

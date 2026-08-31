@@ -92,13 +92,18 @@ export async function GET(request) {
 
     if (type === 'subcategories') {
       if (categoryId) {
-        whereClause.catId = categoryId
+        whereClause.catId = parseInt(categoryId) || categoryId
+      }
+      const productCategoryId = searchParams.get('productCategoryId')
+      if (productCategoryId) {
+        whereClause.productCategoryId = parseInt(productCategoryId) || productCategoryId
       }
 
       const subcategories = await prisma.subCategory.findMany({
         where: whereClause,
         include: {
           category: true,
+          productCategory: true,
           _count: {
             select: { products: true }
           }
@@ -308,14 +313,22 @@ export async function POST(request) {
         counter++
       }
 
+      const parsedCatId = data.catId ? parseInt(data.catId) : (data.categoryId ? parseInt(data.categoryId) : null)
+      const parsedProductCatId = data.productCategoryId ? parseInt(data.productCategoryId) : null
+
       const subcategory = await prisma.subCategory.create({
         data: {
           subCatCode,
           subCatName: data.subCatName,
           image: data.image || null,
-          catId: data.catId,
+          catId: parsedCatId,
+          productCategoryId: parsedProductCatId,
           vertical: data.vertical || 'FOOD',
           status: (data.status === true || data.status === 'ACTIVE')
+        },
+        include: {
+          category: true,
+          productCategory: true
         }
       })
 
@@ -470,18 +483,25 @@ export async function PUT(request) {
     }
 
     if (type === 'subcategory') {
+      const parsedCatId = data.catId ? parseInt(data.catId) : (data.categoryId ? parseInt(data.categoryId) : undefined)
+      const parsedProductCatId = data.productCategoryId !== undefined ? (data.productCategoryId ? parseInt(data.productCategoryId) : null) : undefined
+
       const subcategory = await prisma.subCategory.update({
         where: { subCatId: parseInt(id) },
         data: {
           subCatCode: data.subCatCode,
           subCatName: data.subCatName,
           image: data.image !== undefined ? (data.image || null) : undefined,
-          catId: data.catId,
+          catId: parsedCatId,
+          productCategoryId: parsedProductCatId,
           vertical: data.vertical || undefined,
           status: (data.status === true || data.status === 'ACTIVE')
+        },
+        include: {
+          category: true,
+          productCategory: true
         }
       })
-
 
       return Response.json({
         success: true,
