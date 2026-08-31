@@ -378,18 +378,11 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                     size="small"
                     sx={{ bgcolor: statusConfig.bg, color: statusConfig.color, fontWeight: 700, borderRadius: 0, fontSize: 11 }}
                   />
-                  {business.businessCategory?.categoryTitle && (
+                  {(business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical) && (
                     <Chip
-                      label={business.businessCategory.categoryTitle}
+                      label={business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical}
                       size="small"
                       sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
-                    />
-                  )}
-                  {business.businessType?.typeTitle && (
-                    <Chip
-                      label={business.businessType.typeTitle}
-                      size="small"
-                      sx={{ bgcolor: '#f5f3ff', color: '#6d28d9', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
                     />
                   )}
                 </Box>
@@ -446,10 +439,13 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                   <TextField {...tf} fullWidth label="Business Name" value={business.businessName || ''} InputProps={{ readOnly: true }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Vertical / Category" value={business.businessCategory?.categoryTitle || business.vertical || ''} InputProps={{ readOnly: true }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Business Type" value={business.businessType?.typeTitle || ''} InputProps={{ readOnly: true }} />
+                  <TextField
+                    {...tf}
+                    fullWidth
+                    label="Category"
+                    value={business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical || '—'}
+                    InputProps={{ readOnly: true }}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField {...tf} fullWidth label="NTN Number" value={business.ntnNo || 'Not provided'} InputProps={{ readOnly: true }} />
@@ -460,7 +456,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                 <Grid item xs={12} sm={6}>
                   <TextField {...tf} fullWidth label="Secondary Phone" value={business.phoneNumber2 || 'None'} InputProps={{ readOnly: true }} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                   <TextField {...tf} fullWidth label="Business Email" value={business.email || ''} InputProps={{ readOnly: true }} />
                 </Grid>
               </Grid>
