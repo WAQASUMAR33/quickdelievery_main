@@ -810,7 +810,7 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
         {[
           { label: 'Status', value: business.verificationStatus, color: statusColor },
-          { label: 'Vertical', value: business.vertical || 'FOOD', color: '#3b82f6' },
+          { label: 'Category', value: business.category?.name || business.vertical || 'N/A', color: '#3b82f6' },
           { label: 'Bank Name', value: business.bankName || 'N/A', color: '#10b981' },
           { label: 'City', value: business.city || 'N/A', color: BRAND },
         ].map(({ label, value, color }) => (
@@ -835,6 +835,7 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
           <TextField label="Business Name" value={business.businessName || ''} disabled size="small" fullWidth />
+          <TextField label="Category" value={business.category?.name || 'Not assigned'} disabled size="small" fullWidth />
           <TextField label="Owner First Name" value={business.firstName || ''} disabled size="small" fullWidth />
           <TextField label="Owner Last Name" value={business.lastName || ''} disabled size="small" fullWidth />
           <TextField label="Owner CNIC Number" value={business.cnicNo || ''} disabled size="small" fullWidth />

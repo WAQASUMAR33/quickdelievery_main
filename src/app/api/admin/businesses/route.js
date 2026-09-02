@@ -15,6 +15,9 @@ export async function GET(request) {
 
     const business = await prisma.business.findUnique({
       where,
+      include: {
+        category: true,
+      },
     })
 
     // Return success:true even when no record exists so the UI can
@@ -26,28 +29,39 @@ export async function GET(request) {
   }
 }
 
-// PUT /api/admin/businesses  { id, verificationStatus }
+// PUT /api/admin/businesses  { id, verificationStatus, categoryId }
 export async function PUT(request) {
   try {
-    const { id, verificationStatus } = await request.json()
+    const { id, verificationStatus, categoryId } = await request.json()
 
     if (!id) {
       return Response.json({ success: false, error: 'Business id is required' }, { status: 400 })
     }
 
-    const allowed = ['PENDING', 'APPROVED', 'REJECTED']
-    if (!allowed.includes(verificationStatus)) {
-      return Response.json({ success: false, error: 'Invalid verificationStatus value' }, { status: 400 })
+    const data = {}
+    if (verificationStatus) {
+      const allowed = ['PENDING', 'APPROVED', 'REJECTED']
+      if (!allowed.includes(verificationStatus)) {
+        return Response.json({ success: false, error: 'Invalid verificationStatus value' }, { status: 400 })
+      }
+      data.verificationStatus = verificationStatus
+    }
+
+    if (categoryId !== undefined) {
+      data.categoryId = categoryId ? parseInt(categoryId) : null
     }
 
     const business = await prisma.business.update({
-      where: { id },
-      data:  { verificationStatus },
+      where: { id: parseInt(id) },
+      data,
+      include: {
+        category: true,
+      },
     })
 
     return Response.json({ success: true, data: business })
   } catch (error) {
-    console.error('Error updating business verification:', error)
+    console.error('Error updating business:', error)
     return Response.json({ success: false, error: 'Failed to update business' }, { status: 500 })
   }
 }

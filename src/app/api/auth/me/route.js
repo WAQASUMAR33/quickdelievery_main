@@ -14,7 +14,8 @@ export async function GET(request) {
 
     if (user.email) {
       const biz = await prisma.business.findUnique({
-        where: { email: user.email },
+        where: { email: user.email.trim() },
+        include: { category: true },
       })
       if (biz) {
         urlLogo = biz.urlLogo || null

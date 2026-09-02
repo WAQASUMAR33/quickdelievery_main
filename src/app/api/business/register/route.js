@@ -6,6 +6,7 @@ export async function POST(request) {
 
     const {
       email, businessName, firstName, lastName, cnicNo,
+      categoryId,
       phoneNumber1, phoneNumber2,
       buildingPlaceName, streetAddress, houseNumber,
       state, city, postalCode,
@@ -41,6 +42,7 @@ export async function POST(request) {
         firstName,
         lastName,
         cnicNo,
+        categoryId: categoryId ? parseInt(categoryId) : null,
         phoneNumber1,
         phoneNumber2: phoneNumber2 || null,
         buildingPlaceName: buildingPlaceName || null,

@@ -51,6 +51,7 @@ model Category {
   products          Product[]
   subCategories     SubCategory[]
   productCategories ProductCategory[]
+  businesses        Business[]
 
   @@map("categories")
 }
@@ -249,10 +250,14 @@ model Business {
   latitude            Float?           @map("latitude")
   longitude           Float?           @map("longitude")
   vertical            String           @default("FOOD") @map("vertical")
+  categoryId          Int?             @map("category_id")
   verificationStatus  BusinessVerificationStatus @default(PENDING) @map("verification_status")
   createdAt           DateTime         @default(now()) @map("created_at")
   updatedAt           DateTime         @updatedAt @map("updated_at")
 
+  category            Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId], map: "businesses_category_id_fkey")
   @@map("businesses")
 }
 

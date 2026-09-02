@@ -84,7 +84,7 @@ const STEPS = [
 // ─── Initial form state ───────────────────────────────────────────────────────
 const INITIAL = {
   firstName: '', lastName: '', email: '', cnicNo: '', phoneNumber1: '', phoneNumber2: '',
-  businessName: '',
+  businessName: '', categoryId: '',
   buildingPlaceName: '', streetAddress: '', houseNumber: '', state: '', city: '', postalCode: '',
   urlCnicFront: '', urlCnicBack: '', ntnNo: '',
   bankName: '', bankIbanNo: '', bankAccountTitle: '', billingAddress: '',
@@ -164,6 +164,7 @@ function BusinessRegisterInner() {
   const [step,               setStep]               = useState(1)
   const [loading,            setLoading]            = useState(false)
   const [formData,           setFormData]           = useState({ ...INITIAL, email: vendorEmail })
+  const [categories,         setCategories]         = useState([])
 
   // ── Google Maps state ────────────────────────────────────────────────────────
   const mapRef       = useRef(null)
@@ -202,8 +203,12 @@ function BusinessRegisterInner() {
     )
   }
 
-
-
+  useEffect(() => {
+    fetch('/api/customer/categories')
+      .then(r => r.json())
+      .then(d => { if (d.success && Array.isArray(d.data)) setCategories(d.data.map(c => ({ id: String(c.id), label: c.name }))) })
+      .catch(err => console.error('Failed to fetch categories:', err))
+  }, [])
 
   // Auto-populate user data & existing business profile from database
   useEffect(() => {
@@ -236,6 +241,7 @@ function BusinessRegisterInner() {
           setFormData(p => ({
             ...p,
             businessName: b.businessName || p.businessName,
+            categoryId: b.categoryId ? String(b.categoryId) : (b.category?.id ? String(b.category.id) : p.categoryId),
             firstName: b.firstName || p.firstName,
             lastName: b.lastName || p.lastName,
             cnicNo: b.cnicNo || p.cnicNo,
@@ -282,7 +288,7 @@ function BusinessRegisterInner() {
     const d = formData
     const rules = {
       1: [d.firstName, d.lastName, d.email, d.cnicNo, d.phoneNumber1],
-      2: [d.businessName, d.streetAddress, d.state, d.city, d.postalCode],
+      2: [d.businessName, d.categoryId, d.streetAddress, d.state, d.city, d.postalCode],
       3: [d.urlCnicFront, d.urlCnicBack],
       4: [d.bankName, d.bankIbanNo, d.bankAccountTitle, d.billingAddress],
       5: [],
@@ -304,6 +310,7 @@ function BusinessRegisterInner() {
         body: JSON.stringify({
           email:               formData.email,
           businessName:        formData.businessName,
+          categoryId:          formData.categoryId ? parseInt(formData.categoryId) : null,
           firstName:           formData.firstName,
           lastName:            formData.lastName,
           cnicNo:              formData.cnicNo,
@@ -511,6 +518,23 @@ function BusinessRegisterInner() {
                       placeholder="e.g. The Pizza House" required sx={fieldSx}
                       InputProps={{ startAdornment: adornment(StoreOutlinedIcon) }}
                     />
+
+                    <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
+                      <InputLabel id="category-select-label">Business Category</InputLabel>
+                      <Select
+                        labelId="category-select-label"
+                        name="categoryId"
+                        label="Business Category"
+                        value={formData.categoryId}
+                        onChange={onChange}
+                        startAdornment={adornment(CategoryOutlinedIcon)}
+                      >
+                        <MenuItem value="" disabled><em>Select category…</em></MenuItem>
+                        {categories.map(o => (
+                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
 
 
 

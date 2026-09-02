@@ -4,14 +4,21 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const email = searchParams.get('email')
+    const rawEmail = searchParams.get('email')
 
-    if (!email) {
+    if (!rawEmail) {
       return Response.json({ success: false, error: 'email query param required' }, { status: 400 })
     }
 
-    const business = await prisma.business.findUnique({
-      where: { email },
+    const email = rawEmail.trim()
+
+    const business = await prisma.business.findFirst({
+      where: {
+        email: { equals: email },
+      },
+      include: {
+        category: true,
+      },
     })
 
     return Response.json({ success: true, data: business ?? null })
@@ -21,33 +28,37 @@ export async function GET(request) {
   }
 }
 
-// PATCH /api/vendor/profile  { email, latitude, longitude }
+// PATCH /api/vendor/profile  { email, latitude, longitude, categoryId }
 export async function PATCH(request) {
   try {
     const body = await request.json()
-    const { email, latitude, longitude } = body
+    const { email, latitude, longitude, categoryId } = body
 
     if (!email) {
       return Response.json({ success: false, error: 'email is required' }, { status: 400 })
     }
-    if (latitude == null || longitude == null) {
-      return Response.json({ success: false, error: 'latitude and longitude are required' }, { status: 400 })
+
+    const updateData = {}
+    if (latitude != null) updateData.latitude = parseFloat(latitude)
+    if (longitude != null) updateData.longitude = parseFloat(longitude)
+    if (categoryId !== undefined) {
+      updateData.categoryId = categoryId ? parseInt(categoryId) : null
     }
 
     const business = await prisma.business.update({
-      where: { email },
-      data: {
-        latitude:  parseFloat(latitude),
-        longitude: parseFloat(longitude),
+      where: { email: email.trim() },
+      data: updateData,
+      include: {
+        category: true,
       },
     })
 
-    return Response.json({ success: true, data: { latitude: business.latitude, longitude: business.longitude } })
+    return Response.json({ success: true, data: business })
   } catch (error) {
-    console.error('Error updating vendor location:', error)
+    console.error('Error updating vendor profile:', error)
     if (error.code === 'P2025') {
       return Response.json({ success: false, error: 'Business profile not found for this email' }, { status: 404 })
     }
-    return Response.json({ success: false, error: 'Failed to update location' }, { status: 500 })
+    return Response.json({ success: false, error: 'Failed to update profile' }, { status: 500 })
   }
 }

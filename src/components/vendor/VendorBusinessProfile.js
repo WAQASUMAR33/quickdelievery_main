@@ -60,6 +60,26 @@ const tf = {
   },
 }
 
+const tfReadOnly = {
+  size: 'small',
+  sx: {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 0,
+      bgcolor: '#f8fafc',
+      '& fieldset': { borderColor: '#e2e8f0' },
+      '&:hover fieldset': { borderColor: '#cbd5e1' },
+      '&.Mui-focused fieldset': { borderColor: '#94a3b8' },
+    },
+    '& .MuiInputBase-input': {
+      cursor: 'default',
+      color: '#334155',
+      fontWeight: 500,
+    },
+    '& label': { color: '#64748b' },
+    '& label.Mui-focused': { color: '#64748b' },
+  },
+}
+
 function SectionHeading({ icon, title, subtitle }) {
   return (
     <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -436,11 +456,11 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
               />
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Business Name" value={business.businessName || ''} InputProps={{ readOnly: true }} />
+                  <TextField {...tfReadOnly} fullWidth label="Business Name" value={business.businessName || ''} InputProps={{ readOnly: true }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    {...tf}
+                    {...tfReadOnly}
                     fullWidth
                     label="Category"
                     value={business.category?.name || business.vertical || '—'}
@@ -448,16 +468,16 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="NTN Number" value={business.ntnNo || 'Not provided'} InputProps={{ readOnly: true }} />
+                  <TextField {...tfReadOnly} fullWidth label="NTN Number" value={business.ntnNo || 'Not provided'} InputProps={{ readOnly: true }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Primary Phone" value={business.phoneNumber1 || ''} InputProps={{ readOnly: true }} />
+                  <TextField {...tfReadOnly} fullWidth label="Primary Phone" value={business.phoneNumber1 || ''} InputProps={{ readOnly: true }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Secondary Phone" value={business.phoneNumber2 || 'None'} InputProps={{ readOnly: true }} />
+                  <TextField {...tfReadOnly} fullWidth label="Secondary Phone" value={business.phoneNumber2 || 'None'} InputProps={{ readOnly: true }} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField {...tf} fullWidth label="Business Email" value={business.email || ''} InputProps={{ readOnly: true }} />
+                  <TextField {...tfReadOnly} fullWidth label="Business Email" value={business.email || ''} InputProps={{ readOnly: true }} />
                 </Grid>
               </Grid>
             </Card>
@@ -471,25 +491,25 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                 subtitle="Physical store and billing location"
               />
               <Stack spacing={2}>
-                <TextField {...tf} fullWidth label="Street Address" value={business.streetAddress || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="Building / Market Name" value={business.buildingPlaceName || '—'} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Street Address" value={business.streetAddress || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Building / Market Name" value={business.buildingPlaceName || '—'} InputProps={{ readOnly: true }} />
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="Shop / House #" value={business.houseNumber || '—'} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="Shop / House #" value={business.houseNumber || '—'} InputProps={{ readOnly: true }} />
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="Postal Code" value={business.postalCode || '—'} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="Postal Code" value={business.postalCode || '—'} InputProps={{ readOnly: true }} />
                   </Grid>
                 </Grid>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="City" value={business.city || '—'} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="City" value={business.city || '—'} InputProps={{ readOnly: true }} />
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="State / Province" value={business.state || '—'} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="State / Province" value={business.state || '—'} InputProps={{ readOnly: true }} />
                   </Grid>
                 </Grid>
-                <TextField {...tf} fullWidth label="Billing Address" value={business.billingAddress || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Billing Address" value={business.billingAddress || ''} InputProps={{ readOnly: true }} />
               </Stack>
             </Card>
           </Grid>
@@ -509,15 +529,15 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
               <Stack spacing={2}>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="First Name" value={business.firstName || ''} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="First Name" value={business.firstName || ''} InputProps={{ readOnly: true }} />
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField {...tf} fullWidth label="Last Name" value={business.lastName || ''} InputProps={{ readOnly: true }} />
+                    <TextField {...tfReadOnly} fullWidth label="Last Name" value={business.lastName || ''} InputProps={{ readOnly: true }} />
                   </Grid>
                 </Grid>
-                <TextField {...tf} fullWidth label="Owner CNIC Number" value={business.cnicNo || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="Contact Phone" value={business.phoneNumber1 || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="Registered Email" value={business.email || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Owner CNIC Number" value={business.cnicNo || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Contact Phone" value={business.phoneNumber1 || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Registered Email" value={business.email || ''} InputProps={{ readOnly: true }} />
               </Stack>
             </Card>
           </Grid>
@@ -530,10 +550,10 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                 subtitle="Bank details for automated vendor order settlements"
               />
               <Stack spacing={2}>
-                <TextField {...tf} fullWidth label="Bank Name" value={business.bankName || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="Account Title" value={business.bankAccountTitle || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="IBAN / Account Number" value={business.bankIbanNo || ''} InputProps={{ readOnly: true }} />
-                <TextField {...tf} fullWidth label="Billing Address" value={business.billingAddress || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Bank Name" value={business.bankName || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Account Title" value={business.bankAccountTitle || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="IBAN / Account Number" value={business.bankIbanNo || ''} InputProps={{ readOnly: true }} />
+                <TextField {...tfReadOnly} fullWidth label="Billing Address" value={business.billingAddress || ''} InputProps={{ readOnly: true }} />
               </Stack>
             </Card>
           </Grid>

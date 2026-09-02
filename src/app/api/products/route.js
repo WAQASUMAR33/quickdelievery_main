@@ -27,6 +27,9 @@ export async function GET(request) {
 
       const businesses = await prisma.business.findMany({
         where: vendorWhere,
+        include: {
+          category: true,
+        },
       })
 
       // Fetch corresponding vendor users to get their uid
