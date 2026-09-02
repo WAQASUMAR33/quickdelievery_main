@@ -84,7 +84,7 @@ const STEPS = [
 // ─── Initial form state ───────────────────────────────────────────────────────
 const INITIAL = {
   firstName: '', lastName: '', email: '', cnicNo: '', phoneNumber1: '', phoneNumber2: '',
-  businessName: '', businessTypeId: '', businessCategoryId: '',
+  businessName: '',
   buildingPlaceName: '', streetAddress: '', houseNumber: '', state: '', city: '', postalCode: '',
   urlCnicFront: '', urlCnicBack: '', ntnNo: '',
   bankName: '', bankIbanNo: '', bankAccountTitle: '', billingAddress: '',
@@ -164,8 +164,6 @@ function BusinessRegisterInner() {
   const [step,               setStep]               = useState(1)
   const [loading,            setLoading]            = useState(false)
   const [formData,           setFormData]           = useState({ ...INITIAL, email: vendorEmail })
-  const [businessTypes,      setBusinessTypes]      = useState([])
-  const [businessCategories, setBusinessCategories] = useState([])
 
   // ── Google Maps state ────────────────────────────────────────────────────────
   const mapRef       = useRef(null)
@@ -204,17 +202,7 @@ function BusinessRegisterInner() {
     )
   }
 
-  useEffect(() => {
-    fetch('/api/business-types')
-      .then(r => r.json())
-      .then(d => { if (d.success) setBusinessTypes(d.data.map(t => ({ id: String(t.id), label: t.typeTitle, categoryId: String(t.businessCategoryId) }))) })
-      .catch(err => console.error('Failed to fetch business types:', err))
 
-    fetch('/api/customer/categories')
-      .then(r => r.json())
-      .then(d => { if (d.success) setBusinessCategories(d.data.map(c => ({ id: String(c.id), label: c.name }))) })
-      .catch(err => console.error('Failed to fetch categories:', err))
-  }, [])
 
 
   // Auto-populate user data & existing business profile from database
@@ -251,8 +239,6 @@ function BusinessRegisterInner() {
             firstName: b.firstName || p.firstName,
             lastName: b.lastName || p.lastName,
             cnicNo: b.cnicNo || p.cnicNo,
-            businessCategoryId: b.businessCategoryId ? String(b.businessCategoryId) : p.businessCategoryId,
-            businessTypeId: b.businessTypeId ? String(b.businessTypeId) : p.businessTypeId,
             phoneNumber1: b.phoneNumber1 || p.phoneNumber1,
             phoneNumber2: b.phoneNumber2 || p.phoneNumber2,
             buildingPlaceName: b.buildingPlaceName || p.buildingPlaceName,
@@ -289,19 +275,14 @@ function BusinessRegisterInner() {
     setFormData(p => ({
       ...p,
       [name]: value,
-      ...(name === 'businessCategoryId' ? { businessTypeId: '' } : {}),
     }))
   }
-
-  const filteredTypes = formData.businessCategoryId
-    ? businessTypes.filter(t => t.categoryId === String(formData.businessCategoryId))
-    : []
 
   const validateStep = () => {
     const d = formData
     const rules = {
       1: [d.firstName, d.lastName, d.email, d.cnicNo, d.phoneNumber1],
-      2: [d.businessName, d.businessTypeId, d.businessCategoryId, d.streetAddress, d.state, d.city, d.postalCode],
+      2: [d.businessName, d.streetAddress, d.state, d.city, d.postalCode],
       3: [d.urlCnicFront, d.urlCnicBack],
       4: [d.bankName, d.bankIbanNo, d.bankAccountTitle, d.billingAddress],
       5: [],
@@ -326,8 +307,6 @@ function BusinessRegisterInner() {
           firstName:           formData.firstName,
           lastName:            formData.lastName,
           cnicNo:              formData.cnicNo,
-          businessTypeId:      parseInt(formData.businessTypeId),
-          businessCategoryId:  parseInt(formData.businessCategoryId),
           phoneNumber1:        formData.phoneNumber1,
           phoneNumber2:        formData.phoneNumber2        || null,
           buildingPlaceName:   formData.buildingPlaceName  || null,
@@ -533,47 +512,7 @@ function BusinessRegisterInner() {
                       InputProps={{ startAdornment: adornment(StoreOutlinedIcon) }}
                     />
 
-                    {/* ── Business Category (select first) ── */}
-                    <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
-                      <InputLabel id="business-category-select-label">Business Category</InputLabel>
-                      <Select
-                        labelId="business-category-select-label"
-                        name="businessCategoryId"
-                        label="Business Category"
-                        value={formData.businessCategoryId}
-                        onChange={onChange}
-                        startAdornment={adornment(CategoryOutlinedIcon)}
-                      >
-                        <MenuItem value="" disabled><em>Select category…</em></MenuItem>
-                        {businessCategories.map(o => (
-                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
 
-                    {/* ── Business Type (filtered by selected category) ── */}
-                    <FormControl
-                      fullWidth required
-                      disabled={!formData.businessCategoryId}
-                      sx={{ ...fieldSx, minWidth: 240 }}
-                    >
-                      <InputLabel id="business-type-select-label">
-                        {formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
-                      </InputLabel>
-                      <Select
-                        labelId="business-type-select-label"
-                        name="businessTypeId"
-                        label={formData.businessCategoryId ? 'Business Type' : 'Business Type (select category first)'}
-                        value={formData.businessTypeId}
-                        onChange={onChange}
-                        startAdornment={adornment(BusinessOutlinedIcon)}
-                      >
-                        <MenuItem value="" disabled><em>Select type…</em></MenuItem>
-                        {filteredTypes.map(o => (
-                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
 
                     <Divider>
                       <Chip

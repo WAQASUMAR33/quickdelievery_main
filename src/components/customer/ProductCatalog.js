@@ -1262,7 +1262,7 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
                           </div>
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">
-                          From {20 + ((i * 5) % 15)} min · Rs. · {shop.businessCategory?.categoryTitle || shopProducts[0]?.category?.name || 'Burgers'}
+                          From {20 + ((i * 5) % 15)} min · Rs. · {shop.category?.name || shopProducts[0]?.category?.name || 'Burgers'}
                         </p>
                         <p className="text-sm text-gray-700 mt-1">
                           From {minPrice > 0 ? `Rs.${Math.round(minPrice)}` : 'Rs.99'} with Saver

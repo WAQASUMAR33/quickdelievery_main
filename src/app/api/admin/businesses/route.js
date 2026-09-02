@@ -15,10 +15,6 @@ export async function GET(request) {
 
     const business = await prisma.business.findUnique({
       where,
-      include: {
-        businessType:     true,
-        businessCategory: true,
-      },
     })
 
     // Return success:true even when no record exists so the UI can

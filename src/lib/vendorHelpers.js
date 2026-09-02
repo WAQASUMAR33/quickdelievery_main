@@ -14,11 +14,9 @@ export function isRestaurantVendor(userData, business) {
   ).toLowerCase().trim()
 
   const catName = (
-    business?.businessCategory?.categoryName ||
-    business?.businessCategory?.name ||
-    userData?.businessCategory?.categoryName ||
-    userData?.businessCategory?.name ||
-    userData?.business?.businessCategory?.categoryName ||
+    business?.category?.name ||
+    business?.category?.categoryName ||
+    userData?.category?.name ||
     ''
   ).toLowerCase().trim()
 

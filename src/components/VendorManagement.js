@@ -744,20 +744,7 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
                     size="small"
                     sx={{ bgcolor: statusColor, color: 'white', fontWeight: 800, borderRadius: 0, fontSize: 11 }}
                   />
-                  {business.businessCategory?.name && (
-                    <Chip
-                      label={business.businessCategory.name}
-                      size="small"
-                      sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
-                    />
-                  )}
-                  {business.businessType?.name && (
-                    <Chip
-                      label={business.businessType.name}
-                      size="small"
-                      sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
-                    />
-                  )}
+
                 </Box>
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
@@ -823,8 +810,7 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
         {[
           { label: 'Status', value: business.verificationStatus, color: statusColor },
-          { label: 'Category', value: business.businessCategory?.name || 'N/A', color: '#3b82f6' },
-          { label: 'Business Type', value: business.businessType?.name || 'N/A', color: '#8b5cf6' },
+          { label: 'Vertical', value: business.vertical || 'FOOD', color: '#3b82f6' },
           { label: 'Bank Name', value: business.bankName || 'N/A', color: '#10b981' },
           { label: 'City', value: business.city || 'N/A', color: BRAND },
         ].map(({ label, value, color }) => (
@@ -852,8 +838,6 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
           <TextField label="Owner First Name" value={business.firstName || ''} disabled size="small" fullWidth />
           <TextField label="Owner Last Name" value={business.lastName || ''} disabled size="small" fullWidth />
           <TextField label="Owner CNIC Number" value={business.cnicNo || ''} disabled size="small" fullWidth />
-          <TextField label="Business Category" value={business.businessCategory?.name || ''} disabled size="small" fullWidth />
-          <TextField label="Business Type" value={business.businessType?.name || ''} disabled size="small" fullWidth />
           <TextField label="NTN Number" value={business.ntnNo || 'Not provided'} disabled size="small" fullWidth />
         </Box>
 

@@ -378,9 +378,9 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                     size="small"
                     sx={{ bgcolor: statusConfig.bg, color: statusConfig.color, fontWeight: 700, borderRadius: 0, fontSize: 11 }}
                   />
-                  {(business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical) && (
+                  {(business.category?.name || business.vertical) && (
                     <Chip
-                      label={business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical}
+                      label={business.category?.name || business.vertical}
                       size="small"
                       sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
                     />
@@ -443,7 +443,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                     {...tf}
                     fullWidth
                     label="Category"
-                    value={business.businessCategory?.categoryTitle || business.businessCategory?.categoryName || business.businessCategory?.name || business.category?.name || business.vertical || '—'}
+                    value={business.category?.name || business.vertical || '—'}
                     InputProps={{ readOnly: true }}
                   />
                 </Grid>

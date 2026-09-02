@@ -6,7 +6,6 @@ export async function POST(request) {
 
     const {
       email, businessName, firstName, lastName, cnicNo,
-      businessTypeId, businessCategoryId,
       phoneNumber1, phoneNumber2,
       buildingPlaceName, streetAddress, houseNumber,
       state, city, postalCode,
@@ -19,7 +18,6 @@ export async function POST(request) {
     // Required field validation
     if (
       !email || !businessName || !firstName || !lastName || !cnicNo ||
-      !businessTypeId || !businessCategoryId ||
       !phoneNumber1 || !streetAddress || !state || !city || !postalCode ||
       !urlCnicFront || !urlCnicBack ||
       !bankName || !bankIbanNo || !bankAccountTitle || !billingAddress
@@ -43,8 +41,6 @@ export async function POST(request) {
         firstName,
         lastName,
         cnicNo,
-        businessTypeId: parseInt(businessTypeId),
-        businessCategoryId: parseInt(businessCategoryId),
         phoneNumber1,
         phoneNumber2: phoneNumber2 || null,
         buildingPlaceName: buildingPlaceName || null,

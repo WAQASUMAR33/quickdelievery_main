@@ -181,14 +181,16 @@ export default function ProductEditPage() {
   const vendorCategory = baseCategories.find(c => {
     const cName = c.name.trim().toLowerCase()
     const cCode = (c.code || '').trim().toLowerCase()
-    const bizCatTitle = (
-      vendorBusiness?.businessCategory?.categoryTitle ||
-      vendorBusiness?.businessCategory?.categoryName ||
-      userData?.business?.businessCategory?.categoryTitle ||
-      userData?.business?.businessCategory?.categoryName ||
+    const bizCategoryName = (
+      vendorBusiness?.category?.name ||
+      userData?.business?.category?.name ||
       ''
     ).trim().toLowerCase()
-    if (bizCatTitle && (cName === bizCatTitle || cName.includes(bizCatTitle) || bizCatTitle.includes(cName))) {
+    const bizVertical = (vendorBusiness?.vertical || userData?.business?.vertical || '').trim().toLowerCase()
+    if (bizCategoryName && (cName === bizCategoryName || cName.includes(bizCategoryName) || bizCategoryName.includes(cName))) {
+      return true
+    }
+    if (bizVertical && (cName === bizVertical || cName.includes(bizVertical) || bizVertical.includes(cName))) {
       return true
     }
     if (isRestaurant) {

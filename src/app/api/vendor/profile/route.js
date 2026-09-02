@@ -12,7 +12,6 @@ export async function GET(request) {
 
     const business = await prisma.business.findUnique({
       where: { email },
-      include: { businessType: true, businessCategory: true },
     })
 
     return Response.json({ success: true, data: business ?? null })

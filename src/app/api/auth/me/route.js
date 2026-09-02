@@ -15,10 +15,6 @@ export async function GET(request) {
     if (user.email) {
       const biz = await prisma.business.findUnique({
         where: { email: user.email },
-        include: {
-          businessType: true,
-          businessCategory: true,
-        },
       })
       if (biz) {
         urlLogo = biz.urlLogo || null
@@ -36,8 +32,6 @@ export async function GET(request) {
         photoURL: urlLogo || null,
         businessName: businessName || null,
         business,
-        businessType: business?.businessType || null,
-        businessCategory: business?.businessCategory || null,
       }
     })
   } catch (error) {

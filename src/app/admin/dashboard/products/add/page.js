@@ -162,26 +162,14 @@ export default function AddProductPage() {
   const vendorCategory = categories.find(c => {
     const cName = c.name.trim().toLowerCase()
     const cCode = (c.code || '').trim().toLowerCase()
-    const bizCatTitle = (
-      vendorBusiness?.businessCategory?.categoryTitle ||
-      vendorBusiness?.businessCategory?.categoryName ||
-      userData?.business?.businessCategory?.categoryTitle ||
-      userData?.business?.businessCategory?.categoryName ||
-      ''
-    ).trim().toLowerCase()
-    const bizTypeTitle = (
-      vendorBusiness?.businessType?.name ||
-      vendorBusiness?.businessType?.title ||
-      userData?.business?.businessType?.name ||
-      userData?.business?.businessType?.title ||
+    const bizCategoryName = (
+      vendorBusiness?.category?.name ||
+      userData?.business?.category?.name ||
       ''
     ).trim().toLowerCase()
     const bizVertical = (vendorBusiness?.vertical || userData?.business?.vertical || '').trim().toLowerCase()
 
-    if (bizCatTitle && (cName === bizCatTitle || cName.includes(bizCatTitle) || bizCatTitle.includes(cName))) {
-      return true
-    }
-    if (bizTypeTitle && (cName === bizTypeTitle || cName.includes(bizTypeTitle) || bizTypeTitle.includes(cName))) {
+    if (bizCategoryName && (cName === bizCategoryName || cName.includes(bizCategoryName) || bizCategoryName.includes(cName))) {
       return true
     }
     if (bizVertical && (cName === bizVertical || cName.includes(bizVertical) || bizVertical.includes(cName))) {

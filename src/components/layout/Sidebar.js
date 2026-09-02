@@ -68,13 +68,7 @@ const ADMIN_ITEMS = [
   { id: 'productcategories', label: 'Product Categories', icon: FolderOutlinedIcon, path: '/admin/dashboard/productcategories' },
   { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/admin/dashboard/subcategories' },
   { id: 'deals',         label: 'Food Deals',       icon: LocalOfferOutlinedIcon, path: '/admin/dashboard/deals' },
-  {
-    id: 'business-setup', label: 'Business Setup', icon: WorkOutlinedIcon,
-    children: [
-      { id: 'business-categories', label: 'Business Categories', path: '/admin/dashboard/business-categories' },
-      { id: 'business-types',      label: 'Business Types',      path: '/admin/dashboard/business-types' },
-    ],
-  },
+
   { id: 'employees', label: 'Employees', icon: HowToRegOutlinedIcon,    path: '/admin/dashboard/employees' },
   { id: 'disputes',  label: 'Disputes',  icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
   { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,    path: '/admin/dashboard/settings' },
