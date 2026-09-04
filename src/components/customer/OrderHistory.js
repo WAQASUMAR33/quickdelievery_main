@@ -230,62 +230,6 @@ const OrderHistory = () => {
     }
   }
 
-  const mockOrders = [
-    {
-      id: 'ORD-001',
-      date: '2024-01-15',
-      status: 'delivered',
-      total: 125.50,
-      items: [
-        { name: 'Wireless Headphones', price: 79.99, quantity: 1, image: '/placeholder-product.jpg' },
-        { name: 'Phone Case', price: 15.99, quantity: 2, image: '/placeholder-product.jpg' }
-      ],
-      shippingAddress: '123 Main St, City, State 12345',
-      trackingNumber: 'TRK123456789',
-      estimatedDelivery: '2024-01-18'
-    },
-    {
-      id: 'ORD-002',
-      date: '2024-01-14',
-      status: 'shipped',
-      total: 89.99,
-      items: [
-        { name: 'Laptop Stand', price: 45.99, quantity: 1, image: '/placeholder-product.jpg' },
-        { name: 'USB Cable', price: 12.99, quantity: 2, image: '/placeholder-product.jpg' }
-      ],
-      shippingAddress: '456 Oak Ave, City, State 12345',
-      trackingNumber: 'TRK987654321',
-      estimatedDelivery: '2024-01-20'
-    },
-    {
-      id: 'ORD-003',
-      date: '2024-01-13',
-      status: 'processing',
-      total: 156.75,
-      items: [
-        { name: 'Smart Watch', price: 199.99, quantity: 1, image: '/placeholder-product.jpg' }
-      ],
-      shippingAddress: '789 Pine Rd, City, State 12345',
-      trackingNumber: null,
-      estimatedDelivery: '2024-01-22'
-    },
-    {
-      id: 'ORD-004',
-      date: '2024-01-12',
-      status: 'cancelled',
-      total: 67.50,
-      items: [
-        { name: 'Bluetooth Speaker', price: 67.50, quantity: 1, image: '/placeholder-product.jpg' }
-      ],
-      shippingAddress: '321 Elm St, City, State 12345',
-      trackingNumber: null,
-      estimatedDelivery: null
-    }
-  ]
-  
-  // Uncomment to use mock data
-  // setOrders(mockOrders)
-
   const getStatusIcon = (status) => {
     switch (status) {
       case 'delivered':

@@ -113,9 +113,9 @@ function BrandPanel() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 5 }}>
             <Box sx={{ width: 60, height: 60, bgcolor: '#fff', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-              <Typography variant="h5" fontWeight={900} color={BRAND}>FP</Typography>
+              <Typography variant="h5" fontWeight={900} color={BRAND}>QD</Typography>
             </Box>
-            <Typography variant="h3" fontWeight={900} letterSpacing={-1}>foodpanda</Typography>
+            <Typography variant="h3" fontWeight={900} letterSpacing={-1}>QuickDelivery</Typography>
           </Box>
         </motion.div>
 
@@ -152,7 +152,7 @@ function BrandPanel() {
         {/* Tagline */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}>
           <Typography variant="h4" fontWeight={800} gutterBottom sx={{ lineHeight: 1.2 }}>
-            Join foodpanda
+            Join QuickDelivery
           </Typography>
           <Typography variant="body1" sx={{ opacity: 0.85, maxWidth: 280, mx: 'auto' }}>
             Connect with thousands of customers. Start your journey today.
@@ -241,9 +241,9 @@ export default function RegisterPage() {
           {/* Mobile logo */}
           <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1.5 }}>
             <Box sx={{ width: 36, height: 36, bgcolor: BRAND, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body2" fontWeight={900} color="#fff">FP</Typography>
+              <Typography variant="body2" fontWeight={900} color="#fff">QD</Typography>
             </Box>
-            <Typography variant="h6" fontWeight={800} color={BRAND}>foodpanda</Typography>
+            <Typography variant="h6" fontWeight={800} color={BRAND}>QuickDelivery</Typography>
           </Box>
           <Box sx={{ display: { xs: 'none', lg: 'block' } }} /> {/* spacer */}
 

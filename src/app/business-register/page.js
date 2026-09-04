@@ -380,7 +380,7 @@ function BusinessRegisterInner() {
             </Box>
             <Box>
               <Typography variant="subtitle1" fontWeight={700} color={BRAND} lineHeight={1.2}>
-                foodpanda
+                QuickDelivery
               </Typography>
               <Typography variant="caption" color="text.secondary" lineHeight={1}>
                 Business Registration

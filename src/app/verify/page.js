@@ -33,9 +33,9 @@ export default function EmailVerificationPage() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className="w-12 h-12 bg-[#39772A] rounded-xl flex items-center justify-center">
-                <span className="text-xl font-bold text-white">FP</span>
+                <span className="text-xl font-bold text-white">QD</span>
               </div>
-              <span className="text-2xl font-bold text-[#39772A] tracking-tight">foodpanda</span>
+              <span className="text-2xl font-bold text-[#39772A] tracking-tight">QuickDelivery</span>
             </div>
           </div>
 

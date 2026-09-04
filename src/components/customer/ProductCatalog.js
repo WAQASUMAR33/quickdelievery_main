@@ -28,7 +28,7 @@ import {
   Utensils,
 } from 'lucide-react'
 
-// Foodpanda Brand Color Tokens
+// QuickDelivery Brand Color Tokens
 const BRAND = '#D70F64'
 const BRAND_DARK = '#C20E5A'
 const BRAND_SOFT = '#FFF0F5'
@@ -790,52 +790,7 @@ const ProductCatalog = ({
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* ══════════════ LEFT COLUMN: SIDEBAR ══════════════ */}
         <aside className="hidden lg:block w-[260px] flex-shrink-0 sticky top-36 space-y-4">
-          {/* 1. App Promo QR Card */}
-          <div className="bg-gradient-to-b from-[#C20E5A] to-[#A00B48] text-white p-4 rounded-2xl shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-pink-200">
-                Mobile App
-              </span>
-              <Smartphone className="w-4 h-4 text-pink-200" />
-            </div>
-            <h4 className="text-sm font-extrabold leading-snug mb-3">
-              Order faster with our mobile app.
-            </h4>
-
-            {/* QR Code Graphic */}
-            <div className="bg-white p-2.5 rounded-xl flex items-center justify-center shadow-inner mb-3">
-              <svg className="w-24 h-24 text-gray-900" viewBox="0 0 100 100" fill="currentColor">
-                <rect x="10" y="10" width="25" height="25" fill="#D70F64" rx="2" />
-                <rect x="15" y="15" width="15" height="15" fill="#fff" rx="1" />
-                <rect x="18" y="18" width="9" height="9" fill="#D70F64" />
-                <rect x="65" y="10" width="25" height="25" fill="#D70F64" rx="2" />
-                <rect x="70" y="15" width="15" height="15" fill="#fff" rx="1" />
-                <rect x="73" y="18" width="9" height="9" fill="#D70F64" />
-                <rect x="10" y="65" width="25" height="25" fill="#D70F64" rx="2" />
-                <rect x="15" y="70" width="15" height="15" fill="#fff" rx="1" />
-                <rect x="18" y="73" width="9" height="9" fill="#D70F64" />
-                <circle cx="48" cy="20" r="3" />
-                <circle cx="54" cy="30" r="3" />
-                <circle cx="42" cy="48" r="4" fill="#D70F64" />
-                <circle cx="58" cy="50" r="3" />
-                <circle cx="70" cy="70" r="4" />
-                <circle cx="85" cy="80" r="4" />
-                <circle cx="50" cy="75" r="3" />
-                <circle cx="75" cy="48" r="3" />
-              </svg>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="bg-black/40 hover:bg-black/60 rounded-lg p-1 text-center cursor-pointer transition-colors">
-                <span className="text-[10px] font-bold block leading-tight">App Store</span>
-              </div>
-              <div className="bg-black/40 hover:bg-black/60 rounded-lg p-1 text-center cursor-pointer transition-colors">
-                <span className="text-[10px] font-bold block leading-tight">Google Play</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Dynamic Filters & Sort Card */}
+          {/* Dynamic Filters & Sort Card */}
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
             {SidebarFilterPanel}
           </div>

@@ -484,7 +484,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 <MenuIcon />
               </IconButton>
 
-              {/* Foodpanda-style Brand Logo */}
+              {/* QuickDelivery Brand Logo */}
               <Box
                 onClick={() => setActiveTab('products')}
                 sx={{
@@ -682,12 +682,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               flexWrap: { xs: 'wrap', md: 'nowrap' },
             }}
           >
-            {/* Service Mode Tabs: Delivery | Pick-up | pandamart | Shops */}
+            {/* Service Mode Tabs: Delivery | Pick-up | Grocery | Shops */}
             <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', py: 0.25, '&::-webkit-scrollbar': { display: 'none' } }}>
               {[
                 { id: 'delivery', label: 'Delivery', icon: '🛵' },
                 { id: 'pickup', label: 'Pick-up', icon: '🛍️' },
-                { id: 'pandamart', label: 'pandamart', icon: '🏪' },
+                { id: 'grocery', label: 'Grocery', icon: '🛒' },
                 { id: 'shops', label: 'Shops', icon: '🏬' },
               ].map((tab) => {
                 const isActive = serviceMode === tab.id

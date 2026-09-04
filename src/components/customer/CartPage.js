@@ -220,7 +220,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
     }
   }
 
-  // ── ORDER SUCCESS SCREEN (FOODPANDA STYLE) ──
+  // ── ORDER SUCCESS SCREEN ──
   if (orderSuccess) {
     return (
       <div className="w-full min-h-[75vh] flex items-center justify-center p-4 sm:p-6 lg:p-10">
@@ -349,7 +349,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         </div>
       )}
 
-      {/* ── Main Two-Column Foodpanda Layout ── */}
+      {/* ── Main Two-Column Layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         
         {/* ── LEFT COLUMN: Delivery Details & Items (7 Cols on desktop) ── */}
