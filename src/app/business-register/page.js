@@ -84,7 +84,7 @@ const STEPS = [
 // ─── Initial form state ───────────────────────────────────────────────────────
 const INITIAL = {
   firstName: '', lastName: '', email: '', cnicNo: '', phoneNumber1: '', phoneNumber2: '',
-  businessName: '', categoryId: '',
+  businessName: '', categoryId: '', businessCategoryId: '', businessTypeId: '',
   buildingPlaceName: '', streetAddress: '', houseNumber: '', state: '', city: '', postalCode: '',
   urlCnicFront: '', urlCnicBack: '', ntnNo: '',
   bankName: '', bankIbanNo: '', bankAccountTitle: '', billingAddress: '',
@@ -165,6 +165,7 @@ function BusinessRegisterInner() {
   const [loading,            setLoading]            = useState(false)
   const [formData,           setFormData]           = useState({ ...INITIAL, email: vendorEmail })
   const [categories,         setCategories]         = useState([])
+  const [businessCategories, setBusinessCategories] = useState([])
 
   // ── Google Maps state ────────────────────────────────────────────────────────
   const mapRef       = useRef(null)
@@ -208,6 +209,11 @@ function BusinessRegisterInner() {
       .then(r => r.json())
       .then(d => { if (d.success && Array.isArray(d.data)) setCategories(d.data.map(c => ({ id: String(c.id), label: c.name }))) })
       .catch(err => console.error('Failed to fetch categories:', err))
+
+    fetch('/api/business/categories')
+      .then(r => r.json())
+      .then(d => { if (d.success && Array.isArray(d.data)) setBusinessCategories(d.data) })
+      .catch(err => console.error('Failed to fetch business categories:', err))
   }, [])
 
   // Auto-populate user data & existing business profile from database
@@ -242,6 +248,8 @@ function BusinessRegisterInner() {
             ...p,
             businessName: b.businessName || p.businessName,
             categoryId: b.categoryId ? String(b.categoryId) : (b.category?.id ? String(b.category.id) : p.categoryId),
+            businessCategoryId: b.businessCategoryId ? String(b.businessCategoryId) : p.businessCategoryId,
+            businessTypeId: b.businessTypeId ? String(b.businessTypeId) : p.businessTypeId,
             firstName: b.firstName || p.firstName,
             lastName: b.lastName || p.lastName,
             cnicNo: b.cnicNo || p.cnicNo,
@@ -288,7 +296,7 @@ function BusinessRegisterInner() {
     const d = formData
     const rules = {
       1: [d.firstName, d.lastName, d.email, d.cnicNo, d.phoneNumber1],
-      2: [d.businessName, d.categoryId, d.streetAddress, d.state, d.city, d.postalCode],
+      2: [d.businessName, d.categoryId, d.businessCategoryId, d.businessTypeId, d.streetAddress, d.state, d.city, d.postalCode],
       3: [d.urlCnicFront, d.urlCnicBack],
       4: [d.bankName, d.bankIbanNo, d.bankAccountTitle, d.billingAddress],
       5: [],
@@ -311,6 +319,8 @@ function BusinessRegisterInner() {
           email:               formData.email,
           businessName:        formData.businessName,
           categoryId:          formData.categoryId ? parseInt(formData.categoryId) : null,
+          businessCategoryId:  formData.businessCategoryId ? parseInt(formData.businessCategoryId) : null,
+          businessTypeId:      formData.businessTypeId ? parseInt(formData.businessTypeId) : null,
           firstName:           formData.firstName,
           lastName:            formData.lastName,
           cnicNo:              formData.cnicNo,
@@ -520,21 +530,63 @@ function BusinessRegisterInner() {
                     />
 
                     <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
-                      <InputLabel id="category-select-label">Business Category</InputLabel>
+                      <InputLabel id="category-select-label">Product Category</InputLabel>
                       <Select
                         labelId="category-select-label"
                         name="categoryId"
-                        label="Business Category"
+                        label="Product Category"
                         value={formData.categoryId}
                         onChange={onChange}
                         startAdornment={adornment(CategoryOutlinedIcon)}
                       >
-                        <MenuItem value="" disabled><em>Select category…</em></MenuItem>
+                        <MenuItem value="" disabled><em>Select product category…</em></MenuItem>
                         {categories.map(o => (
                           <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
                         ))}
                       </Select>
                     </FormControl>
+
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
+                          <InputLabel id="biz-category-select-label">Business Category</InputLabel>
+                          <Select
+                            labelId="biz-category-select-label"
+                            name="businessCategoryId"
+                            label="Business Category"
+                            value={formData.businessCategoryId}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setFormData(p => ({ ...p, businessCategoryId: val, businessTypeId: '' }))
+                            }}
+                            startAdornment={adornment(StorefrontOutlinedIcon)}
+                          >
+                            <MenuItem value="" disabled><em>Select business category…</em></MenuItem>
+                            {businessCategories.map(bc => (
+                              <MenuItem key={bc.id} value={String(bc.id)}>{bc.categoryTitle}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }} disabled={!formData.businessCategoryId}>
+                          <InputLabel id="biz-type-select-label">Business Type</InputLabel>
+                          <Select
+                            labelId="biz-type-select-label"
+                            name="businessTypeId"
+                            label="Business Type"
+                            value={formData.businessTypeId}
+                            onChange={onChange}
+                            startAdornment={adornment(BusinessOutlinedIcon)}
+                          >
+                            <MenuItem value="" disabled><em>{formData.businessCategoryId ? 'Select business type…' : 'Select a category first'}</em></MenuItem>
+                            {(businessCategories.find(bc => String(bc.id) === formData.businessCategoryId)?.businessTypes || []).map(bt => (
+                              <MenuItem key={bt.id} value={String(bt.id)}>{bt.typeTitle}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
 
 
 

@@ -6,7 +6,7 @@ export async function POST(request) {
 
     const {
       email, businessName, firstName, lastName, cnicNo,
-      categoryId,
+      categoryId, businessTypeId, businessCategoryId,
       phoneNumber1, phoneNumber2,
       buildingPlaceName, streetAddress, houseNumber,
       state, city, postalCode,
@@ -21,7 +21,8 @@ export async function POST(request) {
       !email || !businessName || !firstName || !lastName || !cnicNo ||
       !phoneNumber1 || !streetAddress || !state || !city || !postalCode ||
       !urlCnicFront || !urlCnicBack ||
-      !bankName || !bankIbanNo || !bankAccountTitle || !billingAddress
+      !bankName || !bankIbanNo || !bankAccountTitle || !billingAddress ||
+      !businessTypeId || !businessCategoryId
     ) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
@@ -33,6 +34,8 @@ export async function POST(request) {
         lastName,
         cnicNo,
         categoryId: categoryId ? parseInt(categoryId) : null,
+        businessTypeId: parseInt(businessTypeId),
+        businessCategoryId: parseInt(businessCategoryId),
         phoneNumber1,
         phoneNumber2: phoneNumber2 || null,
         buildingPlaceName: buildingPlaceName || null,

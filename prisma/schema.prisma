@@ -229,6 +229,8 @@ model Business {
   firstName           String           @map("first_name") @db.VarChar(100)
   lastName            String           @map("last_name") @db.VarChar(100)
   cnicNo              String           @map("cnic_no") @db.VarChar(20)
+  businessTypeId      Int              @map("business_type_id")
+  businessCategoryId  Int              @map("business_category_id")
   phoneNumber1        String           @map("phone_number_1") @db.VarChar(20)
   phoneNumber2        String?          @map("phone_number_2") @db.VarChar(20)
   buildingPlaceName   String?          @map("building_place_name") @db.VarChar(255)
@@ -256,9 +258,39 @@ model Business {
   updatedAt           DateTime         @updatedAt @map("updated_at")
 
   category            Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  businessType        BusinessType     @relation(fields: [businessTypeId], references: [id])
+  businessCategory    BusinessCategory @relation(fields: [businessCategoryId], references: [id])
 
   @@index([categoryId], map: "businesses_category_id_fkey")
+  @@index([businessCategoryId], map: "businesses_business_category_id_fkey")
+  @@index([businessTypeId], map: "businesses_business_type_id_fkey")
   @@map("businesses")
+}
+
+model BusinessCategory {
+  id            Int              @id @default(autoincrement())
+  categoryTitle String           @map("category_title") @db.VarChar(255)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  businessTypes BusinessType[]
+  businesses    Business[]
+
+  @@map("business_categories")
+}
+
+model BusinessType {
+  id                 Int               @id @default(autoincrement())
+  typeTitle          String            @map("type_title") @db.VarChar(255)
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  businessCategoryId Int?              @map("business_category_id")
+
+  businessCategory   BusinessCategory? @relation(fields: [businessCategoryId], references: [id])
+  businesses         Business[]
+
+  @@index([businessCategoryId], map: "business_types_business_category_id_fkey")
+  @@map("business_types")
 }
 
 enum UserRole {
