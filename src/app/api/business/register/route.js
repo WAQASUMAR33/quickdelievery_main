@@ -26,18 +26,8 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check for duplicate email
-    const existing = await prisma.business.findUnique({ where: { email } })
-    if (existing) {
-      return Response.json(
-        { success: false, error: 'This email is already registered as a business' },
-        { status: 400 }
-      )
-    }
-
-    const business = await prisma.business.create({
-      data: {
-        email,
+    // Upsert: update if business already exists, create otherwise
+    const businessData = {
         businessName,
         firstName,
         lastName,
@@ -63,7 +53,12 @@ export async function POST(request) {
         urlRestaurantImages: urlRestaurantImages || null,
         latitude:  latitude  != null ? parseFloat(latitude)  : null,
         longitude: longitude != null ? parseFloat(longitude) : null,
-      }
+    }
+
+    const business = await prisma.business.upsert({
+      where: { email },
+      update: businessData,
+      create: { email, ...businessData },
     })
 
     return Response.json({ success: true, data: { id: business.id, email: business.email } })

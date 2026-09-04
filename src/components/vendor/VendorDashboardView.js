@@ -14,7 +14,7 @@ import Box              from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography       from '@mui/material/Typography'
 
-const BRAND = '#39772A'
+const BRAND = '#D70F64'
 
 function pathnameToTab(pathname) {
   const n = (pathname || '').replace(/\/$/, '')
@@ -40,16 +40,16 @@ export default function VendorDashboardView() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
-        <CircularProgress size={40} sx={{ color: BRAND }} />
-        <Typography color="text.secondary">Loading vendor dashboard...</Typography>
+      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+        <CircularProgress size={44} sx={{ color: BRAND }} />
+        <Typography color="text.secondary" fontWeight={600}>Loading vendor portal...</Typography>
       </Box>
     )
   }
 
   return (
     <DashboardLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 3.5 }, bgcolor: '#f8fafc', minHeight: '100%' }}>
         {activeTab === 'analytics' && <VendorAnalytics vendorId={userData?.uid} />}
         {activeTab === 'products' && <VendorProductManagement />}
         {activeTab === 'deals' && <FoodDealsManagement mode="vendor" />}

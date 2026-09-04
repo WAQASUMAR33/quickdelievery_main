@@ -40,7 +40,7 @@ import ExpandMoreIcon            from '@mui/icons-material/ExpandMore'
 import HistoryOutlinedIcon       from '@mui/icons-material/HistoryOutlined'
 import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
 
-const BRAND      = '#39772A'
+const BRAND      = '#D70F64'
 const BG         = '#0f1724'   // deep navy
 const BG_HOVER   = 'rgba(255,255,255,0.06)'
 const TEXT_DIM   = 'rgba(255,255,255,0.55)'

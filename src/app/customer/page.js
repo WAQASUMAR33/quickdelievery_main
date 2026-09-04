@@ -64,12 +64,14 @@ import StarBorderIcon          from '@mui/icons-material/StarBorder'
 import StorefrontIcon          from '@mui/icons-material/Storefront'
 
 const THEME = {
-  primary: '#6366f1',
-  primaryDark: '#4f46e5',
-  secondary: '#7c3aed',
-  accent: '#a855f7',
-  gradient: 'linear-gradient(135deg, #4338ca 0%, #6366f1 35%, #7c3aed 70%, #9333ea 100%)',
-  cardGradient: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+  primary: '#D70F64',
+  primaryDark: '#C20E5A',
+  secondary: '#FF2E93',
+  accent: '#E21B70',
+  soft: '#FFF0F5',
+  lightBg: '#FDF2F7',
+  gradient: 'linear-gradient(135deg, #D70F64 0%, #E21B70 50%, #FF2E93 100%)',
+  cardGradient: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(255,245,248,0.95) 100%)',
 }
 
 function storefrontGreeting() {
@@ -361,11 +363,14 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     switch (effectiveTab) {
       case 'products':
         return (
-          <Box sx={{ p: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 }, width: '100%' }}>
+          <Box sx={{ width: '100%', py: { xs: 1, sm: 2 } }}>
             <ProductCatalog
               searchQuery={searchQuery}
               onToggleFavorite={() => {}}
               favorites={favorites}
+              serviceMode={serviceMode}
+              onServiceModeChange={setServiceMode}
+              heroFirstName={heroFirstName}
             />
           </Box>
         )
@@ -460,227 +465,167 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           top: 0,
           zIndex: 1100,
           bgcolor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid #e2e8f0',
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid #f0f0f0',
           color: 'text.primary',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         }}
       >
-        <Box sx={{ width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4, xl: 5 } }}>
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 62, md: 72 } }}>
-
-            {/* ── Left: Brand Logo & Mobile Toggle ── */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+        <Box sx={{ width: '100%', maxWidth: '1440px', mx: 'auto', px: { xs: 2, sm: 3, md: 4 } }}>
+          {/* ── ROW 1: Logo | Delivery Address | User & Basket ── */}
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 56, md: 64 } }}>
+            {/* Left: Brand Logo & Delivery Address */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 3 } }}>
               <IconButton
                 onClick={() => setShowMobileSidebar(true)}
-                sx={{ display: { lg: 'none' }, color: THEME.primaryDark, p: 1 }}
+                sx={{ display: { lg: 'none' }, color: THEME.primary, p: 0.5 }}
                 aria-label="open navigation menu"
               >
                 <MenuIcon />
               </IconButton>
 
+              {/* Foodpanda-style Brand Logo */}
               <Box
                 onClick={() => setActiveTab('products')}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.25,
+                  gap: 1,
                   cursor: 'pointer',
                   userSelect: 'none',
-                  transition: 'transform 0.15s ease',
-                  '&:hover': { transform: 'scale(1.02)' }
                 }}
               >
                 <Box
                   sx={{
-                    width: { xs: 36, md: 42 },
-                    height: { xs: 36, md: 42 },
-                    background: THEME.gradient,
-                    borderRadius: 0,
+                    width: { xs: 34, md: 38 },
+                    height: { xs: 34, md: 38 },
+                    borderRadius: '50%',
+                    bgcolor: THEME.primary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 6px 16px rgba(99, 102, 241, 0.3)',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(215, 15, 100, 0.35)',
                   }}
                 >
-                  <DeliveryDiningIcon sx={{ color: '#fff', fontSize: { xs: 22, md: 26 } }} />
+                  <DeliveryDiningIcon sx={{ fontSize: 22 }} />
                 </Box>
-                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                  <Typography
-                    variant="h6"
-                    fontWeight={900}
-                    sx={{
-                      background: THEME.gradient,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      lineHeight: 1.1,
-                      letterSpacing: -0.5,
-                      fontSize: { sm: '1.1rem', md: '1.25rem' }
-                    }}
-                  >
-                    QuickDelivery
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" sx={{ fontSize: 9.5, letterSpacing: 0.6 }}>
-                    FOOD & GROCERY
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h6"
+                  fontWeight={900}
+                  sx={{
+                    color: THEME.primary,
+                    letterSpacing: -0.5,
+                    fontSize: { xs: '1.15rem', md: '1.35rem' },
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  quickdelivery
+                </Typography>
+              </Box>
+
+              {/* Delivery Address Location Selector Pill */}
+              <Box
+                sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.5,
+                  py: 0.6,
+                  bgcolor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '24px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  '&:hover': { borderColor: THEME.primary, bgcolor: '#fff' },
+                }}
+              >
+                <LocationOnIcon sx={{ color: THEME.primary, fontSize: 18 }} />
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  Deliver to:
+                </Typography>
+                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ maxWidth: { sm: 140, md: 220 }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {userData?.address || userData?.city || (user ? 'Select location' : 'Set location')}
+                </Typography>
+                <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
               </Box>
             </Box>
 
-            {/* ── Center: Navbar Nav Menu Tabs (Desktop) ── */}
-            <Stack
-              direction="row"
-              spacing={0.75}
-              sx={{
-                display: { xs: 'none', lg: 'flex' },
-                alignItems: 'center',
-                bgcolor: '#f1f5f9',
-                p: 0.5,
-                borderRadius: 0,
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              {navTabs.map((tab) => {
-                const isActive = effectiveTab === tab.id
-                return (
-                  <Button
-                    key={tab.id}
-                    onClick={() => handleTabSwitch(tab.id)}
-                    startIcon={isActive ? tab.activeIcon : tab.icon}
-                    size="small"
-                    sx={{
-                      borderRadius: 0,
-                      px: 2,
-                      py: 0.75,
-                      textTransform: 'none',
-                      fontWeight: isActive ? 800 : 600,
-                      fontSize: 13.5,
-                      transition: 'all 0.2s ease',
-                      bgcolor: isActive ? '#ffffff' : 'transparent',
-                      color: isActive ? THEME.primaryDark : 'text.secondary',
-                      boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.15)' : 'none',
-                      '&:hover': {
-                        bgcolor: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                        color: THEME.primaryDark,
-                      },
-                    }}
-                  >
-                    {tab.label}
-                  </Button>
-                )
-              })}
-            </Stack>
-
-            {/* ── Search Input (Desktop & Tablet) ── */}
-            <Box sx={{ flex: 1, maxWidth: { xs: '100%', md: 360, lg: 320 }, display: { xs: 'none', sm: 'block' } }}>
-              <TextField
+            {/* Right Actions: Lang | Account | Basket */}
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              {/* Language Chip */}
+              <Chip
+                label="EN"
                 size="small"
-                fullWidth
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search food, grocery, dishes…"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: THEME.primary, fontSize: 18 }} />
-                    </InputAdornment>
-                  ),
-                }}
+                variant="outlined"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 0,
-                    bgcolor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    height: 38,
-                    fontSize: 13,
-                    '&:hover fieldset': { borderColor: THEME.primary },
-                    '&.Mui-focused fieldset': { borderColor: THEME.primary },
-                  },
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  fontWeight: 700,
+                  fontSize: 12,
+                  borderColor: '#e2e8f0',
+                  color: 'text.secondary',
+                  borderRadius: '16px',
                 }}
               />
-            </Box>
 
-            {/* ── Right Actions: Basket & User Account ── */}
-            <Stack direction="row" alignItems="center" spacing={1.25}>
-              
               {/* Basket Trigger Button */}
               <Button
                 onClick={() => handleTabSwitch('cart')}
-                variant="outlined"
-                startIcon={
-                  <Badge
-                    badgeContent={getTotalItems()}
-                    sx={{
-                      '& .MuiBadge-badge': {
-                        bgcolor: THEME.secondary,
-                        color: '#fff',
-                        fontWeight: 800,
-                        fontSize: 10,
-                        minWidth: 16,
-                        height: 16,
-                        px: 0.5,
-                        borderRadius: 0,
-                      }
-                    }}
-                  >
-                    <ShoppingBagOutlinedIcon sx={{ fontSize: 20 }} />
-                  </Badge>
-                }
                 sx={{
-                  borderRadius: 0,
-                  borderColor: '#e0e7ff',
-                  bgcolor: 'rgba(99, 102, 241, 0.06)',
-                  color: THEME.primaryDark,
+                  color: 'text.primary',
                   textTransform: 'none',
-                  fontWeight: 800,
-                  px: { xs: 1.5, sm: 2 },
-                  py: 0.75,
-                  fontSize: 13,
-                  '&:hover': {
-                    bgcolor: 'rgba(99, 102, 241, 0.12)',
-                    borderColor: THEME.primary,
-                  },
+                  fontWeight: 700,
+                  px: { xs: 1, sm: 1.75 },
+                  py: 0.5,
+                  borderRadius: '24px',
+                  bgcolor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  '&:hover': { bgcolor: THEME.soft, borderColor: THEME.primary },
                 }}
               >
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, mr: 0.5 }}>
-                  Basket
-                </Box>
-                {getTotalItems() > 0 && (
-                  <Chip
-                    label={`Rs. ${getTotalPrice().toFixed(0)}`}
-                    size="small"
-                    sx={{
-                      height: 20,
+                <Badge
+                  badgeContent={getTotalItems()}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      bgcolor: THEME.primary,
+                      color: '#fff',
                       fontWeight: 800,
-                      fontSize: 11,
-                      bgcolor: THEME.primaryDark,
-                      color: '#ffffff',
-                      ml: 0.5,
-                      borderRadius: 0,
-                    }}
-                  />
+                      fontSize: 10,
+                      minWidth: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                    }
+                  }}
+                >
+                  <ShoppingBagOutlinedIcon sx={{ fontSize: 20, color: THEME.primary }} />
+                </Badge>
+                {getTotalItems() > 0 && (
+                  <Typography variant="caption" fontWeight={800} color={THEME.primary} sx={{ ml: 1 }}>
+                    Rs. {getTotalPrice().toFixed(0)}
+                  </Typography>
                 )}
               </Button>
 
-              {/* User Authentication Menu */}
+              {/* User Authentication / Profile */}
               {isGuest ? (
                 <Button
                   component={NextLink}
                   href="/login"
                   variant="contained"
                   size="small"
-                  startIcon={<PersonOutlineIcon />}
                   sx={{
-                    background: THEME.gradient,
-                    borderRadius: 0,
+                    bgcolor: THEME.primary,
+                    color: '#fff',
+                    borderRadius: '24px',
                     textTransform: 'none',
                     fontWeight: 800,
-                    px: { xs: 2, sm: 2.5 },
-                    py: 0.85,
+                    px: { xs: 1.75, sm: 2.5 },
+                    py: 0.6,
                     fontSize: 13,
-                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+                    boxShadow: 'none',
                     '&:hover': {
-                      background: THEME.gradient,
-                      opacity: 0.95,
+                      bgcolor: THEME.primaryDark,
+                      boxShadow: '0 4px 12px rgba(215, 15, 100, 0.3)',
                     }
                   }}
                 >
@@ -695,40 +640,118 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     gap: 1,
                     p: 0.5,
                     pr: { xs: 0.5, sm: 1.5 },
-                    borderRadius: 0,
-                    bgcolor: '#f1f5f9',
+                    borderRadius: '24px',
+                    bgcolor: '#f8fafc',
                     border: '1px solid #e2e8f0',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': { bgcolor: '#e2e8f0' }
+                    '&:hover': { bgcolor: '#f1f5f9' },
                   }}
                 >
                   <Avatar
                     src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
                     sx={{
-                      width: 32,
-                      height: 32,
-                      background: THEME.gradient,
+                      width: 28,
+                      height: 28,
+                      bgcolor: THEME.primary,
                       color: '#fff',
                       fontWeight: 800,
-                      fontSize: 13,
-                      border: '2px solid #ffffff',
-                      borderRadius: 0,
+                      fontSize: 12,
                     }}
                   >
                     {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </Avatar>
-                  <Box sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 100 }}>
-                    <Typography variant="body2" fontWeight={800} noWrap sx={{ fontSize: 13, lineHeight: 1.1 }}>
-                      {user?.displayName || 'My Account'}
-                    </Typography>
-                  </Box>
+                  <Typography variant="caption" fontWeight={700} noWrap sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 100 }}>
+                    {user?.displayName || 'Account'}
+                  </Typography>
                   <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
                 </Box>
               )}
             </Stack>
-
           </Toolbar>
+
+          {/* ── ROW 2: Service Mode Tabs (Delivery/Pick-up/Shops) | Wide Search Bar ── */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              pb: 1.5,
+              pt: 0.25,
+              borderTop: '1px solid #f3f4f6',
+              flexWrap: { xs: 'wrap', md: 'nowrap' },
+            }}
+          >
+            {/* Service Mode Tabs: Delivery | Pick-up | pandamart | Shops */}
+            <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', py: 0.25, '&::-webkit-scrollbar': { display: 'none' } }}>
+              {[
+                { id: 'delivery', label: 'Delivery', icon: '🛵' },
+                { id: 'pickup', label: 'Pick-up', icon: '🛍️' },
+                { id: 'pandamart', label: 'pandamart', icon: '🏪' },
+                { id: 'shops', label: 'Shops', icon: '🏬' },
+              ].map((tab) => {
+                const isActive = serviceMode === tab.id
+                return (
+                  <Button
+                    key={tab.id}
+                    onClick={() => {
+                      setServiceMode(tab.id)
+                      if (effectiveTab !== 'products') setActiveTab('products')
+                    }}
+                    size="small"
+                    sx={{
+                      borderRadius: '20px',
+                      px: 2,
+                      py: 0.6,
+                      textTransform: 'none',
+                      fontWeight: isActive ? 800 : 600,
+                      fontSize: 13,
+                      whiteSpace: 'nowrap',
+                      bgcolor: isActive ? THEME.primary : '#f8fafc',
+                      color: isActive ? '#ffffff' : '#374151',
+                      border: isActive ? `1px solid ${THEME.primary}` : '1px solid #e5e7eb',
+                      boxShadow: isActive ? '0 2px 8px rgba(215, 15, 100, 0.25)' : 'none',
+                      '&:hover': {
+                        bgcolor: isActive ? THEME.primaryDark : '#f3f4f6',
+                      },
+                    }}
+                  >
+                    <Box component="span" sx={{ mr: 0.75, fontSize: 14 }}>{tab.icon}</Box>
+                    {tab.label}
+                  </Button>
+                )
+              })}
+            </Stack>
+
+            {/* Pill Search Input */}
+            <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 340, lg: 420 } }}>
+              <TextField
+                size="small"
+                fullWidth
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for restaurants, cuisines, and dishes…"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: THEME.primary, fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '24px',
+                    bgcolor: '#f8fafc',
+                    height: 40,
+                    fontSize: 13.5,
+                    border: '1px solid #e2e8f0',
+                    '&:hover fieldset': { borderColor: THEME.primary },
+                    '&.Mui-focused fieldset': { borderColor: THEME.primary },
+                  },
+                }}
+              />
+            </Box>
+          </Box>
         </Box>
       </AppBar>
 
@@ -809,178 +832,6 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
       {/* ── Main Content Area (Full-Width Container) ── */}
       <Box sx={{ flex: 1, width: '100%', pb: { xs: 8, md: 2 }, display: 'flex', flexDirection: 'column' }}>
-
-        {/* ── HIGH-END HERO SECTION (Matching Violet/Purple Banking UI Theme) ── */}
-        {effectiveTab === 'products' && (
-          <Box sx={{ p: { xs: 1.5, sm: 3, md: 4, lg: 4, xl: 5 }, pb: 0, width: '100%' }}>
-            <Box
-              sx={{
-                position: 'relative',
-                borderRadius: 0,
-                background: THEME.gradient,
-                overflow: 'hidden',
-                color: '#fff',
-                p: { xs: 3, sm: 4, md: 5 },
-                boxShadow: '0 20px 40px -15px rgba(99, 102, 241, 0.35)',
-              }}
-            >
-              {/* Floating Decorative Glass Orbs (Matching UI Image) */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: -40,
-                  right: -40,
-                  width: 220,
-                  height: 220,
-                  borderRadius: 0,
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%)',
-                  filter: 'blur(20px)',
-                  pointerEvents: 'none',
-                }}
-              />
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: -60,
-                  left: '35%',
-                  width: 260,
-                  height: 260,
-                  borderRadius: 0,
-                  background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(168,85,247,0) 70%)',
-                  filter: 'blur(30px)',
-                  pointerEvents: 'none',
-                }}
-              />
-
-              <Box sx={{ position: 'relative', zIndex: 2, maxWidth: 840 }}>
-                {/* Greeting Badge */}
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: 0,
-                    bgcolor: 'rgba(255, 255, 255, 0.16)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    mb: 2.5,
-                  }}
-                >
-                  <FlashOnIcon sx={{ fontSize: 18, color: '#fde047' }} />
-                  <Typography variant="caption" fontWeight={800} letterSpacing={0.5}>
-                    {storefrontGreeting()}, {heroFirstName}! Ready for swift delivery?
-                  </Typography>
-                </Box>
-
-                {/* Hero Title */}
-                <Typography
-                  variant="h3"
-                  fontWeight={900}
-                  sx={{
-                    fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
-                    lineHeight: 1.15,
-                    letterSpacing: -1,
-                    mb: 1.5,
-                  }}
-                >
-                  Fresh Food &amp; Groceries, <br />
-                  <Box component="span" sx={{ color: '#fbcfe8' }}>
-                    Delivered In Minutes.
-                  </Box>
-                </Typography>
-
-                <Typography
-                  variant="body1"
-                  sx={{
-                    opacity: 0.92,
-                    fontSize: { xs: '0.95rem', md: '1.05rem' },
-                    fontWeight: 500,
-                    maxWidth: 580,
-                    mb: 3.5,
-                  }}
-                >
-                  Explore curated restaurant meals, local supermarket essentials, and today’s hottest deals right at your doorstep.
-                </Typography>
-
-                {/* Service Mode Pills */}
-                <Stack direction="row" gap={1.25} flexWrap="wrap" sx={{ mb: 3 }}>
-                  {[
-                    { id: 'delivery', label: '🛵 Instant Delivery' },
-                    { id: 'pickup', label: '🛍️ Store Pick-up' },
-                    { id: 'shops', label: '🏬 Explore Shops' },
-                    { id: 'dinein', label: '🍽️ Dine-in Menu' },
-                  ].map((opt) => (
-                    <Chip
-                      key={opt.id}
-                      label={opt.label}
-                      clickable
-                      onClick={() => setServiceMode(opt.id)}
-                      sx={{
-                        fontWeight: 800,
-                        borderRadius: 0,
-                        px: 1,
-                        height: 40,
-                        bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.18)',
-                        color: serviceMode === opt.id ? THEME.primaryDark : '#ffffff',
-                        backdropFilter: 'blur(8px)',
-                        border: serviceMode === opt.id ? 'none' : '1px solid rgba(255,255,255,0.3)',
-                        boxShadow: serviceMode === opt.id ? '0 8px 20px rgba(0,0,0,0.15)' : 'none',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          bgcolor: serviceMode === opt.id ? '#ffffff' : 'rgba(255,255,255,0.28)',
-                        },
-                      }}
-                    />
-                  ))}
-                </Stack>
-
-                {/* 3 Floating Benefit Highlights */}
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-                    gap: 2,
-                    pt: 2,
-                    borderTop: '1px solid rgba(255,255,255,0.2)',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                      <FlashOnIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" fontWeight={800}>20-Min Delivery</Typography>
-                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Live Rider GPS Tracking</Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                      <SecurityIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" fontWeight={800}>100% Guaranteed</Typography>
-                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Verified Vendors Only</Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                    <Box sx={{ p: 1, borderRadius: 0, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                      <StarIcon sx={{ fontSize: 20, color: '#fde047' }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" fontWeight={800}>4.9+ Top Rated</Typography>
-                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Over 50,000+ Orders</Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-              </Box>
-            </Box>
-          </Box>
-        )}
 
         {/* Tab View Body */}
         {renderActiveTabContent()}

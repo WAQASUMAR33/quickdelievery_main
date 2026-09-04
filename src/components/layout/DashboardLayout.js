@@ -28,7 +28,7 @@ import SearchIcon                from '@mui/icons-material/Search'
 import SettingsOutlinedIcon      from '@mui/icons-material/SettingsOutlined'
 import ShoppingBagOutlinedIcon   from '@mui/icons-material/ShoppingBagOutlined'
 
-const BRAND = '#39772A'
+const BRAND = '#D70F64'
 
 const DashboardLayout = ({ children }) => {
   const { user, userData, logout } = useAuth()
