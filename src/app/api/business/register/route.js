@@ -64,6 +64,6 @@ export async function POST(request) {
     return Response.json({ success: true, data: { id: business.id, email: business.email } })
   } catch (error) {
     console.error('Business registration error:', error)
-    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+    return Response.json({ success: false, error: error?.message || 'Internal server error' }, { status: 500 })
   }
 }
