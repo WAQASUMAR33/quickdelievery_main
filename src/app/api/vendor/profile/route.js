@@ -18,6 +18,8 @@ export async function GET(request) {
       },
       include: {
         category: true,
+        businessType: true,
+        businessCategory: true,
       },
     })
 
@@ -50,6 +52,8 @@ export async function PATCH(request) {
       data: updateData,
       include: {
         category: true,
+        businessType: true,
+        businessCategory: true,
       },
     })
 

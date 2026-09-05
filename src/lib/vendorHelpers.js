@@ -34,8 +34,35 @@ export function isRestaurantVendor(userData, business) {
     ''
   ).toUpperCase().trim()
 
-  if (vertical === 'FOOD') return true
-  if (vertical === 'GROCERY' || vertical === 'SHOP' || vertical === 'RETAIL') return false
+  if (vertical === 'GROCERY' || vertical === 'SHOP' || vertical === 'RETAIL' || vertical === 'STORE') return false
+
+  // Check if type, category, or business name matches shop/retail keywords first
+  const shopKeywords = [
+    'shop',
+    'shops',
+    'store',
+    'mart',
+    'supermarket',
+    'grocery',
+    'groceries',
+    'retail',
+    'pharmacy',
+    'electronics',
+    'clothing',
+    'fashion',
+    'boutique',
+    'general store',
+    'hardware',
+    'bookstore',
+    'stationery',
+    'mobile',
+  ]
+
+  const isShopType = shopKeywords.some((k) => typeTitle.includes(k))
+  const isShopCat = shopKeywords.some((k) => catName.includes(k))
+  const isShopName = shopKeywords.some((k) => bizName.includes(k))
+
+  if (isShopType || isShopCat) return false
 
   // Check if type or category matches restaurant/food keywords
   const foodKeywords = [
@@ -55,13 +82,16 @@ export function isRestaurantVendor(userData, business) {
     'bistro',
     'canteen',
     'takeaway',
+    'kitchen',
   ]
 
   const isFoodType = foodKeywords.some((k) => typeTitle.includes(k))
   const isFoodCat = foodKeywords.some((k) => catName.includes(k))
 
   if (isFoodType || isFoodCat) return true
+  if (isShopName) return false
 
-  // Default fallback for vendor dashboard if restaurant is the primary platform vendor role or if type contains restaurant
+  if (vertical === 'FOOD') return true
+
   return false
 }

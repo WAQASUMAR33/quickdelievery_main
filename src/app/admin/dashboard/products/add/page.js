@@ -352,7 +352,7 @@ export default function AddProductPage() {
             </IconButton>
             <Box>
               <Typography variant="h5" fontWeight={700}>
-                {isRestaurant ? 'Add Food Item' : 'Add Product'}
+                Add New
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {isRestaurant ? 'Create a new dish or food item for your restaurant menu' : 'Create a new product listing for your store'}

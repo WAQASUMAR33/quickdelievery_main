@@ -54,6 +54,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined'
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
 import FastfoodOutlinedIcon from '@mui/icons-material/FastfoodOutlined'
+import { isRestaurantVendor } from '@/lib/vendorHelpers'
 
 const BRAND = '#D70F64'
 const BRAND_DARK = '#C20E5A'
@@ -74,6 +75,7 @@ export default function VendorAnalytics({ vendorId }) {
   const [isOpenForOrders, setIsOpenForOrders] = useState(true)
 
   const activeVendorUid = vendorId || userData?.uid
+  const isRestaurant = isRestaurantVendor(userData, businessProfile)
 
   const fetchData = useCallback(async (isRefresh = false) => {
     if (!activeVendorUid) return
@@ -330,7 +332,7 @@ export default function VendorAnalytics({ vendorId }) {
                   </Typography>
                 )}
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                  • <strong>{products.length}</strong> menu items • <strong>{orders.length}</strong> total orders
+                  • <strong>{products.length}</strong> {isRestaurant ? 'menu items' : 'products'} • <strong>{orders.length}</strong> total orders
                 </Typography>
               </Box>
             </Box>
@@ -377,7 +379,7 @@ export default function VendorAnalytics({ vendorId }) {
             <Button
               variant="contained"
               startIcon={<AddCircleOutlineIcon />}
-              onClick={() => router.push('/vendor/dashboard/products')}
+              onClick={() => router.push('/admin/dashboard/products/add')}
               sx={{
                 bgcolor: BRAND,
                 background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
@@ -392,7 +394,7 @@ export default function VendorAnalytics({ vendorId }) {
                 '&:hover': { background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #9e0b48 100%)`, boxShadow: '0 6px 18px rgba(215, 15, 100, 0.45)' },
               }}
             >
-              Add New Dish
+              Add New
             </Button>
           </Stack>
         </Box>
@@ -423,7 +425,7 @@ export default function VendorAnalytics({ vendorId }) {
                 '& .MuiAlert-message': { fontWeight: 700, color: '#92400e' },
               }}
             >
-              Action Required: You have {pendingOrders.length} pending customer order{pendingOrders.length > 1 ? 's' : ''} awaiting kitchen confirmation!
+              Action Required: You have {pendingOrders.length} pending customer order{pendingOrders.length > 1 ? 's' : ''} awaiting {isRestaurant ? 'kitchen' : 'store'} confirmation!
             </Alert>
           )}
 
@@ -584,7 +586,7 @@ export default function VendorAnalytics({ vendorId }) {
               {products.length}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
-              Menu Dishes ({approvedProducts.length} Active)
+              {isRestaurant ? 'Menu Dishes' : 'Products'} ({approvedProducts.length} Active)
             </Typography>
           </Card>
         </Grid>
