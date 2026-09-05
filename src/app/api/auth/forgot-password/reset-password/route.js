@@ -29,19 +29,31 @@ export async function POST(request) {
     const cleanEmail = email.toLowerCase().trim()
     const cleanOtp = String(otp).trim()
 
-    // 1. Verify user exists
+    // 1. Verify business account exists
+    const business = await prisma.business.findUnique({
+      where: { email: cleanEmail },
+    })
+
+    if (!business) {
+      return Response.json(
+        { success: false, error: 'Business account not found' },
+        { status: 404 }
+      )
+    }
+
+    // 2. Find the corresponding user record (linked by email)
     const user = await prisma.users.findFirst({
       where: { email: cleanEmail },
     })
 
     if (!user) {
       return Response.json(
-        { success: false, error: 'User not found' },
+        { success: false, error: 'User account not found for this business' },
         { status: 404 }
       )
     }
 
-    // 2. Verify OTP in database
+    // 3. Verify OTP in database
     const resetRecord = await prisma.passwordResetOtp.findFirst({
       where: {
         email: cleanEmail,
@@ -67,10 +79,10 @@ export async function POST(request) {
       )
     }
 
-    // 3. Hash the new password securely
+    // 4. Hash the new password securely
     const hashedPassword = await hashPassword(newPassword)
 
-    // 4. Update the user password and mark OTP as used atomically in a transaction
+    // 5. Update the user password and mark OTP as used atomically in a transaction
     await prisma.$transaction([
       prisma.users.update({
         where: { id: user.id },

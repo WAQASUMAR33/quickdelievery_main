@@ -49,10 +49,16 @@ import RestaurantIcon from '@mui/icons-material/Restaurant'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined'
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
+import FastfoodOutlinedIcon from '@mui/icons-material/FastfoodOutlined'
 
 const BRAND = '#D70F64'
 const BRAND_DARK = '#C20E5A'
 const BRAND_LIGHT = '#FFF0F5'
+const BRAND_MUTED = 'rgba(215, 15, 100, 0.08)'
 
 export default function VendorAnalytics({ vendorId }) {
   const router = useRouter()
@@ -121,6 +127,19 @@ export default function VendorAnalytics({ vendorId }) {
   const shippedOrders = useMemo(() => orders.filter(o => o.status === 'SHIPPED'), [orders])
   const deliveredOrders = useMemo(() => orders.filter(o => o.status === 'DELIVERED'), [orders])
 
+  // Today's metrics
+  const todayOrders = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return orders.filter(o => o.createdAt && new Date(o.createdAt) >= today)
+  }, [orders])
+
+  const todayRevenue = useMemo(() => {
+    return todayOrders
+      .filter(o => o.status === 'DELIVERED')
+      .reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0)
+  }, [todayOrders])
+
   // Total sales revenue from DELIVERED orders
   const totalRevenue = useMemo(() => {
     const deliveredRev = deliveredOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0)
@@ -137,16 +156,6 @@ export default function VendorAnalytics({ vendorId }) {
   }, [orders])
 
   const approvalRate = products.length ? Math.round((approvedProducts.length / products.length) * 100) : 0
-
-  // Category breakdown
-  const categoryBreakdown = useMemo(() => {
-    const map = {}
-    products.forEach(p => {
-      const catName = p.category?.name || 'General'
-      map[catName] = (map[catName] || 0) + 1
-    })
-    return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }, [products])
 
   // Top products by price / popularity
   const topProducts = useMemo(() => {
@@ -199,165 +208,194 @@ export default function VendorAnalytics({ vendorId }) {
         sx={{
           p: { xs: 2.5, sm: 3 },
           mb: 3,
-          borderRadius: '20px',
+          borderRadius: '24px',
           bgcolor: '#ffffff',
           border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 2.5,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${BRAND} 0%, #FF2E93 100%)`,
+          },
         }}
       >
-        {/* Left: Store Branding, Badges & Metadata */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-          <Avatar
-            src={businessProfile?.urlLogo || null}
-            sx={{
-              width: 64,
-              height: 64,
-              bgcolor: BRAND,
-              color: '#ffffff',
-              fontSize: 26,
-              fontWeight: 800,
-              boxShadow: '0 4px 14px rgba(215, 15, 100, 0.25)',
-              border: '2px solid #ffffff',
-            }}
-          >
-            {businessProfile?.businessName?.[0] || userData?.username?.[0] || 'V'}
-          </Avatar>
-
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
-              <Typography variant="h5" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
-                {businessProfile?.businessName || userData?.username || 'Store Partner'}
-              </Typography>
-
-              {businessProfile?.verificationStatus === 'APPROVED' ? (
-                <Chip
-                  icon={<CheckCircleOutlinedIcon sx={{ fontSize: '15px !important', color: '#059669' }} />}
-                  label="Verified Merchant"
-                  size="small"
-                  sx={{ bgcolor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', fontWeight: 700, fontSize: 11.5 }}
-                />
-              ) : (
-                <Chip
-                  label="Partner Store"
-                  size="small"
-                  sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: 11.5 }}
-                />
-              )}
-
-              {/* Live Store Radar Switch */}
-              <Chip
-                icon={
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: isOpenForOrders ? '#10b981' : '#ef4444',
-                      boxShadow: isOpenForOrders ? '0 0 10px #10b981' : 'none',
-                      animation: isOpenForOrders ? 'pulse 2s infinite' : 'none',
-                      '@keyframes pulse': {
-                        '0%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)' },
-                        '70%': { transform: 'scale(1)', boxShadow: '0 0 0 6px rgba(16, 185, 129, 0)' },
-                        '100%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
-                      }
-                    }}
-                  />
-                }
-                label={isOpenForOrders ? 'Online & Taking Orders' : 'Store Offline / Paused'}
-                size="small"
-                onClick={() => setIsOpenForOrders(!isOpenForOrders)}
-                sx={{
-                  bgcolor: isOpenForOrders ? '#ecfdf5' : '#fef2f2',
-                  color: isOpenForOrders ? '#059669' : '#dc2626',
-                  border: isOpenForOrders ? '1px solid #a7f3d0' : '1px solid #fecaca',
-                  fontWeight: 800,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  '&:hover': {
-                    bgcolor: isOpenForOrders ? '#d1fae5' : '#fee2e2',
-                  },
-                }}
-              />
-            </Box>
-
-            <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-              {businessProfile?.category?.name && <span>{businessProfile.category.name}</span>}
-              {businessProfile?.city && (
-                <>
-                  <span>•</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                    <LocationOnOutlinedIcon sx={{ fontSize: 15, color: 'text.secondary' }} /> {businessProfile.city}
-                  </span>
-                </>
-              )}
-              <span>•</span>
-              <span>{products.length} menu dishes</span>
-              <span>•</span>
-              <span>{orders.length} total orders</span>
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Right: Quick Operational Actions */}
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Tooltip title="Refresh dashboard metrics">
-            <IconButton
-              onClick={() => fetchData(true)}
-              disabled={refreshing}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2.5,
+          }}
+        >
+          {/* Left: Store Identity, Avatar & Operational Badges */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+            <Avatar
+              src={businessProfile?.urlLogo || null}
               sx={{
-                bgcolor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                color: '#475569',
-                '&:hover': { bgcolor: '#f1f5f9' },
+                width: 68,
+                height: 68,
+                borderRadius: '18px',
+                bgcolor: BRAND,
+                background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
+                color: '#ffffff',
+                fontSize: 28,
+                fontWeight: 900,
+                boxShadow: '0 8px 20px rgba(215, 15, 100, 0.28)',
+                border: '2px solid #ffffff',
               }}
             >
-              <RefreshIcon sx={{ animation: refreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } } }} />
-            </IconButton>
-          </Tooltip>
+              {businessProfile?.businessName?.[0] || userData?.username?.[0] || 'V'}
+            </Avatar>
 
-          <Button
-            variant="outlined"
-            startIcon={<LocalOfferOutlinedIcon sx={{ color: BRAND }} />}
-            onClick={() => router.push('/vendor/dashboard/deals')}
-            sx={{
-              borderColor: '#e2e8f0',
-              color: '#334155',
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 700,
-              px: 2,
-              py: 0.8,
-              '&:hover': { borderColor: BRAND, bgcolor: BRAND_LIGHT, color: BRAND },
-            }}
-          >
-            Create Promo
-          </Button>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
+                <Typography variant="h5" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+                  {businessProfile?.businessName || userData?.username || 'Store Partner'}
+                </Typography>
 
-          <Button
-            variant="contained"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={() => router.push('/vendor/dashboard/products')}
-            sx={{
-              bgcolor: BRAND,
-              color: '#ffffff',
-              fontWeight: 800,
-              borderRadius: '12px',
-              px: 2.5,
-              py: 0.8,
-              textTransform: 'none',
-              boxShadow: '0 4px 14px rgba(215, 15, 100, 0.35)',
-              '&:hover': { bgcolor: BRAND_DARK, boxShadow: '0 6px 18px rgba(215, 15, 100, 0.45)' },
-            }}
-          >
-            Add New Dish
-          </Button>
-        </Stack>
+                {businessProfile?.verificationStatus === 'APPROVED' ? (
+                  <Chip
+                    icon={<CheckCircleIcon sx={{ fontSize: '15px !important', color: '#059669' }} />}
+                    label="Verified Merchant"
+                    size="small"
+                    sx={{ bgcolor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', fontWeight: 800, fontSize: 11.5, borderRadius: '8px' }}
+                  />
+                ) : (
+                  <Chip
+                    label="Partner Store"
+                    size="small"
+                    sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: 11.5, borderRadius: '8px' }}
+                  />
+                )}
+
+                {/* Live Store Radar Switch */}
+                <Tooltip title="Click to toggle store availability for incoming orders">
+                  <Chip
+                    icon={
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: isOpenForOrders ? '#10b981' : '#ef4444',
+                          boxShadow: isOpenForOrders ? '0 0 10px #10b981' : 'none',
+                          animation: isOpenForOrders ? 'pulse 2s infinite' : 'none',
+                          '@keyframes pulse': {
+                            '0%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)' },
+                            '70%': { transform: 'scale(1)', boxShadow: '0 0 0 6px rgba(16, 185, 129, 0)' },
+                            '100%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
+                          }
+                        }}
+                      />
+                    }
+                    label={isOpenForOrders ? 'Taking Orders' : 'Store Paused'}
+                    size="small"
+                    onClick={() => setIsOpenForOrders(!isOpenForOrders)}
+                    sx={{
+                      bgcolor: isOpenForOrders ? '#ecfdf5' : '#fef2f2',
+                      color: isOpenForOrders ? '#059669' : '#dc2626',
+                      border: isOpenForOrders ? '1px solid #a7f3d0' : '1px solid #fecaca',
+                      fontWeight: 800,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      borderRadius: '8px',
+                      transition: 'all 0.15s ease',
+                      '&:hover': {
+                        bgcolor: isOpenForOrders ? '#d1fae5' : '#fee2e2',
+                      },
+                    }}
+                  />
+                </Tooltip>
+              </Box>
+
+              <Box sx={{ mt: 0.75, display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                {businessProfile?.category?.name && (
+                  <Chip
+                    icon={<FastfoodOutlinedIcon sx={{ fontSize: '14px !important', color: BRAND }} />}
+                    label={businessProfile.category.name}
+                    size="small"
+                    sx={{ bgcolor: BRAND_LIGHT, color: BRAND, fontWeight: 700, fontSize: 11, borderRadius: '6px' }}
+                  />
+                )}
+                {businessProfile?.city && (
+                  <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    <LocationOnOutlinedIcon sx={{ fontSize: 16, color: '#64748b' }} /> {businessProfile.city}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                  • <strong>{products.length}</strong> menu items • <strong>{orders.length}</strong> total orders
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Right: Operational Actions Group */}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Tooltip title="Refresh dashboard data">
+              <IconButton
+                onClick={() => fetchData(true)}
+                disabled={refreshing}
+                sx={{
+                  bgcolor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#475569',
+                  borderRadius: '12px',
+                  p: 1.1,
+                  '&:hover': { bgcolor: '#f1f5f9', color: '#0f172a' },
+                }}
+              >
+                <RefreshIcon sx={{ fontSize: 20, animation: refreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } } }} />
+              </IconButton>
+            </Tooltip>
+
+            <Button
+              variant="outlined"
+              startIcon={<LocalOfferOutlinedIcon sx={{ color: BRAND }} />}
+              onClick={() => router.push('/vendor/dashboard/deals')}
+              sx={{
+                borderColor: '#e2e8f0',
+                color: '#334155',
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 700,
+                px: 2,
+                py: 0.9,
+                fontSize: 13,
+                '&:hover': { borderColor: BRAND, bgcolor: BRAND_LIGHT, color: BRAND },
+              }}
+            >
+              Create Promo
+            </Button>
+
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={() => router.push('/vendor/dashboard/products')}
+              sx={{
+                bgcolor: BRAND,
+                background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
+                color: '#ffffff',
+                fontWeight: 800,
+                borderRadius: '12px',
+                px: 2.75,
+                py: 0.9,
+                fontSize: 13,
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(215, 15, 100, 0.35)',
+                '&:hover': { background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #9e0b48 100%)`, boxShadow: '0 6px 18px rgba(215, 15, 100, 0.45)' },
+              }}
+            >
+              Add New Dish
+            </Button>
+          </Stack>
+        </Box>
       </Paper>
 
       {/* ════════════════════════ ATTENTION ALERTS (IF ANY) ════════════════════════ */}
@@ -378,14 +416,14 @@ export default function VendorAnalytics({ vendorId }) {
                 </Button>
               }
               sx={{
-                borderRadius: '14px',
+                borderRadius: '16px',
                 bgcolor: '#fffbeb',
                 borderColor: '#fde68a',
                 border: '1px solid',
                 '& .MuiAlert-message': { fontWeight: 700, color: '#92400e' },
               }}
             >
-              Action Required: You have {pendingOrders.length} pending order{pendingOrders.length > 1 ? 's' : ''} awaiting kitchen confirmation!
+              Action Required: You have {pendingOrders.length} pending customer order{pendingOrders.length > 1 ? 's' : ''} awaiting kitchen confirmation!
             </Alert>
           )}
 
@@ -404,7 +442,7 @@ export default function VendorAnalytics({ vendorId }) {
                 </Button>
               }
               sx={{
-                borderRadius: '14px',
+                borderRadius: '16px',
                 bgcolor: '#f0f9ff',
                 borderColor: '#bae6fd',
                 border: '1px solid',
@@ -425,20 +463,20 @@ export default function VendorAnalytics({ vendorId }) {
             elevation={0}
             sx={{
               p: 2.75,
-              borderRadius: '18px',
+              borderRadius: '20px',
               border: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
-              '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)' },
+              '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
+                  width: 46,
+                  height: 46,
+                  borderRadius: '14px',
                   bgcolor: '#ecfdf5',
                   color: '#059669',
                   display: 'flex',
@@ -446,16 +484,16 @@ export default function VendorAnalytics({ vendorId }) {
                   justifyContent: 'center',
                 }}
               >
-                <AttachMoneyIcon sx={{ fontSize: 24 }} />
+                <AttachMoneyIcon sx={{ fontSize: 26 }} />
               </Box>
               <Chip
-                label="Delivered"
+                label={todayRevenue > 0 ? `+Rs. ${todayRevenue.toLocaleString()} today` : 'Delivered'}
                 size="small"
                 sx={{ bgcolor: '#ecfdf5', color: '#059669', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
               />
             </Box>
             <Typography variant="h4" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
-              PKR {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+              PKR {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
               Total Delivered Revenue
@@ -469,20 +507,20 @@ export default function VendorAnalytics({ vendorId }) {
             elevation={0}
             sx={{
               p: 2.75,
-              borderRadius: '18px',
+              borderRadius: '20px',
               border: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
-              '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)' },
+              '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
+                  width: 46,
+                  height: 46,
+                  borderRadius: '14px',
                   bgcolor: '#eff6ff',
                   color: '#2563eb',
                   display: 'flex',
@@ -490,7 +528,7 @@ export default function VendorAnalytics({ vendorId }) {
                   justifyContent: 'center',
                 }}
               >
-                <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />
+                <ShoppingBagOutlinedIcon sx={{ fontSize: 24 }} />
               </Box>
               <Chip
                 label={`${orders.length} total`}
@@ -513,20 +551,20 @@ export default function VendorAnalytics({ vendorId }) {
             elevation={0}
             sx={{
               p: 2.75,
-              borderRadius: '18px',
+              borderRadius: '20px',
               border: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
-              '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)' },
+              '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
+                  width: 46,
+                  height: 46,
+                  borderRadius: '14px',
                   bgcolor: BRAND_LIGHT,
                   color: BRAND,
                   display: 'flex',
@@ -534,7 +572,7 @@ export default function VendorAnalytics({ vendorId }) {
                   justifyContent: 'center',
                 }}
               >
-                <Inventory2OutlinedIcon sx={{ fontSize: 22 }} />
+                <Inventory2OutlinedIcon sx={{ fontSize: 24 }} />
               </Box>
               <Chip
                 label={`${approvalRate}% Live`}
@@ -557,20 +595,20 @@ export default function VendorAnalytics({ vendorId }) {
             elevation={0}
             sx={{
               p: 2.75,
-              borderRadius: '18px',
+              borderRadius: '20px',
               border: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
-              '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)' },
+              '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
+                  width: 46,
+                  height: 46,
+                  borderRadius: '14px',
                   bgcolor: '#fffbeb',
                   color: '#d97706',
                   display: 'flex',
@@ -578,7 +616,7 @@ export default function VendorAnalytics({ vendorId }) {
                   justifyContent: 'center',
                 }}
               >
-                <ReceiptLongIcon sx={{ fontSize: 22 }} />
+                <ReceiptLongIcon sx={{ fontSize: 24 }} />
               </Box>
               <Chip
                 label="Avg Basket"
@@ -598,14 +636,14 @@ export default function VendorAnalytics({ vendorId }) {
 
       {/* ════════════════════════ 3. BALANCED 2-COLUMN WORKSPACE ════════════════════════ */}
       <Grid container spacing={3}>
-        {/* ── LEFT COLUMN (66%): Live Orders Kitchen Board + Top Dishes ── */}
+        {/* ── LEFT COLUMN (66%): Live Kitchen Queue & Top Dishes ── */}
         <Grid item xs={12} lg={8}>
-          {/* Live Orders Feed */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '20px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)' }}>
+          {/* Live Kitchen Queue */}
+          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
                 <Box>
-                  <Typography variant="h6" fontWeight={800} color="#0f172a">
+                  <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
                     Live Kitchen Queue
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -629,10 +667,12 @@ export default function VendorAnalytics({ vendorId }) {
                         size="small"
                         onClick={() => setOrderStatusFilter(tab.id)}
                         sx={{
-                          fontWeight: 700,
+                          fontWeight: 800,
                           fontSize: 12,
                           cursor: 'pointer',
                           borderRadius: '10px',
+                          px: 0.5,
+                          py: 1.8,
                           bgcolor: isActive
                             ? (tab.alert ? '#d97706' : BRAND)
                             : (tab.alert ? '#fef3c7' : '#f1f5f9'),
@@ -668,7 +708,7 @@ export default function VendorAnalytics({ vendorId }) {
                 sx={{
                   mb: 2.5,
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     bgcolor: '#f8fafc',
                     borderColor: '#e2e8f0',
                   }
@@ -680,8 +720,8 @@ export default function VendorAnalytics({ vendorId }) {
                 <Box sx={{ py: 6, textAlign: 'center' }}>
                   <Box
                     sx={{
-                      width: 60,
-                      height: 60,
+                      width: 64,
+                      height: 64,
                       borderRadius: '50%',
                       bgcolor: '#f8fafc',
                       color: 'text.disabled',
@@ -692,9 +732,9 @@ export default function VendorAnalytics({ vendorId }) {
                       mb: 1.5,
                     }}
                   >
-                    <ShoppingBagOutlinedIcon sx={{ fontSize: 28 }} />
+                    <ShoppingBagOutlinedIcon sx={{ fontSize: 32 }} />
                   </Box>
-                  <Typography variant="subtitle1" fontWeight={700} color="#334155">
+                  <Typography variant="subtitle1" fontWeight={800} color="#334155">
                     No orders in this queue
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -702,7 +742,7 @@ export default function VendorAnalytics({ vendorId }) {
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: '14px', overflow: 'hidden' }}>
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden' }}>
                   <Table size="medium">
                     <TableHead sx={{ bgcolor: '#f8fafc' }}>
                       <TableRow>
@@ -783,7 +823,7 @@ export default function VendorAnalytics({ vendorId }) {
               )}
 
               {filteredOrders.length > 6 && (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Box sx={{ mt: 2.5, textAlign: 'center' }}>
                   <Button
                     endIcon={<ArrowForwardIcon />}
                     onClick={() => router.push('/vendor/dashboard/orders/history')}
@@ -797,19 +837,19 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
 
           {/* Top Menu Products */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '20px', bgcolor: '#ffffff', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                   <StarIcon sx={{ color: '#f59e0b' }} />
-                  <Typography variant="h6" fontWeight={800} color="#0f172a">
+                  <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
                     Top Menu Products
                   </Typography>
                 </Box>
                 <Button
                   size="small"
                   onClick={() => router.push('/vendor/dashboard/products')}
-                  sx={{ textTransform: 'none', fontWeight: 700, color: BRAND }}
+                  sx={{ textTransform: 'none', fontWeight: 800, color: BRAND }}
                 >
                   Manage Menu ({products.length})
                 </Button>
@@ -836,22 +876,22 @@ export default function VendorAnalytics({ vendorId }) {
                     <Grid item xs={12} sm={6} key={p.proId}>
                       <Box
                         sx={{
-                          p: 1.75,
-                          borderRadius: '14px',
+                          p: 2,
+                          borderRadius: '16px',
                           border: '1px solid #f1f5f9',
                           bgcolor: '#f8fafc',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1.75,
+                          gap: 2,
                           transition: 'all 0.15s ease',
-                          '&:hover': { bgcolor: '#ffffff', borderColor: BRAND, boxShadow: '0 4px 14px rgba(0,0,0,0.05)' },
+                          '&:hover': { bgcolor: '#ffffff', borderColor: BRAND, boxShadow: '0 6px 18px rgba(0,0,0,0.04)' },
                         }}
                       >
                         <Box
                           sx={{
-                            width: 50,
-                            height: 50,
-                            borderRadius: '10px',
+                            width: 52,
+                            height: 52,
+                            borderRadius: '12px',
                             overflow: 'hidden',
                             flexShrink: 0,
                             bgcolor: '#ffffff',
@@ -864,7 +904,7 @@ export default function VendorAnalytics({ vendorId }) {
                           {p.proImages?.[0] ? (
                             <img src={p.proImages[0]} alt={p.proName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <RestaurantIcon sx={{ color: 'text.disabled', fontSize: 22 }} />
+                            <RestaurantIcon sx={{ color: 'text.disabled', fontSize: 24 }} />
                           )}
                         </Box>
 
@@ -873,7 +913,7 @@ export default function VendorAnalytics({ vendorId }) {
                             {p.proName}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" display="block">
-                            {p.category?.name || 'Item'} • Stock: {p.stock || 0}
+                            {p.category?.name || 'Item'} • Stock: <strong>{p.stock || 0}</strong>
                           </Typography>
                           <Typography variant="body2" fontWeight={900} color={BRAND} mt={0.25}>
                             Rs. {parseFloat(p.price || 0).toLocaleString()}
@@ -889,7 +929,7 @@ export default function VendorAnalytics({ vendorId }) {
                           label={p.approvalStatus}
                           size="small"
                           sx={{
-                            fontSize: 10,
+                            fontSize: 10.5,
                             fontWeight: 800,
                             borderRadius: '6px',
                             bgcolor: p.approvalStatus === 'Approved' ? '#ecfdf5' : p.approvalStatus === 'Pending' ? '#fffbeb' : '#fef2f2',
@@ -905,16 +945,16 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
         </Grid>
 
-        {/* ── RIGHT COLUMN (34%): Catalog Health & Quick Operations ── */}
+        {/* ── RIGHT COLUMN (34%): Catalog Health, Shortcuts & Store Overview ── */}
         <Grid item xs={12} lg={4}>
           {/* Catalog Approval Status Breakdown */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '20px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={800} color="#0f172a">
+              <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
                 Catalog Health &amp; Approval
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2.5}>
-                Admin review status for items
+                Admin review status for menu items
               </Typography>
 
               {[
@@ -923,7 +963,7 @@ export default function VendorAnalytics({ vendorId }) {
                 { label: 'Edits Needed', count: rejectedProducts.length, color: '#ef4444', bg: '#fef2f2' },
               ].map(({ label, count, color, bg }) => (
                 <Box key={label} sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box sx={{ width: 8, height: 8, bgcolor: color, borderRadius: '50%' }} />
                       <Typography variant="body2" fontWeight={700} color="#334155">{label}</Typography>
@@ -934,10 +974,10 @@ export default function VendorAnalytics({ vendorId }) {
                     variant="determinate"
                     value={products.length ? (count / products.length) * 100 : 0}
                     sx={{
-                      height: 7,
-                      borderRadius: 3.5,
+                      height: 8,
+                      borderRadius: 4,
                       bgcolor: bg,
-                      '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 3.5 },
+                      '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 4 },
                     }}
                   />
                 </Box>
@@ -947,15 +987,15 @@ export default function VendorAnalytics({ vendorId }) {
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', textAlign: 'center' }}>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Approval Rate</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">Approval Rate</Typography>
                   <Typography variant="h6" fontWeight={900} color="success.main">{approvalRate}%</Typography>
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Out of Stock</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">Out of Stock</Typography>
                   <Typography variant="h6" fontWeight={900} color="error.main">{outOfStockProducts.length}</Typography>
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Low Stock (&le;5)</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">Low Stock (&le;5)</Typography>
                   <Typography variant="h6" fontWeight={900} color="warning.main">{lowStockProducts.length}</Typography>
                 </Box>
               </Box>
@@ -963,13 +1003,13 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
 
           {/* Quick Operations 2x2 Grid */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '20px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={800} color="#0f172a" gutterBottom>
+              <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
                 Store Shortcuts
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                Quick access to store tools
+                Quick access to store operations
               </Typography>
 
               <Grid container spacing={1.5}>
@@ -982,12 +1022,13 @@ export default function VendorAnalytics({ vendorId }) {
                       flexDirection: 'column',
                       py: 2,
                       px: 1,
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       textTransform: 'none',
                       borderColor: '#e2e8f0',
                       bgcolor: '#f8fafc',
                       color: '#0f172a',
-                      '&:hover': { bgcolor: BRAND_LIGHT, borderColor: BRAND, color: BRAND },
+                      transition: 'all 0.15s ease',
+                      '&:hover': { bgcolor: BRAND_LIGHT, borderColor: BRAND, color: BRAND, transform: 'translateY(-2px)' },
                     }}
                   >
                     <Inventory2OutlinedIcon sx={{ color: BRAND, fontSize: 26, mb: 0.75 }} />
@@ -1006,12 +1047,13 @@ export default function VendorAnalytics({ vendorId }) {
                       flexDirection: 'column',
                       py: 2,
                       px: 1,
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       textTransform: 'none',
                       borderColor: '#e2e8f0',
                       bgcolor: '#f8fafc',
                       color: '#0f172a',
-                      '&:hover': { bgcolor: '#fffbeb', borderColor: '#d97706', color: '#d97706' },
+                      transition: 'all 0.15s ease',
+                      '&:hover': { bgcolor: '#fffbeb', borderColor: '#d97706', color: '#d97706', transform: 'translateY(-2px)' },
                     }}
                   >
                     <LocalOfferOutlinedIcon sx={{ color: '#d97706', fontSize: 26, mb: 0.75 }} />
@@ -1030,12 +1072,13 @@ export default function VendorAnalytics({ vendorId }) {
                       flexDirection: 'column',
                       py: 2,
                       px: 1,
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       textTransform: 'none',
                       borderColor: '#e2e8f0',
                       bgcolor: '#f8fafc',
                       color: '#0f172a',
-                      '&:hover': { bgcolor: '#eff6ff', borderColor: '#2563eb', color: '#2563eb' },
+                      transition: 'all 0.15s ease',
+                      '&:hover': { bgcolor: '#eff6ff', borderColor: '#2563eb', color: '#2563eb', transform: 'translateY(-2px)' },
                     }}
                   >
                     <StorefrontIcon sx={{ color: '#2563eb', fontSize: 26, mb: 0.75 }} />
@@ -1054,12 +1097,13 @@ export default function VendorAnalytics({ vendorId }) {
                       flexDirection: 'column',
                       py: 2,
                       px: 1,
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       textTransform: 'none',
                       borderColor: '#e2e8f0',
                       bgcolor: '#f8fafc',
                       color: '#0f172a',
-                      '&:hover': { bgcolor: '#fef2f2', borderColor: '#dc2626', color: '#dc2626' },
+                      transition: 'all 0.15s ease',
+                      '&:hover': { bgcolor: '#fef2f2', borderColor: '#dc2626', color: '#dc2626', transform: 'translateY(-2px)' },
                     }}
                   >
                     <ShieldOutlinedIcon sx={{ color: '#dc2626', fontSize: 26, mb: 0.75 }} />
@@ -1069,6 +1113,55 @@ export default function VendorAnalytics({ vendorId }) {
                   </Button>
                 </Grid>
               </Grid>
+            </CardContent>
+          </Card>
+
+          {/* Store Details Quick Overview */}
+          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+                  Store Information
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => router.push('/vendor/dashboard/profile')}
+                  sx={{ textTransform: 'none', fontWeight: 800, color: BRAND }}
+                >
+                  Edit Profile
+                </Button>
+              </Box>
+
+              <Stack spacing={1.5}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <StorefrontIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Business Name: <strong style={{ color: '#0f172a' }}>{businessProfile?.businessName || 'Test Vendor'}</strong>
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <FastfoodOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Category: <strong style={{ color: '#0f172a' }}>{businessProfile?.category?.name || 'Restaurant'}</strong>
+                  </Typography>
+                </Box>
+                {businessProfile?.city && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <LocationOnOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2" color="text.secondary">
+                      City: <strong style={{ color: '#0f172a' }}>{businessProfile.city}</strong>
+                    </Typography>
+                  </Box>
+                )}
+                {userData?.email && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <EmailOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 220 }}>
+                      Email: <strong style={{ color: '#0f172a' }}>{userData.email}</strong>
+                    </Typography>
+                  </Box>
+                )}
+              </Stack>
             </CardContent>
           </Card>
         </Grid>

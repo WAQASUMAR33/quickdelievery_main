@@ -12,12 +12,12 @@ export async function POST(request) {
 
     const cleanEmail = email.toLowerCase().trim()
 
-    // 1. Verify user exists in database
-    const user = await prisma.users.findFirst({
+    // 1. Verify business account exists in database
+    const business = await prisma.business.findUnique({
       where: { email: cleanEmail },
     })
 
-    if (!user) {
+    if (!business) {
       return Response.json(
         { success: false, error: 'No account found with this email address' },
         { status: 404 }
