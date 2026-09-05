@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import crypto from 'crypto'
 
 export async function POST(request) {
   try {
@@ -29,26 +30,19 @@ export async function POST(request) {
     const cleanEmail = email.toLowerCase().trim()
     const cleanOtp = String(otp).trim()
 
-    // 1. Verify business account exists
+    // 1. Check if business exists
     const business = await prisma.business.findUnique({
       where: { email: cleanEmail },
     })
 
-    if (!business) {
-      return Response.json(
-        { success: false, error: 'Business account not found' },
-        { status: 404 }
-      )
-    }
-
-    // 2. Find the corresponding user record (linked by email)
+    // 2. Check if user exists in users table
     const user = await prisma.users.findFirst({
       where: { email: cleanEmail },
     })
 
-    if (!user) {
+    if (!business && !user) {
       return Response.json(
-        { success: false, error: 'User account not found for this business' },
+        { success: false, error: 'No account found with this email address' },
         { status: 404 }
       )
     }
@@ -82,17 +76,42 @@ export async function POST(request) {
     // 4. Hash the new password securely
     const hashedPassword = await hashPassword(newPassword)
 
-    // 5. Update the user password and mark OTP as used atomically in a transaction
-    await prisma.$transaction([
-      prisma.users.update({
-        where: { id: user.id },
-        data: { password: hashedPassword },
-      }),
-      prisma.passwordResetOtp.updateMany({
-        where: { email: cleanEmail, used: false },
-        data: { used: true },
-      }),
-    ])
+    // 5. Update existing user or create vendor user in users table for business
+    if (user) {
+      await prisma.$transaction([
+        prisma.users.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        }),
+        prisma.passwordResetOtp.updateMany({
+          where: { email: cleanEmail, used: false },
+          data: { used: true },
+        }),
+      ])
+    } else {
+      // Vendor exists in businesses table but doesn't have a user account yet
+      const displayName = [business?.firstName, business?.lastName].filter(Boolean).join(' ') || business?.businessName || cleanEmail.split('@')[0]
+      const phone = business?.phoneNumber1 || business?.phoneNumber2 || ''
+
+      await prisma.$transaction([
+        prisma.users.create({
+          data: {
+            uid: crypto.randomUUID(),
+            username: displayName,
+            email: cleanEmail,
+            phoneNumber: phone,
+            role: 'VENDOR',
+            emailVerification: true,
+            type: 'local',
+            password: hashedPassword,
+          },
+        }),
+        prisma.passwordResetOtp.updateMany({
+          where: { email: cleanEmail, used: false },
+          data: { used: true },
+        }),
+      ])
+    }
 
     return Response.json({
       success: true,
