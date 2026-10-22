@@ -8,6 +8,7 @@ import { computeServiceCharge, computeOrderTotalWithService } from '@/lib/servic
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api'
 import toast from 'react-hot-toast'
 import NextLink from 'next/link'
+import { getProductUrl } from '@/lib/productSlug'
 import { 
   ShoppingBag, 
   Plus, 
@@ -523,19 +524,24 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 return (
                   <div key={itemKey} className="py-4 flex items-center gap-3 sm:gap-4 group">
                     {/* Item Thumbnail */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-none bg-gray-100 dark:bg-slate-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-slate-700">
+                    <NextLink
+                      href={getProductUrl(item)}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-none bg-gray-100 dark:bg-slate-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-slate-700 block hover:opacity-80 transition-opacity"
+                    >
                       <img
                         src={item.proImages?.[0] || '/placeholder-product.jpg'}
                         alt={item.proName}
                         className="w-full h-full object-cover"
                       />
-                    </div>
+                    </NextLink>
 
                     {/* Item Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 dark:text-slate-100 text-sm sm:text-base leading-snug line-clamp-1">
-                        {item.proName}
-                      </h3>
+                      <NextLink href={getProductUrl(item)} className="block hover:underline">
+                        <h3 className="font-bold text-gray-900 dark:text-slate-100 text-sm sm:text-base leading-snug line-clamp-1">
+                          {item.proName}
+                        </h3>
+                      </NextLink>
                       {item.selectedVariation && (
                         <span className="inline-block mt-0.5 text-[11px] font-bold text-[#6366f1] dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-none border border-indigo-100 dark:border-indigo-900/40">
                           {item.selectedVariation.name}

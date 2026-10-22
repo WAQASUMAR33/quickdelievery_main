@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { getProductUrl } from '@/lib/productSlug'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useCart } from '@/contexts/CartContext'
@@ -94,7 +96,10 @@ const WishlistPage = () => {
 
         <div className={`${viewMode === 'list' ? 'flex items-center space-x-4 w-full' : ''}`}>
           {/* Product Image */}
-          <div className={`relative ${viewMode === 'list' ? 'w-24 h-24' : 'w-full h-48 mb-4'} overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800`}>
+          <Link
+            href={getProductUrl(product)}
+            className={`block relative ${viewMode === 'list' ? 'w-24 h-24' : 'w-full h-48 mb-4'} overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800`}
+          >
             <motion.img
               whileHover={{ scale: 1.05 }}
               src={product.proImages?.[0] || '/placeholder-product.jpg'}
@@ -109,14 +114,16 @@ const WishlistPage = () => {
                 {Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF
               </div>
             )}
-          </div>
+          </Link>
 
           <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
             {/* Product Info */}
             <div className={`${viewMode === 'list' ? 'mb-0' : 'mb-4'}`}>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2 group-hover:text-[#F25D49] transition-colors">
-                {product.proName}
-              </h3>
+              <Link href={getProductUrl(product)} className="block group">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2 group-hover:text-[#F25D49] transition-colors">
+                  {product.proName}
+                </h3>
+              </Link>
               
               {product.description && (
                 <p className={`text-gray-600 dark:text-slate-400 text-sm ${viewMode === 'list' ? 'line-clamp-2' : 'line-clamp-3'} mb-2`}>

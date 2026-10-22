@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import Link from 'next/link'
+import { getProductUrl } from '@/lib/productSlug'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
@@ -600,10 +602,16 @@ const ProductCatalog = ({
               </span>
             </div>
 
-            {/* Product Title */}
-            <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-[13.5px] leading-snug line-clamp-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors mb-1.5 tracking-tight">
-              {product.proName}
-            </h3>
+            {/* Product Title - Clickable link to dedicated page with SEO slug */}
+            <Link
+              href={getProductUrl(product)}
+              onClick={(e) => e.stopPropagation()}
+              className="block group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors mb-1.5"
+            >
+              <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-[13.5px] leading-snug line-clamp-2 tracking-tight">
+                {product.proName}
+              </h3>
+            </Link>
 
             {/* Star Rating & Review Count */}
             <div className="flex items-center text-xs gap-1.5 mb-2">
@@ -1517,9 +1525,14 @@ const ProductCatalog = ({
                 {/* Right: Specifications, Variations & Cart Actions */}
                 <div className="flex flex-col justify-between space-y-4">
                   <div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-snug mb-2 tracking-tight">
-                      {detailProduct.proName}
-                    </h3>
+                    <Link
+                      href={getProductUrl(detailProduct)}
+                      className="block group"
+                    >
+                      <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-snug mb-2 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {detailProduct.proName}
+                      </h3>
+                    </Link>
 
                     {/* Ratings & Category */}
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3 flex-wrap">
@@ -1607,32 +1620,42 @@ const ProductCatalog = ({
                     </div>
                   </div>
 
-                  {/* Add to Basket Action */}
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addToCart(detailProduct, modalQty, selectedVariation)
-                        toast.success(`Added ${modalQty} item(s) to basket!`)
-                        setDetailProduct(null)
-                      }}
-                      className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-                    >
-                      <ShoppingBag className="w-4 h-4" />
-                      <span>{t('addToCart')}</span>
-                    </button>
+                  {/* Add to Basket & Full Page Actions */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addToCart(detailProduct, modalQty, selectedVariation)
+                          toast.success(`Added ${modalQty} item(s) to basket!`)
+                          setDetailProduct(null)
+                        }}
+                        className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>{t('addToCart')}</span>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addToCart(detailProduct, modalQty, selectedVariation)
-                        setDetailProduct(null)
-                        window.dispatchEvent(new CustomEvent('openCart'))
-                      }}
-                      className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-colors"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addToCart(detailProduct, modalQty, selectedVariation)
+                          setDetailProduct(null)
+                          window.dispatchEvent(new CustomEvent('openCart'))
+                        }}
+                        className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-colors"
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+
+                    <Link
+                      href={getProductUrl(detailProduct)}
+                      className="w-full py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
                     >
-                      Buy Now
-                    </button>
+                      <Eye className="w-4 h-4" />
+                      <span>View Full Product Page with Reviews & Specifications →</span>
+                    </Link>
                   </div>
                 </div>
               </div>
