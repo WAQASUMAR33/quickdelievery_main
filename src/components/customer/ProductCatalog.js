@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { getProductUrl } from '@/lib/productSlug'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -97,6 +98,7 @@ const ProductCatalog = ({
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { user, userData } = useAuth()
+  const router = useRouter()
   const { t, isRTL } = useLanguage()
   const { isDark } = useTheme()
   const isGuest = !userData || userData.role === 'GUEST'
@@ -175,6 +177,15 @@ const ProductCatalog = ({
   const [modalQty, setModalQty] = useState(1)
   const [selectedVariation, setSelectedVariation] = useState(null)
   const [parsedVariations, setParsedVariations] = useState([])
+
+  const handleNavigateToProduct = (e, prod) => {
+    e?.stopPropagation?.()
+    const targetProduct = prod || detailProduct
+    if (!targetProduct) return
+    setDetailProduct(null)
+    const url = getProductUrl(targetProduct)
+    router.push(url)
+  }
 
   // Scroll references
   const heroSliderRef = useRef(null)
@@ -1775,7 +1786,8 @@ const ProductCatalog = ({
                   <div>
                     <Link
                       href={getProductUrl(detailProduct)}
-                      className="block group"
+                      onClick={(e) => handleNavigateToProduct(e, detailProduct)}
+                      className="block group cursor-pointer"
                     >
                       <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-snug mb-2 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {detailProduct.proName}
@@ -1899,7 +1911,8 @@ const ProductCatalog = ({
 
                     <Link
                       href={getProductUrl(detailProduct)}
-                      className="w-full py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                      onClick={(e) => handleNavigateToProduct(e, detailProduct)}
+                      className="w-full py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
                       <span>View Full Product Page with Reviews & Specifications →</span>

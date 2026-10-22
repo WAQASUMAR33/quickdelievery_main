@@ -58,8 +58,19 @@ export default function SingleProductView({ productIdentifier, productId, initia
   const { isDark, toggleTheme } = useTheme()
   const { t } = useLanguage()
 
-  // Resolve identifier
-  const activeIdentifier = productIdentifier || productId
+  // Resolve identifier with resilient pathname fallback
+  const [resolvedId, setResolvedId] = useState(productIdentifier || productId || '')
+
+  useEffect(() => {
+    if (productIdentifier || productId) {
+      setResolvedId(productIdentifier || productId)
+    } else if (typeof window !== 'undefined') {
+      const seg = window.location.pathname.split('/').filter(Boolean).pop()
+      if (seg) setResolvedId(seg)
+    }
+  }, [productIdentifier, productId])
+
+  const activeIdentifier = productIdentifier || productId || resolvedId
 
   // State
   const [product, setProduct] = useState(initialData)
