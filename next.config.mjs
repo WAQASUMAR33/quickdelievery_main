@@ -16,8 +16,11 @@ const nextConfig = {
     ];
   },
 
-  // Prevent Next from resolving Prisma to the WASM/edge bundle (requires prisma:// / Accelerate).
-  // Keeps Node engine + mysql:// DATABASE_URL working in App Router route handlers.
+  // Expose environment variables to SSR runtime in hosting environments like AWS Amplify
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    JWT_KEY: process.env.JWT_KEY,
+  },
   serverExternalPackages: ['@prisma/client', 'prisma', '.prisma/client'],
   eslint: {
     // Speed up CI builds by skipping lint errors during production build
