@@ -22,6 +22,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 
 import { soundAlert } from '@/lib/soundAlert'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
 
@@ -81,12 +82,28 @@ export default function OrderChatDrawer({
     }
   }
 
-  // Poll messages every 3 seconds while chat is open
+  // Instant Realtime Event Listener for incoming messages
+  useRealtimeEvent('NEW_MESSAGE', (payload) => {
+    if (payload?.orderId === parseInt(orderId, 10)) {
+      const incoming = payload.message
+      if (incoming) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === incoming.id)) return prev
+          if (incoming.senderRole !== currentUser?.role) {
+            soundAlert.playMessagePop()
+          }
+          return [...prev, incoming]
+        })
+      }
+    }
+  })
+
+  // Poll messages every 5 seconds as fallback while chat is open
   useEffect(() => {
     if (open && orderId) {
       setLoading(true)
       fetchMessages().finally(() => setLoading(false))
-      const interval = setInterval(fetchMessages, 3000)
+      const interval = setInterval(fetchMessages, 5000)
       return () => clearInterval(interval)
     }
   }, [open, orderId])

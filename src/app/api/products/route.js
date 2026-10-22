@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getAuthUser, requireRole, ADMIN_ROLES } from '@/lib/auth-server'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 // Catalog taxonomy types that only admins may create/update/delete.
 const ADMIN_ONLY_TYPES = ['category', 'subcategory', 'productcategory']
@@ -810,6 +811,13 @@ export async function PUT(request) {
           saleEndDate:       data.saleEndDate   ? new Date(data.saleEndDate)   : null,
         }
       })
+
+      // Broadcast real-time event to refresh storefronts, inventory & carts
+      try {
+        broadcastRealtimeEvent('PRODUCT_UPDATED', { proId: product.proId })
+      } catch (err) {
+        console.warn('Realtime product update broadcast error:', err)
+      }
 
       return Response.json({
         success: true,

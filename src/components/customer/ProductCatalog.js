@@ -11,6 +11,7 @@ import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 import {
   Heart,
   ShoppingBag,
@@ -401,6 +402,11 @@ const ProductCatalog = ({
       console.error('Error loading products:', e)
     }
   }
+
+  // Instant Realtime Event Listener: auto-refresh catalog when products, stock, or prices change
+  useRealtimeEvent('PRODUCT_UPDATED', () => {
+    fetchProducts()
+  })
 
   const fetchCategories = async () => {
     try {

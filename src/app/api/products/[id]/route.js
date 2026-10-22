@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth-server'
 import { parseProductSlug, getProductSlug } from '@/lib/productSlug'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 const safeJson = (val, fb = []) => {
   if (!val) return fb
@@ -178,6 +179,13 @@ export async function POST(request, { params }) {
         reviews: JSON.stringify(updatedReviews)
       }
     })
+
+    // Broadcast real-time catalog update so product rating updates live for all viewers
+    try {
+      broadcastRealtimeEvent('PRODUCT_UPDATED', { proId: id })
+    } catch (err) {
+      console.warn('Realtime product update broadcast error:', err)
+    }
 
     return Response.json({
       success: true,

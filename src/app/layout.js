@@ -12,6 +12,8 @@ import NotificationSystem from "@/components/NotificationSystem";
 import WhatsAppWidget from "@/components/customer/WhatsAppWidget";
 import AIAssistantWidget from "@/components/customer/AIAssistantWidget";
 
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
+
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
@@ -35,27 +37,29 @@ export default function RootLayout({ children }) {
             <LanguageProvider>
               <MaterialUIProvider>
                 <AuthProvider>
-                  <CartProvider>
-                    <WishlistProvider>
-                      {children}
-                      <WhatsAppWidget />
-                      <AIAssistantWidget />
-                      <NotificationSystem />
-                      <Toaster
-                        position="top-right"
-                        toastOptions={{
-                          duration: 4000,
-                          style: {
-                            background: 'rgba(10, 15, 29, 0.92)',
-                            color: '#fff',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            borderRadius: '16px',
-                          },
-                        }}
-                      />
-                    </WishlistProvider>
-                  </CartProvider>
+                  <RealtimeProvider>
+                    <CartProvider>
+                      <WishlistProvider>
+                        {children}
+                        <WhatsAppWidget />
+                        <AIAssistantWidget />
+                        <NotificationSystem />
+                        <Toaster
+                          position="top-right"
+                          toastOptions={{
+                            duration: 4000,
+                            style: {
+                              background: 'rgba(10, 15, 29, 0.92)',
+                              color: '#fff',
+                              backdropFilter: 'blur(12px)',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              borderRadius: '16px',
+                            },
+                          }}
+                        />
+                      </WishlistProvider>
+                    </CartProvider>
+                  </RealtimeProvider>
                 </AuthProvider>
               </MaterialUIProvider>
             </LanguageProvider>

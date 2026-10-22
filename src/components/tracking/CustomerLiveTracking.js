@@ -23,6 +23,7 @@ import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled'
 import NavigationIcon from '@mui/icons-material/Navigation'
 
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
 
@@ -43,6 +44,36 @@ export default function CustomerLiveTracking({
   const [distanceKm, setDistanceKm] = useState(2.4)
   const [mapAuthError, setMapAuthError] = useState(false)
   const [mapViewMode, setMapViewMode] = useState('map') // 'map' or 'radar'
+  const [liveStatus, setLiveStatus] = useState(order?.status || 'PREPARING')
+
+  useEffect(() => {
+    if (order?.status) {
+      setLiveStatus(order.status)
+    }
+  }, [order?.status])
+
+  // Instant Realtime Event: Driver Location Updates
+  useRealtimeEvent('DRIVER_LOCATION', (payload) => {
+    if (!open) return
+    if (payload?.latitude && payload?.longitude) {
+      if (!order?.driverId || payload.driverId === order?.driverId) {
+        const lat = parseFloat(payload.latitude)
+        const lng = parseFloat(payload.longitude)
+        setDriverLocation({ lat, lng })
+        const approxKm = calculateDistance(lat, lng, customerCoord.lat, customerCoord.lng)
+        setDistanceKm(approxKm)
+        setEtaMinutes(Math.max(2, Math.round(approxKm * 3.5)))
+      }
+    }
+  })
+
+  // Instant Realtime Event: Order Status Updates
+  useRealtimeEvent('ORDER_UPDATED', (payload) => {
+    if (!open) return
+    if (payload?.orderId === order?.id && payload?.status) {
+      setLiveStatus(payload.status)
+    }
+  })
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY || ''
   const { isLoaded, loadError } = useJsApiLoader({
@@ -408,7 +439,7 @@ export default function CustomerLiveTracking({
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip
-                  label={order?.status || 'IN TRANSIT'}
+                  label={liveStatus || order?.status || 'IN TRANSIT'}
                   size="small"
                   sx={{
                     bgcolor: '#f0fdf4',

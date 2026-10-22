@@ -43,6 +43,7 @@ import ChatOutlinedIcon                 from '@mui/icons-material/ChatOutlined'
 import IncomingOrderAlertModal from '@/components/driver/IncomingOrderAlertModal'
 import DriverDeliveryNavigation from '@/components/driver/DriverDeliveryNavigation'
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
 
@@ -151,6 +152,11 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
   }, [currentPage, statusFilter, historyMode, poolMode, userData?.id])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  // Instant Realtime Event Listener: auto-update pool and active orders
+  useRealtimeEvent(['ORDER_CREATED', 'ORDER_UPDATED'], () => {
+    fetchOrders()
+  })
 
   /* ── Update status ── */
   const handleStatusUpdate = async (orderId, newStatus, claim = false) => {

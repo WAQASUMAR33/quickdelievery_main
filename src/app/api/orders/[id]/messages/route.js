@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 /**
  * GET /api/orders/[id]/messages
@@ -71,6 +72,16 @@ export async function POST(request, { params }) {
         isRead: false,
       },
     })
+
+    // Broadcast instant real-time event to all connected clients
+    try {
+      broadcastRealtimeEvent('NEW_MESSAGE', {
+        orderId,
+        message: newMessage,
+      })
+    } catch (err) {
+      console.warn('Realtime broadcast failed:', err)
+    }
 
     return Response.json({ success: true, data: newMessage })
   } catch (error) {

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { computeServiceCharge, computeOrderTotalWithService } from '@/lib/serviceCharge'
 import { sendOrderStatusPushNotification } from '@/lib/firebaseAdmin'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 // Test prisma connection
 if (!prisma) {
@@ -293,6 +294,19 @@ export async function POST(request) {
       customBody: `Your order #${order.id} has been received and is being processed.`,
     }).catch(err => console.error('Order creation push notification error:', err))
 
+    // Broadcast instant real-time event across all active pages (orders list, admin, driver pool)
+    try {
+      broadcastRealtimeEvent('ORDER_CREATED', {
+        orderId: order.id,
+        userId: order.userId,
+        status: order.status,
+        total: order.total,
+        order,
+      })
+    } catch (err) {
+      console.warn('Realtime ORDER_CREATED broadcast failed:', err)
+    }
+
     return Response.json({
       success: true,
       data: order,
@@ -386,6 +400,18 @@ export async function PUT(request) {
         orderId: updatedOrder.id,
         status: updatedOrder.status,
       }).catch(err => console.error('Push notification trigger error:', err))
+    }
+
+    // Broadcast instant real-time event so customer & driver screens update immediately
+    try {
+      broadcastRealtimeEvent('ORDER_UPDATED', {
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+        driverId: updatedOrder.driverId,
+        order: updatedOrder,
+      })
+    } catch (err) {
+      console.warn('Realtime ORDER_UPDATED broadcast failed:', err)
     }
 
     return Response.json({

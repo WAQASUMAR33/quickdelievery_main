@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
   if (lat1 === null || lat1 === undefined || lon1 === null || lon1 === undefined ||
@@ -356,6 +357,18 @@ export async function PUT(request) {
         },
       },
     })
+
+    // Broadcast instant real-time event
+    try {
+      broadcastRealtimeEvent('ORDER_UPDATED', {
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+        driverId: updatedOrder.driverId,
+        order: updatedOrder,
+      })
+    } catch (err) {
+      console.warn('Realtime driver order update broadcast error:', err)
+    }
 
     return Response.json({
       success: true,

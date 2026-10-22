@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 /**
  * GET /api/driver/location
@@ -119,6 +120,13 @@ export async function POST(request) {
         speed: parseFloat(speed || 0),
       },
     })
+
+    // Broadcast live coordinates to all active tracking views
+    try {
+      broadcastRealtimeEvent('DRIVER_LOCATION', updatedLocation)
+    } catch (err) {
+      console.warn('Realtime driver location broadcast error:', err)
+    }
 
     return Response.json({ success: true, data: updatedLocation })
   } catch (error) {

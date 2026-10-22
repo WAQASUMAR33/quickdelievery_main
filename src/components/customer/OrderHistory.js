@@ -30,6 +30,7 @@ import {
 import CustomerLiveTracking from '@/components/tracking/CustomerLiveTracking'
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
 import { computeServiceCharge, getServiceChargePercent } from '@/lib/serviceCharge'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 function escapeReceiptHtml(text) {
   return String(text ?? '')
@@ -123,6 +124,13 @@ const OrderHistory = () => {
     }
     setLoading(false)
   }, [userData])
+
+  // Instant Realtime Event Listener: auto-refresh order list whenever status or order changes
+  useRealtimeEvent(['ORDER_UPDATED', 'ORDER_CREATED'], (payload) => {
+    if (userData?.id || userData?.uid) {
+      fetchOrders(true)
+    }
+  })
 
   const fetchOrders = async (isRefresh = false) => {
     const userRef = userData?.id || userData?.uid

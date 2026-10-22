@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { broadcastRealtimeEvent } from '@/lib/realtime'
 
 /**
  * POST /api/driver/orders/accept
@@ -99,6 +100,18 @@ export async function POST(request) {
 
       return updatedOrder
     })
+
+    // Broadcast real-time order update to customer and dispatchers
+    try {
+      broadcastRealtimeEvent('ORDER_UPDATED', {
+        orderId: result.id,
+        status: result.status,
+        driverId: result.driverId,
+        order: result,
+      })
+    } catch (err) {
+      console.warn('Realtime accept broadcast error:', err)
+    }
 
     return Response.json({
       success: true,
