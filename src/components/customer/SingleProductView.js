@@ -332,7 +332,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#080C16] text-slate-900 dark:text-slate-100">
         <div className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse px-6 flex items-center justify-between" />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 py-8">
           <div className="h-6 w-64 bg-slate-200 dark:bg-slate-800 mb-8 animate-pulse rounded-none" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-7 flex gap-4">
@@ -398,7 +398,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0A0F1D]/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors rounded-none">
         <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-cyan-500 via-amber-400 to-rose-500" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 h-16 flex items-center justify-between gap-4">
           
           {/* Left: Back Button & Brand Logo */}
           <div className="flex items-center gap-3 sm:gap-4">
@@ -497,7 +497,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
           2. BREADCRUMBS BAR (Sharp Edges)
       ══════════════════════════════════════════════════════════════ */}
       <nav className="bg-slate-100/70 dark:bg-slate-900/40 border-b border-slate-200/60 dark:border-slate-800/60 rounded-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto scrollbar-hide whitespace-nowrap">
+        <div className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 py-2.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto scrollbar-hide whitespace-nowrap">
           <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">
             Home
           </Link>
@@ -530,8 +530,8 @@ export default function SingleProductView({ productIdentifier, productId, initia
       {/* ══════════════════════════════════════════════════════════════
           3. MAIN SHOWCASE: MULTI-IMAGE GALLERY + BUY BOX & SUPPLIER INFO
       ══════════════════════════════════════════════════════════════ */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+      <main className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 2xl:gap-16">
           
           {/* ──────────────────────────────────────────────────────────
               LEFT: MULTI-IMAGE SHOWCASE (7 Cols, Sharp 0px Corners)
@@ -542,7 +542,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
               
               {/* Vertical Multi-Image Thumbnail Strip */}
               {images.length > 1 && (
-                <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-y-auto sm:max-h-[540px] sm:w-24 w-full flex-shrink-0 scrollbar-hide py-1">
+                <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-y-auto sm:max-h-[640px] sm:w-24 w-full flex-shrink-0 scrollbar-hide py-1">
                   {images.map((img, idx) => {
                     const isSelected = selectedImage === idx
                     return (
@@ -592,7 +592,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                 onMouseEnter={() => setShowMagnifier(true)}
                 onMouseLeave={() => setShowMagnifier(false)}
                 onMouseMove={handleMouseMove}
-                className="relative aspect-square w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex items-center justify-center p-6 sm:p-10 select-none group rounded-none"
+                className="relative aspect-square w-full max-h-[640px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex items-center justify-center p-6 sm:p-10 select-none group rounded-none"
               >
                 {/* Active Main Product Image */}
                 {activeImageSrc ? (
@@ -1020,7 +1020,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
             
             {/* 1. Description */}
             {activeTab === 'description' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-4xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full max-w-5xl">
                 <div>
                   <h3 className="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-2">
                     Product Description
@@ -1050,7 +1050,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 2. Supplier & Kitchen Info (PROMINENT WITH IMAGE & BANNER) */}
             {activeTab === 'vendor' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl space-y-6">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-6">
                 <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-none overflow-hidden">
                   
                   {/* Supplier Header Cover Photo */}
@@ -1155,7 +1155,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 3. Specifications */}
             {activeTab === 'specs' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl">
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-3">
                   Technical Specifications & Record
                 </h3>
@@ -1181,7 +1181,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 4. Customer Reviews */}
             {activeTab === 'reviews' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-4xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full max-w-5xl">
                 
                 {/* Rating Overview Box */}
                 <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 items-center rounded-none">
@@ -1373,7 +1373,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {product.relatedProducts.map((rel) => {
                 const relImg = rel.proImages?.[0] || null
                 const relPrice = parseFloat(rel.salePrice || rel.price || 0)
@@ -1445,7 +1445,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
             transition={{ duration: 0.15 }}
             className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0A0F1D]/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 shadow-xl px-4 py-2.5 rounded-none"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-16 flex items-center justify-between gap-4">
               
               {/* Left thumbnail & title */}
               <div className="flex items-center gap-3 min-w-0">
