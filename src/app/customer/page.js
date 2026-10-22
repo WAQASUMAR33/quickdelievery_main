@@ -14,6 +14,7 @@ import CustomerProfile from '@/components/customer/CustomerProfile'
 import CartPage from '@/components/customer/CartPage'
 import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
+import StorefrontHeaderSearch from '@/components/customer/StorefrontHeaderSearch'
 import toast from 'react-hot-toast'
 
 import AppBar              from '@mui/material/AppBar'
@@ -108,6 +109,8 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchCategory, setSearchCategory] = useState('all')
   const [selectedDepartment, setSelectedDepartment] = useState(null)
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null)
+  const [activeFilter, setActiveFilter] = useState(null)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [userMenuAnchor, setUserMenuAnchor] = useState(null)
   const [favorites, setFavorites] = useState([])
@@ -394,6 +397,8 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               serviceMode={serviceMode}
               onServiceModeChange={setServiceMode}
               heroFirstName={heroFirstName}
+              externalSubcategory={selectedSubcategory}
+              externalFilter={activeFilter}
             />
           </Box>
         )
@@ -709,93 +714,34 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               </Box>
             </Box>
 
-            {/* Center: Sculpted Modern Pill Search Bar */}
-            <Box
-              sx={{
-                flex: 1,
-                maxWidth: { xs: '100%', md: 680, lg: 760 },
-                display: { xs: 'none', md: 'flex' },
-                alignItems: 'center',
-                borderRadius: '50px',
-                p: 0.5,
-                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
-                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
-                transition: 'all 0.25s ease',
-                '&:focus-within': {
-                  borderColor: THEME.primary,
-                  bgcolor: isDark ? 'rgba(255,255,255,0.09)' : '#FFFFFF',
-                  boxShadow: isDark ? '0 0 25px rgba(37, 99, 235, 0.35)' : '0 0 20px rgba(37, 99, 235, 0.18)',
-                },
+            {/* Center: Enhanced Search Bar with Mega Menu Trigger & Live Suggestions */}
+            <StorefrontHeaderSearch
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              searchCategory={searchCategory}
+              setSearchCategory={setSearchCategory}
+              categories={categories}
+              onSearchSubmit={(q) => {
+                if (effectiveTab !== 'products') setActiveTab('products')
               }}
-            >
-              {/* Category Filter Select Capsule */}
-              <Select
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                variant="standard"
-                disableUnderline
-                sx={{
-                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                  color: isDark ? '#E2E8F0' : '#1E293B',
-                  height: 38,
-                  px: 2,
-                  borderRadius: '50px',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  minWidth: 145,
-                  '& .MuiSelect-select': { py: 1, pr: '26px !important' },
-                  '& .MuiSvgIcon-root': { color: isDark ? '#94A3B8' : '#64748B' },
-                }}
-              >
-                <MenuItem value="all">{t('allCollections')}</MenuItem>
-                {categories.map((c) => (
-                  <MenuItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </Select>
-
-              {/* Main Search Input */}
-              <Box
-                component="input"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('searchPlaceholder')}
-                sx={{
-                  flex: 1,
-                  height: 38,
-                  px: 2,
-                  border: 'none',
-                  outline: 'none',
-                  bgcolor: 'transparent',
-                  color: isDark ? '#FFFFFF' : '#0F172A',
-                  fontSize: 13.5,
-                  fontWeight: 500,
-                  fontFamily: 'inherit',
-                  '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
-                }}
-              />
-
-              {/* Luminous Iris Circular Search Button */}
-              <IconButton
-                onClick={() => {
-                  if (effectiveTab !== 'products') setActiveTab('products')
-                }}
-                sx={{
-                  width: 38,
-                  height: 38,
-                  background: THEME.gradient,
-                  color: '#FFFFFF',
-                  borderRadius: '50%',
-                  boxShadow: '0 4px 15px rgba(37, 99, 235, 0.45)',
-                  transition: 'transform 0.2s ease',
-                  '&:hover': { transform: 'scale(1.05)' },
-                }}
-              >
-                <SearchIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Box>
+              onSelectSubcategory={(subCatId) => {
+                setSelectedSubcategory(subCatId)
+                if (effectiveTab !== 'products') setActiveTab('products')
+              }}
+              onApplyFilter={(filterType) => {
+                if (effectiveTab !== 'products') setActiveTab('products')
+                if (filterType === 'deals') {
+                  setSelectedDepartment('deals')
+                } else if (filterType === 'stores') {
+                  setSelectedDepartment('stores')
+                } else {
+                  setActiveFilter(filterType)
+                }
+              }}
+              isDark={isDark}
+              t={t}
+              THEME={THEME}
+            />
 
             {/* Right: AI Concierge | User Account | Orders | Wishlist | Cart */}
             <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5, md: 1.75 }}>
@@ -1001,9 +947,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 'max-content' }}>
             <Button
               onClick={() => {
-                setActiveTab('products')
-                setSelectedDepartment(null)
-                setSearchCategory('all')
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('toggleMegaMenu'))
+                }
               }}
               size="small"
               startIcon={<MenuIcon sx={{ fontSize: 16 }} />}
@@ -1105,20 +1051,47 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9',
             borderRadius: '24px',
             border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
-            p: 0.25,
-            px: 1.5,
+            p: 0.35,
+            px: 1,
+            gap: 1,
           }}
         >
-          <SearchIcon sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 18, mr: 1 }} />
+          <Button
+            size="small"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('toggleMegaMenu'))
+              }
+            }}
+            sx={{
+              minWidth: 0,
+              p: 0.5,
+              px: 1,
+              borderRadius: '20px',
+              fontSize: 11,
+              fontWeight: 800,
+              textTransform: 'none',
+              bgcolor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#DBEAFE',
+              color: THEME.primary,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Menu ▾
+          </Button>
           <Box
             component="input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search 161+ products, brands, stores…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && effectiveTab !== 'products') {
+                setActiveTab('products')
+              }
+            }}
+            placeholder="Search 161+ items, burgers, tech…"
             sx={{
               flex: 1,
-              height: 36,
+              height: 34,
               border: 'none',
               outline: 'none',
               fontSize: 13,
@@ -1128,6 +1101,30 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
             }}
           />
+          {searchQuery && (
+            <IconButton
+              size="small"
+              onClick={() => setSearchQuery('')}
+              sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B' }}
+            >
+              <CloseIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          )}
+          <IconButton
+            size="small"
+            onClick={() => {
+              if (effectiveTab !== 'products') setActiveTab('products')
+            }}
+            sx={{
+              width: 32,
+              height: 32,
+              background: THEME.gradient,
+              color: '#FFFFFF',
+              borderRadius: '50%',
+            }}
+          >
+            <SearchIcon sx={{ fontSize: 16 }} />
+          </IconButton>
         </Box>
       </Box>
 

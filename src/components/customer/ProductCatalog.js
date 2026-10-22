@@ -91,6 +91,8 @@ const ProductCatalog = ({
   serviceMode = 'delivery',
   onServiceModeChange,
   heroFirstName = '',
+  externalSubcategory = null,
+  externalFilter = null,
 }) => {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
@@ -196,6 +198,36 @@ const ProductCatalog = ({
       setSelectedCategory(null)
     }
   }, [searchCategory])
+
+  // Sync external subcategory from Mega Menu
+  useEffect(() => {
+    if (externalSubcategory) {
+      setSelectedSubcategory(Number(externalSubcategory))
+    }
+  }, [externalSubcategory])
+
+  // Sync external filter presets (freeDelivery, highRating, deals, reset)
+  useEffect(() => {
+    if (!externalFilter) return
+    if (externalFilter === 'freeDelivery') {
+      setOnlyFreeDelivery(true)
+    } else if (externalFilter === 'highRating') {
+      setOnlyHighRating(true)
+    } else if (externalFilter === 'deals') {
+      setOnlyDeals(true)
+    } else if (externalFilter.startsWith('vendor:')) {
+      const vName = externalFilter.replace('vendor:', '').toLowerCase()
+      const found = topShops.find(s => (s.businessName || '').toLowerCase().includes(vName))
+      if (found) setSelectedVendor(found.uid || found.id)
+    } else if (externalFilter === 'reset') {
+      setOnlyFreeDelivery(false)
+      setOnlyHighRating(false)
+      setOnlyDeals(false)
+      setSelectedCategory(null)
+      setSelectedSubcategory(null)
+      setSelectedVendor('')
+    }
+  }, [externalFilter, topShops])
 
   // Sync external selectedDepartment prop from Top Departments Strip
   useEffect(() => {

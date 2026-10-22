@@ -136,6 +136,81 @@ export async function GET(request) {
       })
     }
 
+    if (type === 'search' || type === 'suggestions') {
+      const q = (searchParams.get('q') || '').trim()
+      if (!q) {
+        return Response.json({
+          success: true,
+          data: { products: [], categories: [], vendors: [] }
+        })
+      }
+
+      const [matchedProducts, matchedCategories, matchedVendors] = await Promise.all([
+        prisma.product.findMany({
+          where: {
+            OR: [
+              { proName: { contains: q } },
+              { description: { contains: q } }
+            ]
+          },
+          include: {
+            category: { select: { id: true, name: true, code: true } },
+            vendor: { select: { uid: true, username: true } },
+          },
+          take: 6,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.category.findMany({
+          where: {
+            OR: [
+              { name: { contains: q } },
+              { description: { contains: q } }
+            ]
+          },
+          select: { id: true, name: true, code: true, image: true, vertical: true },
+          take: 4
+        }),
+        prisma.business.findMany({
+          where: {
+            businessName: { contains: q },
+            verificationStatus: 'APPROVED'
+          },
+          select: { id: true, businessName: true, urlLogo: true, email: true },
+          take: 3
+        })
+      ])
+
+      const safeJson = (val, fallback = []) => {
+        if (!val) return fallback
+        if (Array.isArray(val)) return val
+        if (typeof val === 'string') {
+          const trimmed = val.trim()
+          if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try { return JSON.parse(trimmed) } catch {}
+          }
+          if (trimmed.includes('http') && trimmed.includes(' ')) {
+            return trimmed.split(/\s+/).filter(Boolean)
+          }
+          return [trimmed]
+        }
+        return [val]
+      }
+
+      const processedProducts = matchedProducts.map(p => ({
+        ...p,
+        proImages: safeJson(p.proImages, [])
+      }))
+
+      return Response.json({
+        success: true,
+        data: {
+          products: processedProducts,
+          categories: matchedCategories,
+          vendors: matchedVendors
+        }
+      })
+    }
+
     if (type === 'products') {
       const isPublicUnfiltered = !categoryId && !vendorId && !vertical && !searchParams.get('productCategoryId')
       if (isPublicUnfiltered && productsCache && (Date.now() - productsCacheTime < 60000)) {
