@@ -64,6 +64,20 @@ export async function GET(request) {
       }
     }
 
+    // Search filter across order ID, address, customer username, email, phone
+    const search = searchParams.get('search')?.trim()
+    if (search) {
+      const numericSearch = Number.parseInt(search, 10)
+      const isNum = Number.isFinite(numericSearch) && String(numericSearch) === search
+      whereClause.OR = [
+        ...(isNum ? [{ id: numericSearch }] : []),
+        { shippingAddress: { contains: search } },
+        { user: { username: { contains: search } } },
+        { user: { email: { contains: search } } },
+        { user: { phoneNumber: { contains: search } } }
+      ]
+    }
+
     // Get orders with pagination
     const orders = await prisma.order.findMany({
       where: whereClause,
@@ -93,12 +107,39 @@ export async function GET(request) {
       take: limit
     })
 
-    // Get total count
-    const totalCount = await prisma.order.count({ where: whereClause })
+    // Compute base where without status to return live counts across all status tabs
+    const baseWhere = { ...whereClause }
+    delete baseWhere.status
+
+    const [
+      totalCount,
+      countAll,
+      countPending,
+      countProcessing,
+      countShipped,
+      countDelivered,
+      countCancelled
+    ] = await Promise.all([
+      prisma.order.count({ where: whereClause }),
+      prisma.order.count({ where: baseWhere }),
+      prisma.order.count({ where: { ...baseWhere, status: 'PENDING' } }),
+      prisma.order.count({ where: { ...baseWhere, status: 'PROCESSING' } }),
+      prisma.order.count({ where: { ...baseWhere, status: 'SHIPPED' } }),
+      prisma.order.count({ where: { ...baseWhere, status: 'DELIVERED' } }),
+      prisma.order.count({ where: { ...baseWhere, status: 'CANCELLED' } })
+    ])
 
     return Response.json({
       success: true,
       data: orders,
+      counts: {
+        all: countAll,
+        pending: countPending,
+        processing: countProcessing,
+        shipped: countShipped,
+        delivered: countDelivered,
+        cancelled: countCancelled
+      },
       pagination: {
         page,
         limit,
