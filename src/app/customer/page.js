@@ -134,6 +134,15 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     const handleOpenCart = () => setActiveTab('cart')
     const handleGoProducts = () => setActiveTab('products')
     
+    // Check URL ?tab= parameter on load
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search)
+      const tab = sp.get('tab')
+      if (tab && ['products', 'orders', 'favorites', 'wishlist', 'profile', 'cart'].includes(tab)) {
+        setActiveTab(tab)
+      }
+    }
+
     window.addEventListener('openCart', handleOpenCart)
     window.addEventListener('goProducts', handleGoProducts)
     

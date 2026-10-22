@@ -25,6 +25,22 @@ export async function GET(request) {
     }
 
     if (!targetDriverId) {
+      if (orderIdParam) {
+        // Return default central dispatch GPS coordinates for pending / newly placed orders
+        return Response.json({
+          success: true,
+          data: {
+            driverId: null,
+            latitude: 31.5204,
+            longitude: 74.3587,
+            heading: 90,
+            speed: 20,
+            isSimulated: true,
+            status: 'DISPATCHING',
+            updatedAt: new Date().toISOString(),
+          },
+        })
+      }
       return Response.json(
         { success: false, error: 'Driver ID or valid assigned Order ID required' },
         { status: 400 }

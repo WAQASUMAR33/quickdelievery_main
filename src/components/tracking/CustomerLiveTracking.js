@@ -41,12 +41,27 @@ export default function CustomerLiveTracking({
   const [chatOpen, setChatOpen] = useState(false)
   const [etaMinutes, setEtaMinutes] = useState(12)
   const [distanceKm, setDistanceKm] = useState(2.4)
+  const [mapAuthError, setMapAuthError] = useState(false)
+  const [mapViewMode, setMapViewMode] = useState('map') // 'map' or 'radar'
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
-  const { isLoaded } = useJsApiLoader({
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY || ''
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
   })
+
+  // Detect Google Maps authentication failures to automatically display high-res live map
+  useEffect(() => {
+    const handleAuthFailure = () => {
+      console.warn('Google Maps authentication failure detected. Falling back to OpenStreetMap live tracker.')
+      setMapAuthError(true)
+    }
+    const prevAuth = window.gm_authFailure
+    window.gm_authFailure = handleAuthFailure
+    return () => {
+      window.gm_authFailure = prevAuth
+    }
+  }, [])
 
   // Simulated or real coordinates for delivery endpoints
   const customerCoord = {
@@ -170,7 +185,7 @@ export default function CustomerLiveTracking({
 
         {/* Interactive Map Section */}
         <Box sx={{ flex: 1, position: 'relative', minHeight: '60vh', bgcolor: '#e5e7eb' }}>
-          {isLoaded && apiKey ? (
+          {isLoaded && apiKey && !mapAuthError && !loadError && mapViewMode === 'map' ? (
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
               center={mapCenter}
@@ -221,43 +236,136 @@ export default function CustomerLiveTracking({
                 }}
               />
             </GoogleMap>
+          ) : mapViewMode === 'map' ? (
+            // High-Res OpenStreetMap Interactive Live Map
+            <Box sx={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+              <iframe
+                title="OpenStreetMap Live Tracking"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                scrolling="no"
+                marginHeight="0"
+                marginWidth="0"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(restaurantCoord.lng, customerCoord.lng, driverPos.lng) - 0.012}%2C${Math.min(restaurantCoord.lat, customerCoord.lat, driverPos.lat) - 0.012}%2C${Math.max(restaurantCoord.lng, customerCoord.lng, driverPos.lng) + 0.012}%2C${Math.max(restaurantCoord.lat, customerCoord.lat, driverPos.lat) + 0.012}&layer=mapnik&marker=${driverPos.lat}%2C${driverPos.lng}`}
+                style={{ border: 0, width: '100%', height: '100%', filter: 'contrast(1.05)' }}
+              />
+
+              {/* Live Overlay HUD Card */}
+              <Box sx={{
+                position: 'absolute',
+                bottom: 24,
+                left: 16,
+                zIndex: 10,
+                px: 2,
+                py: 1,
+                borderRadius: '16px',
+                bgcolor: 'rgba(15, 23, 42, 0.88)',
+                backdropFilter: 'blur(8px)',
+                color: '#fff',
+                fontSize: 11,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                border: '1px solid rgba(255,255,255,0.15)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#4ade80', animation: 'pulse 1.5s infinite' }} />
+                <span>Live GPS Feed Active • OpenStreetMap Engine</span>
+              </Box>
+            </Box>
           ) : (
-            // Visual Simulated Map UI if Google Maps key is being loaded
+            // Visual Simulated Radar HUD
             <Box sx={{
               width: '100%', height: '100%',
-              bgcolor: '#1e293b',
+              bgcolor: '#0f172a',
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               position: 'relative', overflow: 'hidden',
             }}>
               {/* Radar Grid Animation */}
               <Box sx={{
-                position: 'absolute', width: 420, height: 420,
-                borderRadius: '50%', border: '1px solid rgba(57, 119, 42, 0.3)',
+                position: 'absolute', width: 440, height: 440,
+                borderRadius: '50%', border: '1px solid rgba(34, 197, 94, 0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Box sx={{
-                  width: 260, height: 260,
-                  borderRadius: '50%', border: '1px solid rgba(57, 119, 42, 0.4)',
+                  width: 280, height: 280,
+                  borderRadius: '50%', border: '1px solid rgba(34, 197, 94, 0.35)',
                 }} />
               </Box>
 
               <Box sx={{
-                p: 2.5, bgcolor: 'rgba(255,255,255,0.08)',
+                p: 3, bgcolor: 'rgba(255,255,255,0.06)',
                 backdropFilter: 'blur(12px)',
-                borderRadius: '20px', textAlign: 'center', zIndex: 2,
+                borderRadius: '24px', textAlign: 'center', zIndex: 2,
                 border: '1px solid rgba(255,255,255,0.15)', maxWidth: 360,
               }}>
-                <NavigationIcon sx={{ fontSize: 44, color: '#4ade80', mb: 1, animation: 'bounce 2s infinite' }} />
-                <Typography variant="h6" fontWeight={700} color="#ffffff" gutterBottom>
+                <NavigationIcon sx={{ fontSize: 44, color: '#4ade80', mb: 1.5, animation: 'bounce 2s infinite' }} />
+                <Typography variant="h6" fontWeight={800} color="#ffffff" gutterBottom>
                   Driver in Transit
                 </Typography>
                 <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                  Live GPS signal connected. Driver is moving towards your destination.
+                  Live telemetry connected. Distance to destination: ~{distanceKm} km.
                 </Typography>
               </Box>
             </Box>
           )}
+
+          {/* Map View Mode Switcher Pill */}
+          <Box sx={{
+            position: 'absolute',
+            top: 80,
+            right: 16,
+            zIndex: 10,
+            display: 'flex',
+            gap: 0.75,
+            p: 0.5,
+            bgcolor: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '20px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            border: '1px solid rgba(0,0,0,0.06)',
+          }}>
+            <Button
+              size="small"
+              onClick={() => setMapViewMode('map')}
+              sx={{
+                borderRadius: '16px',
+                px: 1.75,
+                py: 0.5,
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'none',
+                minWidth: 0,
+                bgcolor: mapViewMode === 'map' ? '#0f172a' : 'transparent',
+                color: mapViewMode === 'map' ? '#ffffff' : '#64748b',
+                '&:hover': { bgcolor: mapViewMode === 'map' ? '#1e293b' : 'rgba(0,0,0,0.04)' },
+              }}
+            >
+              Live Map
+            </Button>
+            <Button
+              size="small"
+              onClick={() => setMapViewMode('radar')}
+              sx={{
+                borderRadius: '16px',
+                px: 1.75,
+                py: 0.5,
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'none',
+                minWidth: 0,
+                bgcolor: mapViewMode === 'radar' ? '#0f172a' : 'transparent',
+                color: mapViewMode === 'radar' ? '#ffffff' : '#64748b',
+                '&:hover': { bgcolor: mapViewMode === 'radar' ? '#1e293b' : 'rgba(0,0,0,0.04)' },
+              }}
+            >
+              Radar HUD
+            </Button>
+          </Box>
+        </Box>
 
           {/* Floating ETA Badge */}
           <Paper
