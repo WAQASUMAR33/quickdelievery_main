@@ -118,14 +118,14 @@ export default function AuthProvider({ children }) {
     loadUser()
   }, [loadUser])
 
-  const signUp = async (email, password, displayName, phoneNumber = '', role = 'CUSTOMER', type = 'local') => {
+  const signUp = async (email, password, displayName, phoneNumber = '', role = 'CUSTOMER', type = 'local', image = null) => {
     try {
       setLoading(true)
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName, phoneNumber, role, type })
+        body: JSON.stringify({ email, password, displayName, phoneNumber, role, type, image })
       })
 
       const result = await response.json()
@@ -144,6 +144,7 @@ export default function AuthProvider({ children }) {
         displayName: dbUser.username,
         emailVerified: dbUser.emailVerification,
         phoneNumber: dbUser.phoneNumber,
+        photoURL: dbUser.image || null,
         getIdToken: async () => token
       }
 
@@ -160,6 +161,7 @@ export default function AuthProvider({ children }) {
       setLoading(false)
     }
   }
+
 
   const signIn = async (email, password) => {
     try {

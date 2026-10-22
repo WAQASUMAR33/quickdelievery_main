@@ -1,16 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import NextLink from 'next/link'
 
 import Box              from '@mui/material/Box'
-import Paper            from '@mui/material/Paper'
 import Typography       from '@mui/material/Typography'
 import Stack            from '@mui/material/Stack'
-import Grid             from '@mui/material/Grid'
 import TextField        from '@mui/material/TextField'
 import InputAdornment   from '@mui/material/InputAdornment'
 import IconButton       from '@mui/material/IconButton'
@@ -20,171 +19,408 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider          from '@mui/material/Divider'
 import Chip             from '@mui/material/Chip'
 
-// MUI Icons
-import PersonOutlinedIcon             from '@mui/icons-material/PersonOutlined'
-import EmailOutlinedIcon              from '@mui/icons-material/EmailOutlined'
-import PhoneOutlinedIcon              from '@mui/icons-material/PhoneOutlined'
-import LockOutlinedIcon               from '@mui/icons-material/LockOutlined'
-import VisibilityOutlinedIcon         from '@mui/icons-material/VisibilityOutlined'
-import VisibilityOffOutlinedIcon      from '@mui/icons-material/VisibilityOffOutlined'
-import ArrowForwardIcon               from '@mui/icons-material/ArrowForward'
-import ArrowBackIcon                  from '@mui/icons-material/ArrowBack'
-import CheckIcon                      from '@mui/icons-material/Check'
-import StorefrontOutlinedIcon         from '@mui/icons-material/StorefrontOutlined'
-import LocalShippingOutlinedIcon      from '@mui/icons-material/LocalShippingOutlined'
-import ShoppingCartOutlinedIcon       from '@mui/icons-material/ShoppingCartOutlined'
-import RestaurantOutlinedIcon         from '@mui/icons-material/RestaurantOutlined'
-import ShoppingBagOutlinedIcon        from '@mui/icons-material/ShoppingBagOutlined'
-import Inventory2Icon                 from '@mui/icons-material/Inventory2'
-import CheckCircleIcon                from '@mui/icons-material/CheckCircle'
+// Icons
+import PersonOutlinedIcon         from '@mui/icons-material/PersonOutlined'
+import EmailOutlinedIcon          from '@mui/icons-material/EmailOutlined'
+import PhoneOutlinedIcon          from '@mui/icons-material/PhoneOutlined'
+import LockOutlinedIcon           from '@mui/icons-material/LockOutlined'
+import VisibilityOutlinedIcon     from '@mui/icons-material/VisibilityOutlined'
+import VisibilityOffOutlinedIcon  from '@mui/icons-material/VisibilityOffOutlined'
+import ArrowForwardIcon           from '@mui/icons-material/ArrowForward'
+import ArrowBackIcon              from '@mui/icons-material/ArrowBack'
+import CheckIcon                  from '@mui/icons-material/Check'
+import StorefrontOutlinedIcon     from '@mui/icons-material/StorefrontOutlined'
+import LocalShippingOutlinedIcon  from '@mui/icons-material/LocalShippingOutlined'
+import ShoppingCartOutlinedIcon   from '@mui/icons-material/ShoppingCartOutlined'
+import ShoppingBagIcon            from '@mui/icons-material/ShoppingBag'
+import FastfoodOutlinedIcon       from '@mui/icons-material/FastfoodOutlined'
+import ShieldOutlinedIcon         from '@mui/icons-material/ShieldOutlined'
+import LightModeOutlinedIcon      from '@mui/icons-material/LightModeOutlined'
+import DarkModeOutlinedIcon       from '@mui/icons-material/DarkModeOutlined'
+import StarIcon                   from '@mui/icons-material/Star'
+import CameraAltOutlinedIcon      from '@mui/icons-material/CameraAltOutlined'
+import DeleteOutlineIcon          from '@mui/icons-material/DeleteOutline'
+import CloudUploadOutlinedIcon    from '@mui/icons-material/CloudUploadOutlined'
 
-// ─── Brand colour ─────────────────────────────────────────────────────────────
-const BRAND = '#39772A'
+// Luxury Brand Tokens
+const SAPPHIRE = '#2563EB'
+const SAPPHIRE_DARK = '#1D4ED8'
+const GOLD = '#F59E0B'
+const GRADIENT = 'linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%)'
 
-// ─── Role definitions ─────────────────────────────────────────────────────────
+// Role definitions
 const ROLES = [
   {
     value: 'CUSTOMER',
-    label: 'Customer',
-    subtitle: 'Order food & essentials',
+    label: 'Customer Account',
+    badge: 'SHOPPING & DINING',
+    subtitle: 'Order gourmet meals, fresh produce, and tech hardware with real-time tracking.',
     Icon: ShoppingCartOutlinedIcon,
-    color: '#7C3AED',
-    gradient: 'linear-gradient(135deg, #7C3AED22, #7C3AED08)',
-    perks: ['Browse restaurants & stores', 'Real-time order tracking', 'Exclusive deals & offers'],
+    accentColor: '#2563EB',
+    perks: ['Curated multi-vendor catalog', 'Live GPS courier tracking', 'Exclusive deals & flash drops'],
   },
   {
     value: 'VENDOR',
-    label: 'Vendor / Restaurant',
-    subtitle: 'Sell your products',
+    label: 'Merchant / Kitchen Partner',
+    badge: 'BOUTIQUE COMMERCE',
+    subtitle: 'List your restaurant, bakery menu, or electronics boutique and manage orders.',
     Icon: StorefrontOutlinedIcon,
-    color: BRAND,
-    gradient: `linear-gradient(135deg, ${BRAND}22, ${BRAND}08)`,
-    perks: ['List your menu or products', 'Manage orders in real-time', 'Fast & secure payouts'],
+    accentColor: '#F59E0B',
+    perks: ['Direct boutique profile with logo & cover', 'Live order dispatch dashboard', 'Instant automated payout schedules'],
   },
   {
     value: 'DRIVER',
-    label: 'Delivery Driver',
-    subtitle: 'Deliver & earn',
+    label: 'Delivery Partner',
+    badge: 'EXPRESS FLEET',
+    subtitle: 'Deliver orders across your city and earn competitive weekly earnings.',
     Icon: LocalShippingOutlinedIcon,
-    color: '#059669',
-    gradient: 'linear-gradient(135deg, #05966922, #05966908)',
-    perks: ['Flexible working hours', 'Earn per delivery', 'GPS-assisted navigation'],
+    accentColor: '#10B981',
+    perks: ['Flexible dispatch schedule', 'Smart spatial batching & routing', 'Direct driver performance bonuses'],
   },
 ]
 
-// ─── Shared TextField sx ──────────────────────────────────────────────────────
-const fieldSx = {
-  '& .MuiOutlinedInput-root': {
-    '&:hover fieldset':       { borderColor: BRAND },
-    '&.Mui-focused fieldset': { borderColor: BRAND },
-  },
-  '& label.Mui-focused': { color: BRAND },
-}
+// Slide animation variants
+const slideIn = { hidden: { opacity: 0, x: 30 }, visible: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -30 } }
 
-const adornment = Icon => (
-  <InputAdornment position="start">
-    <Icon sx={{ color: 'action.active', fontSize: 20 }} />
-  </InputAdornment>
-)
-
-// ─── Slide variants ───────────────────────────────────────────────────────────
-const slideIn  = { hidden: { opacity: 0, x: 40 },  visible: { opacity: 1, x: 0 },  exit: { opacity: 0, x: -40 }  }
-const slideOut = { hidden: { opacity: 0, x: -40 }, visible: { opacity: 1, x: 0 },  exit: { opacity: 0, x: 40 }   }
-
-// ─── Left branding panel ──────────────────────────────────────────────────────
 function BrandPanel() {
   return (
-    <Box sx={{
-      display: { xs: 'none', lg: 'flex' },
-      width: '45%', flexShrink: 0,
-      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      p: 6, position: 'sticky', top: 0, height: '100vh',
-      background: `linear-gradient(155deg, ${BRAND} 0%, #FF1F8D 60%, #FF6B6B 100%)`,
-      overflow: 'hidden',
-    }}>
-      {/* Decorative blobs */}
-      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <Box sx={{ position: 'absolute', top: -60, left: -60, width: 320, height: 320, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.08)', filter: 'blur(40px)' }} />
-        <Box sx={{ position: 'absolute', bottom: -80, right: -80, width: 400, height: 400, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', filter: 'blur(60px)' }} />
+    <Box
+      sx={{
+        display: { xs: 'none', lg: 'flex' },
+        width: '45%',
+        flexShrink: 0,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        p: { lg: 6, xl: 8 },
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        background: 'linear-gradient(155deg, #060A14 0%, #0A0F1D 45%, #101935 75%, #1E1B4B 100%)',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+        overflow: 'hidden',
+        color: '#FFFFFF',
+      }}
+    >
+      {/* Background Ambient Glow Orbs */}
+      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -120,
+            left: -120,
+            width: 420,
+            height: 420,
+            borderRadius: '50%',
+            bgcolor: 'rgba(37, 99, 235, 0.22)',
+            filter: 'blur(90px)',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -100,
+            right: -100,
+            width: 480,
+            height: 480,
+            borderRadius: '50%',
+            bgcolor: 'rgba(124, 58, 237, 0.18)',
+            filter: 'blur(100px)',
+          }}
+        />
       </Box>
 
-      <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', color: '#fff' }}>
-        {/* Logo */}
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 5 }}>
-            <Box sx={{ width: 60, height: 60, bgcolor: '#fff', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-              <Typography variant="h5" fontWeight={900} color={BRAND}>QD</Typography>
+      {/* Top: Brand Header */}
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+        <NextLink href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Box
+              sx={{
+                width: 42,
+                height: 42,
+                background: GRADIENT,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 25px rgba(37, 99, 235, 0.45)',
+                borderRadius: 0,
+              }}
+            >
+              <ShoppingBagIcon sx={{ color: '#fff', fontSize: 22 }} />
             </Box>
-            <Typography variant="h3" fontWeight={900} letterSpacing={-1}>QuickDelivery</Typography>
-          </Box>
-        </motion.div>
-
-        {/* Illustration */}
-        <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.15 }}>
-          <Box sx={{ position: 'relative', display: 'inline-block', mb: 5 }}>
-            <Box sx={{
-              width: 220, height: 220,
-              bgcolor: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(12px)',
-              borderRadius: '32px',
-              border: '1px solid rgba(255,255,255,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Inventory2Icon sx={{ fontSize: 90, color: '#fff' }} />
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: -0.5, lineHeight: 1 }}>
+                Quick<Box component="span" sx={{ color: '#60A5FA' }}>Delivery</Box>
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+                Boutique Marketplace
+              </Typography>
             </Box>
+          </Stack>
+        </NextLink>
+      </Box>
 
-            <motion.div animate={{ y: [0, -14, 0] }} transition={{ duration: 2.8, repeat: Infinity }}
-              style={{ position: 'absolute', top: -18, right: -18 }}>
-              <Paper elevation={12} sx={{ width: 56, height: 56, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <RestaurantOutlinedIcon sx={{ fontSize: 28, color: BRAND }} />
-              </Paper>
-            </motion.div>
+      {/* Middle: Value Prop Cards */}
+      <Box sx={{ position: 'relative', zIndex: 1, my: 'auto', py: 4 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <Chip
+            icon={<StarIcon sx={{ fontSize: '13px !important', color: GOLD }} />}
+            label="JOIN THE PLATFORM"
+            size="small"
+            sx={{
+              mb: 2.5,
+              borderRadius: 0,
+              fontWeight: 800,
+              fontSize: 10,
+              letterSpacing: 1,
+              bgcolor: 'rgba(245, 158, 11, 0.12)',
+              color: GOLD,
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+            }}
+          />
 
-            <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 2.8, repeat: Infinity, delay: 0.5 }}
-              style={{ position: 'absolute', bottom: -18, left: -18 }}>
-              <Paper elevation={12} sx={{ width: 56, height: 56, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ShoppingBagOutlinedIcon sx={{ fontSize: 28, color: BRAND }} />
-              </Paper>
-            </motion.div>
-          </Box>
-        </motion.div>
-
-        {/* Tagline */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}>
-          <Typography variant="h4" fontWeight={800} gutterBottom sx={{ lineHeight: 1.2 }}>
-            Join QuickDelivery
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 900,
+              letterSpacing: -1,
+              lineHeight: 1.15,
+              mb: 2,
+              fontSize: { lg: '2.1rem', xl: '2.6rem' },
+            }}
+          >
+            Create your account in{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F59E0B 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              less than 2 minutes
+            </Box>.
           </Typography>
-          <Typography variant="body1" sx={{ opacity: 0.85, maxWidth: 280, mx: 'auto' }}>
-            Connect with thousands of customers. Start your journey today.
+
+          <Typography variant="body1" sx={{ color: '#94A3B8', maxWidth: 440, mb: 4, fontSize: 14.5, lineHeight: 1.6 }}>
+            Whether you are ordering dinner, growing your restaurant revenue, or delivering with our fleet — QuickDelivery is engineered for speed.
           </Typography>
+
+          {/* Highlights List */}
+          <Stack spacing={1.5} sx={{ maxWidth: 460 }}>
+            {[
+              { icon: <ShoppingCartOutlinedIcon sx={{ color: '#60A5FA', fontSize: 18 }} />, label: 'Fast 1-Click Ordering', sub: 'Saved addresses, encrypted payment methods, and live SMS updates' },
+              { icon: <StorefrontOutlinedIcon sx={{ color: '#F59E0B', fontSize: 18 }} />, label: 'Merchant Onboarding Portal', sub: 'Launch your digital storefront with menu variants, modifiers, and SEO slugs' },
+              { icon: <LocalShippingOutlinedIcon sx={{ color: '#10B981', fontSize: 18 }} />, label: 'Automated Fleet Network', sub: 'Smart logistics stacking orders to ensure hot and fresh handoffs' },
+            ].map((p, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.75,
+                  p: 1.75,
+                  bgcolor: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 0,
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <Box sx={{ mt: 0.25 }}>{p.icon}</Box>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, fontSize: 13, color: '#F1F5F9' }}>
+                    {p.label}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 11, display: 'block' }}>
+                    {p.sub}
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
+          </Stack>
         </motion.div>
+      </Box>
+
+      {/* Bottom Security Note */}
+      <Box sx={{ position: 'relative', zIndex: 1, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <ShieldOutlinedIcon sx={{ fontSize: 16, color: '#10B981' }} />
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 11, fontWeight: 600 }}>
+            Enterprise 256-bit SSL encryption • Verified secure customer portal
+          </Typography>
+        </Stack>
       </Box>
     </Box>
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ── Avatar Upload Component ──────────────────────────────────────────────────
+function AvatarUploader({ isDark, value, onChange }) {
+  const inputRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+
+  const uploadFile = useCallback(async (file) => {
+    if (!file || !file.type.startsWith('image/')) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'avatars')
+      const res = await fetch('/api/upload-image', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.success && data.url) {
+        onChange(data.url)
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+    } finally {
+      setUploading(false)
+    }
+  }, [onChange])
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) uploadFile(file)
+  }, [uploadFile])
+
+  const handleDragOver = (e) => { e.preventDefault(); setDragOver(true) }
+  const handleDragLeave = () => setDragOver(false)
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 1 }}>
+      {/* Avatar Preview */}
+      <Box
+        sx={{
+          position: 'relative',
+          width: 72,
+          height: 72,
+          flexShrink: 0,
+          borderRadius: 0,
+          overflow: 'hidden',
+          border: dragOver
+            ? `2px dashed #2563EB`
+            : isDark ? '2px solid rgba(255,255,255,0.12)' : '2px solid #CBD5E1',
+          bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
+          cursor: 'pointer',
+          transition: 'border-color 0.2s ease',
+          '&:hover .overlay': { opacity: 1 },
+        }}
+        onClick={() => inputRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        {value ? (
+          <Box component="img" src={value} alt="avatar" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {uploading ? (
+              <CircularProgress size={22} sx={{ color: '#2563EB' }} />
+            ) : (
+              <CameraAltOutlinedIcon sx={{ fontSize: 28, color: isDark ? '#475569' : '#94A3B8' }} />
+            )}
+          </Box>
+        )}
+        {/* Overlay on hover */}
+        <Box
+          className="overlay"
+          sx={{
+            position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: 0, transition: 'opacity 0.2s ease',
+          }}
+        >
+          {uploading
+            ? <CircularProgress size={18} sx={{ color: '#fff' }} />
+            : <CameraAltOutlinedIcon sx={{ color: '#fff', fontSize: 20 }} />
+          }
+        </Box>
+      </Box>
+
+      {/* Text + Actions */}
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: 13, color: isDark ? '#F1F5F9' : '#0F172A', mb: 0.5 }}>
+          Profile Photo <Box component="span" sx={{ fontSize: 11, fontWeight: 500, color: isDark ? '#64748B' : '#94A3B8' }}>(Optional)</Box>
+        </Typography>
+        <Typography variant="caption" sx={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 11, display: 'block', mb: 1 }}>
+          JPG, PNG or WEBP · Max 5MB
+        </Typography>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={uploading ? <CircularProgress size={12} /> : <CloudUploadOutlinedIcon sx={{ fontSize: 14 }} />}
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            sx={{
+              borderRadius: 0,
+              textTransform: 'none',
+              fontSize: 11,
+              fontWeight: 700,
+              py: 0.4,
+              px: 1.25,
+              borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#CBD5E1',
+              color: isDark ? '#94A3B8' : '#475569',
+              '&:hover': { borderColor: '#2563EB', color: '#2563EB', bgcolor: 'transparent' },
+            }}
+          >
+            {uploading ? 'Uploading…' : 'Upload Photo'}
+          </Button>
+          {value && (
+            <IconButton
+              size="small"
+              onClick={() => onChange(null)}
+              sx={{ borderRadius: 0, color: '#EF4444', p: 0.5, border: '1px solid rgba(239,68,68,0.25)', '&:hover': { bgcolor: 'rgba(239,68,68,0.08)' } }}
+              title="Remove photo"
+            >
+              <DeleteOutlineIcon sx={{ fontSize: 15 }} />
+            </IconButton>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f) }}
+      />
+    </Box>
+  )
+}
+
 export default function RegisterPage() {
   const { signUp } = useAuth()
-  const router     = useRouter()
+  const { isDark, toggleTheme } = useTheme()
+  const router = useRouter()
 
   // phase: 'select' | 'form'
-  const [phase,    setPhase]    = useState('select')
+  const [phase, setPhase] = useState('select')
   const [formData, setFormData] = useState({
-    email: '', password: '', confirmPassword: '',
-    displayName: '', phoneNumber: '', role: '', type: 'local',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    displayName: '',
+    phoneNumber: '',
+    role: '',
+    type: 'local',
   })
-  const [showPassword,        setShowPassword]        = useState(false)
+  const [profileImage, setProfileImage] = useState(null)
+  const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading,             setLoading]             = useState(false)
-  const [error,               setError]               = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const selectedRole = ROLES.find(r => r.value === formData.role)
+  const selectedRole = ROLES.find((r) => r.value === formData.role)
 
-  const handleChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }))
+  const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }))
 
   const selectRole = (value) => {
-    setFormData(p => ({ ...p, role: value }))
+    setFormData((p) => ({ ...p, role: value }))
   }
 
   const continueToForm = () => {
@@ -194,14 +430,25 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return }
-    if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
 
     setLoading(true)
     try {
       const result = await signUp(
-        formData.email, formData.password, formData.displayName,
-        formData.phoneNumber, formData.role, formData.type,
+        formData.email,
+        formData.password,
+        formData.displayName,
+        formData.phoneNumber,
+        formData.role,
+        formData.type,
+        profileImage,
       )
       if (result.success) {
         if (formData.role === 'VENDOR') {
@@ -221,356 +468,596 @@ export default function RegisterPage() {
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const fieldStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 0,
+      bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#F8FAFC',
+      color: isDark ? '#FFFFFF' : '#0F172A',
+      '& fieldset': {
+        borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#CBD5E1',
+      },
+      '&:hover fieldset': {
+        borderColor: SAPPHIRE,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: SAPPHIRE,
+        borderWidth: '1.5px',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: isDark ? '#94A3B8' : '#64748B',
+      '&.Mui-focused': {
+        color: SAPPHIRE,
+      },
+    },
+  }
+
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        bgcolor: isDark ? '#060A14' : '#F8FAFC',
+        color: isDark ? '#F1F5F9' : '#0F172A',
+        transition: 'background-color 0.25s ease',
+      }}
+    >
+      {/* ── 1. LUXURY LEFT BRAND PANEL ── */}
       <BrandPanel />
 
-      {/* ══════ RIGHT PANEL ══════════════════════════════════════════════════ */}
-      <Box sx={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        minHeight: '100vh', overflowY: 'auto', bgcolor: 'background.paper',
-      }}>
-        {/* Top bar */}
-        <Box sx={{
-          px: { xs: 3, sm: 5 }, py: 2.5,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderBottom: 1, borderColor: 'divider',
-          position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 10,
-        }}>
-          {/* Mobile logo */}
-          <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{ width: 36, height: 36, bgcolor: BRAND, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body2" fontWeight={900} color="#fff">QD</Typography>
+      {/* ── 2. RIGHT SIGNUP PANEL ── */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          overflowY: 'auto',
+          bgcolor: isDark ? '#0A0F1D' : '#FFFFFF',
+        }}
+      >
+        {/* Top Utility Bar */}
+        <Box
+          sx={{
+            px: { xs: 2.5, sm: 4, lg: 6 },
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0',
+            position: 'sticky',
+            top: 0,
+            bgcolor: isDark ? '#0A0F1D' : '#FFFFFF',
+            zIndex: 10,
+          }}
+        >
+          {/* Mobile Brand Logo */}
+          <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                background: GRADIENT,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 0,
+              }}
+            >
+              <ShoppingBagIcon sx={{ color: '#fff', fontSize: 18 }} />
             </Box>
-            <Typography variant="h6" fontWeight={800} color={BRAND}>QuickDelivery</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+              Quick<Box component="span" sx={{ color: SAPPHIRE }}>Delivery</Box>
+            </Typography>
           </Box>
-          <Box sx={{ display: { xs: 'none', lg: 'block' } }} /> {/* spacer */}
 
-          <Typography variant="body2" color="text.secondary">
-            Already have an account?{' '}
-            <Box component={NextLink} href="/login"
-              sx={{ color: BRAND, fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-              Sign In
-            </Box>
-          </Typography>
+          {/* Desktop Left: Home navigation link */}
+          <Button
+            component={NextLink}
+            href="/"
+            size="small"
+            startIcon={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+            sx={{
+              display: { xs: 'none', lg: 'inline-flex' },
+              borderRadius: 0,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 12,
+              color: isDark ? '#94A3B8' : '#64748B',
+              '&:hover': { color: SAPPHIRE, bgcolor: 'transparent' },
+            }}
+          >
+            Storefront Home
+          </Button>
+
+          {/* Right: Theme Toggle & Sign In Link */}
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton
+              size="small"
+              onClick={toggleTheme}
+              sx={{
+                color: isDark ? '#F59E0B' : '#64748B',
+                borderRadius: 0,
+                p: 0.75,
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E2E8F0',
+                '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9' },
+              }}
+              title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            >
+              {isDark ? <LightModeOutlinedIcon sx={{ fontSize: 18 }} /> : <DarkModeOutlinedIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+
+            <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13 }}>
+              Already have an account?{' '}
+              <Box
+                component={NextLink}
+                href="/login"
+                sx={{
+                  color: SAPPHIRE,
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                Sign In
+              </Box>
+            </Typography>
+          </Stack>
         </Box>
 
-        {/* ── Main content ── */}
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: { xs: 3, sm: 5 } }}>
+        {/* Main Content Area */}
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: { xs: 3, sm: 5, md: 6 },
+          }}
+        >
           <Box sx={{ width: '100%', maxWidth: 560 }}>
             <AnimatePresence mode="wait">
-
-              {/* ════ PHASE 1: Role Selection ════════════════════════════════ */}
+              {/* ════ PHASE 1: ROLE SELECTION ════ */}
               {phase === 'select' && (
                 <motion.div
                   key="select"
                   variants={slideIn}
-                  initial="hidden" animate="visible" exit="exit"
-                  transition={{ duration: 0.3 }}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.25 }}
                 >
-                  {/* Header */}
-                  <Box mb={4}>
-                    <Typography variant="h4" fontWeight={800} gutterBottom>
+                  <Box mb={3.5}>
+                    <Chip
+                      label="STEP 1 OF 2"
+                      size="small"
+                      sx={{
+                        mb: 1.5,
+                        borderRadius: 0,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        letterSpacing: 1,
+                        bgcolor: isDark ? 'rgba(37, 99, 235, 0.15)' : 'rgba(37, 99, 235, 0.1)',
+                        color: SAPPHIRE,
+                        border: `1px solid ${isDark ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.25)'}`,
+                      }}
+                    />
+                    <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -0.5, mb: 1, fontSize: { xs: 26, sm: 30 } }}>
                       Create your account
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      Choose the account type that fits you best
+                    <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13.5 }}>
+                      Select the account profile that matches how you plan to use QuickDelivery.
                     </Typography>
                   </Box>
 
-                  {/* Role cards */}
-                  <Grid container spacing={2} mb={4}>
-                    {ROLES.map(role => {
-                      const active = formData.role === role.value
-                      return (
-                        <Grid item xs={12} sm={6} key={role.value}>
-                          <Paper
-                            variant="outlined"
-                            onClick={() => selectRole(role.value)}
-                            sx={{
-                              p: 2.5, cursor: 'pointer', height: '100%',
-                              borderWidth: 2,
-                              borderColor: active ? role.color : 'divider',
-                              background: active ? role.gradient : 'background.paper',
-                              position: 'relative', overflow: 'hidden',
-                              transition: 'all 0.22s ease',
-                              '&:hover': {
-                                borderColor: role.color,
-                                background: role.gradient,
-                                transform: 'translateY(-2px)',
-                                boxShadow: `0 8px 24px ${role.color}22`,
-                              },
-                            }}
-                          >
-                            {/* Selected check */}
-                            {active && (
-                              <Box sx={{
-                                position: 'absolute', top: 10, right: 10,
-                                width: 22, height: 22, borderRadius: '50%',
-                                bgcolor: role.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              }}>
-                                <CheckIcon sx={{ fontSize: 14, color: '#fff' }} />
-                              </Box>
-                            )}
+                  {/* Role Cards List */}
+                  <Stack spacing={2} mb={3.5}>
+                    {ROLES.map((r) => {
+                      const isSelected = formData.role === r.value
+                      const IconComp = r.Icon
 
-                            {/* Icon */}
-                            <Box sx={{
-                              width: 48, height: 48, borderRadius: 2.5, mb: 1.5,
-                              bgcolor: active ? role.color : `${role.color}18`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'all 0.22s',
-                            }}>
-                              <role.Icon sx={{ fontSize: 26, color: active ? '#fff' : role.color }} />
+                      return (
+                        <Box
+                          key={r.value}
+                          onClick={() => selectRole(r.value)}
+                          sx={{
+                            p: 2.5,
+                            borderRadius: 0,
+                            cursor: 'pointer',
+                            bgcolor: isDark
+                              ? isSelected
+                                ? 'rgba(37, 99, 235, 0.12)'
+                                : 'rgba(255,255,255,0.03)'
+                              : isSelected
+                              ? '#EFF6FF'
+                              : '#F8FAFC',
+                            border: isSelected
+                              ? `2px solid ${SAPPHIRE}`
+                              : isDark
+                              ? '1px solid rgba(255,255,255,0.1)'
+                              : '1px solid #CBD5E1',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: SAPPHIRE,
+                              bgcolor: isDark ? 'rgba(37, 99, 235, 0.08)' : '#EFF6FF',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Box
+                              sx={{
+                                width: 44,
+                                height: 44,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: isSelected ? SAPPHIRE : isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+                                color: isSelected ? '#FFFFFF' : isDark ? '#CBD5E1' : '#334155',
+                                borderRadius: 0,
+                                flexShrink: 0,
+                              }}
+                            >
+                              <IconComp sx={{ fontSize: 22 }} />
                             </Box>
 
-                            <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                              {role.label}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-                              {role.subtitle}
-                            </Typography>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Stack direction="row" alignItems="center" justifyContent="space-between" mb={0.5}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 800, fontSize: 15, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                                  {r.label}
+                                </Typography>
+                                <Chip
+                                  label={r.badge}
+                                  size="small"
+                                  sx={{
+                                    height: 18,
+                                    fontSize: 9,
+                                    fontWeight: 900,
+                                    letterSpacing: 0.5,
+                                    borderRadius: 0,
+                                    bgcolor: isSelected ? 'rgba(37, 99, 235, 0.2)' : isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+                                    color: isSelected ? SAPPHIRE : isDark ? '#94A3B8' : '#64748B',
+                                  }}
+                                />
+                              </Stack>
+                              <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12.5, mb: 1.5 }}>
+                                {r.subtitle}
+                              </Typography>
 
-                            {/* Perks */}
-                            <Stack spacing={0.6}>
-                              {role.perks.map(perk => (
-                                <Box key={perk} sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75 }}>
-                                  <CheckCircleIcon sx={{ fontSize: 14, color: role.color, mt: '2px', flexShrink: 0 }} />
-                                  <Typography variant="caption" color="text.secondary" lineHeight={1.4}>
-                                    {perk}
-                                  </Typography>
-                                </Box>
-                              ))}
-                            </Stack>
-                          </Paper>
-                        </Grid>
+                              {/* Perks list */}
+                              <Stack spacing={0.6}>
+                                {r.perks.map((perk, i) => (
+                                  <Stack key={i} direction="row" spacing={1} alignItems="center">
+                                    <CheckIcon sx={{ fontSize: 13, color: isSelected ? SAPPHIRE : '#10B981' }} />
+                                    <Typography variant="caption" sx={{ color: isDark ? '#CBD5E1' : '#475569', fontSize: 11.5, fontWeight: 600 }}>
+                                      {perk}
+                                    </Typography>
+                                  </Stack>
+                                ))}
+                              </Stack>
+                            </Box>
+                          </Stack>
+                        </Box>
                       )
                     })}
-                  </Grid>
+                  </Stack>
 
-                  {/* Continue */}
+                  {/* Continue Button */}
                   <Button
-                    fullWidth variant="contained" size="large"
-                    onClick={continueToForm}
+                    fullWidth
+                    variant="contained"
+                    size="large"
                     disabled={!formData.role}
-                    endIcon={<ArrowForwardIcon />}
+                    onClick={continueToForm}
+                    endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
                     sx={{
-                      py: 1.6, fontWeight: 700, fontSize: '1rem', textTransform: 'none',
-                      bgcolor: BRAND, '&:hover': { bgcolor: '#2E5F22' },
-                      boxShadow: formData.role ? `0 6px 20px ${BRAND}44` : 'none',
-                      transition: 'all 0.2s',
+                      py: 1.4,
+                      fontWeight: 800,
+                      fontSize: 14,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                      borderRadius: 0,
+                      background: formData.role ? GRADIENT : undefined,
+                      color: '#FFFFFF',
+                      boxShadow: formData.role ? '0 6px 20px rgba(37, 99, 235, 0.35)' : 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #1D4ED8 0%, #4338CA 50%, #6D28D9 100%)',
+                        boxShadow: '0 8px 25px rgba(37, 99, 235, 0.45)',
+                        transform: 'translateY(-1px)',
+                      },
                     }}
                   >
-                    {formData.role
-                      ? `Continue as ${selectedRole?.label}`
-                      : 'Select an account type to continue'
-                    }
+                    Continue to Details
                   </Button>
-
-                  <Divider sx={{ my: 3 }} />
-
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Button
-                      component={NextLink} href="/"
-                      variant="text" size="small"
-                      startIcon={<ArrowBackIcon />}
-                      sx={{ textTransform: 'none', color: 'text.secondary', '&:hover': { color: BRAND, bgcolor: 'transparent' } }}
-                    >
-                      Back to Home
-                    </Button>
-                  </Box>
                 </motion.div>
               )}
 
-              {/* ════ PHASE 2: Registration Form ═════════════════════════════ */}
+              {/* ════ PHASE 2: ACCOUNT DETAILS FORM ════ */}
               {phase === 'form' && (
                 <motion.div
                   key="form"
-                  variants={slideOut}
-                  initial="hidden" animate="visible" exit="exit"
-                  transition={{ duration: 0.3 }}
+                  variants={slideIn}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.25 }}
                 >
-                  {/* Header with back + role badge */}
-                  <Box mb={4}>
+                  {/* Step Back & Header */}
+                  <Box mb={3.5}>
                     <Button
-                      variant="text" size="small"
-                      startIcon={<ArrowBackIcon />}
-                      onClick={() => { setPhase('select'); setError('') }}
-                      sx={{ textTransform: 'none', color: 'text.secondary', mb: 2, pl: 0,
-                            '&:hover': { color: BRAND, bgcolor: 'transparent' } }}
+                      size="small"
+                      startIcon={<ArrowBackIcon sx={{ fontSize: 15 }} />}
+                      onClick={() => setPhase('select')}
+                      sx={{
+                        mb: 1.5,
+                        p: 0,
+                        minWidth: 0,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        color: SAPPHIRE,
+                        '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
+                      }}
                     >
-                      Change account type
+                      Change Account Type
                     </Button>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                      <Typography variant="h4" fontWeight={800}>Create Account</Typography>
+                    <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
+                      <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -0.5, fontSize: { xs: 26, sm: 28 } }}>
+                        Enter your credentials
+                      </Typography>
                       {selectedRole && (
                         <Chip
-                          icon={<selectedRole.Icon sx={{ fontSize: '16px !important' }} />}
                           label={selectedRole.label}
                           size="small"
                           sx={{
-                            bgcolor: `${selectedRole.color}18`,
-                            color: selectedRole.color,
-                            fontWeight: 700,
-                            border: `1px solid ${selectedRole.color}44`,
-                            '& .MuiChip-icon': { color: selectedRole.color },
+                            borderRadius: 0,
+                            fontWeight: 800,
+                            fontSize: 10.5,
+                            bgcolor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#DBEAFE',
+                            color: SAPPHIRE,
                           }}
                         />
                       )}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Fill in your details to get started
+                    </Stack>
+                    <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13 }}>
+                      Complete your profile information to activate your account.
                     </Typography>
                   </Box>
 
+                  {/* Error Notification */}
+                  {error && (
+                    <Alert
+                      severity="error"
+                      sx={{
+                        mb: 3,
+                        borderRadius: 0,
+                        bgcolor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+                        border: '1px solid #EF4444',
+                        color: '#EF4444',
+                      }}
+                    >
+                      {error}
+                    </Alert>
+                  )}
+
+                  {/* Details Form */}
                   <Box component="form" onSubmit={handleSubmit}>
-                    <Stack spacing={2.5}>
-
-                      {/* Error */}
-                      <AnimatePresence>
-                        {error && (
-                          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                            <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Name + Phone */}
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth label="Full Name" name="displayName"
-                            value={formData.displayName} onChange={handleChange}
-                            placeholder="John Doe" required sx={fieldSx}
-                            InputProps={{ startAdornment: adornment(PersonOutlinedIcon) }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth label="Phone Number" name="phoneNumber" type="tel"
-                            value={formData.phoneNumber} onChange={handleChange}
-                            placeholder="+92 300 1234567" sx={fieldSx}
-                            InputProps={{ startAdornment: adornment(PhoneOutlinedIcon) }}
-                          />
-                        </Grid>
-                      </Grid>
-
-                      {/* Email */}
-                      <TextField
-                        fullWidth label="Email Address" name="email" type="email"
-                        value={formData.email} onChange={handleChange}
-                        placeholder="name@example.com" required sx={fieldSx}
-                        InputProps={{ startAdornment: adornment(EmailOutlinedIcon) }}
-                      />
-
-                      {/* Vendor notice */}
-                      {formData.role === 'VENDOR' && (
-                        <Alert
-                          severity="info"
-                          icon={<StorefrontOutlinedIcon fontSize="inherit" />}
-                          sx={{
-                            borderRadius: 2,
-                            bgcolor: `${BRAND}08`,
-                            border: `1px solid ${BRAND}33`,
-                            color: BRAND,
-                            '& .MuiAlert-icon': { color: BRAND },
-                          }}
-                        >
-                          After creating your account you&apos;ll complete{' '}
-                          <strong>Business Registration</strong> — store details, banking &amp; branding.
-                        </Alert>
-                      )}
-
-                      {/* Passwords */}
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth label="Password" name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password} onChange={handleChange}
-                            placeholder="Min. 6 characters" required sx={fieldSx}
-                            InputProps={{
-                              startAdornment: adornment(LockOutlinedIcon),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton size="small" edge="end" onClick={() => setShowPassword(p => !p)}>
-                                    {showPassword
-                                      ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} />
-                                      : <VisibilityOutlinedIcon   sx={{ fontSize: 18 }} />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth label="Confirm Password" name="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            value={formData.confirmPassword} onChange={handleChange}
-                            placeholder="Re-enter password" required sx={fieldSx}
-                            InputProps={{
-                              startAdornment: adornment(LockOutlinedIcon),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton size="small" edge="end" onClick={() => setShowConfirmPassword(p => !p)}>
-                                    {showConfirmPassword
-                                      ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} />
-                                      : <VisibilityOutlinedIcon   sx={{ fontSize: 18 }} />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        </Grid>
-                      </Grid>
-
-                      {/* Submit */}
-                      <Button
-                        type="submit" fullWidth variant="contained" size="large"
-                        disabled={loading}
-                        endIcon={loading
-                          ? <CircularProgress size={18} color="inherit" />
-                          : <ArrowForwardIcon />
-                        }
+                    <Stack spacing={2.25}>
+                      {/* Profile Photo Upload */}
+                      <Box
                         sx={{
-                          mt: 0.5, py: 1.6, fontWeight: 700, fontSize: '1rem',
-                          textTransform: 'none',
-                          bgcolor: selectedRole?.color || BRAND,
-                          '&:hover': { bgcolor: BRAND, filter: 'brightness(0.9)' },
-                          boxShadow: `0 6px 20px ${selectedRole?.color || BRAND}44`,
+                          p: 2,
+                          border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E2E8F0',
+                          bgcolor: isDark ? 'rgba(255,255,255,0.02)' : '#F8FAFC',
                         }}
                       >
-                        {loading ? 'Creating Account…' : 'Create Account'}
-                      </Button>
+                        <AvatarUploader isDark={isDark} value={profileImage} onChange={setProfileImage} />
+                      </Box>
+                      {/* Full Name */}
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Full Legal Name"
+                        name="displayName"
+                        value={formData.displayName}
+                        onChange={handleChange}
+                        placeholder="e.g. John Doe"
+                        required
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PersonOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
 
+                      {/* Email Address */}
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Email Address"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="name@example.com"
+                        required
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <EmailOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+
+                      {/* Phone Number */}
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Mobile Phone Number"
+                        name="phoneNumber"
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={handleChange}
+                        placeholder="+92 300 1234567"
+                        required
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PhoneOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+
+                      {/* Password */}
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Create Password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Min. 6 alphanumeric characters"
+                        required
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LockOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                edge="end"
+                                onClick={() => setShowPassword((v) => !v)}
+                                sx={{ color: isDark ? '#94A3B8' : '#64748B' }}
+                              >
+                                {showPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+
+                      {/* Confirm Password */}
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Confirm Password"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Re-enter your password"
+                        required
+                        sx={fieldStyles}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LockOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                edge="end"
+                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                sx={{ color: isDark ? '#94A3B8' : '#64748B' }}
+                              >
+                                {showConfirmPassword ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+
+                      {/* Register Submit Button */}
+                      <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        size="large"
+                        disabled={loading}
+                        endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon sx={{ fontSize: 18 }} />}
+                        sx={{
+                          mt: 1,
+                          py: 1.4,
+                          fontWeight: 800,
+                          fontSize: 14,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                          borderRadius: 0,
+                          background: GRADIENT,
+                          color: '#FFFFFF',
+                          boxShadow: '0 6px 20px rgba(37, 99, 235, 0.35)',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #1D4ED8 0%, #4338CA 50%, #6D28D9 100%)',
+                            boxShadow: '0 8px 25px rgba(37, 99, 235, 0.45)',
+                            transform: 'translateY(-1px)',
+                          },
+                        }}
+                      >
+                        {loading ? 'Creating Account…' : 'Complete Registration'}
+                      </Button>
                     </Stack>
                   </Box>
-
-                  <Divider sx={{ my: 3 }} />
-
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Already have an account?{' '}
-                    <Box component={NextLink} href="/login"
-                      sx={{ color: BRAND, fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                      Sign In
-                    </Box>
-                  </Typography>
                 </motion.div>
               )}
-
             </AnimatePresence>
+
+            {/* Mobile Return to Home */}
+            <Box sx={{ display: { xs: 'flex', lg: 'none' }, justifyContent: 'center', mt: 4 }}>
+              <Button
+                component={NextLink}
+                href="/"
+                variant="text"
+                size="small"
+                startIcon={<ArrowBackIcon />}
+                sx={{
+                  textTransform: 'none',
+                  color: isDark ? '#94A3B8' : '#64748B',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  '&:hover': { color: SAPPHIRE },
+                }}
+              >
+                Back to Storefront Home
+              </Button>
+            </Box>
           </Box>
         </Box>
 
         {/* Footer */}
-        <Box sx={{ px: { xs: 3, sm: 5 }, py: 2, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
-          <Typography variant="caption" color="text.disabled">
-            By creating an account you agree to our{' '}
-            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer' }}>Terms of Service</Box>
+        <Box
+          sx={{
+            px: { xs: 3, sm: 6 },
+            py: 2,
+            borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0',
+            textAlign: 'center',
+          }}
+        >
+          <Typography variant="caption" sx={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 11 }}>
+            By registering you agree to QuickDelivery&apos;s{' '}
+            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer', color: isDark ? '#94A3B8' : '#64748B' }}>
+              Terms of Service
+            </Box>
             {' '}and{' '}
-            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer' }}>Privacy Policy</Box>.
+            <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer', color: isDark ? '#94A3B8' : '#64748B' }}>
+              Privacy Policy
+            </Box>.
           </Typography>
         </Box>
       </Box>

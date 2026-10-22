@@ -4,7 +4,7 @@ import crypto from 'crypto'
 
 export async function POST(request) {
   try {
-    const { email, password, displayName, phoneNumber, role = 'CUSTOMER' } = await request.json()
+    const { email, password, displayName, phoneNumber, role = 'CUSTOMER', image } = await request.json()
 
     if (!email || !password || !displayName) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 })
@@ -34,7 +34,8 @@ export async function POST(request) {
         phoneNumber: phoneNumber || '',
         role,
         uid,
-        emailVerification: false, // Default to false, can implement verify email later
+        image: image || null,
+        emailVerification: false,
         type: 'local'
       }
     })
