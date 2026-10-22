@@ -52,9 +52,12 @@ export async function GET(request) {
     try {
       const user = await authenticateRequest(request)
 
-      // If user is admin, return all users
+      // If user is admin, return all users (with optional role filtering)
       if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        const roleQuery = searchParams.get('role')
+        const whereClause = roleQuery ? { role: roleQuery } : {}
         const users = await prisma.users.findMany({
+          where: whereClause,
           orderBy: { createdAt: 'desc' }
         })
         return Response.json({ success: true, data: users })

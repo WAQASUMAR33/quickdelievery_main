@@ -47,6 +47,7 @@ import SendOutlinedIcon         from '@mui/icons-material/SendOutlined'
 import ShoppingBagOutlinedIcon  from '@mui/icons-material/ShoppingBagOutlined'
 
 import { formatPrice, COUNTRY_CURRENCIES, getActiveCountry, setActiveCountry } from '@/lib/currency'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND      = '#39772A'
 const DROP_MIN_W = 300
@@ -127,6 +128,11 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  // Instant Realtime auto-update on order mutations
+  useRealtimeEvent(['ORDER_CREATED', 'ORDER_UPDATED'], () => {
+    fetchOrders()
+  })
 
   useEffect(() => {
     if (!orders.length) return

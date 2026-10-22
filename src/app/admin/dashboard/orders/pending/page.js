@@ -33,6 +33,9 @@ export default function PendingOrdersPage() {
     )
   }
 
+  const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
+  if (!user || !access.hasAccess) return null
+
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>

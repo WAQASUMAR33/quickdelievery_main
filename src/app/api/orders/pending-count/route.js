@@ -1,47 +1,45 @@
-import { authenticateRequest } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth-server'
 
+export const dynamic = 'force-dynamic'
+
+/**
+ * GET /api/orders/pending-count
+ * Returns the count of pending orders for admin or vendor notification badge
+ */
 export async function GET(request) {
   try {
-    const user = await authenticateRequest(request)
-    if (!user) {
-      return Response.json({ success: false, count: 0 }, { status: 401 })
+    const authUser = await getAuthUser(request)
+
+    if (!authUser) {
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    let whereClause = {
-      status: 'PENDING'
-    }
+    let whereClause = { status: 'PENDING' }
 
-    if (user.role === 'VENDOR') {
-      whereClause.orderItems = {
-        some: {
-          product: {
-            OR: [
-              { vendorId: user.uid },
-              { vendorId: String(user.id) }
-            ]
-          }
-        }
+    if (authUser.role === 'VENDOR') {
+      whereClause = {
+        status: 'PENDING',
+        orderItems: {
+          some: {
+            product: {
+              vendorId: authUser.uid,
+            },
+          },
+        },
       }
-    } else if (user.role === 'CUSTOMER') {
-      whereClause.userId = user.id
-    } else if (user.role === 'DRIVER') {
-      whereClause.OR = [
-        { driverId: user.id, status: 'PENDING' },
-        { driverId: null, status: 'PENDING' }
-      ]
     }
-    // For ADMIN / SUPER_ADMIN: all PENDING orders across the system
 
     const count = await prisma.order.count({
-      where: whereClause
+      where: whereClause,
     })
 
     return Response.json({
       success: true,
-      count
+      count,
     })
   } catch (error) {
-    return Response.json({ success: false, count: 0, error: error.message }, { status: 500 })
+    console.error('Error fetching pending orders count:', error)
+    return Response.json({ success: false, error: 'Failed to count pending orders' }, { status: 500 })
   }
 }

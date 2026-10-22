@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 import Sidebar from './Sidebar'
 
 import AppBar         from '@mui/material/AppBar'
@@ -60,6 +61,11 @@ const DashboardLayout = ({ children }) => {
     const interval = setInterval(fetchPendingCount, 20000)
     return () => clearInterval(interval)
   }, [fetchPendingCount])
+
+  // Realtime instant badge counter update
+  useRealtimeEvent(['ORDER_CREATED', 'ORDER_UPDATED'], () => {
+    fetchPendingCount()
+  })
 
   const handleLogout = async () => {
     setAnchorEl(null)

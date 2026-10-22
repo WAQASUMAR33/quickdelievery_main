@@ -18,13 +18,17 @@ export default function CustomersPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading) {
+      if (!user) {
+        router.push('/login?redirect=/admin/dashboard/customers')
+        return
+      }
       const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
       if (!access.hasAccess) {
         const role = getUserRole(userData)
         if (role === 'CUSTOMER')     router.push('/customer')
         else if (role === 'VENDOR')  router.push('/vendor/dashboard')
-        else                         router.push(access.redirectTo)
+        else                         router.push(access.redirectTo || '/login')
       }
     }
   }, [user, userData, loading, router])
@@ -37,6 +41,9 @@ export default function CustomersPage() {
       </Box>
     )
   }
+
+  const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
+  if (!user || !access.hasAccess) return null
 
   return (
     <DashboardLayout>
