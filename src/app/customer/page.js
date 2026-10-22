@@ -15,6 +15,7 @@ import CartPage from '@/components/customer/CartPage'
 import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
 import StorefrontHeaderSearch from '@/components/customer/StorefrontHeaderSearch'
+import VisualSearchModal from '@/components/customer/VisualSearchModal'
 import toast from 'react-hot-toast'
 
 import AppBar              from '@mui/material/AppBar'
@@ -70,6 +71,7 @@ import DarkModeOutlinedIcon    from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon   from '@mui/icons-material/LightModeOutlined'
 import TranslateIcon           from '@mui/icons-material/Translate'
 import AutoAwesomeIcon         from '@mui/icons-material/AutoAwesome'
+import CameraAltIcon           from '@mui/icons-material/CameraAlt'
 
 // Ultra-Impressive Luxe Sapphire & Champagne Gold Palette
 const THEME = {
@@ -108,6 +110,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   const [activeTab, setActiveTab] = useState(initialTab)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchCategory, setSearchCategory] = useState('all')
+  const [mobileVisualModalOpen, setMobileVisualModalOpen] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [activeFilter, setActiveFilter] = useState(null)
@@ -539,7 +542,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', boxShadow: '0 0 8px #10B981' }} />
                 <Typography variant="caption" sx={{ fontSize: 11.5, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
-                  AWS CloudFront • Multi-Store Ready
+                  High-Speed CDN • Multi-Store Ready
                 </Typography>
               </Box>
             </Stack>
@@ -1112,6 +1115,13 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           )}
           <IconButton
             size="small"
+            onClick={() => setMobileVisualModalOpen(true)}
+            sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B' }}
+          >
+            <CameraAltIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          <IconButton
+            size="small"
             onClick={() => {
               if (effectiveTab !== 'products') setActiveTab('products')
             }}
@@ -1126,6 +1136,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             <SearchIcon sx={{ fontSize: 16 }} />
           </IconButton>
         </Box>
+
+        <VisualSearchModal
+          open={mobileVisualModalOpen}
+          onClose={() => setMobileVisualModalOpen(false)}
+          isDark={isDark}
+        />
       </Box>
 
       {/* ── Main Content Area (Full-Width Container) ── */}

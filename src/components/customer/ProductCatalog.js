@@ -114,12 +114,57 @@ const ProductCatalog = ({
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState(null)
   const [selectedVendor, setSelectedVendor] = useState('')
+  const [selectedBrands, setSelectedBrands] = useState([])
+  const [selectedColors, setSelectedColors] = useState([])
+  const [onlyInStock, setOnlyInStock] = useState(false)
+  const [aiSearchPayload, setAiSearchPayload] = useState(null)
   const [priceRange, setPriceRange] = useState({ min: 0, max: 200000 })
   const [onlyFreeDelivery, setOnlyFreeDelivery] = useState(false)
   const [onlyDeals, setOnlyDeals] = useState(false)
   const [onlyHighRating, setOnlyHighRating] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+
+  // Listen for AI Search and Faceted Filter Events from Global Header
+  useEffect(() => {
+    const handleAiResults = (e) => {
+      if (e.detail && e.detail.products) {
+        setAiSearchPayload(e.detail)
+      }
+    }
+    const handleClearAi = () => {
+      setAiSearchPayload(null)
+    }
+    const handleFaceted = (e) => {
+      const f = e.detail || {}
+      if (f.minPrice !== undefined || f.maxPrice !== undefined) {
+        setPriceRange({ min: f.minPrice ?? 0, max: f.maxPrice ?? 200000 })
+      }
+      if (Array.isArray(f.brands)) setSelectedBrands(f.brands)
+      if (Array.isArray(f.colors)) setSelectedColors(f.colors)
+      if (f.inStock !== undefined) setOnlyInStock(f.inStock)
+      if (f.freeDelivery !== undefined) setOnlyFreeDelivery(f.freeDelivery)
+      if (f.minRating !== undefined) setOnlyHighRating(f.minRating >= 4.0)
+    }
+    const handleClearFaceted = () => {
+      setSelectedBrands([])
+      setSelectedColors([])
+      setOnlyInStock(false)
+      setPriceRange({ min: 0, max: 200000 })
+    }
+
+    window.addEventListener('aiSearchResults', handleAiResults)
+    window.addEventListener('clearAiSearch', handleClearAi)
+    window.addEventListener('applyFacetedFilters', handleFaceted)
+    window.addEventListener('clearFacetedFilters', handleClearFaceted)
+
+    return () => {
+      window.removeEventListener('aiSearchResults', handleAiResults)
+      window.removeEventListener('clearAiSearch', handleClearAi)
+      window.removeEventListener('applyFacetedFilters', handleFaceted)
+      window.removeEventListener('clearFacetedFilters', handleClearFaceted)
+    }
+  }, [])
 
   // Countdown timer state for Flash Sale (ticks every second)
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 28, seconds: 15 })
@@ -405,17 +450,47 @@ const ProductCatalog = ({
     return max > 0 ? max : 45
   }, [discountedProducts])
 
-  // Filter products by all selected criteria
+  // Derive dynamic brand facets with live product counts
+  const availableBrands = useMemo(() => {
+    const map = {}
+    products.forEach(p => {
+      if (p.brandName && p.brandName.trim()) {
+        const b = p.brandName.trim()
+        map[b] = (map[b] || 0) + 1
+      }
+    })
+    return Object.entries(map).map(([name, count]) => ({ name, count }))
+  }, [products])
+
+  // Derive dynamic color facets with live product counts
+  const availableColors = useMemo(() => {
+    const map = {}
+    products.forEach(p => {
+      if (p.color && p.color.trim()) {
+        const c = p.color.trim()
+        map[c] = (map[c] || 0) + 1
+      }
+    })
+    return Object.entries(map).map(([name, count]) => ({ name, count }))
+  }, [products])
+
+  // Filter products by all selected criteria (multi-faceted + AI)
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
+    const baseList = aiSearchPayload?.products?.length ? aiSearchPayload.products : products
+
+    return baseList.filter(product => {
       const q = searchQuery.toLowerCase().trim()
       const name = String(product.proName ?? '').toLowerCase()
       const desc = String(product.description ?? '').toLowerCase()
+      const brand = String(product.brandName ?? '').toLowerCase()
+      const color = String(product.color ?? '').toLowerCase()
       const vendorName = String(product.vendor?.businessName ?? '').toLowerCase()
       const catName = String(product.category?.name ?? '').toLowerCase()
       const subCatName = String(product.subCategory?.subCatName ?? '').toLowerCase()
 
-      const matchesSearch = !q || name.includes(q) || desc.includes(q) || vendorName.includes(q) || catName.includes(q) || subCatName.includes(q)
+      const matchesSearch = aiSearchPayload
+        ? true
+        : (!q || name.includes(q) || desc.includes(q) || brand.includes(q) || vendorName.includes(q) || catName.includes(q) || subCatName.includes(q))
 
       const productCatId = product.catId ?? product.category?.id
       const productSubId = product.subCatId ?? product.subCategory?.subCatId ?? product.sub_category_id
@@ -424,11 +499,15 @@ const ProductCatalog = ({
       const matchesSubcategory = selectedSubcategory == null || idsEqual(productSubId, selectedSubcategory)
       const matchesVendor = !selectedVendor || String(product.vendorId ?? '') === String(selectedVendor)
 
-      const price = parseFloat(product.price) || 0
+      const price = parseFloat(product.salePrice || product.price) || 0
       const matchesPrice = price >= priceRange.min && price <= priceRange.max
 
       const matchesFreeDelivery = !onlyFreeDelivery || product.freeDelivery === true
       const matchesDeals = !onlyDeals || (parseFloat(product.discount || 0) > 0 || (product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price)))
+
+      const matchesBrands = selectedBrands.length === 0 || (product.brandName && selectedBrands.includes(product.brandName))
+      const matchesColors = selectedColors.length === 0 || (product.color && selectedColors.includes(product.color))
+      const matchesStock = !onlyInStock || (product.stock > 0 || product.qnty > 0)
 
       let avgRating = 0
       if (Array.isArray(product.reviews) && product.reviews.length > 0) {
@@ -436,14 +515,18 @@ const ProductCatalog = ({
       }
       const matchesRating = !onlyHighRating || avgRating >= 4.0
 
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice && matchesFreeDelivery && matchesDeals && matchesRating
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice && matchesFreeDelivery && matchesDeals && matchesBrands && matchesColors && matchesStock && matchesRating
     })
   }, [
     products,
+    aiSearchPayload,
     searchQuery,
     selectedCategory,
     selectedSubcategory,
     selectedVendor,
+    selectedBrands,
+    selectedColors,
+    onlyInStock,
     priceRange,
     onlyFreeDelivery,
     onlyDeals,
@@ -476,10 +559,14 @@ const ProductCatalog = ({
     setSelectedCategory(null)
     setSelectedSubcategory(null)
     setSelectedVendor('')
+    setSelectedBrands([])
+    setSelectedColors([])
+    setOnlyInStock(false)
     setPriceRange({ min: 0, max: 200000 })
     setOnlyFreeDelivery(false)
     setOnlyDeals(false)
     setOnlyHighRating(false)
+    setAiSearchPayload(null)
     if (onSelectDepartment) onSelectDepartment(null)
   }
 
@@ -915,7 +1002,100 @@ const ProductCatalog = ({
             <span>Free Express Delivery</span>
           </div>
         </label>
+
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-indigo-600">
+          <input
+            type="checkbox"
+            checked={onlyInStock}
+            onChange={(e) => setOnlyInStock(e.target.checked)}
+            className="rounded accent-indigo-600 h-3.5 w-3.5"
+          />
+          <div className="flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+            <span>In Stock Only</span>
+          </div>
+        </label>
       </div>
+
+      {/* ── 5. Dynamic Brand Multi-Select Facet ── */}
+      {availableBrands.length > 0 && (
+        <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">
+              Brands ({availableBrands.length})
+            </h4>
+            {selectedBrands.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedBrands([])}
+                className="text-[11px] font-bold text-blue-600 hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            {availableBrands.map((b) => {
+              const isChecked = selectedBrands.includes(b.name)
+              return (
+                <label
+                  key={b.name}
+                  className="flex items-center justify-between p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        setSelectedBrands(prev =>
+                          isChecked ? prev.filter(x => x !== b.name) : [...prev, b.name]
+                        )
+                      }}
+                      className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
+                    />
+                    <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
+                      {b.name}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">({b.count})</span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── 6. Dynamic Color Swatches Facet ── */}
+      {availableColors.length > 0 && (
+        <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+          <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider">
+            Colors
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {availableColors.map((c) => {
+              const isSelected = selectedColors.includes(c.name)
+              return (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedColors(prev =>
+                      isSelected ? prev.filter(x => x !== c.name) : [...prev, c.name]
+                    )
+                  }}
+                  className={`px-2.5 py-1 rounded-none text-[11px] font-bold transition-all border ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                  }`}
+                >
+                  {c.name} ({c.count})
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 
@@ -1349,6 +1529,42 @@ const ProductCatalog = ({
 
         {/* Right Main Product Grid Area */}
         <main className="flex-1 min-w-0 space-y-4">
+          {/* AI Vector & NLP Intent Banner (When AI Search is active) */}
+          {aiSearchPayload && (
+            <div className="rounded-none border border-blue-500/40 bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/80 p-4 text-white shadow-xl flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-none bg-blue-600/30 border border-blue-400/50 flex items-center justify-center text-blue-400">
+                  <Sparkles className="w-5 h-5 text-blue-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white rounded-none">
+                      {aiSearchPayload.isAiPowered ? 'Gemini AI Intent Active' : 'Smart Intent Active'}
+                    </span>
+                    <span className="text-xs text-blue-300 font-medium">
+                      &ldquo;{aiSearchPayload.query}&rdquo;
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-white mt-1">
+                    {aiSearchPayload.explanation}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAiSearchPayload(null)
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('clearAiSearch'))
+                  }
+                }}
+                className="text-xs font-bold px-3 py-1.5 rounded-none bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors cursor-pointer"
+              >
+                Clear AI Results
+              </button>
+            </div>
+          )}
+
           {/* Top Bar: Item Counter, Active Tags & Sort Dropdown */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">

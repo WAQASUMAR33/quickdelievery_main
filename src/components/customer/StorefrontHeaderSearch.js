@@ -27,9 +27,14 @@ import {
   Devices as TechIcon,
   Cake as BakeryIcon,
   Category as CategoryIcon,
+  CameraAlt as CameraIcon,
+  AutoAwesome as SparklesIcon,
+  Tune as FilterIcon,
 } from '@mui/icons-material'
 import { getProductUrl } from '@/lib/productSlug'
 import StorefrontMegaMenu from './StorefrontMegaMenu'
+import VisualSearchModal from './VisualSearchModal'
+import FacetedFilterDrawer from './FacetedFilterDrawer'
 
 const RECENT_SEARCHES_KEY = 'quickdelivery_recent_searches'
 const TRENDING_TAGS = [
@@ -59,6 +64,7 @@ export default function StorefrontHeaderSearch({
   onSearchSubmit,
   onApplyFilter,
   onSelectSubcategory,
+  onAiSearchResults,
   isDark = true,
   t = (k) => k,
   THEME = {},
@@ -70,6 +76,14 @@ export default function StorefrontHeaderSearch({
   const [suggestions, setSuggestions] = useState({ products: [], categories: [], vendors: [] })
   const [recentSearches, setRecentSearches] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
+
+  // AI & Advanced Feature States
+  const [visualModalOpen, setVisualModalOpen] = useState(false)
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
+  const [isAiMode, setIsAiMode] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiInterpretation, setAiInterpretation] = useState(null)
+  const [searchFacets, setSearchFacets] = useState({})
 
   const inputRef = useRef(null)
   const containerRef = useRef(null)
@@ -164,11 +178,41 @@ export default function StorefrontHeaderSearch({
     return found ? found.name : 'Collections'
   }, [searchCategory, categories])
 
-  const handleExecuteSearch = (term) => {
-    const q = term !== undefined ? term : searchQuery
+  const handleExecuteSearch = async (term) => {
+    const q = (term !== undefined ? term : searchQuery)?.trim()
+    if (!q) return
+
     saveRecentSearch(q)
     setSuggestionsOpen(false)
     setMegaMenuOpen(false)
+
+    // Conversational query detection or explicit AI mode
+    const isConversational = isAiMode || /\b(under|below|less than|for|with|between|cheap|best|in stock)\b/i.test(q)
+
+    if (isConversational) {
+      setAiLoading(true)
+      try {
+        const res = await fetch('/api/ai/nlp-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setAiInterpretation(data)
+          if (data.facets) setSearchFacets(data.facets)
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aiSearchResults', { detail: data }))
+          }
+          if (onAiSearchResults) onAiSearchResults(data)
+        }
+      } catch (err) {
+        console.error('AI Search execution error:', err)
+      } finally {
+        setAiLoading(false)
+      }
+    }
+
     if (onSearchSubmit) onSearchSubmit(q)
   }
 
@@ -300,7 +344,11 @@ export default function StorefrontHeaderSearch({
               setMegaMenuOpen(false)
             }}
             onKeyDown={handleKeyDown}
-            placeholder={t('searchPlaceholder') || 'Search 161+ items, burgers, tech, groceries, brands…'}
+            placeholder={
+              isAiMode
+                ? 'Ask AI: "black waterproof jacket under $50", "cheap gaming mouse"…'
+                : t('searchPlaceholder') || 'Search 161+ items, burgers, tech, groceries, brands…'
+            }
             sx={{
               flex: 1,
               height: 38,
@@ -312,12 +360,12 @@ export default function StorefrontHeaderSearch({
               fontSize: 13.5,
               fontWeight: 500,
               fontFamily: 'inherit',
-              '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
+              '&::placeholder': { color: isAiMode ? '#3B82F6' : isDark ? '#64748B' : '#94A3B8' },
             }}
           />
 
           {/* Loading Spinner */}
-          {loadingSuggestions && (
+          {(loadingSuggestions || aiLoading) && (
             <CircularProgress size={16} sx={{ color: THEME?.primary || '#2563EB', mr: 1 }} />
           )}
 
@@ -327,6 +375,7 @@ export default function StorefrontHeaderSearch({
               size="small"
               onClick={() => {
                 setSearchQuery('')
+                setAiInterpretation(null)
                 inputRef.current?.focus()
               }}
               sx={{
@@ -339,6 +388,69 @@ export default function StorefrontHeaderSearch({
               <CloseIcon sx={{ fontSize: 16 }} />
             </IconButton>
           )}
+
+          {/* ── AI Search Mode Toggle Pill ── */}
+          <Button
+            size="small"
+            onClick={() => setIsAiMode((prev) => !prev)}
+            startIcon={<SparklesIcon sx={{ fontSize: '13px !important', color: isAiMode ? '#FFFFFF' : '#3B82F6' }} />}
+            sx={{
+              height: 30,
+              px: 1.2,
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontSize: 11.5,
+              fontWeight: 800,
+              bgcolor: isAiMode ? '#2563EB' : isDark ? 'rgba(37, 99, 235, 0.14)' : '#EFF6FF',
+              color: isAiMode ? '#FFFFFF' : '#2563EB',
+              border: isAiMode ? '1px solid #3B82F6' : '1px solid rgba(37, 99, 235, 0.3)',
+              boxShadow: isAiMode ? '0 0 12px rgba(37, 99, 235, 0.5)' : 'none',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap',
+              mr: 0.5,
+              '&:hover': {
+                bgcolor: isAiMode ? '#1D4ED8' : isDark ? 'rgba(37, 99, 235, 0.25)' : '#DBEAFE',
+              },
+            }}
+          >
+            {isAiMode ? 'AI ON' : 'AI'}
+          </Button>
+
+          {/* ── Visual Search Camera Icon Button ── */}
+          <IconButton
+            size="small"
+            title="Visual Search with Photo (Gemini Vision)"
+            onClick={() => setVisualModalOpen(true)}
+            sx={{
+              p: 0.75,
+              mr: 0.25,
+              color: isDark ? '#94A3B8' : '#64748B',
+              '&:hover': {
+                color: '#2563EB',
+                bgcolor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF',
+              },
+            }}
+          >
+            <CameraIcon sx={{ fontSize: 19 }} />
+          </IconButton>
+
+          {/* ── Faceted Filters Drawer Trigger ── */}
+          <IconButton
+            size="small"
+            title="Dynamic Multi-Faceted Filters"
+            onClick={() => setFilterDrawerOpen(true)}
+            sx={{
+              p: 0.75,
+              mr: 0.5,
+              color: isDark ? '#94A3B8' : '#64748B',
+              '&:hover': {
+                color: '#2563EB',
+                bgcolor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF',
+              },
+            }}
+          >
+            <FilterIcon sx={{ fontSize: 19 }} />
+          </IconButton>
 
           {/* ── 3. SEARCH ACTION BUTTON ── */}
           <IconButton
@@ -357,6 +469,111 @@ export default function StorefrontHeaderSearch({
             <SearchIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Box>
+
+        {/* ── Active AI NLP Intent Badge Strip ── */}
+        {aiInterpretation && (
+          <Box
+            sx={{
+              mt: 1,
+              px: 2,
+              py: 1,
+              bgcolor: isDark ? 'rgba(37, 99, 235, 0.12)' : '#EFF6FF',
+              border: isDark ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid #BFDBFE',
+              borderRadius: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1.5,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
+              <Chip
+                size="small"
+                icon={<SparklesIcon sx={{ fontSize: '12px !important', color: '#FFFFFF !important' }} />}
+                label={aiInterpretation.isAiPowered ? 'Gemini AI Search' : 'Smart Intent'}
+                sx={{
+                  borderRadius: 0,
+                  bgcolor: '#2563EB',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: 10.5,
+                  height: 22,
+                }}
+              />
+              <Typography variant="caption" sx={{ fontWeight: 600, color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 12 }}>
+                {aiInterpretation.explanation}
+              </Typography>
+
+              {aiInterpretation.extractedFilters?.color && (
+                <Chip
+                  size="small"
+                  label={`Color: ${aiInterpretation.extractedFilters.color}`}
+                  sx={{ borderRadius: 0, height: 20, fontSize: 10.5, fontWeight: 700, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#DBEAFE' }}
+                />
+              )}
+              {aiInterpretation.extractedFilters?.maxPrice && (
+                <Chip
+                  size="small"
+                  label={`Max: $${aiInterpretation.extractedFilters.maxPrice}`}
+                  sx={{ borderRadius: 0, height: 20, fontSize: 10.5, fontWeight: 700, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#DBEAFE' }}
+                />
+              )}
+              {aiInterpretation.extractedFilters?.brand && (
+                <Chip
+                  size="small"
+                  label={`Brand: ${aiInterpretation.extractedFilters.brand}`}
+                  sx={{ borderRadius: 0, height: 20, fontSize: 10.5, fontWeight: 700, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#DBEAFE' }}
+                />
+              )}
+              {aiInterpretation.extractedFilters?.inStock && (
+                <Chip
+                  size="small"
+                  label="In Stock Only"
+                  sx={{ borderRadius: 0, height: 20, fontSize: 10.5, fontWeight: 700, bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}
+                />
+              )}
+            </Stack>
+
+            <IconButton
+              size="small"
+              onClick={() => {
+                setAiInterpretation(null)
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('clearAiSearch'))
+                }
+              }}
+              sx={{ p: 0.25, color: isDark ? '#94A3B8' : '#64748B' }}
+            >
+              <CloseIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+          </Box>
+        )}
+
+        {/* ── Visual Search Modal (Gemini Vision) ── */}
+        <VisualSearchModal
+          open={visualModalOpen}
+          onClose={() => setVisualModalOpen(false)}
+          isDark={isDark}
+        />
+
+        {/* ── Faceted Filters Drawer ── */}
+        <FacetedFilterDrawer
+          open={filterDrawerOpen}
+          onClose={() => setFilterDrawerOpen(false)}
+          facets={searchFacets}
+          isDark={isDark}
+          onFilterChange={(appliedFilters) => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('applyFacetedFilters', { detail: appliedFilters }))
+            }
+          }}
+          onResetFilters={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('clearFacetedFilters'))
+            }
+          }}
+        />
 
         {/* ── 4. MEGA MENU POPOVER ── */}
         <StorefrontMegaMenu

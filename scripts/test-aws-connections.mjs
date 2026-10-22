@@ -28,11 +28,11 @@ async function testDatabase() {
 
 async function testS3() {
   console.log('\n--- 2. TESTING AMAZON S3 STORAGE BUCKET ---')
-  const region = process.env.AWS_REGION || 'ap-southeast-2'
-  const bucketName = process.env.AWS_S3_BUCKET_NAME
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
-  const customDomain = process.env.AWS_S3_CUSTOM_DOMAIN
+  const region = process.env.REGION || process.env.AWS_REGION || 'ap-southeast-2'
+  const bucketName = process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME
+  const accessKeyId = process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID
+  const secretAccessKey = process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY
+  const customDomain = process.env.S3_CUSTOM_DOMAIN || process.env.AWS_S3_CUSTOM_DOMAIN
 
   console.log(`Region: ${region}`)
   console.log(`Bucket: ${bucketName}`)

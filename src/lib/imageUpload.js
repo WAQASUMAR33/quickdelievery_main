@@ -8,7 +8,7 @@ export const fileToBase64DataUrl = (file) =>
   })
 
 /**
- * Uploads a base64 image data string to the backend S3 upload API
+ * Uploads a base64 image data string to the backend upload API
  */
 export const uploadBase64Image = async (base64Image, fileName = null, folder = 'uploads') => {
   try {
@@ -53,13 +53,13 @@ export const uploadBase64Image = async (base64Image, fileName = null, folder = '
       error: data.error || 'Upload failed: Server did not return a valid URL',
     }
   } catch (error) {
-    console.error('Error uploading image to S3:', error)
+    console.error('Error uploading image:', error)
     return { success: false, error: error.message || 'Network error during upload' }
   }
 }
 
 /**
- * Uploads a File object directly to Amazon S3 via the backend API
+ * Uploads a File object directly to the backend API
  */
 export const uploadProductImage = async (file, folder = 'uploads') => {
   try {
@@ -123,13 +123,13 @@ export const uploadMultipleImages = async (files, folder = 'uploads') => {
       errors: failed.map((r) => r.error),
     }
   } catch (error) {
-    console.error('Error uploading multiple images to S3:', error)
+    console.error('Error uploading multiple images:', error)
     return { success: false, error: error.message }
   }
 }
 
 /**
- * Deletes an image from Amazon S3
+ * Deletes an image via the backend API
  */
 export const deleteProductImage = async (fileNameOrUrl) => {
   try {
@@ -141,7 +141,7 @@ export const deleteProductImage = async (fileNameOrUrl) => {
     const data = await response.json().catch(() => ({}))
     return data
   } catch (err) {
-    console.error('Error deleting image from S3:', err)
+    console.error('Error deleting image:', err)
     return { success: false, error: err.message }
   }
 }

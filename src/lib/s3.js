@@ -6,11 +6,11 @@ function cleanEnv(val) {
     .replace(/^["']|["']$/g, '')
 }
 
-const region = cleanEnv(process.env.AWS_REGION) || 'us-east-1'
-const accessKeyId = cleanEnv(process.env.AWS_ACCESS_KEY_ID)
-const secretAccessKey = cleanEnv(process.env.AWS_SECRET_ACCESS_KEY)
-const bucketName = cleanEnv(process.env.AWS_S3_BUCKET_NAME)
-const customDomain = cleanEnv(process.env.AWS_S3_CUSTOM_DOMAIN)
+const region = cleanEnv(process.env.REGION || process.env.AWS_REGION) || 'ap-southeast-2'
+const accessKeyId = cleanEnv(process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID)
+const secretAccessKey = cleanEnv(process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY)
+const bucketName = cleanEnv(process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME)
+const customDomain = cleanEnv(process.env.S3_CUSTOM_DOMAIN || process.env.AWS_S3_CUSTOM_DOMAIN)
 
 let s3ClientInstance = null
 
@@ -18,7 +18,7 @@ export function getS3Client() {
   if (!s3ClientInstance) {
     if (!accessKeyId || !secretAccessKey) {
       throw new Error(
-        'AWS credentials missing. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.'
+        'Storage credentials missing. Please set ACCESS_KEY_ID and SECRET_ACCESS_KEY in your .env file.'
       )
     }
     s3ClientInstance = new S3Client({
@@ -42,7 +42,7 @@ export function formatS3Url(key) {
     return `https://${domain}/${cleanKey}`
   }
 
-  // Standard AWS S3 URL format
+  // Standard S3 URL format
   if (region === 'us-east-1') {
     return `https://${bucketName}.s3.amazonaws.com/${cleanKey}`
   }
@@ -50,11 +50,11 @@ export function formatS3Url(key) {
 }
 
 /**
- * Upload a binary Buffer or Uint8Array to AWS S3
+ * Upload a binary Buffer or Uint8Array to S3
  */
 export async function uploadBufferToS3(buffer, { fileName, contentType = 'image/jpeg', folder = 'uploads' } = {}) {
   if (!bucketName) {
-    throw new Error('AWS_S3_BUCKET_NAME is not configured in .env')
+    throw new Error('S3_BUCKET_NAME is not configured in .env')
   }
 
   const s3 = getS3Client()

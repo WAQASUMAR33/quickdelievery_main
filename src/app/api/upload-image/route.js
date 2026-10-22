@@ -1,6 +1,7 @@
 export const runtime = 'nodejs'
 
-import { uploadBufferToS3, deleteObjectFromS3 } from '@/lib/s3'
+import fs from 'fs/promises'
+import path from 'path'
 
 function parseBase64(base64Str) {
   const matches = base64Str.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
@@ -14,6 +15,28 @@ function parseBase64(base64Str) {
   return {
     contentType: 'image/jpeg',
     buffer: Buffer.from(base64Str, 'base64'),
+  }
+}
+
+async function saveFileLocally(buffer, fileName = 'upload.jpg', folder = 'uploads') {
+  const cleanFolder = folder.replace(/^\/+|\/+$/g, '') || 'uploads'
+  const uploadsDir = path.join(process.cwd(), 'public', cleanFolder)
+  await fs.mkdir(uploadsDir, { recursive: true })
+
+  const ext = path.extname(fileName) || '.jpg'
+  const baseName = path.basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()
+  const uniqueName = `${Date.now()}-${baseName}${ext}`
+  const filePath = path.join(uploadsDir, uniqueName)
+
+  await fs.writeFile(filePath, buffer)
+  const publicUrl = `/${cleanFolder}/${uniqueName}`
+
+  return {
+    success: true,
+    url: publicUrl,
+    image_url: publicUrl,
+    fileName: uniqueName,
+    key: `${cleanFolder}/${uniqueName}`,
   }
 }
 
@@ -34,21 +57,37 @@ export async function POST(request) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
       const fileName = file.name || 'upload.jpg'
-      const contentType = file.type || 'image/jpeg'
 
-      const result = await uploadBufferToS3(buffer, {
-        fileName,
-        contentType,
-        folder,
-      })
+      // Check if S3 credentials are fully configured
+      const hasS3 = Boolean(
+        (process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID) &&
+        (process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY) &&
+        (process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME)
+      )
 
-      return Response.json({
-        success: true,
-        url: result.url,
-        image_url: result.url,
-        fileName: result.key,
-        key: result.key,
-      })
+      if (hasS3) {
+        try {
+          const { uploadBufferToS3 } = await import('@/lib/s3')
+          const result = await uploadBufferToS3(buffer, {
+            fileName,
+            contentType: file.type || 'image/jpeg',
+            folder,
+          })
+          return Response.json({
+            success: true,
+            url: result.url,
+            image_url: result.url,
+            fileName: result.key,
+            key: result.key,
+          })
+        } catch (s3Err) {
+          console.warn('S3 upload failed, falling back to local storage:', s3Err.message)
+        }
+      }
+
+      // Default high-performance local storage
+      const result = await saveFileLocally(buffer, fileName, folder)
+      return Response.json(result)
     }
 
     // JSON body (base64 image)
@@ -61,7 +100,6 @@ export async function POST(request) {
 
     const { contentType, buffer } = parseBase64(image)
     
-    // Derive extension from mime type if available
     let ext = 'jpg'
     if (contentType.includes('png')) ext = 'png'
     else if (contentType.includes('webp')) ext = 'webp'
@@ -70,34 +108,37 @@ export async function POST(request) {
 
     const fileName = customFileName || `upload.${ext}`
 
-    const result = await uploadBufferToS3(buffer, {
-      fileName,
-      contentType,
-      folder,
-    })
+    const hasS3 = Boolean(
+      (process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID) &&
+      (process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY) &&
+      (process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME)
+    )
 
-    return Response.json({
-      success: true,
-      url: result.url,
-      image_url: result.url,
-      fileName: result.key,
-      key: result.key,
-    })
-  } catch (error) {
-    console.error('AWS S3 Image upload error:', error)
-    
-    // Friendly error message for missing credentials
-    if (error.message?.includes('AWS credentials missing') || error.message?.includes('AWS_S3_BUCKET_NAME')) {
-      return Response.json(
-        {
-          success: false,
-          error: error.message,
-          hint: 'Please update AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET_NAME in .env',
-        },
-        { status: 500 }
-      )
+    if (hasS3) {
+      try {
+        const { uploadBufferToS3 } = await import('@/lib/s3')
+        const result = await uploadBufferToS3(buffer, {
+          fileName,
+          contentType,
+          folder,
+        })
+        return Response.json({
+          success: true,
+          url: result.url,
+          image_url: result.url,
+          fileName: result.key,
+          key: result.key,
+        })
+      } catch (s3Err) {
+        console.warn('S3 upload failed, falling back to local storage:', s3Err.message)
+      }
     }
 
+    // Default local storage
+    const result = await saveFileLocally(buffer, fileName, folder)
+    return Response.json(result)
+  } catch (error) {
+    console.error('Image upload error:', error)
     return Response.json({ success: false, error: error.message || 'Image upload failed' }, { status: 500 })
   }
 }
@@ -111,10 +152,29 @@ export async function DELETE(request) {
       return Response.json({ success: false, error: 'No key provided' }, { status: 400 })
     }
 
-    const result = await deleteObjectFromS3(key)
-    return Response.json(result)
+    // Check if it is a local upload
+    const cleanKey = key.replace(/^\/+/, '')
+    const localPath = path.join(process.cwd(), 'public', cleanKey)
+    try {
+      await fs.unlink(localPath)
+      return Response.json({ success: true, message: 'Local image deleted' })
+    } catch {
+      // File may not exist locally or could be S3
+    }
+
+    // Try S3 if configured
+    if (
+      (process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID) &&
+      (process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME)
+    ) {
+      const { deleteObjectFromS3 } = await import('@/lib/s3')
+      const result = await deleteObjectFromS3(key)
+      return Response.json(result)
+    }
+
+    return Response.json({ success: true, message: 'Delete completed' })
   } catch (error) {
-    console.error('AWS S3 Image delete error:', error)
+    console.error('Image delete error:', error)
     return Response.json({ success: false, error: error.message }, { status: 500 })
   }
 }

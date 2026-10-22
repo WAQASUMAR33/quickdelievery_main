@@ -7,7 +7,7 @@ const translations = {
     // Top utility ribbon
     deliverTo: 'Deliver to:',
     allRegions: 'Pakistan (All Regions)',
-    liveStatus: 'Live AWS CloudFront & RDS Verified',
+    liveStatus: 'Live Verified High-Speed Cloud Storefront',
     partnerWithUs: 'Partner with Us',
     zeroFee: '0% FEE',
     trackOrder: 'Track Order',
@@ -136,14 +136,14 @@ const translations = {
     sellZeroComm: 'Sell on QuickDelivery (0% Comm)',
     registerDriver: 'Register as Delivery Partner',
     customerCare: 'Customer Care',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. Powered by Amazon S3 & CloudFront CDN.',
+    copyright: 'QuickDelivery Multi-Vendor Marketplace. High-Speed Cloud Storefront.',
   },
 
   ar: {
     // Top utility ribbon
     deliverTo: 'التوصيل إلى:',
     allRegions: 'باكستان (جميع المناطق)',
-    liveStatus: 'معتمد مباشرة من AWS CloudFront و RDS',
+    liveStatus: 'معتمد وموثق سحابياً بأعلى سرعة',
     partnerWithUs: 'انضم كشريك',
     zeroFee: 'عمولة 0%',
     trackOrder: 'تتبع الطلب',
@@ -272,14 +272,14 @@ const translations = {
     sellZeroComm: 'بع منتجاتك مع QuickDelivery (0% عمولة)',
     registerDriver: 'سجل كسائق توصيل',
     customerCare: 'خدمة العملاء',
-    copyright: 'سوق QuickDelivery متعدد المتاجر. مدعوم بواسطة Amazon S3 و CloudFront CDN.',
+    copyright: 'سوق QuickDelivery متعدد المتاجر. منصة سحابية فائقة السرعة.',
   },
 
   fr: {
     // Top utility ribbon
     deliverTo: 'Livrer à :',
     allRegions: 'Pakistan (Toutes régions)',
-    liveStatus: 'Vérifié en direct AWS CloudFront & RDS',
+    liveStatus: 'Vérifié en direct Storefront Cloud',
     partnerWithUs: 'Devenir Partenaire',
     zeroFee: '0% FRAIS',
     trackOrder: 'Suivre Commande',
@@ -408,14 +408,14 @@ const translations = {
     sellZeroComm: 'Vendez sur QuickDelivery (0% Comm)',
     registerDriver: 'Devenir Livreur Partenaire',
     customerCare: 'Service Client',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. Propulsé par Amazon S3 & CloudFront CDN.',
+    copyright: 'QuickDelivery Multi-Vendor Marketplace. Plateforme Cloud Haute Vitesse.',
   },
 
   it: {
     // Top utility ribbon
     deliverTo: 'Consegna a:',
     allRegions: 'Pakistan (Tutte le regioni)',
-    liveStatus: 'Verificato in tempo reale AWS CloudFront & RDS',
+    liveStatus: 'Verificato in tempo reale Cloud Storefront',
     partnerWithUs: 'Diventa Partner',
     zeroFee: '0% COMMISSIONI',
     trackOrder: 'Traccia Ordine',
@@ -544,7 +544,7 @@ const translations = {
     sellZeroComm: 'Vendi su QuickDelivery (0% Comm)',
     registerDriver: 'Diventa Corriere Partner',
     customerCare: 'Servizio Clienti',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. Alimentato da Amazon S3 & CloudFront CDN.',
+    copyright: 'QuickDelivery Multi-Vendor Marketplace. Piattaforma Cloud ad Alta Velocità.',
   },
 }
 

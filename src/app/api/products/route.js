@@ -136,7 +136,7 @@ export async function GET(request) {
       })
     }
 
-    if (type === 'search' || type === 'suggestions') {
+    if (type === 'suggestions') {
       const q = (searchParams.get('q') || '').trim()
       if (!q) {
         return Response.json({
@@ -207,6 +207,143 @@ export async function GET(request) {
           products: processedProducts,
           categories: matchedCategories,
           vendors: matchedVendors
+        }
+      })
+    }
+
+    if (type === 'search') {
+      const q = (searchParams.get('q') || '').trim()
+      const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')) : null
+      const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')) : null
+      const brands = searchParams.get('brands') ? searchParams.get('brands').split(',').map(b => b.trim()).filter(Boolean) : []
+      const colors = searchParams.get('colors') ? searchParams.get('colors').split(',').map(c => c.trim()).filter(Boolean) : []
+      const inStock = searchParams.get('inStock') === 'true' || searchParams.get('inStock') === '1'
+      const catId = searchParams.get('categoryId') ? parseInt(searchParams.get('categoryId')) : null
+      const subCatId = searchParams.get('subCatId') ? parseInt(searchParams.get('subCatId')) : null
+      const sortBy = searchParams.get('sortBy') || 'relevance'
+      const limit = parseInt(searchParams.get('limit')) || 40
+
+      const searchWhere = { status: true }
+
+      if (q) {
+        searchWhere.OR = [
+          { proName: { contains: q } },
+          { description: { contains: q } },
+          { brandName: { contains: q } },
+          { color: { contains: q } },
+        ]
+      }
+
+      if (inStock) {
+        searchWhere.stock = { gt: 0 }
+      }
+
+      if (catId) {
+        searchWhere.catId = catId
+      }
+
+      if (subCatId) {
+        searchWhere.subCatId = subCatId
+      }
+
+      if (brands.length > 0) {
+        searchWhere.brandName = { in: brands }
+      }
+
+      if (colors.length > 0) {
+        searchWhere.color = { in: colors }
+      }
+
+      let orderBy = { createdAt: 'desc' }
+      if (sortBy === 'price_asc') {
+        orderBy = { price: 'asc' }
+      } else if (sortBy === 'price_desc') {
+        orderBy = { price: 'desc' }
+      }
+
+      const rawProducts = await prisma.product.findMany({
+        where: searchWhere,
+        include: {
+          category: { select: { id: true, name: true, code: true, vertical: true } },
+          subCategory: { select: { subCatId: true, subCatName: true, subCatCode: true } },
+          vendor: { select: { uid: true, username: true } },
+        },
+        take: limit,
+        orderBy,
+      })
+
+      const safeJson = (val, fallback = []) => {
+        if (!val) return fallback
+        if (Array.isArray(val)) return val
+        if (typeof val === 'string') {
+          const trimmed = val.trim()
+          if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try { return JSON.parse(trimmed) } catch {}
+          }
+          if (trimmed.includes('http') && trimmed.includes(' ')) {
+            return trimmed.split(/\s+/).filter(Boolean)
+          }
+          return [trimmed]
+        }
+        return [val]
+      }
+
+      // Filter by min/max price if specified (handles salePrice fallback)
+      let filtered = rawProducts
+      if (minPrice !== null || maxPrice !== null) {
+        filtered = filtered.filter(p => {
+          const effPrice = parseFloat(p.salePrice || p.price || 0)
+          if (minPrice !== null && effPrice < minPrice) return false
+          if (maxPrice !== null && effPrice > maxPrice) return false
+          return true
+        })
+      }
+
+      // Compute facets from results
+      const brandMap = {}
+      const colorMap = {}
+      const categoryMap = {}
+      let minP = Infinity
+      let maxP = 0
+      let inStockTotal = 0
+
+      filtered.forEach(p => {
+        const effPrice = parseFloat(p.salePrice || p.price || 0)
+        if (effPrice < minP) minP = effPrice
+        if (effPrice > maxP) maxP = effPrice
+        if (p.stock > 0) inStockTotal++
+
+        if (p.brandName) {
+          brandMap[p.brandName] = (brandMap[p.brandName] || 0) + 1
+        }
+        if (p.color) {
+          colorMap[p.color] = (colorMap[p.color] || 0) + 1
+        }
+        if (p.category?.name) {
+          categoryMap[p.category.name] = (categoryMap[p.category.name] || 0) + 1
+        }
+      })
+
+      const processedProducts = filtered.map(p => ({
+        ...p,
+        proImages: safeJson(p.proImages, [])
+      }))
+
+      return Response.json({
+        success: true,
+        data: {
+          products: processedProducts,
+          totalCount: processedProducts.length,
+          facets: {
+            brands: Object.entries(brandMap).map(([name, count]) => ({ name, count })),
+            colors: Object.entries(colorMap).map(([name, count]) => ({ name, count })),
+            categories: Object.entries(categoryMap).map(([name, count]) => ({ name, count })),
+            priceRange: {
+              min: minP === Infinity ? 0 : Math.floor(minP),
+              max: maxP === 0 ? 1000 : Math.ceil(maxP),
+            },
+            inStockCount: inStockTotal,
+          }
         }
       })
     }
