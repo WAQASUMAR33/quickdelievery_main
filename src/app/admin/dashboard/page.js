@@ -8,6 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import CustomerManagement from '@/components/admin/CustomerManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
 import OrderManagement from '@/components/admin/OrderManagement'
+import AdminAnalyticsCharts from '@/components/admin/AdminAnalyticsCharts'
 
 import Box              from '@mui/material/Box'
 import Card             from '@mui/material/Card'
@@ -120,14 +121,17 @@ export default function AdminDashboard() {
       <Box sx={{ p: 3 }}>
 
         {/* Header */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" fontWeight={700}>Admin Dashboard</Typography>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h5" fontWeight={800} sx={{ color: '#0f172a', letterSpacing: '-0.3px' }}>
+            System Executive Dashboard
+          </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Welcome back, {userData?.username || 'Admin'}!
+            Welcome back, {userData?.username || 'System Admin'}! Here is your marketplace operational overview and real-time trends.
           </Typography>
         </Box>
 
-        <OverviewTab stats={dashboardStats} username={userData?.username} />
+        {/* Live Graphs, Charts, and Multi-Vendor Analytics */}
+        <AdminAnalyticsCharts />
 
       </Box>
     </DashboardLayout>
