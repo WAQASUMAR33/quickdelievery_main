@@ -16,7 +16,7 @@ const AnimatedCard = ({
       transition={{ delay, duration: 0.5 }}
       whileHover={hover ? { y: -5, scale: 1.02 } : {}}
       className={`
-        bg-white rounded-xl shadow-lg border border-gray-100 
+        bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800 text-slate-900 dark:text-slate-100
         transition-all duration-300 hover:shadow-xl
         ${className}
       `}

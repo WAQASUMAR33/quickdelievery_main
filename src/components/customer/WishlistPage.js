@@ -87,14 +87,14 @@ const WishlistPage = () => {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => handleRemoveFromWishlist(product.proId)}
-          className="absolute top-3 right-3 z-10 p-2 bg-white rounded-full shadow-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+          className="absolute top-3 right-3 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-lg text-gray-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 border border-gray-100 dark:border-slate-700 transition-all duration-300"
         >
           <X className="w-4 h-4" />
         </motion.button>
 
         <div className={`${viewMode === 'list' ? 'flex items-center space-x-4 w-full' : ''}`}>
           {/* Product Image */}
-          <div className={`relative ${viewMode === 'list' ? 'w-24 h-24' : 'w-full h-48 mb-4'} overflow-hidden rounded-lg bg-gray-100`}>
+          <div className={`relative ${viewMode === 'list' ? 'w-24 h-24' : 'w-full h-48 mb-4'} overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800`}>
             <motion.img
               whileHover={{ scale: 1.05 }}
               src={product.proImages?.[0] || '/placeholder-product.jpg'}
@@ -114,12 +114,12 @@ const WishlistPage = () => {
           <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
             {/* Product Info */}
             <div className={`${viewMode === 'list' ? 'mb-0' : 'mb-4'}`}>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-[#F25D49] transition-colors">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2 group-hover:text-[#F25D49] transition-colors">
                 {product.proName}
               </h3>
               
               {product.description && (
-                <p className={`text-gray-600 text-sm ${viewMode === 'list' ? 'line-clamp-2' : 'line-clamp-3'} mb-2`}>
+                <p className={`text-gray-600 dark:text-slate-400 text-sm ${viewMode === 'list' ? 'line-clamp-2' : 'line-clamp-3'} mb-2`}>
                   {product.description}
                 </p>
               )}
@@ -132,12 +132,12 @@ const WishlistPage = () => {
                       className={`w-4 h-4 ${
                         i < (product.rating || 4) 
                           ? 'text-yellow-400 fill-current' 
-                          : 'text-gray-300'
+                          : 'text-gray-300 dark:text-slate-600'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-500">({product.reviews || 0})</span>
+                <span className="text-sm text-gray-500 dark:text-slate-400">({product.reviews || 0})</span>
               </div>
 
               {/* Price */}
@@ -146,7 +146,7 @@ const WishlistPage = () => {
                   ${price.toFixed(2)}
                 </span>
                 {hasDiscount && (
-                  <span className="text-lg text-gray-400 line-through">
+                  <span className="text-lg text-gray-400 dark:text-slate-500 line-through">
                     ${originalPrice.toFixed(2)}
                   </span>
                 )}
@@ -169,7 +169,7 @@ const WishlistPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleRemoveFromWishlist(product.proId)}
-                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-red-100 hover:text-red-600 transition-all duration-300 flex items-center justify-center space-x-2"
+                className="px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 flex items-center justify-center space-x-2 border border-transparent dark:border-slate-700"
               >
                 <Trash2 className="w-4 h-4" />
                 <span className={viewMode === 'list' ? 'hidden lg:inline' : ''}>Remove</span>
@@ -190,11 +190,11 @@ const WishlistPage = () => {
         className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center space-x-3">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 flex items-center space-x-3">
             <Heart className="text-[#F25D49]" />
             <span>My Wishlist</span>
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 dark:text-slate-400 mt-2">
             {getTotalWishlistItems()} {getTotalWishlistItems() === 1 ? 'item' : 'items'} saved for later
           </p>
         </div>
@@ -205,7 +205,7 @@ const WishlistPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={clearWishlist}
-              className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center space-x-2 border border-red-200 dark:border-red-900/40"
             >
               <Trash2 className="w-4 h-4" />
               <span>Clear All</span>
@@ -220,18 +220,18 @@ const WishlistPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+          className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-800"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Search wishlist..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-slate-500"
               />
             </div>
 
@@ -240,7 +240,7 @@ const WishlistPage = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent"
+                className="px-3 py-2 bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -249,13 +249,13 @@ const WishlistPage = () => {
               </select>
 
               {/* View Mode */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-transparent dark:border-slate-700">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded ${
                     viewMode === 'grid'
-                      ? 'bg-white shadow-sm text-[#F25D49]'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'bg-white dark:bg-slate-900 shadow-sm text-[#F25D49]'
+                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -264,8 +264,8 @@ const WishlistPage = () => {
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded ${
                     viewMode === 'list'
-                      ? 'bg-white shadow-sm text-[#F25D49]'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'bg-white dark:bg-slate-900 shadow-sm text-[#F25D49]'
+                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <List className="w-4 h-4" />
@@ -290,13 +290,13 @@ const WishlistPage = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center"
+              className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-pink-100 to-red-100 dark:from-pink-950/40 dark:to-red-950/40 rounded-full flex items-center justify-center border border-red-200/50 dark:border-red-900/40"
             >
               <Heart className="w-12 h-12 text-[#F25D49]" />
             </motion.div>
             
-            <h3 className="text-2xl font-bold text-gray-600 mb-3">Your wishlist is empty</h3>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-gray-700 dark:text-slate-200 mb-3">Your wishlist is empty</h3>
+            <p className="text-gray-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
               Start adding products you love to keep track of them and purchase later.
             </p>
             
@@ -322,9 +322,9 @@ const WishlistPage = () => {
           >
             {filteredItems.length === 0 ? (
               <div className="text-center py-12">
-                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No items found</h3>
-                <p className="text-gray-500">Try adjusting your search or filters</p>
+                <Search className="w-16 h-16 text-gray-400 dark:text-slate-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-slate-300 mb-2">No items found</h3>
+                <p className="text-gray-500 dark:text-slate-400">Try adjusting your search or filters</p>
               </div>
             ) : (
               <div className={

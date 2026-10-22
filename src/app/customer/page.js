@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useTheme } from '@/contexts/ThemeContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
@@ -36,10 +38,11 @@ import Menu                from '@mui/material/Menu'
 import MenuItem            from '@mui/material/MenuItem'
 import Paper               from '@mui/material/Paper'
 import Stack               from '@mui/material/Stack'
-import TextField           from '@mui/material/TextField'
-import Toolbar             from '@mui/material/Toolbar'
-import Tooltip             from '@mui/material/Tooltip'
-import Typography          from '@mui/material/Typography'
+import Select             from '@mui/material/Select'
+import TextField          from '@mui/material/TextField'
+import Toolbar            from '@mui/material/Toolbar'
+import Tooltip            from '@mui/material/Tooltip'
+import Typography         from '@mui/material/Typography'
 
 import CloseIcon               from '@mui/icons-material/Close'
 import DeliveryDiningIcon      from '@mui/icons-material/DeliveryDining'
@@ -62,16 +65,29 @@ import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import StarIcon                from '@mui/icons-material/Star'
 import StarBorderIcon          from '@mui/icons-material/StarBorder'
 import StorefrontIcon          from '@mui/icons-material/Storefront'
+import DarkModeOutlinedIcon    from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon   from '@mui/icons-material/LightModeOutlined'
+import TranslateIcon           from '@mui/icons-material/Translate'
+import AutoAwesomeIcon         from '@mui/icons-material/AutoAwesome'
 
+// Ultra-Impressive Luxe Sapphire & Champagne Gold Palette
 const THEME = {
-  primary: '#D70F64',
-  primaryDark: '#C20E5A',
-  secondary: '#FF2E93',
-  accent: '#E21B70',
-  soft: '#FFF0F5',
-  lightBg: '#FDF2F7',
-  gradient: 'linear-gradient(135deg, #D70F64 0%, #E21B70 50%, #FF2E93 100%)',
-  cardGradient: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(255,245,248,0.95) 100%)',
+  primary: '#2563EB',         // Royal Sapphire
+  primaryDark: '#1D4ED8',
+  primaryLight: '#3B82F6',
+  gold: '#F59E0B',            // Champagne Gold
+  goldLight: '#FBBF24',
+  secondary: '#06B6D4',       // Luminous Cyan
+  accent: '#10B981',          // Emerald Mint
+  rose: '#F43F5E',            // Sunset Rose
+  darkNav: '#0A0F1D',         // Luxe Midnight Obsidian
+  darkNavSub: '#0E1528',
+  topBar: '#060A14',
+  soft: '#EFF6FF',
+  lightBg: '#F8FAFC',
+  gradient: 'linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%)',
+  goldGradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+  luxeGradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #F59E0B 100%)',
 }
 
 function storefrontGreeting() {
@@ -84,10 +100,14 @@ function storefrontGreeting() {
 export default function CustomerDashboard({ initialTab = 'products' }) {
   const { user, userData, logout, loading: authLoading } = useAuth()
   const { addToCart, getTotalItems, getTotalPrice } = useCart()
+  const { isDark, toggleTheme } = useTheme()
+  const { language, setLanguage, t, isRTL, availableLanguages } = useLanguage()
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState(initialTab)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchCategory, setSearchCategory] = useState('all')
+  const [selectedDepartment, setSelectedDepartment] = useState(null)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [userMenuAnchor, setUserMenuAnchor] = useState(null)
   const [favorites, setFavorites] = useState([])
@@ -190,7 +210,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   }
 
   const renderSidebarContent = () => (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2.5, bgcolor: '#ffffff' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2.5, bgcolor: isDark ? '#0A0F1D' : '#ffffff' }}>
       {/* Brand Header */}
       <Box
         onClick={() => { setActiveTab('products'); setShowMobileSidebar(false) }}
@@ -243,22 +263,22 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               key={tab.id}
               onClick={() => handleTabSwitch(tab.id)}
               sx={{
-                borderRadius: 0,
+                borderRadius: '10px',
                 py: 1.25,
                 px: 2,
                 transition: 'all 0.25s ease',
-                bgcolor: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid transparent',
-                color: isActive ? THEME.primaryDark : 'text.secondary',
+                bgcolor: isActive ? (isDark ? 'rgba(37, 99, 235, 0.25)' : 'rgba(37, 99, 235, 0.1)') : 'transparent',
+                border: isActive ? `1px solid ${isDark ? 'rgba(37, 99, 235, 0.5)' : 'rgba(37, 99, 235, 0.25)'}` : '1px solid transparent',
+                color: isActive ? (isDark ? THEME.goldLight : THEME.primaryDark) : (isDark ? '#CBD5E1' : 'text.secondary'),
                 '&:hover': {
-                  bgcolor: isActive ? 'rgba(99, 102, 241, 0.16)' : 'rgba(241, 245, 249, 0.8)',
+                  bgcolor: isActive ? (isDark ? 'rgba(37, 99, 235, 0.35)' : 'rgba(37, 99, 235, 0.16)') : (isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(241, 245, 249, 0.8)'),
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 38,
-                  color: isActive ? THEME.primaryDark : 'text.secondary',
+                  color: isActive ? (isDark ? THEME.goldLight : THEME.primaryDark) : (isDark ? '#94A3B8' : 'text.secondary'),
                 }}
               >
                 {isActive ? tab.activeIcon : tab.icon}
@@ -272,40 +292,40 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 }}
               />
               {tab.id === 'orders' && !isGuest && (
-                <Chip label="Live" size="small" sx={{ height: 20, fontSize: 10, fontWeight: 800, bgcolor: '#dcfce7', color: '#15803d', borderRadius: 0 }} />
+                <Chip label="Live" size="small" sx={{ height: 20, fontSize: 10, fontWeight: 800, bgcolor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#dcfce7', color: isDark ? '#34d399' : '#15803d', borderRadius: '6px' }} />
               )}
             </ListItemButton>
           )
         })}
       </List>
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 3, borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'divider' }} />
 
       {/* Cart Quick Trigger Card */}
       <Box
         onClick={() => { setActiveTab('cart'); setShowMobileSidebar(false) }}
         sx={{
           p: 2,
-          borderRadius: 0,
-          background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
-          border: '1px solid #e0e7ff',
+          borderRadius: '12px',
+          background: isDark ? 'linear-gradient(135deg, #0A0F1D 0%, #1E293B 100%)' : 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
+          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e0e7ff',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
-          '&:hover': { boxShadow: '0 8px 20px rgba(99, 102, 241, 0.12)' },
+          '&:hover': { boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.5)' : '0 8px 20px rgba(37, 99, 235, 0.12)' },
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Badge badgeContent={getTotalItems()} sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, borderRadius: 0 } }}>
-              <ShoppingBagIcon sx={{ color: THEME.primaryDark, fontSize: 24 }} />
+            <Badge badgeContent={getTotalItems()} sx={{ '& .MuiBadge-badge': { bgcolor: THEME.gold, color: '#000', fontWeight: 800, borderRadius: '4px' } }}>
+              <ShoppingBagIcon sx={{ color: isDark ? THEME.goldLight : THEME.primaryDark, fontSize: 24 }} />
             </Badge>
-            <Typography variant="body2" fontWeight={800} color="text.primary">
+            <Typography variant="body2" fontWeight={800} sx={{ color: isDark ? '#F1F5F9' : 'text.primary' }}>
               My Basket
             </Typography>
           </Box>
-          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: '#ffffff', color: THEME.primaryDark, borderRadius: 0 }} />
+          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: isDark ? 'rgba(255,255,255,0.1)' : '#ffffff', color: isDark ? '#fff' : THEME.primaryDark, borderRadius: '6px' }} />
         </Box>
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : 'text.secondary' }} display="block">
           Tap to view bill & checkout
         </Typography>
       </Box>
@@ -363,9 +383,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     switch (effectiveTab) {
       case 'products':
         return (
-          <Box sx={{ width: '100%', py: { xs: 1, sm: 2 } }}>
+          <Box sx={{ width: '100%', py: 0 }}>
             <ProductCatalog
               searchQuery={searchQuery}
+              searchCategory={searchCategory}
+              selectedDepartment={selectedDepartment}
+              onSelectDepartment={setSelectedDepartment}
               onToggleFavorite={() => {}}
               favorites={favorites}
               serviceMode={serviceMode}
@@ -393,7 +416,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               Favorite Stores & Kitchens
             </Typography>
             {favorites.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8, bgcolor: '#fff', borderRadius: 0, border: '1px solid #e2e8f0', p: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 8, bgcolor: isDark ? '#0A0F1D' : '#fff', borderRadius: 0, border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0', p: 4 }}>
                 <StarBorderIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 2 }} />
                 <Typography variant="h6" fontWeight={700} color="text.secondary">No favorites saved yet</Typography>
                 <Typography variant="body2" color="text.disabled" mb={3}>
@@ -406,7 +429,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
                 {favorites.map((vendor, idx) => (
-                  <Card key={idx} elevation={0} sx={{ borderRadius: 0, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                  <Card key={idx} elevation={0} sx={{ borderRadius: 0, bgcolor: isDark ? '#0E1528' : '#fff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0', overflow: 'hidden' }}>
                     <CardMedia
                       component="img"
                       height={140}
@@ -414,7 +437,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       alt="Store"
                     />
                     <CardContent>
-                      <Typography variant="subtitle1" fontWeight={800}>{vendor.businessName || 'Verified Store'}</Typography>
+                      <Typography variant="subtitle1" fontWeight={800} sx={{ color: isDark ? '#F1F5F9' : 'text.primary' }}>{vendor.businessName || 'Verified Store'}</Typography>
                       <Typography variant="caption" color="text.secondary">Fast delivery ready</Typography>
                     </CardContent>
                   </Card>
@@ -444,7 +467,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: isDark ? '#080C16' : '#F8FAFC', color: isDark ? '#F1F5F9' : '#0F172A', display: 'flex', flexDirection: 'column', transition: 'background-color 0.3s ease' }}>
 
       {/* Mobile Drawer Sidebar */}
       <Drawer
@@ -452,161 +475,381 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         open={showMobileSidebar}
         onClose={() => setShowMobileSidebar(false)}
         ModalProps={{ keepMounted: true }}
-        PaperProps={{ sx: { width: 290, border: 'none' } }}
+        PaperProps={{ sx: { width: 290, border: 'none', bgcolor: isDark ? '#0F172A' : '#ffffff', color: isDark ? '#F1F5F9' : '#0F172A' } }}
       >
         {renderSidebarContent()}
       </Drawer>
 
-      {/* ── TOP HEADER NAVBAR (FULL-WIDTH MODERN E-COMMERCE NAVBAR) ── */}
+      {/* ── TOP HEADER NAVBAR (UNIQUE BESPOKE NEO-MARKETPLACE NAVBAR) ── */}
       <AppBar
         position="sticky"
         elevation={0}
         sx={{
           top: 0,
           zIndex: 1100,
-          bgcolor: 'rgba(255, 255, 255, 0.95)',
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid #f0f0f0',
-          color: 'text.primary',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          bgcolor: isDark ? THEME.darkNav : '#FFFFFF',
+          borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0',
+          color: isDark ? '#ffffff' : '#0F172A',
+          boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)',
+          backdropFilter: 'blur(20px)',
+          transition: 'background-color 0.25s ease, border-color 0.25s ease',
         }}
       >
-        <Box sx={{ width: '100%', maxWidth: '1440px', mx: 'auto', px: { xs: 2, sm: 3, md: 4 } }}>
-          {/* ── ROW 1: Logo | Delivery Address | User & Basket ── */}
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 2 }, minHeight: { xs: 56, md: 64 } }}>
-            {/* Left: Brand Logo & Delivery Address */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 3 } }}>
+        {/* Top Accent Gradient Line (Sapphire to Gold) */}
+        <Box sx={{ height: 2.5, background: 'linear-gradient(90deg, #2563EB 0%, #06B6D4 40%, #F59E0B 80%, #D97706 100%)' }} />
+
+        {/* ── 1. TOP UTILITY RIBBON ── */}
+        <Box
+          sx={{
+            bgcolor: isDark ? THEME.topBar : '#F8FAFC',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
+            py: 0.6,
+            px: { xs: 2, sm: 3, md: 4, xl: 6 },
+            display: { xs: 'none', sm: 'block' },
+            transition: 'background-color 0.25s ease',
+          }}
+        >
+          <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+            {/* Left: Deliver To & Status */}
+            <Stack direction="row" spacing={3} alignItems="center">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  color: isDark ? '#94A3B8' : '#64748B',
+                  cursor: 'pointer',
+                  '&:hover': { color: isDark ? '#ffffff' : '#0F172A' },
+                }}
+              >
+                <LocationOnIcon sx={{ fontSize: 15, color: THEME.gold }} />
+                <Typography variant="caption" sx={{ fontSize: 11.5, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 500 }}>
+                  {t('deliverTo')}:
+                </Typography>
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#F1F5F9' : '#0F172A' }}>
+                  {userData?.address || userData?.city || 'Pakistan (All Regions)'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', boxShadow: '0 0 8px #10B981' }} />
+                <Typography variant="caption" sx={{ fontSize: 11.5, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
+                  AWS CloudFront • Multi-Store Ready
+                </Typography>
+              </Box>
+            </Stack>
+
+            {/* Right: Language Selector | Light/Dark Mode | Partner | Orders | Support */}
+            <Stack direction="row" spacing={2.5} alignItems="center">
+              {/* Language Selector Dropdown */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#EDF2F7', px: 1, py: 0.25, borderRadius: '6px', border: isDark ? '1px solid transparent' : '1px solid #E2E8F0' }}>
+                <TranslateIcon sx={{ fontSize: 13, color: THEME.gold }} />
+                <Select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  variant="standard"
+                  disableUnderline
+                  sx={{
+                    color: isDark ? '#F1F5F9' : '#0F172A',
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    '& .MuiSelect-select': { py: 0.2, pr: '18px !important' },
+                    '& .MuiSvgIcon-root': { color: isDark ? '#94A3B8' : '#64748B', fontSize: 16 },
+                  }}
+                >
+                  {availableLanguages.map((lang) => (
+                    <MenuItem key={lang.code} value={lang.code} sx={{ fontSize: 12, fontWeight: 600 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+
+              {/* Light / Dark Mode Switcher */}
+              <Tooltip title={isDark ? t('lightMode') : t('darkMode')}>
+                <IconButton
+                  size="small"
+                  onClick={toggleTheme}
+                  sx={{
+                    color: isDark ? THEME.goldLight : '#475569',
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#EDF2F7',
+                    border: isDark ? '1px solid transparent' : '1px solid #E2E8F0',
+                    width: 26,
+                    height: 26,
+                    borderRadius: '6px',
+                    transition: 'all 0.2s',
+                    '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0', color: isDark ? '#fff' : '#000' },
+                  }}
+                >
+                  {isDark ? <LightModeOutlinedIcon sx={{ fontSize: 15 }} /> : <DarkModeOutlinedIcon sx={{ fontSize: 15 }} />}
+                </IconButton>
+              </Tooltip>
+
+              <NextLink
+                href="/business-register"
+                style={{ textDecoration: 'none', color: isDark ? '#F8FAFC' : '#0F172A', display: 'flex', alignItems: 'center', gap: 5 }}
+              >
+                <StorefrontIcon sx={{ fontSize: 14, color: THEME.gold }} />
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#E2E8F0' : '#334155', '&:hover': { color: THEME.gold } }}>
+                  {t('partnerWithUs')}
+                </Typography>
+                <Chip
+                  label="0% FEE"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    background: THEME.goldGradient,
+                    color: '#000',
+                    borderRadius: '4px',
+                    px: 0.25,
+                  }}
+                />
+              </NextLink>
+
+              <Box
+                onClick={() => handleTabSwitch('orders')}
+                sx={{ cursor: 'pointer', color: isDark ? '#94A3B8' : '#64748B', '&:hover': { color: isDark ? '#ffffff' : '#0F172A' } }}
+              >
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 600 }}>
+                  {t('trackOrder')}
+                </Typography>
+              </Box>
+
+              <NextLink
+                href="/login"
+                style={{ textDecoration: 'none', color: isDark ? '#94A3B8' : '#64748B' }}
+              >
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 600, '&:hover': { color: isDark ? '#ffffff' : '#0F172A' } }}>
+                  {t('support247')}
+                </Typography>
+              </NextLink>
+            </Stack>
+          </Box>
+        </Box>
+
+        {/* ── 2. MAIN HEADER (Unique Sculpted Pill Search & Glass Actions) ── */}
+        <Box sx={{ width: '100%', px: { xs: 1.5, sm: 3, md: 4, xl: 6 } }}>
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 3 }, minHeight: { xs: 60, md: 70 } }}>
+            {/* Left: Mobile Drawer Trigger & Unique Brand Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
               <IconButton
                 onClick={() => setShowMobileSidebar(true)}
-                sx={{ display: { lg: 'none' }, color: THEME.primary, p: 0.5 }}
+                sx={{ display: { lg: 'none' }, color: isDark ? '#F8FAFC' : '#0F172A', p: 0.5 }}
                 aria-label="open navigation menu"
               >
                 <MenuIcon />
               </IconButton>
 
-              {/* QuickDelivery Brand Logo */}
+              {/* Bespoke Logo */}
               <Box
-                onClick={() => setActiveTab('products')}
+                onClick={() => { setActiveTab('products'); setSelectedDepartment(null) }}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1,
+                  gap: 1.25,
                   cursor: 'pointer',
                   userSelect: 'none',
                 }}
               >
                 <Box
                   sx={{
-                    width: { xs: 34, md: 38 },
-                    height: { xs: 34, md: 38 },
-                    borderRadius: '50%',
-                    bgcolor: THEME.primary,
+                    width: { xs: 38, md: 42 },
+                    height: { xs: 38, md: 42 },
+                    borderRadius: '12px',
+                    background: THEME.gradient,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#fff',
-                    boxShadow: '0 4px 12px rgba(215, 15, 100, 0.35)',
+                    boxShadow: '0 8px 24px rgba(79, 70, 229, 0.35)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                   }}
                 >
-                  <DeliveryDiningIcon sx={{ fontSize: 22 }} />
+                  <DeliveryDiningIcon sx={{ fontSize: 24 }} />
                 </Box>
-                <Typography
-                  variant="h6"
-                  fontWeight={900}
-                  sx={{
-                    color: THEME.primary,
-                    letterSpacing: -0.5,
-                    fontSize: { xs: '1.15rem', md: '1.35rem' },
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  quickdelivery
-                </Typography>
-              </Box>
-
-              {/* Delivery Address Location Selector Pill */}
-              <Box
-                sx={{
-                  display: { xs: 'none', sm: 'flex' },
-                  alignItems: 'center',
-                  gap: 0.75,
-                  px: 1.5,
-                  py: 0.6,
-                  bgcolor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '24px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  '&:hover': { borderColor: THEME.primary, bgcolor: '#fff' },
-                }}
-              >
-                <LocationOnIcon sx={{ color: THEME.primary, fontSize: 18 }} />
-                <Typography variant="caption" fontWeight={600} color="text.secondary">
-                  Deliver to:
-                </Typography>
-                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ maxWidth: { sm: 140, md: 220 }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {userData?.address || userData?.city || (user ? 'Select location' : 'Set location')}
-                </Typography>
-                <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight={900}
+                      sx={{
+                        color: isDark ? '#FFFFFF' : '#0F172A',
+                        letterSpacing: -0.6,
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
+                        lineHeight: 1,
+                        fontFamily: 'var(--font-jakarta)',
+                      }}
+                    >
+                      Quick<Box component="span" sx={{ color: isDark ? THEME.primaryLight : THEME.primary }}>Delivery</Box>
+                    </Typography>
+                    <Chip
+                      label="BOUTIQUE MALL"
+                      size="small"
+                      sx={{
+                        height: 18,
+                        fontSize: 9,
+                        fontWeight: 900,
+                        letterSpacing: 0.75,
+                        bgcolor: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+                        color: isDark ? '#A5B4FC' : '#2563EB',
+                        border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(37, 99, 235, 0.2)',
+                        borderRadius: '20px',
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
+                    Curated Multi-Vendor Marketplace
+                  </Typography>
+                </Box>
               </Box>
             </Box>
 
-            {/* Right Actions: Lang | Account | Basket */}
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              {/* Language Chip */}
-              <Chip
-                label="EN"
-                size="small"
-                variant="outlined"
+            {/* Center: Sculpted Modern Pill Search Bar */}
+            <Box
+              sx={{
+                flex: 1,
+                maxWidth: { xs: '100%', md: 680, lg: 760 },
+                display: { xs: 'none', md: 'flex' },
+                alignItems: 'center',
+                borderRadius: '50px',
+                p: 0.5,
+                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
+                border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
+                transition: 'all 0.25s ease',
+                '&:focus-within': {
+                  borderColor: THEME.primary,
+                  bgcolor: isDark ? 'rgba(255,255,255,0.09)' : '#FFFFFF',
+                  boxShadow: isDark ? '0 0 25px rgba(37, 99, 235, 0.35)' : '0 0 20px rgba(37, 99, 235, 0.18)',
+                },
+              }}
+            >
+              {/* Category Filter Select Capsule */}
+              <Select
+                value={searchCategory}
+                onChange={(e) => setSearchCategory(e.target.value)}
+                variant="standard"
+                disableUnderline
                 sx={{
-                  display: { xs: 'none', sm: 'inline-flex' },
+                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
+                  color: isDark ? '#E2E8F0' : '#1E293B',
+                  height: 38,
+                  px: 2,
+                  borderRadius: '50px',
+                  fontSize: 12.5,
                   fontWeight: 700,
-                  fontSize: 12,
-                  borderColor: '#e2e8f0',
-                  color: 'text.secondary',
-                  borderRadius: '16px',
+                  minWidth: 145,
+                  '& .MuiSelect-select': { py: 1, pr: '26px !important' },
+                  '& .MuiSvgIcon-root': { color: isDark ? '#94A3B8' : '#64748B' },
+                }}
+              >
+                <MenuItem value="all">{t('allCollections')}</MenuItem>
+                {categories.map((c) => (
+                  <MenuItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </Select>
+
+              {/* Main Search Input */}
+              <Box
+                component="input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('searchPlaceholder')}
+                sx={{
+                  flex: 1,
+                  height: 38,
+                  px: 2,
+                  border: 'none',
+                  outline: 'none',
+                  bgcolor: 'transparent',
+                  color: isDark ? '#FFFFFF' : '#0F172A',
+                  fontSize: 13.5,
+                  fontWeight: 500,
+                  fontFamily: 'inherit',
+                  '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
                 }}
               />
 
-              {/* Basket Trigger Button */}
-              <Button
-                onClick={() => handleTabSwitch('cart')}
+              {/* Luminous Iris Circular Search Button */}
+              <IconButton
+                onClick={() => {
+                  if (effectiveTab !== 'products') setActiveTab('products')
+                }}
                 sx={{
-                  color: 'text.primary',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  px: { xs: 1, sm: 1.75 },
-                  py: 0.5,
-                  borderRadius: '24px',
-                  bgcolor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  '&:hover': { bgcolor: THEME.soft, borderColor: THEME.primary },
+                  width: 38,
+                  height: 38,
+                  background: THEME.gradient,
+                  color: '#FFFFFF',
+                  borderRadius: '50%',
+                  boxShadow: '0 4px 15px rgba(37, 99, 235, 0.45)',
+                  transition: 'transform 0.2s ease',
+                  '&:hover': { transform: 'scale(1.05)' },
                 }}
               >
-                <Badge
-                  badgeContent={getTotalItems()}
+                <SearchIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
+
+            {/* Right: AI Concierge | User Account | Orders | Wishlist | Cart */}
+            <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5, md: 1.75 }}>
+              {/* Interactive AI Concierge Button */}
+              <Button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('openAI'))
+                  }
+                }}
+                size="small"
+                startIcon={<AutoAwesomeIcon sx={{ fontSize: 16, color: THEME.gold, animation: 'pulse 2s infinite' }} />}
+                sx={{
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  color: isDark ? '#FFFFFF' : '#1E293B',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: 12,
+                  px: 1.75,
+                  py: 0.7,
+                  borderRadius: '24px',
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(245, 158, 11, 0.22) 100%)'
+                    : 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%)',
+                  border: isDark ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(245, 158, 11, 0.4)',
+                  boxShadow: isDark ? '0 0 16px rgba(245, 158, 11, 0.15)' : 'none',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.45) 0%, rgba(245, 158, 11, 0.35) 100%)'
+                      : 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(245, 158, 11, 0.2) 100%)',
+                    borderColor: THEME.gold,
+                    transform: 'translateY(-1px)',
+                  },
+                }}
+              >
+                {t('askAI')}
+                <Chip
+                  label="PRO"
+                  size="small"
                   sx={{
-                    '& .MuiBadge-badge': {
-                      bgcolor: THEME.primary,
-                      color: '#fff',
-                      fontWeight: 800,
-                      fontSize: 10,
-                      minWidth: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                    }
+                    ml: 0.75,
+                    height: 16,
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    bgcolor: THEME.gold,
+                    color: '#000',
+                    borderRadius: '4px',
+                    px: 0.25,
                   }}
-                >
-                  <ShoppingBagOutlinedIcon sx={{ fontSize: 20, color: THEME.primary }} />
-                </Badge>
-                {getTotalItems() > 0 && (
-                  <Typography variant="caption" fontWeight={800} color={THEME.primary} sx={{ ml: 1 }}>
-                    Rs. {getTotalPrice().toFixed(0)}
-                  </Typography>
-                )}
+                />
               </Button>
 
-              {/* User Authentication / Profile */}
+              {/* Account Dropdown */}
               {isGuest ? (
                 <Button
                   component={NextLink}
@@ -614,22 +857,19 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   variant="contained"
                   size="small"
                   sx={{
-                    bgcolor: THEME.primary,
+                    background: THEME.gradient,
                     color: '#fff',
                     borderRadius: '24px',
                     textTransform: 'none',
                     fontWeight: 800,
                     px: { xs: 1.75, sm: 2.5 },
-                    py: 0.6,
+                    py: 0.85,
                     fontSize: 13,
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: THEME.primaryDark,
-                      boxShadow: '0 4px 12px rgba(215, 15, 100, 0.3)',
-                    }
+                    boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
+                    '&:hover': { opacity: 0.95 },
                   }}
                 >
-                  Sign In
+                  {t('signIn')}
                 </Button>
               ) : (
                 <Box
@@ -638,21 +878,21 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1,
-                    p: 0.5,
-                    pr: { xs: 0.5, sm: 1.5 },
+                    px: 1.5,
+                    py: 0.6,
                     borderRadius: '24px',
-                    bgcolor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
+                    border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E2E8F0',
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: '#f1f5f9' },
+                    '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0' },
                   }}
                 >
                   <Avatar
                     src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
                     sx={{
-                      width: 28,
-                      height: 28,
-                      bgcolor: THEME.primary,
+                      width: 30,
+                      height: 30,
+                      background: THEME.gradient,
                       color: '#fff',
                       fontWeight: 800,
                       fontSize: 12,
@@ -660,173 +900,234 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   >
                     {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </Avatar>
-                  <Typography variant="caption" fontWeight={700} noWrap sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 100 }}>
-                    {user?.displayName || 'Account'}
-                  </Typography>
-                  <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+                    <Typography variant="caption" sx={{ fontSize: 10.5, color: isDark ? '#94A3B8' : '#64748B', display: 'block', lineHeight: 1.1 }}>
+                      Welcome,
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                      <Typography variant="body2" sx={{ fontSize: 12.5, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
+                        {heroFirstName}
+                      </Typography>
+                      <ExpandMoreIcon sx={{ fontSize: 16, color: isDark ? '#94A3B8' : '#64748B' }} />
+                    </Box>
+                  </Box>
                 </Box>
               )}
-            </Stack>
-          </Toolbar>
 
-          {/* ── ROW 2: Service Mode Tabs (Delivery/Pick-up/Shops) | Wide Search Bar ── */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              pb: 1.5,
-              pt: 0.25,
-              borderTop: '1px solid #f3f4f6',
-              flexWrap: { xs: 'wrap', md: 'nowrap' },
-            }}
-          >
-            {/* Service Mode Tabs: Delivery | Pick-up | Grocery | Shops */}
-            <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', py: 0.25, '&::-webkit-scrollbar': { display: 'none' } }}>
-              {[
-                { id: 'delivery', label: 'Delivery', icon: '🛵' },
-                { id: 'pickup', label: 'Pick-up', icon: '🛍️' },
-                { id: 'grocery', label: 'Grocery', icon: '🛒' },
-                { id: 'shops', label: 'Shops', icon: '🏬' },
-              ].map((tab) => {
-                const isActive = serviceMode === tab.id
-                return (
-                  <Button
-                    key={tab.id}
-                    onClick={() => {
-                      setServiceMode(tab.id)
-                      if (effectiveTab !== 'products') setActiveTab('products')
-                    }}
-                    size="small"
-                    sx={{
-                      borderRadius: '20px',
-                      px: 2,
-                      py: 0.6,
-                      textTransform: 'none',
-                      fontWeight: isActive ? 800 : 600,
-                      fontSize: 13,
-                      whiteSpace: 'nowrap',
-                      bgcolor: isActive ? THEME.primary : '#f8fafc',
-                      color: isActive ? '#ffffff' : '#374151',
-                      border: isActive ? `1px solid ${THEME.primary}` : '1px solid #e5e7eb',
-                      boxShadow: isActive ? '0 2px 8px rgba(215, 15, 100, 0.25)' : 'none',
-                      '&:hover': {
-                        bgcolor: isActive ? THEME.primaryDark : '#f3f4f6',
-                      },
-                    }}
-                  >
-                    <Box component="span" sx={{ mr: 0.75, fontSize: 14 }}>{tab.icon}</Box>
-                    {tab.label}
-                  </Button>
-                )
-              })}
-            </Stack>
-
-            {/* Pill Search Input */}
-            <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 340, lg: 420 } }}>
-              <TextField
-                size="small"
-                fullWidth
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for restaurants, cuisines, and dishes…"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: THEME.primary, fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
+              {/* Wishlist Button */}
+              <IconButton
+                onClick={() => handleTabSwitch('wishlist')}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '24px',
-                    bgcolor: '#f8fafc',
-                    height: 40,
-                    fontSize: 13.5,
-                    border: '1px solid #e2e8f0',
-                    '&:hover fieldset': { borderColor: THEME.primary },
-                    '&.Mui-focused fieldset': { borderColor: THEME.primary },
+                  color: effectiveTab === 'wishlist' ? THEME.gold : (isDark ? '#CBD5E1' : '#475569'),
+                  borderRadius: '50%',
+                  p: 1,
+                  bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
+                  border: isDark ? '1px solid transparent' : '1px solid #E2E8F0',
+                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0', color: isDark ? '#fff' : '#000' },
+                }}
+                title={t('wishlist')}
+              >
+                <FavoriteBorderIcon sx={{ fontSize: 21 }} />
+              </IconButton>
+
+              {/* Shopping Bag Capsule Button */}
+              <Button
+                onClick={() => handleTabSwitch('cart')}
+                sx={{
+                  color: isDark ? '#FFFFFF' : '#0F172A',
+                  textTransform: 'none',
+                  px: { xs: 1.25, sm: 2 },
+                  py: 0.8,
+                  borderRadius: '24px',
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(245, 158, 11, 0.2) 100%)'
+                    : 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%)',
+                  border: isDark ? '1px solid rgba(37, 99, 235, 0.35)' : '1px solid rgba(37, 99, 235, 0.25)',
+                  '&:hover': {
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.4) 0%, rgba(245, 158, 11, 0.3) 100%)'
+                      : 'linear-gradient(135deg, rgba(37, 99, 235, 0.16) 0%, rgba(245, 158, 11, 0.2) 100%)',
+                    borderColor: THEME.primary,
                   },
                 }}
-              />
-            </Box>
+              >
+                <Badge
+                  badgeContent={getTotalItems()}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      background: THEME.goldGradient,
+                      color: '#000',
+                      fontWeight: 900,
+                      fontSize: 10,
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                    }
+                  }}
+                >
+                  <ShoppingBagIcon sx={{ fontSize: 21, color: THEME.gold }} />
+                </Badge>
+                <Box sx={{ ml: 1.25, textAlign: 'left', display: { xs: 'none', sm: 'block' } }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#CBD5E1' : '#64748B', display: 'block', lineHeight: 1 }}>
+                    {t('cart')}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: 12.5, fontWeight: 800, color: isDark ? '#FFFFFF' : '#0F172A', lineHeight: 1.1 }}>
+                    Rs. {getTotalPrice().toFixed(0)}
+                  </Typography>
+                </Box>
+              </Button>
+            </Stack>
+          </Toolbar>
+        </Box>
+
+        {/* ── 3. CURATED DEPARTMENTS SUB-NAV STRIP ── */}
+        <Box
+          sx={{
+            bgcolor: isDark ? THEME.darkNavSub : '#F8FAFC',
+            borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
+            borderBottom: isDark ? 'none' : '1px solid #E2E8F0',
+            px: { xs: 1.5, sm: 3, md: 4, xl: 6 },
+            py: 0.6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+            overflowX: 'auto',
+            '&::-webkit-scrollbar': { display: 'none' },
+            transition: 'background-color 0.25s ease',
+          }}
+        >
+          {/* Category Pill Buttons */}
+          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 'max-content' }}>
+            <Button
+              onClick={() => {
+                setActiveTab('products')
+                setSelectedDepartment(null)
+                setSearchCategory('all')
+              }}
+              size="small"
+              startIcon={<MenuIcon sx={{ fontSize: 16 }} />}
+              sx={{
+                color: isDark ? '#FFFFFF' : '#0F172A',
+                fontWeight: 800,
+                fontSize: 12,
+                textTransform: 'none',
+                px: 1.75,
+                py: 0.5,
+                borderRadius: '20px',
+                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+                '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#CBD5E1' },
+              }}
+            >
+              {t('allDepartments')}
+            </Button>
+
+            {[
+              { id: 'deals', label: '⚡ Flash Drops', badge: 'LIVE', badgeBg: THEME.rose },
+              { id: 'mobile', label: '📱 Mobile & Tech' },
+              { id: 'computers', label: '💻 Computing & Laptops' },
+              { id: 'grocery', label: '🛒 Pantry & Organic' },
+              { id: 'dining', label: '🍔 Chef Dining' },
+              { id: 'bakery', label: '🥐 French Bakery' },
+              { id: 'stores', label: '🏬 Brand Boutiques' },
+            ].map((dep) => {
+              const isActive = selectedDepartment === dep.id
+              return (
+                <Button
+                  key={dep.id}
+                  onClick={() => {
+                    setSelectedDepartment(isActive ? null : dep.id)
+                    if (effectiveTab !== 'products') setActiveTab('products')
+                  }}
+                  size="small"
+                  sx={{
+                    color: isActive ? '#FFFFFF' : (isDark ? '#CBD5E1' : '#475569'),
+                    fontWeight: isActive ? 800 : 600,
+                    fontSize: 12,
+                    textTransform: 'none',
+                    px: 1.75,
+                    py: 0.5,
+                    borderRadius: '20px',
+                    bgcolor: isActive ? THEME.primary : 'transparent',
+                    border: isActive ? `1px solid ${THEME.primaryLight}` : '1px solid transparent',
+                    boxShadow: isActive ? '0 4px 14px rgba(37, 99, 235, 0.4)' : 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? THEME.primaryDark : (isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
+                      color: isDark || isActive ? '#FFFFFF' : '#0F172A',
+                    },
+                  }}
+                >
+                  {dep.label}
+                  {dep.badge && (
+                    <Chip
+                      label={dep.badge}
+                      size="small"
+                      sx={{
+                        ml: 0.75,
+                        height: 16,
+                        fontSize: 8.5,
+                        fontWeight: 900,
+                        bgcolor: dep.badgeBg || THEME.rose,
+                        color: '#fff',
+                        borderRadius: '20px',
+                      }}
+                    />
+                  )}
+                </Button>
+              )
+            })}
+          </Stack>
+
+          {/* Right Status Badge */}
+          <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#06B6D4', boxShadow: '0 0 8px #06B6D4' }} />
+            <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11.5, fontWeight: 600 }}>
+              Express Delivery across Pakistan • Free on orders over <Box component="span" sx={{ color: isDark ? '#F1F5F9' : '#0F172A', fontWeight: 800 }}>Rs. 1,500</Box>
+            </Typography>
           </Box>
         </Box>
       </AppBar>
 
-      {/* ── Sub-bar for Mobile Search & Navigation Pills (Visible on xs/sm/md) ── */}
+      {/* ── Mobile Search Strip (< md screens) ── */}
       <Box
         sx={{
-          display: { xs: 'block', lg: 'none' },
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
-          px: { xs: 1.5, sm: 2 },
-          py: 1.25,
+          display: { xs: 'block', md: 'none' },
+          bgcolor: isDark ? THEME.darkNav : '#FFFFFF',
+          px: 1.5,
+          py: 1,
+          borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0',
         }}
       >
-        {/* Mobile Search Input */}
-        <Box sx={{ mb: 1, display: { xs: 'block', sm: 'none' } }}>
-          <TextField
-            size="small"
-            fullWidth
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search food, groceries, stores…"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: THEME.primary, fontSize: 18 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 0,
-                bgcolor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                height: 38,
-                fontSize: 13,
-                '&:hover fieldset': { borderColor: THEME.primary },
-                '&.Mui-focused fieldset': { borderColor: THEME.primary },
-              },
-            }}
-          />
-        </Box>
-
-        {/* Swipeable Tabs */}
         <Box
           sx={{
-            overflowX: 'auto',
-            '&::-webkit-scrollbar': { display: 'none' },
-            scrollbarWidth: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9',
+            borderRadius: '24px',
+            border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
+            p: 0.25,
+            px: 1.5,
           }}
         >
-          <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
-            {navTabs.map((tab) => {
-              const isActive = effectiveTab === tab.id
-              return (
-                <Chip
-                  key={tab.id}
-                  icon={isActive ? tab.activeIcon : tab.icon}
-                  label={tab.label}
-                  clickable
-                  onClick={() => handleTabSwitch(tab.id)}
-                  sx={{
-                    fontWeight: isActive ? 800 : 600,
-                    fontSize: 12.5,
-                    borderRadius: 0,
-                    bgcolor: isActive ? THEME.primaryDark : '#f1f5f9',
-                    color: isActive ? '#ffffff' : 'text.primary',
-                    '& .MuiChip-icon': { color: isActive ? '#ffffff' : 'inherit' },
-                    '&:hover': {
-                      bgcolor: isActive ? THEME.primaryDark : '#e2e8f0',
-                    },
-                  }}
-                />
-              )
-            })}
-          </Stack>
+          <SearchIcon sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 18, mr: 1 }} />
+          <Box
+            component="input"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search 161+ products, brands, stores…"
+            sx={{
+              flex: 1,
+              height: 36,
+              border: 'none',
+              outline: 'none',
+              fontSize: 13,
+              color: isDark ? '#FFFFFF' : '#0F172A',
+              bgcolor: 'transparent',
+              fontFamily: 'inherit',
+              '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
+            }}
+          />
         </Box>
       </Box>
 
@@ -889,11 +1190,11 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           alignItems: 'center',
           py: 0.75,
           px: 1,
-          bgcolor: 'rgba(255, 255, 255, 0.96)',
+          bgcolor: isDark ? 'rgba(10, 15, 29, 0.96)' : 'rgba(255, 255, 255, 0.96)',
           backdropFilter: 'blur(16px)',
-          borderTop: '1px solid #e2e8f0',
+          borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
           borderRadius: 0,
-          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
+          boxShadow: isDark ? '0 -4px 25px rgba(0, 0, 0, 0.6)' : '0 -4px 20px rgba(0, 0, 0, 0.06)',
         }}
       >
         <Button
@@ -902,7 +1203,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: effectiveTab === 'products' ? THEME.primaryDark : 'text.secondary',
+            color: effectiveTab === 'products' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'products' ? 800 : 600,
@@ -910,7 +1211,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'products' ? <HomeIcon sx={{ fontSize: 22 }} /> : <HomeOutlinedIcon sx={{ fontSize: 22 }} />}
-          Explore
+          {t('home')}
         </Button>
 
         <Button
@@ -919,7 +1220,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: effectiveTab === 'orders' ? THEME.primaryDark : 'text.secondary',
+            color: effectiveTab === 'orders' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'orders' ? 800 : 600,
@@ -927,7 +1228,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 22 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />}
-          Orders
+          {t('myOrders')}
         </Button>
 
         {/* Center Prominent Cart Button */}
@@ -937,7 +1238,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: effectiveTab === 'cart' ? THEME.primaryDark : 'text.secondary',
+            color: effectiveTab === 'cart' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: 800,
@@ -946,11 +1247,11 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         >
           <Badge
             badgeContent={getTotalItems()}
-            sx={{ '& .MuiBadge-badge': { bgcolor: THEME.secondary, color: '#fff', fontWeight: 800, fontSize: 9, minWidth: 16, height: 16, borderRadius: 0 } }}
+            sx={{ '& .MuiBadge-badge': { bgcolor: THEME.gold, color: '#000', fontWeight: 900, fontSize: 9, minWidth: 16, height: 16, borderRadius: '4px' } }}
           >
             <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />
           </Badge>
-          Basket
+          {t('cart')}
         </Button>
 
         <Button
@@ -959,7 +1260,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: effectiveTab === 'wishlist' ? THEME.primaryDark : 'text.secondary',
+            color: effectiveTab === 'wishlist' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'wishlist' ? 800 : 600,
@@ -967,7 +1268,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'wishlist' ? <FavoriteIcon sx={{ fontSize: 22 }} /> : <FavoriteBorderIcon sx={{ fontSize: 22 }} />}
-          Wishlist
+          {t('wishlist')}
         </Button>
 
         <Button
@@ -976,7 +1277,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             flexDirection: 'column',
             minWidth: 56,
             p: 0.5,
-            color: effectiveTab === 'profile' ? THEME.primaryDark : 'text.secondary',
+            color: effectiveTab === 'profile' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
             fontSize: 10.5,
             fontWeight: effectiveTab === 'profile' ? 800 : 600,

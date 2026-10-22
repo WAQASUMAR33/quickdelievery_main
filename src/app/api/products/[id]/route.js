@@ -12,14 +12,20 @@ export async function GET(request, { params }) {
 
     if (!product) return Response.json({ success: false, error: 'Product not found' }, { status: 404 })
 
+    const safe = (val, fb = []) => {
+      if (!val) return fb
+      if (typeof val !== 'string') return val
+      try { return JSON.parse(val) } catch { return fb }
+    }
+
     return Response.json({
       success: true,
       data: {
         ...product,
-        proImages:   product.proImages   ? JSON.parse(product.proImages)   : [],
-        keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : [],
-        variations:  product.variations  ? JSON.parse(product.variations)  : [],
-        reviews:     product.reviews     ? JSON.parse(product.reviews)     : [],
+        proImages:   safe(product.proImages, []),
+        keyFeatures: safe(product.keyFeatures, typeof product.keyFeatures === 'string' ? product.keyFeatures.split(',').map(s => s.trim()) : []),
+        variations:  safe(product.variations, []),
+        reviews:     safe(product.reviews, []),
       },
     })
   } catch (error) {

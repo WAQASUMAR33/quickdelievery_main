@@ -35,16 +35,17 @@ export function canManageDealRecord(user, deal) {
 
 export function parseProductForClient(product) {
   if (!product) return product
-  try {
-    return {
-      ...product,
-      proImages: product.proImages ? JSON.parse(product.proImages) : null,
-      keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
-      variations: product.variations ? JSON.parse(product.variations) : null,
-      reviews: product.reviews ? JSON.parse(product.reviews) : null,
-    }
-  } catch {
-    return { ...product, proImages: null, keyFeatures: null, variations: null, reviews: null }
+  const safe = (val, fb = null) => {
+    if (!val) return fb
+    if (typeof val !== 'string') return val
+    try { return JSON.parse(val) } catch { return fb }
+  }
+  return {
+    ...product,
+    proImages: safe(product.proImages, []),
+    keyFeatures: safe(product.keyFeatures, typeof product.keyFeatures === 'string' ? product.keyFeatures.split(',').map(s => s.trim()) : []),
+    variations: safe(product.variations, []),
+    reviews: safe(product.reviews, []),
   }
 }
 

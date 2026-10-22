@@ -305,12 +305,12 @@ const OrderHistory = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Order History</h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Order History</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700">
               {orders.length} {orders.length === 1 ? 'order' : 'orders'}
             </span>
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Track active deliveries, review past receipts, and reorder with one click.
           </p>
         </div>
@@ -318,30 +318,30 @@ const OrderHistory = () => {
         {/* Right Header Actions */}
         <div className="flex items-center gap-2.5 self-start md:self-auto">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search orders or items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D70F64]/30 focus:border-[#D70F64] w-48 sm:w-56 transition-all"
+              className="pl-9 pr-4 py-2 text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D70F64]/30 focus:border-[#D70F64] w-48 sm:w-56 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
           </div>
 
           <button
             onClick={() => fetchOrders(true)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-50"
             title="Refresh Orders"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${refreshing ? 'animate-spin text-[#D70F64]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-600 dark:text-slate-400 ${refreshing ? 'animate-spin text-[#D70F64]' : ''}`} />
             <span>Refresh</span>
           </button>
         </div>
       </div>
 
       {/* ── Segmented Status Filter Tabs ── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100 dark:border-slate-800">
         {[
           { id: 'all', label: 'All Orders', count: statusCounts.all },
           { id: 'active', label: 'In Progress', count: statusCounts.active },
@@ -355,8 +355,8 @@ const OrderHistory = () => {
               onClick={() => setFilterStatus(tab.id)}
               className={`relative px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 flex items-center gap-2 ${
                 isActive
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                  ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800'
               }`}
             >
               <span>{tab.label}</span>
@@ -364,7 +364,7 @@ const OrderHistory = () => {
                 className={`text-[11px] font-bold px-1.5 py-0.2 rounded-full ${
                   isActive
                     ? 'bg-white/20 text-white'
-                    : 'bg-slate-200/80 text-slate-600'
+                    : 'bg-slate-200/80 dark:bg-slate-750 text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {tab.count}
@@ -378,31 +378,31 @@ const OrderHistory = () => {
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm animate-pulse space-y-4">
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm animate-pulse space-y-4">
               <div className="flex justify-between items-center">
-                <div className="h-5 bg-slate-200 rounded w-32" />
-                <div className="h-6 bg-slate-200 rounded-full w-24" />
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-32" />
+                <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-24" />
               </div>
               <div className="flex gap-4 items-center">
-                <div className="w-14 h-14 bg-slate-200 rounded-xl" />
+                <div className="w-14 h-14 bg-slate-200 dark:bg-slate-800 rounded-xl" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-200 rounded w-1/3" />
-                  <div className="h-3 bg-slate-100 rounded w-1/4" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                  <div className="h-3 bg-slate-100 dark:bg-slate-800/60 rounded w-1/4" />
                 </div>
               </div>
-              <div className="h-10 bg-slate-100 rounded-xl" />
+              <div className="h-10 bg-slate-100 dark:bg-slate-800/60 rounded-xl" />
             </div>
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-16 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+        <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-slate-800 mb-1">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">
             {searchQuery ? 'No matching orders found' : 'No orders in this category'}
           </h3>
-          <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
             {searchQuery
               ? `We couldn't find anything matching "${searchQuery}". Try a different keyword.`
               : "When you place orders, they will appear here with live tracking and receipts."}
@@ -410,7 +410,7 @@ const OrderHistory = () => {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               Clear search
             </button>
@@ -428,26 +428,26 @@ const OrderHistory = () => {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: index * 0.05 }}
-                className="bg-white rounded-2xl border border-slate-100/90 shadow-[0_2px_14px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_26px_rgba(15,23,42,0.07)] transition-all duration-300 overflow-hidden"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100/90 dark:border-slate-800 shadow-[0_2px_14px_rgba(15,23,42,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_26px_rgba(15,23,42,0.07)] transition-all duration-300 overflow-hidden"
               >
                 {/* ── Card Header ── */}
-                <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-50/60 to-white">
+                <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-50/60 to-white dark:from-slate-800/80 dark:to-slate-900">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center font-black text-sm shadow-sm border border-transparent dark:border-slate-700">
                       #{order.id}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-slate-900">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                           Order #{order.id}
                         </h3>
-                        <span className="text-xs text-slate-400 font-medium">•</span>
-                        <span className="text-xs font-medium text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200/60">
+                        <span className="text-xs text-slate-400 dark:text-slate-600 font-medium">•</span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700">
                           {order.paymentMethod}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         {new Date(order.date).toLocaleDateString('en-US', {
                           weekday: 'short',
                           month: 'short',
@@ -471,34 +471,34 @@ const OrderHistory = () => {
                     {order.items.map((item, itemIdx) => (
                       <div
                         key={itemIdx}
-                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 hover:bg-slate-50 border border-slate-100/80 transition-colors"
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100/80 dark:border-slate-700/80 transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="relative flex-shrink-0">
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-slate-200/60 bg-white"
+                              className="w-12 h-12 rounded-xl object-cover border border-slate-200/60 dark:border-slate-700 bg-white dark:bg-slate-800"
                               onError={(e) => {
                                 e.target.src = '/placeholder-product.jpg'
                               }}
                             />
-                            <span className="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[10px] font-extrabold rounded-full w-5 h-5 flex items-center justify-center shadow-xs">
+                            <span className="absolute -top-1.5 -right-1.5 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-extrabold rounded-full w-5 h-5 flex items-center justify-center shadow-xs">
                               {item.quantity}
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-800 truncate">
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
                               {item.name}
                             </h4>
-                            <p className="text-xs text-slate-500 font-medium">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                               ${Number(item.price).toFixed(2)} × {item.quantity}
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right flex-shrink-0 pl-3">
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
                             ${(Number(item.price) * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -507,25 +507,25 @@ const OrderHistory = () => {
                   </div>
 
                   {/* ── Bill Breakdown Box ── */}
-                  <div className="p-4 rounded-xl bg-slate-50/90 border border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-600">
+                  <div className="p-4 rounded-xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-750 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
                       <div>
-                        <span className="text-slate-400 mr-1.5">Subtotal:</span>
-                        <span className="font-semibold text-slate-700">${Number(order.subtotal ?? 0).toFixed(2)}</span>
+                        <span className="text-slate-400 dark:text-slate-500 mr-1.5">Subtotal:</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">${Number(order.subtotal ?? 0).toFixed(2)}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 mr-1.5">Service ({getServiceChargePercent()}%):</span>
-                        <span className="font-semibold text-slate-700">${Number(order.serviceCharge ?? 0).toFixed(2)}</span>
+                        <span className="text-slate-400 dark:text-slate-500 mr-1.5">Service ({getServiceChargePercent()}%):</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">${Number(order.serviceCharge ?? 0).toFixed(2)}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 mr-1.5">Delivery:</span>
-                        <span className="font-bold text-emerald-600">Free</span>
+                        <span className="text-slate-400 dark:text-slate-500 mr-1.5">Delivery:</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">Free</span>
                       </div>
                     </div>
 
-                    <div className="flex items-baseline justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
-                      <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Payable:</span>
-                      <span className="text-lg font-extrabold text-slate-900">
+                    <div className="flex items-baseline justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-700">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total Payable:</span>
+                      <span className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
                         ${Number(order.total).toFixed(2)}
                       </span>
                     </div>
@@ -533,8 +533,8 @@ const OrderHistory = () => {
 
                   {/* Tracking Number pill if present */}
                   {order.trackingNumber && (
-                    <div className="flex items-center gap-2 text-xs font-mono bg-sky-50 text-sky-800 px-3 py-1.5 rounded-lg border border-sky-200/60">
-                      <Truck className="w-3.5 h-3.5 text-sky-600" />
+                    <div className="flex items-center gap-2 text-xs font-mono bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 px-3 py-1.5 rounded-lg border border-sky-200/60 dark:border-sky-800">
+                      <Truck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                       <span>Tracking: <strong>{order.trackingNumber}</strong></span>
                     </div>
                   )}
@@ -545,24 +545,24 @@ const OrderHistory = () => {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => printOrderReceipt(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95 shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-all active:scale-95 shadow-2xs"
                       >
-                        <Printer className="w-3.5 h-3.5 text-slate-500" />
+                        <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                         <span>Print receipt</span>
                       </button>
 
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/60 rounded-xl transition-all active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700 rounded-xl transition-all active:scale-95"
                       >
-                        <Eye className="w-3.5 h-3.5 text-slate-600" />
+                        <Eye className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                         <span>View Details</span>
                       </button>
 
                       {order.status === 'delivered' && !order.review && (
                         <button
                           onClick={() => setRatingModal(order.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-xl transition-all active:scale-95"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/80 dark:border-amber-800 rounded-xl transition-all active:scale-95"
                         >
                           <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
                           <span>Rate Order</span>
@@ -570,7 +570,7 @@ const OrderHistory = () => {
                       )}
 
                       {order.review && (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-700 bg-amber-50/70 border border-amber-200/60 rounded-xl">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/60 rounded-xl">
                           <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
                           <span>{order.review.rating}/5 Rated</span>
                         </div>
@@ -591,9 +591,9 @@ const OrderHistory = () => {
 
                           <button
                             onClick={() => setChattingOrder(order)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 rounded-xl transition-all active:scale-95"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200/80 dark:border-sky-800 rounded-xl transition-all active:scale-95"
                           >
-                            <MessageCircle className="w-3.5 h-3.5 text-sky-600" />
+                            <MessageCircle className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                             <span>Live Chat</span>
                           </button>
                         </>
@@ -624,22 +624,22 @@ const OrderHistory = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedOrder(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 12 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 12 }}
-              className="bg-white rounded-2xl max-w-xl w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-slate-100"
+              className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 {/* Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                   <div>
-                    <h2 className="text-xl font-extrabold text-slate-900">Order #{selectedOrder.id}</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Order #{selectedOrder.id}</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Placed on {new Date(selectedOrder.date).toLocaleString()}
                     </p>
                   </div>
@@ -647,14 +647,14 @@ const OrderHistory = () => {
                     <button
                       type="button"
                       onClick={() => printOrderReceipt(selectedOrder)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent dark:border-slate-700"
                     >
-                      <Printer className="w-3.5 h-3.5 text-slate-600" />
+                      <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                       <span>Print</span>
                     </button>
                     <button
                       onClick={() => setSelectedOrder(null)}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -664,26 +664,26 @@ const OrderHistory = () => {
                 <div className="space-y-5 pt-5">
                   {/* Status and Summary Cards */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</span>
-                      <p className="text-sm font-bold text-slate-800 capitalize mt-1">
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-750">
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Status</span>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100 capitalize mt-1">
                         {selectedOrder.status}
                       </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Payment</span>
-                      <p className="text-sm font-bold text-slate-800 mt-1">
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-750">
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Payment</span>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">
                         {selectedOrder.paymentMethod}
                       </p>
                     </div>
                   </div>
 
                   {/* Delivery destination */}
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-750 flex items-start gap-2.5">
                     <MapPin className="w-4 h-4 text-[#D70F64] flex-shrink-0 mt-0.5" />
                     <div>
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Delivery Address</span>
-                      <p className="text-xs font-semibold text-slate-700 mt-0.5">
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Delivery Address</span>
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
                         {selectedOrder.shippingAddress}
                       </p>
                     </div>
@@ -691,23 +691,23 @@ const OrderHistory = () => {
 
                   {/* Itemized list */}
                   <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Items Ordered</h4>
+                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Items Ordered</h4>
                     <div className="space-y-2">
                       {selectedOrder.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 text-xs">
+                        <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-750 text-xs">
                           <div className="flex items-center gap-2.5">
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-10 h-10 rounded-lg object-cover bg-white border border-slate-200/60"
+                              className="w-10 h-10 rounded-lg object-cover bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700"
                               onError={(e) => { e.target.src = '/placeholder-product.jpg' }}
                             />
                             <div>
-                              <p className="font-semibold text-slate-800">{item.name}</p>
-                              <p className="text-slate-500">${Number(item.price).toFixed(2)} × {item.quantity}</p>
+                              <p className="font-semibold text-slate-800 dark:text-slate-200">{item.name}</p>
+                              <p className="text-slate-500 dark:text-slate-400">${Number(item.price).toFixed(2)} × {item.quantity}</p>
                             </div>
                           </div>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">
                             ${(Number(item.price) * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -716,7 +716,7 @@ const OrderHistory = () => {
                   </div>
 
                   {/* Calculation summary */}
-                  <div className="p-4 rounded-xl bg-slate-900 text-white space-y-2 text-xs">
+                  <div className="p-4 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-800 text-white space-y-2 text-xs">
                     <div className="flex justify-between text-slate-300">
                       <span>Subtotal</span>
                       <span className="font-semibold">${Number(selectedOrder.subtotal ?? 0).toFixed(2)}</span>
@@ -748,7 +748,7 @@ const OrderHistory = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setRatingModal(null)}
           >
             <motion.div
@@ -756,15 +756,15 @@ const OrderHistory = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-100"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-slate-900">Rate Order #{ratingModal}</h3>
-                <button onClick={() => setRatingModal(null)} className="text-slate-400 hover:text-slate-700">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Rate Order #{ratingModal}</h3>
+                <button onClick={() => setRatingModal(null)} className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mb-4 text-center">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 text-center">
                 How was your food and delivery experience?
               </p>
               <div className="flex space-x-2 justify-center mb-5">
@@ -777,14 +777,14 @@ const OrderHistory = () => {
                   >
                     <Star
                       className={`w-8 h-8 transition-colors ${
-                        s <= ratingVal ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
+                        s <= ratingVal ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'
                       }`}
                     />
                   </button>
                 ))}
               </div>
               <textarea
-                className="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 mb-4 focus:ring-2 focus:ring-[#D70F64]/30 focus:border-[#D70F64] focus:outline-none resize-none"
+                className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 mb-4 focus:ring-2 focus:ring-[#D70F64]/30 focus:border-[#D70F64] focus:outline-none resize-none"
                 rows="3"
                 placeholder="Share your feedback (optional)..."
                 value={ratingText}

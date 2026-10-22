@@ -1,5 +1,3 @@
-import { normalizePhpUploadJson } from '@/lib/uploadImageResolve'
-
 // Convert a File object to a base64 data-URL string
 export const fileToBase64DataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -9,140 +7,111 @@ export const fileToBase64DataUrl = (file) =>
     reader.readAsDataURL(file)
   })
 
-function cleanEnv(val) {
-  return String(val ?? '')
-    .trim()
-    .replace(/^["']|["']$/g, '')
-}
-
 /**
- * Calls uploadImage.php with JSON body. Used in the browser directly (PHP allows CORS)
- * when NEXT_PUBLIC_UPLOAD_IMAGE_API is an absolute URL — avoids Node fetch issues on some networks.
+ * Uploads a base64 image data string to the backend S3 upload API
  */
-async function postPhpUpload(base64Image) {
-  const uploadApi = cleanEnv(process.env.NEXT_PUBLIC_UPLOAD_IMAGE_API)
-
-  const imageBaseUrl = cleanEnv(process.env.NEXT_PUBLIC_UPLOADED_IMAGE_URL)
-
-  if (!uploadApi || !/^https?:\/\//i.test(uploadApi)) return null
-
-  const response = await fetch(uploadApi, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ image: base64Image }),
-  })
-
-  const text = await response.text()
-  let data
-  try {
-    data = JSON.parse(text)
-  } catch {
-    return {
-      success: false,
-      error: response.ok ? 'Invalid JSON from upload server' : text.slice(0, 160),
-    }
-  }
-
-  if (!response.ok) {
-    return {
-      success: false,
-      error:
-        (typeof data?.error === 'string' && data.error) ||
-        `Upload failed (HTTP ${response.status})`,
-    }
-  }
-
-  const normalized = normalizePhpUploadJson(data, imageBaseUrl)
-  if (!normalized.ok) {
-    return { success: false, error: normalized.error }
-  }
-
-  return {
-    success: true,
-    url: normalized.url,
-    fileName: normalized.image_url,
-  }
-}
-
-async function postViaNextProxy(base64Image) {
-  const response = await fetch('/api/upload-image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ image: base64Image }),
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    return {
-      success: false,
-      error: data.error || `Upload proxy failed (${response.status})`,
-    }
-  }
-
-  if (data.success && data.url) {
-    return {
-      success: true,
-      url: data.url,
-      fileName: data.image_url,
-    }
-  }
-
-  return {
-    success: false,
-    error: data.error || 'Upload failed',
-  }
-}
-
-/**
- * Sends base64 to uploadImage.php. In the browser, calls PHP directly first (same TLS stack as Chrome);
- * falls back to the Next.js `/api/upload-image` proxy if that path is not used or throws.
- */
-export const uploadBase64Image = async (base64Image) => {
+export const uploadBase64Image = async (base64Image, fileName = null, folder = 'uploads') => {
   try {
     if (!base64Image || typeof base64Image !== 'string') {
-      return { success: false, error: 'No image data' }
+      return { success: false, error: 'No image data provided' }
     }
 
-    if (typeof window !== 'undefined') {
-      try {
-        const direct = await postPhpUpload(base64Image)
-        if (direct !== null) {
-          return direct
-        }
-      } catch (e) {
-        console.warn('Direct PHP upload failed, using Next proxy:', e.message)
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        fileName,
+        folder,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || `Upload failed with status ${response.status}`,
+        hint: data.hint,
       }
     }
 
-    return await postViaNextProxy(base64Image)
+    if (data.success && data.url) {
+      return {
+        success: true,
+        url: data.url,
+        fileName: data.fileName || data.key || data.url,
+        image_url: data.image_url || data.url,
+      }
+    }
+
+    return {
+      success: false,
+      error: data.error || 'Upload failed: Server did not return a valid URL',
+    }
   } catch (error) {
-    console.error('Error uploading image:', error)
-    return { success: false, error: error.message }
+    console.error('Error uploading image to S3:', error)
+    return { success: false, error: error.message || 'Network error during upload' }
   }
 }
 
-export const uploadProductImage = async (file) => {
+/**
+ * Uploads a File object directly to Amazon S3 via the backend API
+ */
+export const uploadProductImage = async (file, folder = 'uploads') => {
   try {
+    if (!file) {
+      return { success: false, error: 'No file provided' }
+    }
+
+    // Try FormData upload first for efficiency with larger files
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', folder)
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (response.ok && data.success && data.url) {
+        return {
+          success: true,
+          url: data.url,
+          fileName: data.fileName || data.key || data.url,
+          image_url: data.image_url || data.url,
+        }
+      }
+    } catch {
+      // Fallback to base64 if FormData fails
+    }
+
+    // Fallback: convert to base64 data URL
     const base64 = await fileToBase64DataUrl(file)
-    return uploadBase64Image(base64)
+    return await uploadBase64Image(base64, file.name, folder)
   } catch (error) {
-    console.error('Error uploading image:', error)
+    console.error('Error in uploadProductImage:', error)
     return { success: false, error: error.message }
   }
 }
 
-export const uploadMultipleImages = async (files) => {
+/**
+ * Uploads multiple File objects in parallel
+ */
+export const uploadMultipleImages = async (files, folder = 'uploads') => {
   try {
     if (!files || files.length === 0) {
       throw new Error('No files provided')
     }
 
     const results = await Promise.all(
-      Array.from(files).map((file) => uploadProductImage(file))
+      Array.from(files).map((file) => uploadProductImage(file, folder))
     )
 
     const successful = results.filter((r) => r.success)
@@ -154,12 +123,25 @@ export const uploadMultipleImages = async (files) => {
       errors: failed.map((r) => r.error),
     }
   } catch (error) {
-    console.error('Error uploading multiple images:', error)
+    console.error('Error uploading multiple images to S3:', error)
     return { success: false, error: error.message }
   }
 }
 
-export const deleteProductImage = async (fileName) => {
-  console.warn('Delete image not supported on external server for:', fileName)
-  return { success: true }
+/**
+ * Deletes an image from Amazon S3
+ */
+export const deleteProductImage = async (fileNameOrUrl) => {
+  try {
+    if (!fileNameOrUrl) return { success: false, error: 'No file specified' }
+
+    const response = await fetch(`/api/upload-image?key=${encodeURIComponent(fileNameOrUrl)}`, {
+      method: 'DELETE',
+    })
+    const data = await response.json().catch(() => ({}))
+    return data
+  } catch (err) {
+    console.error('Error deleting image from S3:', err)
+    return { success: false, error: err.message }
+  }
 }

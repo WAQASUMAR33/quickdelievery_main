@@ -4,6 +4,9 @@ import { getAuthUser, requireRole, ADMIN_ROLES } from '@/lib/auth-server'
 // Catalog taxonomy types that only admins may create/update/delete.
 const ADMIN_ONLY_TYPES = ['category', 'subcategory', 'productcategory']
 
+let productsCache = null
+let productsCacheTime = 0
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -134,6 +137,14 @@ export async function GET(request) {
     }
 
     if (type === 'products') {
+      const isPublicUnfiltered = !categoryId && !vendorId && !vertical && !searchParams.get('productCategoryId')
+      if (isPublicUnfiltered && productsCache && (Date.now() - productsCacheTime < 60000)) {
+        return Response.json({
+          success: true,
+          data: productsCache
+        })
+      }
+
       if (categoryId) {
         whereClause.catId = parseInt(categoryId) || categoryId
       }
@@ -159,9 +170,6 @@ export async function GET(request) {
             subCategory: true,
             productCategory: true,
             vendor: true,
-            approver: true,
-
-            creator: true
           },
           orderBy: { createdAt: 'desc' }
         }),
@@ -179,39 +187,39 @@ export async function GET(request) {
         businessMap[b.email.toLowerCase()] = b
       })
 
-      // Parse JSON fields back to arrays/objects
+      // Parse JSON fields safely so one invalid field never drops images
+      const safeJson = (val, fallback = null) => {
+        if (!val) return fallback
+        if (typeof val !== 'string') return val
+        try {
+          return JSON.parse(val)
+        } catch {
+          if (fallback !== null) return fallback
+          return [val]
+        }
+      }
+
       const processedProducts = products.map(product => {
         const vendorEmail = product.vendor?.email
         const biz = vendorEmail ? businessMap[vendorEmail.toLowerCase()] : null
-        try {
-          return {
-            ...product,
-            vendor: product.vendor ? {
-              ...product.vendor,
-              businessName: biz?.businessName || product.vendor.username,
-              urlLogo: biz?.urlLogo || null
-            } : null,
-            proImages: product.proImages ? JSON.parse(product.proImages) : null,
-            keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
-            variations: product.variations ? JSON.parse(product.variations) : null,
-            reviews: product.reviews ? JSON.parse(product.reviews) : null
-          }
-        } catch (parseError) {
-          console.warn('JSON parse error for product:', product.proId, parseError)
-          return {
-            ...product,
-            vendor: product.vendor ? {
-              ...product.vendor,
-              businessName: biz?.businessName || product.vendor.username,
-              urlLogo: biz?.urlLogo || null
-            } : null,
-            proImages: null,
-            keyFeatures: null,
-            variations: null,
-            reviews: null
-          }
+        return {
+          ...product,
+          vendor: product.vendor ? {
+            ...product.vendor,
+            businessName: biz?.businessName || product.vendor.username,
+            urlLogo: biz?.urlLogo || null
+          } : null,
+          proImages: safeJson(product.proImages, []),
+          keyFeatures: safeJson(product.keyFeatures, typeof product.keyFeatures === 'string' ? product.keyFeatures.split(',').map(s => s.trim()) : []),
+          variations: safeJson(product.variations, []),
+          reviews: safeJson(product.reviews, [])
         }
       })
+
+      if (isPublicUnfiltered) {
+        productsCache = processedProducts
+        productsCacheTime = Date.now()
+      }
 
       return Response.json({
         success: true,

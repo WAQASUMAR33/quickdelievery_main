@@ -228,55 +228,55 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="bg-white rounded-none p-6 sm:p-10 max-w-xl w-full text-center shadow-xl border border-gray-100"
+          className="bg-white dark:bg-slate-900 rounded-none p-6 sm:p-10 max-w-xl w-full text-center shadow-xl border border-gray-100 dark:border-slate-800"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.15, type: 'spring', stiffness: 220 }}
-            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-none flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200"
+            className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-none flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20"
           >
             <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
           </motion.div>
 
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-emerald-50 text-emerald-700 text-xs font-extrabold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold uppercase tracking-wider mb-3 border border-emerald-200 dark:border-emerald-800">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             Order Confirmed #{orderSuccess.id}
           </span>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-slate-100 mb-2">
             Your Order is on the way!
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md mx-auto">
-            The kitchen has received your order and rider dispatch is in progress. Estimated arrival in <span className="font-bold text-gray-900">20-30 minutes</span>.
+          <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+            The kitchen has received your order and rider dispatch is in progress. Estimated arrival in <span className="font-bold text-gray-900 dark:text-slate-100">20-30 minutes</span>.
           </p>
 
-          <div className="bg-gray-50 rounded-none p-4 mb-6 border border-gray-100 text-left space-y-2 text-xs sm:text-sm text-gray-700">
+          <div className="bg-gray-50 dark:bg-slate-800/80 rounded-none p-4 mb-6 border border-gray-100 dark:border-slate-700 text-left space-y-2 text-xs sm:text-sm text-gray-700 dark:text-slate-300">
             <div className="flex justify-between">
-              <span className="text-gray-500">Delivery Address:</span>
-              <span className="font-bold truncate max-w-[240px]">{shippingAddress}</span>
+              <span className="text-gray-500 dark:text-slate-400">Delivery Address:</span>
+              <span className="font-bold truncate max-w-[240px] text-gray-900 dark:text-slate-100">{shippingAddress}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Payment Method:</span>
-              <span className="font-bold uppercase">{paymentMethod.replace(/_/g, ' ')}</span>
+              <span className="text-gray-500 dark:text-slate-400">Payment Method:</span>
+              <span className="font-bold uppercase text-gray-900 dark:text-slate-100">{paymentMethod.replace(/_/g, ' ')}</span>
             </div>
-            <div className="flex justify-between text-base font-black text-gray-900 pt-2 border-t border-gray-200">
+            <div className="flex justify-between text-base font-black text-gray-900 dark:text-slate-100 pt-2 border-t border-gray-200 dark:border-slate-700">
               <span>Total Paid:</span>
-              <span className="text-[#4f46e5]">Rs. {effectiveTotal.toLocaleString()}</span>
+              <span className="text-[#4f46e5] dark:text-indigo-400">Rs. {effectiveTotal.toLocaleString()}</span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => onNavigateOrders?.()}
-              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
             >
               <Truck className="w-4 h-4" />
               Track Live Order
             </button>
             <button
               onClick={() => onNavigateExplore?.()}
-              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-none font-bold text-sm transition-colors"
+              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-none font-bold text-sm transition-colors border border-transparent dark:border-slate-700"
             >
               Continue Exploring
             </button>
@@ -295,16 +295,16 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           animate={{ scale: 1, opacity: 1 }}
           className="max-w-md w-full"
         >
-          <div className="w-24 h-24 bg-gradient-to-tr from-violet-100 to-indigo-50 rounded-none flex items-center justify-center mx-auto mb-6 border border-indigo-100 shadow-sm">
-            <ShoppingBag className="w-12 h-12 text-[#6366f1]" />
+          <div className="w-24 h-24 bg-gradient-to-tr from-violet-100 to-indigo-50 dark:from-slate-800 dark:to-indigo-950/40 rounded-none flex items-center justify-center mx-auto mb-6 border border-indigo-100 dark:border-slate-700 shadow-sm">
+            <ShoppingBag className="w-12 h-12 text-[#6366f1] dark:text-indigo-400" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Your basket is empty</h2>
-          <p className="text-sm text-gray-500 mb-8 max-w-sm mx-auto">
+          <h2 className="text-2xl font-black text-gray-900 dark:text-slate-100 mb-2">Your basket is empty</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">
             Hungry? Discover curated restaurant meals, hot deals, and daily grocery essentials delivered in minutes.
           </p>
           <button
             onClick={() => onNavigateExplore?.()}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
           >
             <ShoppingBag className="w-4 h-4" />
             Explore Stores &amp; Menus
@@ -318,32 +318,32 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
       
       {/* ── Top Header & Breadcrumb ── */}
-      <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/80">
+      <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/80 dark:border-slate-800">
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigateExplore?.()}
-            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#6366f1] transition-colors p-2 -ml-2 rounded-none hover:bg-gray-100"
+            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-indigo-400 transition-colors p-2 -ml-2 rounded-none hover:bg-gray-100 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Menu
           </button>
-          <span className="text-gray-300">|</span>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
+          <span className="text-gray-300 dark:text-slate-700">|</span>
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-slate-100 flex items-center gap-2">
             Checkout
-            <span className="text-xs font-extrabold bg-indigo-50 text-[#4f46e5] px-2.5 py-0.5 rounded-none">
+            <span className="text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-[#4f46e5] dark:text-indigo-400 px-2.5 py-0.5 rounded-none border border-indigo-100 dark:border-indigo-900/50">
               {getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'}
             </span>
           </h1>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-none bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-          <Clock className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-none bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>Estimated Delivery: 20-30 mins</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-none bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+        <div className="mb-6 p-4 rounded-none bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-sm flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
@@ -356,10 +356,10 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="lg:col-span-7 space-y-6">
 
           {/* 1. Delivery Address Card */}
-          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-none p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base sm:text-lg font-black text-gray-900 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#6366f1]" />
+              <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[#6366f1] dark:text-indigo-400" />
                 1. Delivery Details
               </h2>
               <div className="flex items-center gap-1.5">
@@ -370,8 +370,8 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     onClick={() => setAddressLabel(tag)}
                     className={`text-xs font-bold px-3 py-1 rounded-none transition-all ${
                       addressLabel === tag
-                        ? 'bg-[#4f46e5] text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[#4f46e5] text-white shadow-sm'
+                        : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {tag}
@@ -383,7 +383,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
             <div className="space-y-4">
               {/* Street Address Input */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                   Street / Apartment / Building Address *
                 </label>
                 <textarea
@@ -391,40 +391,40 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                   value={shippingAddress}
                   onChange={(e) => setShippingAddress(e.target.value)}
                   placeholder="e.g. House #14, Street 8, Block C, Gulberg III, Lahore"
-                  className="w-full p-3 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all resize-none"
+                  className="w-full p-3 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 rounded-none focus:border-[#6366f1] dark:focus:border-indigo-400 focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
                 />
               </div>
 
               {/* Phone & Rider Notes row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     Contact Phone Number
                   </label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-gray-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="0300-1234567"
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 rounded-none focus:border-[#6366f1] dark:focus:border-indigo-400 focus:ring-2 focus:ring-[#6366f1]/20 outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     Instructions for Rider
                   </label>
                   <div className="relative">
-                    <FileText className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <FileText className="w-4 h-4 text-gray-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={riderNotes}
                       onChange={(e) => setRiderNotes(e.target.value)}
                       placeholder="e.g. Ring bell / Leave at gate"
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 rounded-none focus:border-[#6366f1] dark:focus:border-indigo-400 focus:ring-2 focus:ring-[#6366f1]/20 outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -433,21 +433,21 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
               {/* Interactive Google Map Pin Drop */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-gray-600 flex items-center gap-1.5">
-                    <Navigation className="w-3.5 h-3.5 text-[#6366f1]" />
+                  <span className="text-xs font-bold text-gray-600 dark:text-slate-400 flex items-center gap-1.5">
+                    <Navigation className="w-3.5 h-3.5 text-[#6366f1] dark:text-indigo-400" />
                     Drop Pin on Map for Live GPS Delivery:
                   </span>
                   <button
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isLocating}
-                    className="text-xs font-bold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-none transition-colors flex items-center gap-1"
+                    className="text-xs font-bold text-[#4f46e5] dark:text-indigo-300 hover:text-[#4338ca] bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-3 py-1 rounded-none transition-colors flex items-center gap-1 border border-indigo-100 dark:border-indigo-900/40"
                   >
                     {isLocating ? 'Locating…' : '📍 Use My GPS Location'}
                   </button>
                 </div>
 
-                <div className="w-full h-44 rounded-none overflow-hidden border border-gray-200 relative bg-gray-100">
+                <div className="w-full h-44 rounded-none overflow-hidden border border-gray-200 dark:border-slate-700 relative bg-gray-100 dark:bg-slate-950">
                   {isLoaded ? (
                     <GoogleMap
                       mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -478,7 +478,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                       />
                     </GoogleMap>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-400 dark:text-slate-500">
                       Loading interactive map…
                     </div>
                   )}
@@ -489,24 +489,24 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* 2. Cart Items Review Card */}
-          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+          <div className="bg-white dark:bg-slate-900 rounded-none p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-none bg-violet-50 flex items-center justify-center text-[#6366f1]">
+                <div className="w-8 h-8 rounded-none bg-violet-50 dark:bg-indigo-950/60 flex items-center justify-center text-[#6366f1] dark:text-indigo-400">
                   <ShoppingBag className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-gray-900 leading-tight">
+                  <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-slate-100 leading-tight">
                     2. Order Items
                   </h2>
-                  <span className="text-xs text-gray-500 font-medium">From {storeName}</span>
+                  <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">From {storeName}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => onNavigateExplore?.()}
-                className="text-xs font-extrabold text-[#4f46e5] hover:text-[#4338ca] bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-none transition-colors flex items-center gap-1"
+                className="text-xs font-extrabold text-[#4f46e5] dark:text-indigo-300 hover:text-[#4338ca] bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-3 py-1.5 rounded-none transition-colors flex items-center gap-1 border border-indigo-100 dark:border-indigo-900/50"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add More
@@ -514,7 +514,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
             </div>
 
             {/* List of Cart Items */}
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-slate-800">
               {items.map((item, idx) => {
                 const itemKey = `${item.proId}_${item.selectedVariation?.name || 'def'}_${idx}`
                 const itemPrice = parseFloat(item.salePrice) || parseFloat(item.price) || 0
@@ -523,7 +523,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 return (
                   <div key={itemKey} className="py-4 flex items-center gap-3 sm:gap-4 group">
                     {/* Item Thumbnail */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-none bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-none bg-gray-100 dark:bg-slate-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-slate-700">
                       <img
                         src={item.proImages?.[0] || '/placeholder-product.jpg'}
                         alt={item.proName}
@@ -533,36 +533,36 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
 
                     {/* Item Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug line-clamp-1">
+                      <h3 className="font-bold text-gray-900 dark:text-slate-100 text-sm sm:text-base leading-snug line-clamp-1">
                         {item.proName}
                       </h3>
                       {item.selectedVariation && (
-                        <span className="inline-block mt-0.5 text-[11px] font-bold text-[#6366f1] bg-indigo-50 px-2 py-0.5 rounded-none">
+                        <span className="inline-block mt-0.5 text-[11px] font-bold text-[#6366f1] dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-none border border-indigo-100 dark:border-indigo-900/40">
                           {item.selectedVariation.name}
                         </span>
                       )}
-                      <p className="text-xs text-gray-500 mt-1 font-semibold">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 font-semibold">
                         Rs. {itemPrice.toLocaleString()} each
                       </p>
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 p-1 rounded-none border border-gray-200">
+                    <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 dark:bg-slate-800 p-1 rounded-none border border-gray-200 dark:border-slate-700">
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.proId, item.quantity - 1, item.selectedVariation)}
-                        className="w-7 h-7 rounded-none bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
+                        className="w-7 h-7 rounded-none bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center justify-center shadow-sm transition-colors"
                         aria-label="Decrease quantity"
                       >
                         {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5 text-rose-500" /> : <Minus className="w-3.5 h-3.5" />}
                       </button>
-                      <span className="text-xs sm:text-sm font-black w-6 text-center tabular-nums text-gray-900">
+                      <span className="text-xs sm:text-sm font-black w-6 text-center tabular-nums text-gray-900 dark:text-slate-100">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.proId, item.quantity + 1, item.selectedVariation)}
-                        className="w-7 h-7 rounded-none bg-white text-gray-700 hover:bg-gray-200 flex items-center justify-center shadow-sm transition-colors"
+                        className="w-7 h-7 rounded-none bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center justify-center shadow-sm transition-colors"
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -571,7 +571,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
 
                     {/* Line Total Price */}
                     <div className="text-right min-w-[70px]">
-                      <span className="text-sm sm:text-base font-black text-gray-900">
+                      <span className="text-sm sm:text-base font-black text-gray-900 dark:text-slate-100">
                         Rs. {itemLineTotal.toLocaleString()}
                       </span>
                     </div>
@@ -580,7 +580,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     <button
                       type="button"
                       onClick={() => removeFromCart(item.proId, item.selectedVariation)}
-                      className="p-1.5 text-gray-400 hover:text-rose-500 rounded-none hover:bg-rose-50 transition-colors"
+                      className="p-1.5 text-gray-400 dark:text-slate-500 hover:text-rose-500 rounded-none hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                       title="Remove item"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -592,9 +592,9 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* 3. Payment Method Card */}
-          <div className="bg-white rounded-none p-5 sm:p-6 border border-gray-200 shadow-sm">
-            <h2 className="text-base sm:text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
-              <CreditCard className="w-5 h-5 text-[#6366f1]" />
+          <div className="bg-white dark:bg-slate-900 rounded-none p-5 sm:p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
+            <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-slate-100 flex items-center gap-2 mb-4">
+              <CreditCard className="w-5 h-5 text-[#6366f1] dark:text-indigo-400" />
               3. Payment Method
             </h2>
 
@@ -612,15 +612,15 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                     onClick={() => setPaymentMethod(method.id)}
                     className={`p-4 rounded-none border text-left transition-all relative ${
                       isSelected
-                        ? 'border-[#6366f1] bg-indigo-50/40 ring-2 ring-[#6366f1]/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
+                        ? 'border-[#6366f1] dark:border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/40 ring-2 ring-[#6366f1]/20'
+                        : 'border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-gray-300 dark:hover:border-slate-700'
                     }`}
                   >
                     <div className="text-2xl mb-1">{method.icon}</div>
-                    <h3 className={`text-sm font-extrabold ${isSelected ? 'text-[#4f46e5]' : 'text-gray-900'}`}>
+                    <h3 className={`text-sm font-extrabold ${isSelected ? 'text-[#4f46e5] dark:text-indigo-400' : 'text-gray-900 dark:text-slate-100'}`}>
                       {method.label}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{method.desc}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{method.desc}</p>
                   </button>
                 )
               })}
@@ -633,24 +633,24 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-24">
 
           {/* Voucher Promo Input */}
-          <div className="bg-white rounded-none p-5 border border-gray-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-none p-5 border border-gray-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <Tag className="w-4 h-4 text-[#6366f1]" />
-              <h3 className="text-sm font-black text-gray-900">Have a Voucher / Promo Code?</h3>
+              <Tag className="w-4 h-4 text-[#6366f1] dark:text-indigo-400" />
+              <h3 className="text-sm font-black text-gray-900 dark:text-slate-100">Have a Voucher / Promo Code?</h3>
             </div>
 
             {appliedVoucher ? (
-              <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-none">
+              <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-none">
                 <div>
-                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
                     {appliedVoucher.code} ({appliedVoucher.label})
                   </span>
-                  <span className="text-xs text-emerald-600 font-semibold">Discount applied to bill!</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Discount applied to bill!</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleRemoveVoucher}
-                  className="text-xs font-bold text-rose-600 hover:underline px-2"
+                  className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-2"
                 >
                   Remove
                 </button>
@@ -662,11 +662,11 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value)}
                   placeholder="e.g. WELCOME50"
-                  className="flex-1 px-3.5 py-2.5 text-sm uppercase font-bold border border-gray-200 rounded-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none"
+                  className="flex-1 px-3.5 py-2.5 text-sm uppercase font-bold bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 rounded-none focus:border-[#6366f1] dark:focus:border-indigo-400 focus:ring-2 focus:ring-[#6366f1]/20 outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gray-900 hover:bg-[#4f46e5] text-white text-xs font-extrabold rounded-none transition-colors"
+                  className="px-5 py-2.5 bg-gray-900 dark:bg-indigo-600 hover:bg-[#4f46e5] text-white text-xs font-extrabold rounded-none transition-colors"
                 >
                   Apply
                 </button>
@@ -675,41 +675,41 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           </div>
 
           {/* Bill Summary Breakdown */}
-          <div className="bg-white rounded-none p-6 border border-gray-200 shadow-sm space-y-4">
-            <h3 className="text-lg font-black text-gray-900 pb-3 border-b border-gray-100">
+          <div className="bg-white dark:bg-slate-900 rounded-none p-6 border border-gray-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 className="text-lg font-black text-gray-900 dark:text-slate-100 pb-3 border-b border-gray-100 dark:border-slate-800">
               Order Summary
             </h3>
 
-            <div className="space-y-2.5 text-sm text-gray-600">
+            <div className="space-y-2.5 text-sm text-gray-600 dark:text-slate-300">
               <div className="flex justify-between">
-                <span>Items Subtotal</span>
-                <span className="font-bold text-gray-900">Rs. {subtotalCart.toLocaleString()}</span>
+                <span className="text-gray-500 dark:text-slate-400">Items Subtotal</span>
+                <span className="font-bold text-gray-900 dark:text-slate-100">Rs. {subtotalCart.toLocaleString()}</span>
               </div>
 
               <div className="flex justify-between">
-                <span>Delivery Fee</span>
-                <span className="font-bold text-emerald-600">FREE</span>
+                <span className="text-gray-500 dark:text-slate-400">Delivery Fee</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">FREE</span>
               </div>
 
               <div className="flex justify-between">
-                <span>Platform &amp; Service Fee</span>
-                <span className="font-bold text-gray-900">Rs. {serviceChargeAmt.toLocaleString()}</span>
+                <span className="text-gray-500 dark:text-slate-400">Platform &amp; Service Fee</span>
+                <span className="font-bold text-gray-900 dark:text-slate-100">Rs. {serviceChargeAmt.toLocaleString()}</span>
               </div>
 
               {voucherDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600 font-bold">
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
                   <span>Voucher Discount</span>
                   <span>- Rs. {voucherDiscount.toLocaleString()}</span>
                 </div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-gray-200 flex justify-between items-baseline">
+            <div className="pt-3 border-t border-gray-200 dark:border-slate-800 flex justify-between items-baseline">
               <div>
-                <span className="text-base font-extrabold text-gray-900 block">Total (incl. VAT)</span>
-                <span className="text-[11px] text-gray-400 font-medium">All taxes &amp; charges included</span>
+                <span className="text-base font-extrabold text-gray-900 dark:text-slate-100 block">Total (incl. VAT)</span>
+                <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">All taxes &amp; charges included</span>
               </div>
-              <span className="text-2xl sm:text-3xl font-black text-[#4f46e5] tracking-tight">
+              <span className="text-2xl sm:text-3xl font-black text-[#4f46e5] dark:text-indigo-400 tracking-tight">
                 Rs. {effectiveTotal.toLocaleString()}
               </span>
             </div>
@@ -718,7 +718,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
             {isGuest ? (
               <NextLink
                 href="/login"
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01]"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:scale-[1.01]"
               >
                 Sign In to Place Order
                 <ChevronRight className="w-5 h-5" />
@@ -728,7 +728,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 type="button"
                 disabled={isCheckingOut || items.length === 0}
                 onClick={handlePlaceOrder}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none"
               >
                 {isCheckingOut ? (
                   <span className="flex items-center gap-2">
@@ -744,7 +744,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
               </button>
             )}
 
-            <div className="flex items-center justify-center gap-2 pt-2 text-[11px] font-bold text-gray-400">
+            <div className="flex items-center justify-center gap-2 pt-2 text-[11px] font-bold text-gray-400 dark:text-slate-500">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span>100% Safe &amp; Contactless Delivery Available</span>
             </div>
