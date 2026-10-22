@@ -5,6 +5,7 @@ frontend:
       commands:
         - npm ci --cache .npm --prefer-offline
         - npx prisma generate
+        - npx prisma db push --accept-data-loss
     build:
       commands:
         - env | grep -E '^(DATABASE_URL|JWT_KEY|ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION|S3_BUCKET_NAME|S3_CUSTOM_DOMAIN|GEMINI_API_KEY|NEXT_PUBLIC_)' > .env.production
