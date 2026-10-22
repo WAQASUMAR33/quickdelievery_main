@@ -56,10 +56,15 @@ export async function POST(request, { params }) {
       db = new PrismaClient()
     }
 
+    let numericSenderId = parseInt(senderId, 10)
+    if (isNaN(numericSenderId) || !numericSenderId) {
+      numericSenderId = 1
+    }
+
     const newMessage = await db.orderMessage.create({
       data: {
         orderId,
-        senderId: parseInt(senderId, 10),
+        senderId: numericSenderId,
         senderRole,
         senderName: senderName || (senderRole === 'DRIVER' ? 'Your Driver' : 'Customer'),
         message: message.trim(),

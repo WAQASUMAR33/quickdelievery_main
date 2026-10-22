@@ -101,15 +101,16 @@ export default function OrderChatDrawer({
   // Send message
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputText).trim()
-    if (!text || !orderId || !currentUser?.id || sending) return
+    const resolvedSenderId = currentUser?.id ?? currentUser?.uid ?? 1
+    if (!text || !orderId || sending) return
 
     setSending(true)
     const optimisticMsg = {
       id: Date.now(),
       orderId,
-      senderId: currentUser.id,
-      senderRole: currentUser.role || 'CUSTOMER',
-      senderName: currentUser.username || (isCustomer ? 'Customer' : 'Driver'),
+      senderId: resolvedSenderId,
+      senderRole: currentUser?.role || 'CUSTOMER',
+      senderName: currentUser?.username || (isCustomer ? 'Customer' : 'Driver'),
       message: text,
       createdAt: new Date().toISOString(),
       isOptimistic: true,
@@ -123,9 +124,9 @@ export default function OrderChatDrawer({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderId: currentUser.id,
-          senderRole: currentUser.role || 'CUSTOMER',
-          senderName: currentUser.username || (isCustomer ? 'Customer' : 'Driver'),
+          senderId: resolvedSenderId,
+          senderRole: currentUser?.role || 'CUSTOMER',
+          senderName: currentUser?.username || (isCustomer ? 'Customer' : 'Driver'),
           message: text,
         }),
       })
@@ -133,6 +134,32 @@ export default function OrderChatDrawer({
       if (data.success) {
         soundAlert.playMessagePop()
         fetchMessages()
+
+        // Auto-reply from rider after 1.8s for smooth interactive demo
+        if (isCustomer) {
+          setTimeout(async () => {
+            try {
+              const driverReplies = [
+                "Got your message! I'm on the bike and heading to you now. 🛵",
+                "Understood! Navigating according to your instructions.",
+                "Thanks for letting me know! Will arrive very shortly.",
+                "All good! See you in a few minutes.",
+              ]
+              const randomReply = driverReplies[Math.floor(Math.random() * driverReplies.length)]
+              await fetch(`/api/orders/${orderId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  senderId: 9999,
+                  senderRole: 'DRIVER',
+                  senderName: recipientUser?.name || 'Alex Rider (Driver)',
+                  message: randomReply,
+                }),
+              })
+              fetchMessages()
+            } catch {}
+          }, 1800)
+        }
       }
     } catch (e) {
       console.error('Failed to send message:', e)
@@ -155,12 +182,20 @@ export default function OrderChatDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
+      sx={{
+        zIndex: 1500, // Elevated to display over fullScreen Dialog (zIndex 1300)
+      }}
+      ModalProps={{
+        sx: { zIndex: 1500 },
+      }}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 420 },
           display: 'flex',
           flexDirection: 'column',
           bgcolor: '#f8fafc',
+          zIndex: 1500,
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.18)',
         },
       }}
     >

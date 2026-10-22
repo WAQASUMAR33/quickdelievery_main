@@ -391,7 +391,6 @@ export default function CustomerLiveTracking({
               Estimated Arrival: ~{etaMinutes} mins ({distanceKm} km away)
             </Typography>
           </Paper>
-        </Box>
 
         {/* Bottom Driver Info & Actions Card */}
         <Paper
