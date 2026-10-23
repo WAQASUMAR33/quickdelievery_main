@@ -37,7 +37,7 @@ export default function MaterialUIProvider({ children }) {
         fontFamily: 'var(--font-jakarta), system-ui, -apple-system, sans-serif',
       },
       shape: {
-        borderRadius: 12,
+        borderRadius: 0,
       },
       components: {
         MuiCssBaseline: {
@@ -47,11 +47,15 @@ export default function MaterialUIProvider({ children }) {
               color: isDark ? '#F1F5F9' : '#0F172A',
               transition: 'background-color 0.25s ease, color 0.25s ease',
             },
+            '*, *::before, *::after': {
+              borderRadius: '0px !important',
+            },
           },
         },
         MuiPaper: {
           styleOverrides: {
             root: {
+              borderRadius: '0px !important',
               backgroundImage: 'none',
               backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
               color: isDark ? '#F1F5F9' : '#0F172A',
@@ -62,6 +66,7 @@ export default function MaterialUIProvider({ children }) {
         MuiCard: {
           styleOverrides: {
             root: {
+              borderRadius: '0px !important',
               backgroundImage: 'none',
               backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
               borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
@@ -71,6 +76,7 @@ export default function MaterialUIProvider({ children }) {
         MuiMenu: {
           styleOverrides: {
             paper: {
+              borderRadius: '0px !important',
               backgroundImage: 'none',
               backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
               border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)',
@@ -80,6 +86,7 @@ export default function MaterialUIProvider({ children }) {
         MuiMenuItem: {
           styleOverrides: {
             root: {
+              borderRadius: '0px !important',
               color: isDark ? '#F1F5F9' : '#0F172A',
               '&:hover': {
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
@@ -91,8 +98,142 @@ export default function MaterialUIProvider({ children }) {
           styleOverrides: {
             root: {
               textTransform: 'none',
-              borderRadius: 8,
+              borderRadius: '0px !important',
               fontWeight: 600,
+            },
+          },
+        },
+        MuiButtonBase: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiDialog: {
+          styleOverrides: {
+            paper: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiDialogTitle: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiDialogContent: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiDialogActions: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiOutlinedInput: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+            notchedOutline: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiInputBase: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiFilledInput: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiChip: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+            label: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiAlert: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiAccordion: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+              '&:first-of-type': {
+                borderRadius: '0px !important',
+              },
+              '&:last-of-type': {
+                borderRadius: '0px !important',
+              },
+            },
+          },
+        },
+        MuiTabs: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+            indicator: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiTab: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiBadge: {
+          styleOverrides: {
+            badge: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiTooltip: {
+          styleOverrides: {
+            tooltip: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiDrawer: {
+          styleOverrides: {
+            paper: {
+              borderRadius: '0px !important',
+            },
+          },
+        },
+        MuiPaginationItem: {
+          styleOverrides: {
+            root: {
+              borderRadius: '0px !important',
             },
           },
         },
