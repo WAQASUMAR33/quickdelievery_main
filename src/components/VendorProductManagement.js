@@ -79,6 +79,8 @@ const VendorProductManagement = () => {
   const { userData } = useAuth()
   const router = useRouter()
   const [products, setProducts] = useState([])
+  const [mainCategories, setMainCategories] = useState([])
+  const [productCategories, setProductCategories] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -123,6 +125,7 @@ const VendorProductManagement = () => {
     productType: '',
     menuSectionName: '',
     catId: '',
+    productCategoryId: '',
     subCatId: '',
 
     // Phase 2: Pricing, Availability & Offer Data
@@ -217,31 +220,49 @@ const VendorProductManagement = () => {
     { name: 'Brown',  hex: '#92400E' }, { name: 'Navy',   hex: '#1E3A8A' },
   ]
 
-  const fetchCategories = async () => {
+  const fetchTaxonomy = async () => {
     try {
-      const [pcRes, catRes] = await Promise.all([
+      const [pcRes, catRes, subRes] = await Promise.all([
         fetch('/api/products?type=productcategories').then(r => r.json()),
         fetch('/api/products?type=categories').then(r => r.json()),
+        fetch('/api/products?type=subcategories').then(r => r.json()),
       ])
-      if (pcRes.success && pcRes.data?.length > 0) {
-        setCategories(pcRes.data.map(c => ({
-          id: c.productCategoryId,
-          name: c.productCategoryName,
-          catId: c.categoryId,
-        })))
-      } else if (catRes.success) {
-        setCategories(catRes.data || [])
+      const fetchedCats = catRes.success ? (catRes.data || []) : []
+      const fetchedProdCats = pcRes.success ? (pcRes.data || []) : []
+      const fetchedSubs = subRes.success ? (subRes.data || []) : []
+
+      setMainCategories(fetchedCats)
+      setProductCategories(fetchedProdCats)
+      setCategories(fetchedCats)
+      setSubcategories(fetchedSubs)
+
+      const restaurantCat = fetchedCats.find(c => {
+        const n = (c.name || '').toLowerCase()
+        const code = (c.code || '').toLowerCase()
+        return n === 'restaurant' || code === 'restaurant' || n.includes('restaurant') || code.includes('restaurant') || c.vertical === 'FOOD'
+      })
+
+      if (isRestaurant && restaurantCat) {
+        setFormData(p => ({
+          ...p,
+          catId: p.catId || String(restaurantCat.id),
+        }))
       }
-    } catch { setCategories([]) }
+    } catch (e) {
+      console.error('Failed to load taxonomy:', e)
+      setMainCategories([])
+      setProductCategories([])
+      setCategories([])
+      setSubcategories([])
+    }
   }
 
-  const fetchSubcategories = async () => {
-    try {
-      const res = await fetch('/api/products?type=subcategories')
-      const r = await res.json()
-      setSubcategories(r.success ? (r.data || []) : [])
-    } catch { setSubcategories([]) }
-  }
+  const selectedMainCat = mainCategories.find(c => String(c.id) === String(formData.catId))
+  const isRestaurantActive = selectedMainCat
+    ? ((selectedMainCat.name || '').toLowerCase().includes('restaurant') ||
+       (selectedMainCat.code || '').toLowerCase().includes('restaurant') ||
+       selectedMainCat.vertical === 'FOOD')
+    : isRestaurant
 
   const fetchProducts = useCallback(async () => {
     if (!userData?.uid) return
@@ -256,11 +277,10 @@ const VendorProductManagement = () => {
 
   useEffect(() => {
     if (userData?.uid) {
-      fetchCategories()
-      fetchSubcategories()
+      fetchTaxonomy()
       fetchProducts()
     }
-  }, [userData?.uid, fetchProducts])
+  }, [userData?.uid, fetchProducts, isRestaurant])
 
   const handleEditProduct = async () => {
     if (!selectedProduct) return
@@ -296,8 +316,8 @@ const VendorProductManagement = () => {
           id: selectedProduct.proId,
           proName: formData.proName,
           description: formData.description,
-          productCategoryId: selectedCat?.id ? parseInt(selectedCat.id) : null,
-          catId: selectedCat?.catId || parseInt(formData.catId),
+          productCategoryId: formData.productCategoryId ? parseInt(formData.productCategoryId) : null,
+          catId: parseInt(formData.catId) || 2,
           subCatId: parseInt(formData.subCatId),
           price: parseFloat(formData.price),
           cost: parseFloat(formData.cost || 0),
@@ -357,13 +377,17 @@ const VendorProductManagement = () => {
     setSelectedProduct(product)
 
     // Match product category or root category
-    let initialCatId = ''
-    if (product.productCategoryId) {
-      const match = categories.find(c => String(c.id) === String(product.productCategoryId))
-      initialCatId = match ? String(match.id) : String(product.productCategoryId)
-    } else if (product.catId) {
-      const match = categories.find(c => String(c.id) === String(product.catId) || String(c.catId) === String(product.catId))
-      initialCatId = match ? String(match.id) : String(product.catId)
+    let initialCatId = product.catId ? String(product.catId) : ''
+    let initialProdCatId = product.productCategoryId ? String(product.productCategoryId) : ''
+
+    if (!initialCatId && initialProdCatId) {
+      const matchPC = productCategories.find(c => String(c.productCategoryId) === initialProdCatId)
+      if (matchPC?.categoryId) initialCatId = String(matchPC.categoryId)
+    }
+
+    if (!initialCatId && isRestaurant) {
+      const restCat = mainCategories.find(c => (c.name || '').toLowerCase() === 'restaurant' || (c.code || '').toLowerCase() === 'restaurant' || c.vertical === 'FOOD')
+      if (restCat) initialCatId = String(restCat.id)
     }
 
     // Parse existing variations / add-ons
@@ -417,6 +441,7 @@ const VendorProductManagement = () => {
       proName: product.proName || '',
       description: product.description || '',
       catId: initialCatId,
+      productCategoryId: initialProdCatId,
       subCatId: product.subCatId != null ? String(product.subCatId) : '',
       price: product.price != null ? product.price.toString() : '',
       cost: product.cost != null ? product.cost.toString() : '',
@@ -561,7 +586,9 @@ const VendorProductManagement = () => {
       p.description?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchStatus = filterStatus === 'all' ||
       (filterStatus === 'active' && p.status) || (filterStatus === 'inactive' && !p.status)
-    const matchCat = filterCategory === 'all' || p.catId === filterCategory
+    const matchCat = filterCategory === 'all' ||
+      String(p.catId) === String(filterCategory) ||
+      String(p.productCategoryId) === String(filterCategory)
     const matchApproval = filterApproval === 'all' || p.approvalStatus === filterApproval
     return matchSearch && matchStatus && matchCat && matchApproval
   })
@@ -687,7 +714,11 @@ const VendorProductManagement = () => {
             <InputLabel>Category</InputLabel>
             <Select value={filterCategory} label="Category" onChange={e => setFilterCategory(e.target.value)} sx={{ borderRadius: 0 }}>
               <MenuItem value="all">All Categories</MenuItem>
-              {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+              {mainCategories.map(c => (
+                <MenuItem key={c.id} value={String(c.id)}>
+                  {c.name.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : c.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Box>
@@ -1048,14 +1079,14 @@ const VendorProductManagement = () => {
           {/* Phase Filter Navigation Pills */}
           <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
             {[
-              { id: 'all', label: 'All 7 Phases' },
+              { id: 'all', label: 'All Phases' },
               { id: 'phase_1', label: 'Phase 1: Vital Info' },
               { id: 'phase_2', label: 'Phase 2: Pricing & Offer' },
               { id: 'phase_3', label: 'Phase 3: Discoverability' },
-              { id: 'phase_4', label: 'Phase 4: Food & Safety' },
-              { id: 'phase_5', label: 'Phase 5: Modifiers & Variations' },
+              ...(isRestaurantActive ? [{ id: 'phase_4', label: 'Phase 4: Food & Dietary' }] : []),
+              { id: 'phase_5', label: isRestaurantActive ? 'Phase 5: Modifiers & Add-ons' : 'Phase 5: Variations & Options' },
               { id: 'phase_6', label: 'Phase 6: Image Media Assets' },
-              { id: 'phase_7', label: 'Phase 7: Dimensions & Shipping' },
+              { id: 'phase_7', label: isRestaurantActive ? 'Phase 7: Packaging & Handover' : 'Phase 7: Dimensions & Shipping' },
             ].map(tab => (
               <Button
                 key={tab.id}
@@ -1155,56 +1186,105 @@ const VendorProductManagement = () => {
                     </Select>
                   </FormControl>
 
-                  <TextField
-                    size="small" fullWidth label="Product Type / Subtype"
-                    value={formData.productType}
-                    onChange={e => setFormData({ ...formData, productType: e.target.value })}
-                    placeholder="e.g. Grocery & Gourmet Food, Restaurant Items"
-                    sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-
-                  <TextField
-                    size="small" fullWidth label="Menu Section Name (Food)"
-                    value={formData.menuSectionName}
-                    onChange={e => setFormData({ ...formData, menuSectionName: e.target.value })}
-                    placeholder="e.g. Appetizers, Entrees, Chef Specials"
-                    sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-
-                  {/* Category */}
+                  {/* Root-Level Main Category */}
                   <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                    <InputLabel>Product Category *</InputLabel>
+                    <InputLabel id="edit-modal-main-cat-label">Main Category (Root) *</InputLabel>
                     <Select
+                      labelId="edit-modal-main-cat-label"
                       value={formData.catId ? String(formData.catId) : ''}
-                      label="Product Category *"
-                      onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
+                      label="Main Category (Root) *"
+                      onChange={e => setFormData({ ...formData, catId: e.target.value, productCategoryId: '', subCatId: '' })}
                       sx={{ borderRadius: 0 }}
                     >
-                      <MenuItem value=""><em>Select Category</em></MenuItem>
-                      {categories.map(c => <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>)}
+                      <MenuItem value=""><em>Select Main Category…</em></MenuItem>
+                      {mainCategories.map(c => (
+                        <MenuItem key={c.id} value={String(c.id)}>
+                          {c.name?.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : c.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
 
-                  {/* Subcategory */}
+                  {/* Scoped Product Category */}
                   <FormControl size="small" fullWidth disabled={!formData.catId} sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                    <InputLabel>Subcategory *</InputLabel>
+                    <InputLabel id="edit-modal-prod-cat-label">Product Category *</InputLabel>
                     <Select
+                      labelId="edit-modal-prod-cat-label"
+                      value={formData.productCategoryId ? String(formData.productCategoryId) : ''}
+                      label="Product Category *"
+                      onChange={e => setFormData({ ...formData, productCategoryId: e.target.value, subCatId: '' })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value=""><em>{formData.catId ? 'Select Product Category…' : 'Select Main Category first'}</em></MenuItem>
+                      {productCategories
+                        .filter(pc => String(pc.categoryId) === String(formData.catId))
+                        .map(pc => (
+                          <MenuItem key={pc.productCategoryId} value={String(pc.productCategoryId)}>
+                            {pc.productCategoryName}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Scoped Subcategory */}
+                  <FormControl size="small" fullWidth disabled={!formData.productCategoryId && !formData.catId} sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel id="edit-modal-subcat-label">Subcategory *</InputLabel>
+                    <Select
+                      labelId="edit-modal-subcat-label"
                       value={formData.subCatId ? String(formData.subCatId) : ''}
                       label="Subcategory *"
                       onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
                       sx={{ borderRadius: 0 }}
                     >
-                      <MenuItem value=""><em>Select Subcategory</em></MenuItem>
-                      {(() => {
-                        const selCat = categories.find(c => String(c.id) === String(formData.catId))
-                        const targetCatId = selCat?.catId || formData.catId
-                        const filtered = subcategories.filter(s => String(s.catId) === String(targetCatId))
-                        return filtered.map(s => (
-                          <MenuItem key={s.subCatId} value={String(s.subCatId)}>{s.subCatName}</MenuItem>
-                        ))
-                      })()}
+                      <MenuItem value=""><em>{formData.productCategoryId ? 'Select Subcategory…' : 'Select Product Category first'}</em></MenuItem>
+                      {subcategories
+                        .filter(s => {
+                          if (formData.productCategoryId && s.productCategoryId) {
+                            return String(s.productCategoryId) === String(formData.productCategoryId)
+                          }
+                          if (formData.catId) {
+                            return String(s.catId) === String(formData.catId)
+                          }
+                          return false
+                        })
+                        .map(s => (
+                          <MenuItem key={s.subCatId} value={String(s.subCatId)}>
+                            {s.subCatName}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
+
+                  {/* Dynamic Category Specific Field: Menu Section for Restaurant, Product Type for General */}
+                  {isRestaurantActive ? (
+                    <TextField
+                      size="small" fullWidth label="Menu Section Name (Food)"
+                      value={formData.menuSectionName}
+                      onChange={e => setFormData({ ...formData, menuSectionName: e.target.value })}
+                      placeholder="e.g. Appetizers, Entrees, Chef Specials, Beverages"
+                      sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
+                  ) : (
+                    <TextField
+                      size="small" fullWidth label="Product Type / Subtype"
+                      value={formData.productType}
+                      onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                      placeholder="e.g. Consumer Electronics, Apparel Pack"
+                      sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
+                  )}
+
+                  {/* Restaurant Mode Banner */}
+                  {isRestaurantActive && (
+                    <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: '#f0fdf4', border: '1px solid #86efac', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Typography variant="body2" fontWeight={800} color="#166534">
+                        🍽️ RESTAURANT ACTIVE:
+                      </Typography>
+                      <Typography variant="caption" color="#15803d">
+                        Showing scoped food categories, menu sections, and culinary attributes. Non-food options are automatically filtered out.
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               </Card>
             )}
@@ -1425,8 +1505,8 @@ const VendorProductManagement = () => {
               </Card>
             )}
 
-            {/* ── PHASE 4: Food, Dietary & Safety Compliance ── */}
-            {(activeEditPhase === 'all' || activeEditPhase === 'phase_4') && (
+            {/* ── PHASE 4: Food, Dietary & Safety Compliance (Only for Restaurant Items) ── */}
+            {isRestaurantActive && (activeEditPhase === 'all' || activeEditPhase === 'phase_4') && (
               <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
@@ -1666,36 +1746,38 @@ const VendorProductManagement = () => {
                   </Box>
                 </Box>
 
-                {/* Retail Size & Color Variant Pickers */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
-                      <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
+                {/* Retail Size & Color Variant Pickers (Only for Retail / Non-Restaurant Products) */}
+                {!isRestaurantActive && (
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                        <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
+                        <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
+                      </Box>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Select Size</InputLabel>
+                        <Select value={formData.size || ''} label="Select Size" onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                          <MenuItem value=""><em>None / Standard</em></MenuItem>
+                          {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                        </Select>
+                      </FormControl>
                     </Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Select Size</InputLabel>
-                      <Select value={formData.size || ''} label="Select Size" onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
-                        <MenuItem value=""><em>None / Standard</em></MenuItem>
-                        {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                      </Select>
-                    </FormControl>
-                  </Box>
 
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
-                      <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
+                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                        <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
+                        <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
+                      </Box>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Select Color</InputLabel>
+                        <Select value={formData.color || ''} label="Select Color" onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                          <MenuItem value=""><em>None / Default</em></MenuItem>
+                          {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
+                        </Select>
+                      </FormControl>
                     </Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Select Color</InputLabel>
-                      <Select value={formData.color || ''} label="Select Color" onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
-                        <MenuItem value=""><em>None / Default</em></MenuItem>
-                        {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
-                      </Select>
-                    </FormControl>
                   </Box>
-                </Box>
+                )}
               </Card>
             )}
 
@@ -1763,132 +1845,197 @@ const VendorProductManagement = () => {
               </Card>
             )}
 
-            {/* ── PHASE 7: Dimensions, Weight & Shipping ── */}
+            {/* ── PHASE 7: Dimensions, Weight & Shipping / Packaging & Handover ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_7') && (
               <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
                     <Chip label="PHASE 7" size="small" sx={{ bgcolor: '#e0e7ff', color: '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
                     <Typography variant="subtitle1" fontWeight={800} color="#111827">
-                      Dimensions, Weight & Shipping
+                      {isRestaurantActive ? 'Food Packaging, Handover & Freshness Assurance' : 'Dimensions, Weight & Shipping'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Net item metrics, shipping tare weight, package size dimensions, warranty, and return policies.
+                      {isRestaurantActive
+                        ? 'Culinary packaging, portion weight, freshness handover guarantee, and replacement policy.'
+                        : 'Net item metrics, shipping tare weight, package size dimensions, warranty, and return policies.'}
                     </Typography>
                   </Box>
                 </Box>
                 <Divider sx={{ mb: 2.5 }} />
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-                  <TextField
-                    size="small" fullWidth label="Net Item Weight" type="number" inputProps={{ min: 0 }}
-                    value={formData.itemWeight}
-                    onChange={e => setFormData({ ...formData, itemWeight: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                {isRestaurantActive ? (
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2.5 }}>
+                    <TextField
+                      size="small" fullWidth label="Estimated Dish / Portion Weight"
+                      value={formData.itemWeight || ''}
+                      onChange={e => setFormData({ ...formData, itemWeight: e.target.value })}
+                      placeholder="e.g. 450"
+                      InputProps={{ endAdornment: <InputAdornment position="end">grams</InputAdornment> }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
+                    <FormControl size="small" fullWidth>
+                      <InputLabel>Packaging Type</InputLabel>
+                      <Select
+                        value={formData.dimensionalUnit || 'Thermal Insulated Food Box'}
+                        label="Packaging Type"
+                        onChange={e => setFormData({ ...formData, dimensionalUnit: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {[
+                          'Thermal Insulated Food Box',
+                          'Tamper-Evident Sealed Bag',
+                          'Eco-Friendly Kraft Paper Container',
+                          'Microwavable Food Grade Bowl',
+                          'Beverage Spill-Proof Cup Carrier',
+                        ].map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                      </Select>
+                    </FormControl>
 
-                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
-                    <InputLabel>Item Weight Unit</InputLabel>
-                    <Select
-                      value={formData.itemWeightUnit || 'grams'}
-                      label="Item Weight Unit"
-                      onChange={e => setFormData({ ...formData, itemWeightUnit: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                    <FormControl size="small" fullWidth sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                      <InputLabel>Freshness & Quality Assurance</InputLabel>
+                      <Select
+                        value={formData.warrantyType || 'Freshness & Hygiene Guarantee'}
+                        label="Freshness & Quality Assurance"
+                        onChange={e => setFormData({ ...formData, warrantyType: e.target.value, warranty: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {[
+                          'Freshness & Hygiene Guarantee',
+                          '100% Hot & Fresh on Delivery Guarantee',
+                          'Chef Quality Handover Inspection',
+                          'Sealed Kitchen Handover Assurance',
+                        ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
+                      </Select>
+                    </FormControl>
 
-                  <TextField
-                    size="small" fullWidth label="Shipping Weight" type="number" inputProps={{ min: 0 }}
-                    value={formData.shippingWeight}
-                    onChange={e => setFormData({ ...formData, shippingWeight: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                    <FormControl size="small" fullWidth sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                      <InputLabel>Resolution & Replacement Policy</InputLabel>
+                      <Select
+                        value={formData.returnPolicy || 'Immediate Replacement on Delivery'}
+                        label="Resolution & Replacement Policy"
+                        onChange={e => setFormData({ ...formData, returnPolicy: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {[
+                          'Immediate Replacement on Delivery',
+                          'Instant Full Refund or Credit if Incorrect',
+                          'Kitchen Compensation Guarantee',
+                          'Non-Returnable Perishable Meal',
+                        ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                    <TextField
+                      size="small" fullWidth label="Net Item Weight" type="number" inputProps={{ min: 0 }}
+                      value={formData.itemWeight}
+                      onChange={e => setFormData({ ...formData, itemWeight: e.target.value })}
+                      sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
 
-                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
-                    <InputLabel>Shipping Weight Unit</InputLabel>
-                    <Select
-                      value={formData.shippingWeightUnit || 'grams'}
-                      label="Shipping Weight Unit"
-                      onChange={e => setFormData({ ...formData, shippingWeightUnit: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                    <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                      <InputLabel>Item Weight Unit</InputLabel>
+                      <Select
+                        value={formData.itemWeightUnit || 'grams'}
+                        label="Item Weight Unit"
+                        onChange={e => setFormData({ ...formData, itemWeightUnit: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                      </Select>
+                    </FormControl>
 
-                  <TextField
-                    size="small" fullWidth label="Item Length" type="number" inputProps={{ min: 0 }}
-                    value={formData.itemLength}
-                    onChange={e => setFormData({ ...formData, itemLength: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                    <TextField
+                      size="small" fullWidth label="Shipping Weight" type="number" inputProps={{ min: 0 }}
+                      value={formData.shippingWeight}
+                      onChange={e => setFormData({ ...formData, shippingWeight: e.target.value })}
+                      sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
 
-                  <TextField
-                    size="small" fullWidth label="Item Width" type="number" inputProps={{ min: 0 }}
-                    value={formData.itemWidth}
-                    onChange={e => setFormData({ ...formData, itemWidth: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                    <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                      <InputLabel>Shipping Weight Unit</InputLabel>
+                      <Select
+                        value={formData.shippingWeightUnit || 'grams'}
+                        label="Shipping Weight Unit"
+                        onChange={e => setFormData({ ...formData, shippingWeightUnit: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                      </Select>
+                    </FormControl>
 
-                  <TextField
-                    size="small" fullWidth label="Item Height" type="number" inputProps={{ min: 0 }}
-                    value={formData.itemHeight}
-                    onChange={e => setFormData({ ...formData, itemHeight: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                    <TextField
+                      size="small" fullWidth label="Item Length" type="number" inputProps={{ min: 0 }}
+                      value={formData.itemLength}
+                      onChange={e => setFormData({ ...formData, itemLength: e.target.value })}
+                      sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
 
-                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
-                    <InputLabel>Dimensional Unit</InputLabel>
-                    <Select
-                      value={formData.dimensionalUnit || 'cm'}
-                      label="Dimensional Unit"
-                      onChange={e => setFormData({ ...formData, dimensionalUnit: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      {['cm', 'inches', 'mm'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                    <TextField
+                      size="small" fullWidth label="Item Width" type="number" inputProps={{ min: 0 }}
+                      value={formData.itemWidth}
+                      onChange={e => setFormData({ ...formData, itemWidth: e.target.value })}
+                      sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
 
-                  {/* Amazon / Daraz Warranty & Return Policy */}
-                  <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                    <InputLabel>Warranty Coverage (Amazon / Daraz)</InputLabel>
-                    <Select
-                      value={formData.warrantyType || formData.warranty || '1 Year Brand Warranty'}
-                      label="Warranty Coverage (Amazon / Daraz)"
-                      onChange={e => setFormData({ ...formData, warrantyType: e.target.value, warranty: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      {[
-                        '1 Year Official Brand Warranty',
-                        '2 Years Official Brand Warranty',
-                        '6 Months Brand Warranty',
-                        '3 Months Seller Warranty',
-                        '7 Days Replacement Warranty',
-                        '7 Days Checking Warranty',
-                        'No Warranty',
-                      ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                    <TextField
+                      size="small" fullWidth label="Item Height" type="number" inputProps={{ min: 0 }}
+                      value={formData.itemHeight}
+                      onChange={e => setFormData({ ...formData, itemHeight: e.target.value })}
+                      sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
 
-                  <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                    <InputLabel>Return & Resolution Policy</InputLabel>
-                    <Select
-                      value={formData.returnPolicy || '7 Days Replacement'}
-                      label="Return & Resolution Policy"
-                      onChange={e => setFormData({ ...formData, returnPolicy: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      {[
-                        '7 Days Free Return / Refund',
-                        '14 Days Replacement Guarantee',
-                        '30 Days Buyer Protection',
-                        'Non-Returnable (Hygiene / Perishable)',
-                      ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Box>
+                    <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                      <InputLabel>Dimensional Unit</InputLabel>
+                      <Select
+                        value={formData.dimensionalUnit || 'cm'}
+                        label="Dimensional Unit"
+                        onChange={e => setFormData({ ...formData, dimensionalUnit: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {['cm', 'inches', 'mm'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                      <InputLabel>Warranty Coverage (Amazon / Daraz)</InputLabel>
+                      <Select
+                        value={formData.warrantyType || formData.warranty || '1 Year Brand Warranty'}
+                        label="Warranty Coverage (Amazon / Daraz)"
+                        onChange={e => setFormData({ ...formData, warrantyType: e.target.value, warranty: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {[
+                          '1 Year Official Brand Warranty',
+                          '2 Years Official Brand Warranty',
+                          '6 Months Brand Warranty',
+                          '3 Months Seller Warranty',
+                          '7 Days Replacement Warranty',
+                          '7 Days Checking Warranty',
+                          'No Warranty',
+                        ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                      <InputLabel>Return & Resolution Policy</InputLabel>
+                      <Select
+                        value={formData.returnPolicy || '7 Days Replacement'}
+                        label="Return & Resolution Policy"
+                        onChange={e => setFormData({ ...formData, returnPolicy: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {[
+                          '7 Days Free Return / Refund',
+                          '14 Days Replacement Guarantee',
+                          '30 Days Buyer Protection',
+                          'Non-Returnable (Hygiene / Perishable)',
+                        ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                )}
               </Card>
             )}
 

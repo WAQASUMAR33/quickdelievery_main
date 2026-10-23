@@ -200,9 +200,9 @@ export default function ProductEditPage() {
     }
   })
 
-  const activeCategoryId = vendorCategory?.id || (isRestaurant ? 12 : 13)
+  const activeCategoryId = form.catId || vendorCategory?.id || (isRestaurant ? 2 : null)
 
-  // Filter product categories to ONLY show product categories under this vendor's category
+  // Filter product categories to ONLY show product categories under this category
   const availableProductCategories = productCategories.filter(pc => {
     if (!activeCategoryId) return true
     return String(pc.categoryId) === String(activeCategoryId)
@@ -478,37 +478,59 @@ export default function ProductEditPage() {
               </SectionCard>
 
               {/* Category */}
-              <SectionCard icon={<CategoryOutlinedIcon fontSize="small" />} title="Category">
+              <SectionCard icon={<CategoryOutlinedIcon fontSize="small" />} title="Category Hierarchy">
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12} sm={4}>
                     <FormControl {...tf} fullWidth required disabled={isAdmin} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
+                      <InputLabel>Main Category (Root)</InputLabel>
+                      <Select label="Main Category (Root)" value={form.catId || ''}
+                        onChange={e => {
+                          const newCatId = e.target.value
+                          setForm(p => ({
+                            ...p,
+                            catId: newCatId,
+                            productCategoryId: '',
+                            subCatId: '',
+                          }))
+                        }}
+                        sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
+                        {baseCategories.map(c => (
+                          <MenuItem key={c.id} value={String(c.id)}>
+                            {c.name?.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : c.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={4}>
+                    <FormControl {...tf} fullWidth required disabled={isAdmin || !form.catId} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                       <InputLabel>Product Category</InputLabel>
-                      <Select label="Product Category" value={form.productCategoryId || form.catId}
+                      <Select label="Product Category" value={form.productCategoryId || ''}
                         onChange={e => {
                           const selectedPCId = e.target.value
-                          const selectedPC = productCategories.find(c => String(c.productCategoryId) === String(selectedPCId))
                           setForm(p => ({
                             ...p,
                             productCategoryId: selectedPCId,
-                            catId: selectedPC?.categoryId ? String(selectedPC.categoryId) : (activeCategoryId ? String(activeCategoryId) : selectedPCId),
                             subCatId: '',
                           }))
                         }}
                         sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
                         {availableProductCategories.map(c => (
-                          <MenuItem key={c.productCategoryId} value={c.productCategoryId}>
+                          <MenuItem key={c.productCategoryId} value={String(c.productCategoryId)}>
                             {c.productCategoryName}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+
+                  <Grid item xs={12} sm={4}>
                     <FormControl {...tf} fullWidth required disabled={isAdmin || (!form.catId && !form.productCategoryId)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}>
                       <InputLabel>Sub-category</InputLabel>
-                      <Select label="Sub-category" value={form.subCatId} onChange={e => set('subCatId', e.target.value)}
+                      <Select label="Sub-category" value={form.subCatId || ''} onChange={e => set('subCatId', e.target.value)}
                         sx={{ borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderRadius: 0 } }}>
-                        {filteredSubs.map(s => <MenuItem key={s.subCatId} value={s.subCatId}>{s.subCatName}</MenuItem>)}
+                        {filteredSubs.map(s => <MenuItem key={s.subCatId} value={String(s.subCatId)}>{s.subCatName}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>

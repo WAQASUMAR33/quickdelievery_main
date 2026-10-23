@@ -209,44 +209,51 @@ export default function AddProductPage() {
       fetch('/api/products?type=productcategories').then(r => r.json()),
       fetch('/api/products?type=subcategories').then(r => r.json()),
     ]).then(([catsData, pcData, subsData]) => {
-      if (catsData.success) setCategories(catsData.data || [])
+      const fetchedCats = catsData.success ? (catsData.data || []) : []
+      if (catsData.success) setCategories(fetchedCats)
       if (pcData.success)   setProductCategories(pcData.data || [])
       if (subsData.success) setSubcategories(subsData.data || [])
+
+      // Auto-initialize form.catId if not already set
+      const restaurantCat = fetchedCats.find(c => {
+        const n = (c.name || '').toLowerCase()
+        const code = (c.code || '').toLowerCase()
+        return n === 'restaurant' || code === 'restaurant' || n.includes('restaurant') || code.includes('restaurant') || c.vertical === 'FOOD'
+      })
+      const defaultCatId = (isRestaurant && restaurantCat) ? String(restaurantCat.id) : (restaurantCat ? String(restaurantCat.id) : (fetchedCats[0] ? String(fetchedCats[0].id) : ''))
+      if (defaultCatId) {
+        setForm(p => ({
+          ...p,
+          catId: p.catId || defaultCatId,
+          productType: (isRestaurant || restaurantCat) ? 'Grocery & Gourmet Food / Restaurant Items' : p.productType,
+          conditionType: (isRestaurant || restaurantCat) ? 'Prepared Fresh' : p.conditionType,
+        }))
+      }
     }).catch(e => console.error('Categories fetch error:', e))
-  }, [userData?.uid])
+  }, [userData?.uid, isRestaurant])
 
-  // Resolve the vendor's category
-  const vendorCategory = categories.find(c => {
-    const cName = (c.name || '').trim().toLowerCase()
-    const cCode = (c.code || '').trim().toLowerCase()
-    const bizCategoryName = (vendorBusiness?.category?.name || userData?.business?.category?.name || '').trim().toLowerCase()
-    const bizVertical = (vendorBusiness?.vertical || userData?.business?.vertical || '').trim().toLowerCase()
+  // Resolve the current selected category and check if it is Restaurant
+  const selectedCategory = categories.find(c => String(c.id) === String(form.catId))
+  const isRestaurantCategory = selectedCategory
+    ? ((selectedCategory.name || '').toLowerCase().includes('restaurant') ||
+       (selectedCategory.code || '').toLowerCase().includes('restaurant') ||
+       selectedCategory.vertical === 'FOOD')
+    : isRestaurant
 
-    if (bizCategoryName && (cName === bizCategoryName || cName.includes(bizCategoryName) || bizCategoryName.includes(cName))) return true
-    if (bizVertical && (cName === bizVertical || cName.includes(bizVertical) || bizVertical.includes(cName))) return true
-    if (isRestaurant) {
-      return cName.includes('restaurant') || cName.includes('food') || cCode.includes('restaurant') || cCode.includes('food')
-    } else {
-      return cName.includes('shop') || cName.includes('grocery') || cName.includes('store') || cCode.includes('shop') || cCode.includes('grocery')
-    }
-  })
-
-  const activeCategoryId = vendorCategory?.id || (isRestaurant ? 12 : 13)
-
+  // Filter Product Categories strictly by the selected Main Category (Root)
   const availableProductCategories = productCategories.filter(pc => {
-    if (!activeCategoryId) return true
-    return String(pc.categoryId) === String(activeCategoryId)
+    if (!form.catId) return true
+    return String(pc.categoryId) === String(form.catId)
   })
 
+  // Filter Subcategories strictly by the selected Product Category
   const filteredSubs = (() => {
-    if (!form.productCategoryId) return []
-    const matchedByProdCat = subcategories.filter(s => String(s.productCategoryId) === String(form.productCategoryId))
-    if (matchedByProdCat.length > 0) return matchedByProdCat
-
-    const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(form.productCategoryId))
-    const targetCatId = selectedPC?.categoryId || form.catId || activeCategoryId
-    if (targetCatId) {
-      return subcategories.filter(s => String(s.catId) === String(targetCatId))
+    if (form.productCategoryId) {
+      const matched = subcategories.filter(s => String(s.productCategoryId) === String(form.productCategoryId))
+      if (matched.length > 0) return matched
+    }
+    if (form.catId) {
+      return subcategories.filter(s => String(s.catId) === String(form.catId))
     }
     return []
   })()
@@ -256,18 +263,38 @@ export default function AddProductPage() {
     if (errors[field]) setErrors(p => ({ ...p, [field]: '' }))
   }
 
+  const handleMainCategoryChange = (e) => {
+    const selectedCatId = e.target.value
+    const selCat = categories.find(c => String(c.id) === String(selectedCatId))
+    const isFoodCat = selCat
+      ? ((selCat.name || '').toLowerCase().includes('restaurant') ||
+         (selCat.code || '').toLowerCase().includes('restaurant') ||
+         selCat.vertical === 'FOOD')
+      : false
+
+    setForm(p => ({
+      ...p,
+      catId: selectedCatId,
+      productCategoryId: '',
+      subCatId: '',
+      productType: isFoodCat ? 'Grocery & Gourmet Food / Restaurant Items' : 'Physical Retail Product',
+      menuSectionName: isFoodCat ? (p.menuSectionName || 'Chef Signature Entrees') : '',
+      conditionType: isFoodCat ? 'Prepared Fresh' : 'New',
+      taxCode: isFoodCat ? 'FOOD_PREP_STD' : 'RETAIL_GOODS_STD',
+      unitCountType: isFoodCat ? 'serving' : 'item',
+    }))
+    if (errors.catId) setErrors(p => ({ ...p, catId: '' }))
+  }
+
   const handleCategoryChange = (e) => {
     const selectedPCId = e.target.value
-    const selectedPC = productCategories.find(pc => String(pc.productCategoryId) === String(selectedPCId))
-    const resolvedCatId = selectedPC?.categoryId ? String(selectedPC.categoryId) : (activeCategoryId ? String(activeCategoryId) : '')
     setForm(p => ({
       ...p,
       productCategoryId: selectedPCId,
-      catId: resolvedCatId,
       subCatId: '',
     }))
-    if (errors.catId || errors.productCategoryId) {
-      setErrors(p => ({ ...p, catId: '', productCategoryId: '' }))
+    if (errors.productCategoryId) {
+      setErrors(p => ({ ...p, productCategoryId: '' }))
     }
   }
 
@@ -394,7 +421,8 @@ export default function AddProductPage() {
     const e = {}
     if (!form.name.trim()) e.name = 'Item name is required'
     if (!form.sku.trim()) e.sku = 'SKU is required'
-    if (!form.productCategoryId && !form.catId) e.catId = 'Category is required'
+    if (!form.catId) e.catId = 'Main Category is required'
+    if (!form.productCategoryId) e.productCategoryId = 'Product category is required'
     if (!form.subCatId) e.subCatId = 'Sub-category is required'
     if (!form.price || parseFloat(form.price) <= 0) e.price = 'Valid price is required'
     setErrors(e)
@@ -432,7 +460,7 @@ export default function AddProductPage() {
           type: 'product',
           proName: form.name,
           description: form.description,
-          catId: parseInt(form.catId) || activeCategoryId || 12,
+          catId: parseInt(form.catId) || 2,
           subCatId: parseInt(form.subCatId),
           productCategoryId: form.productCategoryId ? parseInt(form.productCategoryId) : null,
           price: parseFloat(form.price),
@@ -581,14 +609,14 @@ export default function AddProductPage() {
         {/* ── Phase Filter Navigation Pills ── */}
         <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 3, borderBottom: '1px solid', borderColor: '#e2e8f0' }}>
           {[
-            { id: 'all', label: 'All 7 Phases' },
+            { id: 'all', label: 'All Phases' },
             { id: 'phase_1', label: 'Phase 1: Vital Info' },
             { id: 'phase_2', label: 'Phase 2: Pricing & Offer' },
             { id: 'phase_3', label: 'Phase 3: Discoverability' },
-            { id: 'phase_4', label: 'Phase 4: Food & Safety' },
-            { id: 'phase_5', label: 'Phase 5: Modifiers & Variations' },
-            { id: 'phase_6', label: 'Phase 6: Image Media Assets' },
-            { id: 'phase_7', label: 'Phase 7: Dimensions & Shipping' },
+            ...(isRestaurantCategory ? [{ id: 'phase_4', label: 'Phase 4: Food & Kitchen' }] : []),
+            { id: 'phase_5', label: isRestaurantCategory ? 'Phase 5: Food Modifiers' : 'Phase 5: Options & Variations' },
+            { id: 'phase_6', label: 'Phase 6: Image Assets' },
+            { id: 'phase_7', label: isRestaurantCategory ? 'Phase 7: Packaging & Delivery' : 'Phase 7: Dimensions & Shipping' },
           ].map(tab => (
             <Button
               key={tab.id}
@@ -686,47 +714,54 @@ export default function AddProductPage() {
                   </Select>
                 </FormControl>
 
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Product Type / Subtype"
-                  value={form.productType} onChange={e => setField('productType', e.target.value)}
-                  placeholder="e.g. Grocery & Gourmet Food, Restaurant Items"
-                  sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}
-                />
-
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Menu Section Name (Food)"
-                  value={form.menuSectionName} onChange={e => setField('menuSectionName', e.target.value)}
-                  placeholder="e.g. Appetizers, Entrees, Chef Specials"
-                  sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}
-                />
-
-                {/* Category */}
+                {/* Root-Level Main Category */}
                 <FormControl size="small" fullWidth required error={!!errors.catId} sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                  <InputLabel>Product Category *</InputLabel>
+                  <InputLabel id="main-category-label">Main Category (Root) *</InputLabel>
                   <Select
-                    value={form.productCategoryId}
-                    label="Product Category *"
-                    onChange={handleCategoryChange}
+                    labelId="main-category-label"
+                    value={form.catId || ''}
+                    label="Main Category (Root) *"
+                    onChange={handleMainCategoryChange}
                   >
-                    <MenuItem value=""><em>Select category…</em></MenuItem>
-                    {availableProductCategories.map(c => (
-                      <MenuItem key={c.productCategoryId} value={String(c.productCategoryId)}>
-                        {c.productCategoryName}
+                    <MenuItem value=""><em>Select Main Category…</em></MenuItem>
+                    {categories.map(c => (
+                      <MenuItem key={c.id} value={String(c.id)}>
+                        {c.name.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : c.name}
                       </MenuItem>
                     ))}
                   </Select>
                   {errors.catId && <Typography variant="caption" color="error">{errors.catId}</Typography>}
                 </FormControl>
 
-                {/* Subcategory */}
-                <FormControl size="small" fullWidth required disabled={!form.productCategoryId} error={!!errors.subCatId} sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                  <InputLabel>Sub-category *</InputLabel>
+                {/* Scoped Product Category */}
+                <FormControl size="small" fullWidth required disabled={!form.catId} error={!!errors.productCategoryId} sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                  <InputLabel id="product-category-label">Product Category *</InputLabel>
                   <Select
-                    value={form.subCatId}
+                    labelId="product-category-label"
+                    value={form.productCategoryId || ''}
+                    label="Product Category *"
+                    onChange={handleCategoryChange}
+                  >
+                    <MenuItem value=""><em>{form.catId ? 'Select category…' : 'Select Main Category first'}</em></MenuItem>
+                    {availableProductCategories.map(c => (
+                      <MenuItem key={c.productCategoryId} value={String(c.productCategoryId)}>
+                        {c.productCategoryName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.productCategoryId && <Typography variant="caption" color="error">{errors.productCategoryId}</Typography>}
+                </FormControl>
+
+                {/* Scoped Sub-category */}
+                <FormControl size="small" fullWidth required disabled={!form.productCategoryId} error={!!errors.subCatId} sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                  <InputLabel id="subcategory-label">Sub-category *</InputLabel>
+                  <Select
+                    labelId="subcategory-label"
+                    value={form.subCatId || ''}
                     label="Sub-category *"
                     onChange={e => setField('subCatId', e.target.value)}
                   >
-                    <MenuItem value=""><em>Select sub-category…</em></MenuItem>
+                    <MenuItem value=""><em>{form.productCategoryId ? 'Select sub-category…' : 'Select Product Category first'}</em></MenuItem>
                     {filteredSubs.map(s => (
                       <MenuItem key={s.subCatId} value={String(s.subCatId)}>
                         {s.subCatName}
@@ -735,6 +770,33 @@ export default function AddProductPage() {
                   </Select>
                   {errors.subCatId && <Typography variant="caption" color="error">{errors.subCatId}</Typography>}
                 </FormControl>
+
+                {/* Restaurant-specific Menu Section */}
+                {isRestaurantCategory ? (
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Menu Section Name (Food)"
+                    value={form.menuSectionName} onChange={e => setField('menuSectionName', e.target.value)}
+                    placeholder="e.g. Appetizers, Chef Specials, Main Course, Desserts"
+                    sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}
+                  />
+                ) : (
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Product Type / Subtype"
+                    value={form.productType} onChange={e => setField('productType', e.target.value)}
+                    placeholder="e.g. Consumer Electronics, Retail Pack"
+                    sx={{ gridColumn: { xs: '1 / -1', sm: 'span 2' } }}
+                  />
+                )}
+
+                {/* Restaurant Mode Status Banner */}
+                {isRestaurantCategory && (
+                  <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Chip label="RESTAURANT ACTIVE" size="small" sx={{ bgcolor: '#166534', color: '#ffffff', fontWeight: 900, borderRadius: 0 }} />
+                    <Typography variant="caption" fontWeight={700} color="#166534">
+                      Restaurant root category active — Showing only restaurant categories, dishes, kitchen attributes &amp; modifiers.
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </Card>
           )}
@@ -920,7 +982,7 @@ export default function AddProductPage() {
           {/* ══════════════════════════════════════════════════════════════════════
               PHASE 4: Food, Dietary & Safety Compliance
           ══════════════════════════════════════════════════════════════════════ */}
-          {(activePhase === 'all' || activePhase === 'phase_4') && (
+          {(activePhase === 'all' || activePhase === 'phase_4') && isRestaurantCategory && (
             <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
@@ -1141,36 +1203,38 @@ export default function AddProductPage() {
                 </Box>
               </Box>
 
-              {/* Retail Size & Color Variant Pickers */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
-                <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
-                    <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
+              {/* Retail Size & Color Variant Pickers - Only for retail items */}
+              {!isRestaurantCategory && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
+                      <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
+                    </Box>
+                    <FormControl fullWidth size="small" sx={tfStyle}>
+                      <InputLabel>Select Size</InputLabel>
+                      <Select value={form.size || ''} label="Select Size" onChange={e => setField('size', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Standard</em></MenuItem>
+                        {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Box>
-                  <FormControl fullWidth size="small" sx={tfStyle}>
-                    <InputLabel>Select Size</InputLabel>
-                    <Select value={form.size || ''} label="Select Size" onChange={e => setField('size', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
-                      <MenuItem value=""><em>None / Standard</em></MenuItem>
-                      {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Box>
 
-                <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
-                    <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
+                      <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
+                    </Box>
+                    <FormControl fullWidth size="small" sx={tfStyle}>
+                      <InputLabel>Select Color</InputLabel>
+                      <Select value={form.color || ''} label="Select Color" onChange={e => setField('color', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Default</em></MenuItem>
+                        {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Box>
-                  <FormControl fullWidth size="small" sx={tfStyle}>
-                    <InputLabel>Select Color</InputLabel>
-                    <Select value={form.color || ''} label="Select Color" onChange={e => setField('color', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
-                      <MenuItem value=""><em>None / Default</em></MenuItem>
-                      {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
                 </Box>
-              </Box>
+              )}
             </Card>
           )}
 
@@ -1274,103 +1338,142 @@ export default function AddProductPage() {
               </Box>
               <Divider sx={{ mb: 2.5 }} />
 
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Net Item Weight" type="number" inputProps={{ min: 0 }}
-                  value={form.itemWeight} onChange={e => setField('itemWeight', e.target.value)}
-                />
+              {isRestaurantCategory ? (
+                <Box sx={{ mb: 2.5 }}>
+                  <Box sx={{ p: 2.5, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', mb: 2.5 }}>
+                    <Typography variant="subtitle2" fontWeight={800} color="#166534" mb={1}>
+                      🍽️ Takeaway &amp; Delivery Food Packaging Standards
+                    </Typography>
+                    <Typography variant="body2" color="#166534" mb={2}>
+                      Prepared fresh to order and dispatched in thermal food packaging. Freight physical dimensions (L × W × H) are waived for restaurant items.
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                      <TextField
+                        {...tfStyle} size="small" fullWidth label="Approx. Food Portion Weight"
+                        value={form.itemWeight || '450'} onChange={e => setField('itemWeight', e.target.value)}
+                        InputProps={{ endAdornment: <InputAdornment position="end">grams</InputAdornment> }}
+                      />
+                      <TextField
+                        {...tfStyle} size="small" fullWidth label="Kitchen Quality Assurance"
+                        value={form.warrantyType || 'Freshness & Hygiene Guarantee Upon Handover'}
+                        onChange={e => setField('warrantyType', e.target.value)}
+                      />
+                    </Box>
+                  </Box>
+                  <FormControl size="small" fullWidth sx={tfStyle}>
+                    <InputLabel>Return &amp; Resolution Policy</InputLabel>
+                    <Select
+                      value={form.returnPolicy || 'Immediate Replacement on Delivery'}
+                      label="Return &amp; Resolution Policy"
+                      onChange={e => setField('returnPolicy', e.target.value)}
+                    >
+                      {[
+                        'Immediate Replacement on Delivery',
+                        'Quality Assurance Guarantee — Instant Redelivery',
+                        'Refund on Damaged Packaging',
+                      ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Box>
+              ) : (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Net Item Weight" type="number" inputProps={{ min: 0 }}
+                    value={form.itemWeight} onChange={e => setField('itemWeight', e.target.value)}
+                  />
 
-                <FormControl size="small" fullWidth sx={tfStyle}>
-                  <InputLabel>Item Weight Unit</InputLabel>
-                  <Select
-                    value={form.itemWeightUnit || 'grams'}
-                    label="Item Weight Unit"
-                    onChange={e => setField('itemWeightUnit', e.target.value)}
-                  >
-                    {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                  <FormControl size="small" fullWidth sx={tfStyle}>
+                    <InputLabel>Item Weight Unit</InputLabel>
+                    <Select
+                      value={form.itemWeightUnit || 'grams'}
+                      label="Item Weight Unit"
+                      onChange={e => setField('itemWeightUnit', e.target.value)}
+                    >
+                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
 
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Shipping Weight" type="number" inputProps={{ min: 0 }}
-                  value={form.shippingWeight} onChange={e => setField('shippingWeight', e.target.value)}
-                />
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Shipping Weight" type="number" inputProps={{ min: 0 }}
+                    value={form.shippingWeight} onChange={e => setField('shippingWeight', e.target.value)}
+                  />
 
-                <FormControl size="small" fullWidth sx={tfStyle}>
-                  <InputLabel>Shipping Weight Unit</InputLabel>
-                  <Select
-                    value={form.shippingWeightUnit || 'grams'}
-                    label="Shipping Weight Unit"
-                    onChange={e => setField('shippingWeightUnit', e.target.value)}
-                  >
-                    {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                  <FormControl size="small" fullWidth sx={tfStyle}>
+                    <InputLabel>Shipping Weight Unit</InputLabel>
+                    <Select
+                      value={form.shippingWeightUnit || 'grams'}
+                      label="Shipping Weight Unit"
+                      onChange={e => setField('shippingWeightUnit', e.target.value)}
+                    >
+                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
 
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Item Length" type="number" inputProps={{ min: 0 }}
-                  value={form.itemLength} onChange={e => setField('itemLength', e.target.value)}
-                />
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Item Length" type="number" inputProps={{ min: 0 }}
+                    value={form.itemLength} onChange={e => setField('itemLength', e.target.value)}
+                  />
 
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Item Width" type="number" inputProps={{ min: 0 }}
-                  value={form.itemWidth} onChange={e => setField('itemWidth', e.target.value)}
-                />
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Item Width" type="number" inputProps={{ min: 0 }}
+                    value={form.itemWidth} onChange={e => setField('itemWidth', e.target.value)}
+                  />
 
-                <TextField
-                  {...tfStyle} size="small" fullWidth label="Item Height" type="number" inputProps={{ min: 0 }}
-                  value={form.itemHeight} onChange={e => setField('itemHeight', e.target.value)}
-                />
+                  <TextField
+                    {...tfStyle} size="small" fullWidth label="Item Height" type="number" inputProps={{ min: 0 }}
+                    value={form.itemHeight} onChange={e => setField('itemHeight', e.target.value)}
+                  />
 
-                <FormControl size="small" fullWidth sx={tfStyle}>
-                  <InputLabel>Dimensional Unit</InputLabel>
-                  <Select
-                    value={form.dimensionalUnit || 'cm'}
-                    label="Dimensional Unit"
-                    onChange={e => setField('dimensionalUnit', e.target.value)}
-                  >
-                    {['cm', 'inches', 'mm'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                  <FormControl size="small" fullWidth sx={tfStyle}>
+                    <InputLabel>Dimensional Unit</InputLabel>
+                    <Select
+                      value={form.dimensionalUnit || 'cm'}
+                      label="Dimensional Unit"
+                      onChange={e => setField('dimensionalUnit', e.target.value)}
+                    >
+                      {['cm', 'inches', 'mm'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
 
-                {/* Amazon / Daraz Warranty & Return Policy */}
-                <FormControl size="small" fullWidth sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                  <InputLabel>Warranty Coverage (Amazon / Daraz Standard)</InputLabel>
-                  <Select
-                    value={form.warrantyType || (isRestaurant ? 'Freshness & Quality Guarantee' : '1 Year Official Brand Warranty')}
-                    label="Warranty Coverage (Amazon / Daraz Standard)"
-                    onChange={e => setField('warrantyType', e.target.value)}
-                  >
-                    {[
-                      '1 Year Official Brand Warranty',
-                      '2 Years Official Brand Warranty',
-                      '6 Months Brand Warranty',
-                      '3 Months Seller Warranty',
-                      'Freshness & Quality Guarantee',
-                      '7 Days Replacement Warranty',
-                      '7 Days Checking Warranty',
-                      'No Warranty',
-                    ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                  {/* Amazon / Daraz Warranty & Return Policy */}
+                  <FormControl size="small" fullWidth sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Warranty Coverage (Amazon / Daraz Standard)</InputLabel>
+                    <Select
+                      value={form.warrantyType || '1 Year Official Brand Warranty'}
+                      label="Warranty Coverage (Amazon / Daraz Standard)"
+                      onChange={e => setField('warrantyType', e.target.value)}
+                    >
+                      {[
+                        '1 Year Official Brand Warranty',
+                        '2 Years Official Brand Warranty',
+                        '6 Months Brand Warranty',
+                        '3 Months Seller Warranty',
+                        'Freshness & Quality Guarantee',
+                        '7 Days Replacement Warranty',
+                        '7 Days Checking Warranty',
+                        'No Warranty',
+                      ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
+                    </Select>
+                  </FormControl>
 
-                <FormControl size="small" fullWidth sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                  <InputLabel>Return & Resolution Policy</InputLabel>
-                  <Select
-                    value={form.returnPolicy || '7 Days Free Return / Refund'}
-                    label="Return & Resolution Policy"
-                    onChange={e => setField('returnPolicy', e.target.value)}
-                  >
-                    {[
-                      '7 Days Free Return / Refund',
-                      '14 Days Replacement Guarantee',
-                      '30 Days Buyer Protection',
-                      'Immediate Replacement on Delivery',
-                      'Non-Returnable (Hygiene / Perishable Food)',
-                    ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Box>
+                  <FormControl size="small" fullWidth sx={{ ...tfStyle, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Return & Resolution Policy</InputLabel>
+                    <Select
+                      value={form.returnPolicy || '7 Days Free Return / Refund'}
+                      label="Return & Resolution Policy"
+                      onChange={e => setField('returnPolicy', e.target.value)}
+                    >
+                      {[
+                        '7 Days Free Return / Refund',
+                        '14 Days Replacement Guarantee',
+                        '30 Days Buyer Protection',
+                        'Immediate Replacement on Delivery',
+                        'Non-Returnable (Hygiene / Perishable Food)',
+                      ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
             </Card>
           )}
 

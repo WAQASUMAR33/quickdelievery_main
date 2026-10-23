@@ -462,8 +462,26 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                   <TextField
                     {...tfReadOnly}
                     fullWidth
-                    label="Category"
+                    label="Root Category"
                     value={business.category?.name || business.vertical || '—'}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    {...tfReadOnly}
+                    fullWidth
+                    label="Business Category"
+                    value={business.businessCategory?.categoryTitle || 'Restaurant'}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    {...tfReadOnly}
+                    fullWidth
+                    label="Business Type (Cuisine / Storefront)"
+                    value={business.businessType?.typeTitle || '—'}
                     InputProps={{ readOnly: true }}
                   />
                 </Grid>

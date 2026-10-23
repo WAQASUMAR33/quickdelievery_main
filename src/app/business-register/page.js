@@ -304,6 +304,13 @@ function BusinessRegisterInner() {
     return rules[step].every(v => v && String(v).trim())
   }
 
+  const selectedBizCategory = businessCategories.find(bc => String(bc.id) === String(formData.businessCategoryId))
+  const selectedProdCategory = categories.find(c => String(c.id) === String(formData.categoryId))
+  const isRestaurantSelected = Boolean(
+    selectedBizCategory?.categoryTitle?.toLowerCase() === 'restaurant' ||
+    selectedProdCategory?.label?.toLowerCase() === 'restaurant'
+  )
+
   const handleNext = () => {
     if (validateStep()) setStep(s => s + 1)
     else toast.error('Please fill all required fields.')
@@ -536,12 +543,31 @@ function BusinessRegisterInner() {
                         name="categoryId"
                         label="Product Category"
                         value={formData.categoryId}
-                        onChange={onChange}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const prodCat = categories.find(c => String(c.id) === String(val))
+                          const isRest = prodCat?.label?.toLowerCase() === 'restaurant'
+                          setFormData(p => {
+                            let newBizCatId = p.businessCategoryId
+                            if (isRest) {
+                              const restBizCat = businessCategories.find(bc => bc.categoryTitle?.toLowerCase() === 'restaurant')
+                              if (restBizCat) newBizCatId = String(restBizCat.id)
+                            }
+                            return {
+                              ...p,
+                              categoryId: val,
+                              businessCategoryId: newBizCatId,
+                              ...(isRest ? { businessTypeId: '' } : {}),
+                            }
+                          })
+                        }}
                         startAdornment={adornment(CategoryOutlinedIcon)}
                       >
                         <MenuItem value="" disabled><em>Select product category…</em></MenuItem>
                         {categories.map(o => (
-                          <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>
+                          <MenuItem key={o.id} value={o.id}>
+                            {o.label.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : o.label}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -557,13 +583,29 @@ function BusinessRegisterInner() {
                             value={formData.businessCategoryId}
                             onChange={(e) => {
                               const val = e.target.value
-                              setFormData(p => ({ ...p, businessCategoryId: val, businessTypeId: '' }))
+                              const bizCat = businessCategories.find(bc => String(bc.id) === String(val))
+                              const isRest = bizCat?.categoryTitle?.toLowerCase() === 'restaurant'
+                              setFormData(p => {
+                                let newCatId = p.categoryId
+                                if (isRest) {
+                                  const restProdCat = categories.find(c => c.label?.toLowerCase() === 'restaurant')
+                                  if (restProdCat) newCatId = restProdCat.id
+                                }
+                                return {
+                                  ...p,
+                                  businessCategoryId: val,
+                                  businessTypeId: '',
+                                  categoryId: newCatId,
+                                }
+                              })
                             }}
                             startAdornment={adornment(StorefrontOutlinedIcon)}
                           >
                             <MenuItem value="" disabled><em>Select business category…</em></MenuItem>
                             {businessCategories.map(bc => (
-                              <MenuItem key={bc.id} value={String(bc.id)}>{bc.categoryTitle}</MenuItem>
+                              <MenuItem key={bc.id} value={String(bc.id)}>
+                                {bc.categoryTitle.toLowerCase() === 'restaurant' ? '🍽️ Restaurant' : bc.categoryTitle}
+                              </MenuItem>
                             ))}
                           </Select>
                         </FormControl>
@@ -580,13 +622,28 @@ function BusinessRegisterInner() {
                             startAdornment={adornment(BusinessOutlinedIcon)}
                           >
                             <MenuItem value="" disabled><em>{formData.businessCategoryId ? 'Select business type…' : 'Select a category first'}</em></MenuItem>
-                            {(businessCategories.find(bc => String(bc.id) === formData.businessCategoryId)?.businessTypes || []).map(bt => (
+                            {(businessCategories.find(bc => String(bc.id) === String(formData.businessCategoryId))?.businessTypes || []).map(bt => (
                               <MenuItem key={bt.id} value={String(bt.id)}>{bt.typeTitle}</MenuItem>
                             ))}
                           </Select>
                         </FormControl>
                       </Grid>
                     </Grid>
+
+                    {/* Scoped Restaurant Mode Banner */}
+                    {isRestaurantSelected && (
+                      <Box sx={{ p: 2, bgcolor: '#f0fdf4', border: '1px solid #86efac', display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                        <Box sx={{ fontSize: 22, lineHeight: 1 }}>🍽️</Box>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={800} color="#166534">
+                            RESTAURANT BUSINESS CATEGORY ACTIVE
+                          </Typography>
+                          <Typography variant="caption" color="#15803d">
+                            Your store is registered under culinary & dining verticals. Only relevant restaurant cuisines, preparation timings, and food certifications will apply to your vendor portal.
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
 
 
 
@@ -857,10 +914,10 @@ function BusinessRegisterInner() {
                     </Grid>
 
                     <ImageUploadField
-                      label="Restaurant / Store Image (Optional)"
+                      label={isRestaurantSelected ? "Kitchen & Dining Showcase Image (Optional)" : "Restaurant / Store Image (Optional)"}
                       value={formData.urlRestaurantImages}
                       onChange={(url) => setFormData(p => ({ ...p, urlRestaurantImages: url }))}
-                      helperText="A photo of your restaurant or store front"
+                      helperText={isRestaurantSelected ? "Photo of your kitchen hygiene, dining hall, or signature culinary presentation" : "A photo of your restaurant or store front"}
                     />
 
                     {/* ── Summary ── */}
