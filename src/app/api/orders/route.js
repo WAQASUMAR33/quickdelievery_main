@@ -129,9 +129,38 @@ export async function GET(request) {
       prisma.order.count({ where: { ...baseWhere, status: 'CANCELLED' } })
     ])
 
+    // Format and parse product proImages into arrays for each order item
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      orderItems: (order.orderItems || []).map(item => {
+        let images = []
+        if (item.product?.proImages) {
+          if (Array.isArray(item.product.proImages)) {
+            images = item.product.proImages
+          } else if (typeof item.product.proImages === 'string') {
+            try {
+              const parsed = JSON.parse(item.product.proImages)
+              images = Array.isArray(parsed) ? parsed : [parsed]
+            } catch {
+              if (item.product.proImages.startsWith('http')) {
+                images = [item.product.proImages]
+              }
+            }
+          }
+        }
+        return {
+          ...item,
+          product: item.product ? {
+            ...item.product,
+            proImages: images
+          } : item.product
+        }
+      })
+    }))
+
     return Response.json({
       success: true,
-      data: orders,
+      data: formattedOrders,
       counts: {
         all: countAll,
         pending: countPending,

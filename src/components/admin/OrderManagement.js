@@ -179,6 +179,92 @@ function formatRelativeTime(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+export function getProductImageSrc(product) {
+  if (!product) return null
+  const proImages = product.proImages
+  if (!proImages) return null
+
+  if (Array.isArray(proImages)) {
+    for (const img of proImages) {
+      if (typeof img === 'string') {
+        const trimmed = img.trim()
+        if (trimmed.startsWith('http') || trimmed.startsWith('/')) return trimmed
+        if (trimmed.startsWith('[') || trimmed.startsWith('"')) {
+          try {
+            const parsed = JSON.parse(trimmed)
+            if (Array.isArray(parsed) && parsed[0]) return parsed[0]
+            if (typeof parsed === 'string') return parsed
+          } catch {}
+        }
+      }
+    }
+  }
+
+  if (typeof proImages === 'string') {
+    const trimmed = proImages.trim()
+    if (trimmed.startsWith('[') || trimmed.startsWith('{') || trimmed.startsWith('"')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const first = parsed[0]
+          if (typeof first === 'string' && (first.startsWith('http') || first.startsWith('/'))) return first.trim()
+        } else if (typeof parsed === 'string' && (parsed.startsWith('http') || parsed.startsWith('/'))) {
+          return parsed.trim()
+        }
+      } catch {}
+    } else if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
+      return trimmed
+    }
+  }
+
+  return null
+}
+
+function ProductImageItem({ src, name, size = 42, sx = {} }) {
+  const [error, setError] = useState(false)
+
+  if (!src || error) {
+    return (
+      <Box
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '8px',
+          bgcolor: '#f1f5f9',
+          color: '#94a3b8',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid #e2e8f0',
+          flexShrink: 0,
+          ...sx,
+        }}
+      >
+        <ShoppingBagOutlinedIcon sx={{ fontSize: Math.max(14, Math.round(size * 0.5)) }} />
+      </Box>
+    )
+  }
+
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={name || 'Product'}
+      onError={() => setError(true)}
+      sx={{
+        width: size,
+        height: size,
+        borderRadius: '8px',
+        objectFit: 'cover',
+        border: '1px solid #e2e8f0',
+        bgcolor: '#f8fafc',
+        flexShrink: 0,
+        ...sx,
+      }}
+    />
+  )
+}
+
 export default function OrderManagement({ defaultStatusFilter = '', vendorId = '' }) {
   const router = useRouter()
 
@@ -902,10 +988,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               {orders.map((order) => {
                 const isFood = order.vertical !== 'GROCERY'
                 const itemsCount = order.orderItems?.reduce((sum, item) => sum + item.quantity, 0) || order.orderItems?.length || 0
-                const previewImages = order.orderItems
-                  ?.map(i => i.product?.proImages?.[0])
+                const previewImages = (order.orderItems || [])
+                  .map(i => getProductImageSrc(i.product))
                   .filter(Boolean)
-                  .slice(0, 3) || []
+                  .slice(0, 3)
 
                 return (
                   <TableRow
@@ -1020,6 +1106,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               component="img"
                               src={img}
                               alt="item"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }}
                               sx={{
                                 width: 34,
                                 height: 34,
@@ -1028,6 +1115,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                                 border: '2px solid #FFFFFF',
                                 ml: idx > 0 ? -1.2 : 0,
                                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                bgcolor: '#f8fafc',
                               }}
                             />
                           ))}
@@ -1259,14 +1347,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                       {order.orderItems?.slice(0, 2).map((item, idx) => (
                         <Box key={idx} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                            {item.product?.proImages?.[0] && (
-                              <Box
-                                component="img"
-                                src={item.product.proImages[0]}
-                                alt={item.product.proName}
-                                sx={{ width: 28, height: 28, borderRadius: '6px', objectFit: 'cover' }}
-                              />
-                            )}
+                            <ProductImageItem
+                              src={getProductImageSrc(item.product)}
+                              name={item.product?.proName}
+                              size={28}
+                              sx={{ borderRadius: '6px' }}
+                            />
                             <Typography variant="caption" sx={{ color: '#374151', fontWeight: 600, noWrap: true, maxWidth: 170 }}>
                               {item.quantity}x {item.product?.proName || 'Product'}
                             </Typography>
@@ -1630,14 +1716,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           <TableRow key={idx} sx={{ '&:last-child td': { borderBottom: 0 } }}>
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                {item.product?.proImages?.[0] && (
-                                  <Box
-                                    component="img"
-                                    src={item.product.proImages[0]}
-                                    alt={item.product.proName}
-                                    sx={{ width: 42, height: 42, borderRadius: '8px', objectFit: 'cover' }}
-                                  />
-                                )}
+                                <ProductImageItem
+                                  src={getProductImageSrc(item.product)}
+                                  name={item.product?.proName}
+                                  size={44}
+                                  sx={{ borderRadius: '10px' }}
+                                />
                                 <Box>
                                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#111827' }}>
                                     {item.product?.proName || 'Unknown Product'}
