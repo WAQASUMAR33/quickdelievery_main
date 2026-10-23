@@ -93,6 +93,19 @@ const THEME = {
   luxeGradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #F59E0B 100%)',
 }
 
+function getCategoryEmoji(cat) {
+  const str = `${cat.code || ''} ${cat.name || ''} ${cat.vertical || ''}`.toLowerCase()
+  if (str.includes('restaurant') || str.includes('dining') || str.includes('food') || str.includes('burger') || str.includes('pizza') || str.includes('fast food')) return '🍽️'
+  if (str.includes('grocer') || str.includes('produce') || str.includes('supermarket') || str.includes('pantry') || str.includes('organic')) return '🛒'
+  if (str.includes('baker') || str.includes('dessert') || str.includes('croissant') || str.includes('sweet') || str.includes('patisserie') || str.includes('cake')) return '🥐'
+  if (str.includes('tech') || str.includes('electron') || str.includes('mobile') || str.includes('gadget') || str.includes('phone') || str.includes('laptop') || str.includes('computer')) return '📱'
+  if (str.includes('fashion') || str.includes('apparel') || str.includes('clothing') || str.includes('wear')) return '👗'
+  if (str.includes('health') || str.includes('pharmacy') || str.includes('medicine') || str.includes('beauty')) return '💊'
+  if (str.includes('home') || str.includes('furniture') || str.includes('decor')) return '🏠'
+  if (str.includes('sport') || str.includes('fitness')) return '⚽'
+  return '📦'
+}
+
 function storefrontGreeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Good morning'
@@ -182,6 +195,32 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     }
     fetchCategories()
   }, [])
+
+  const dynamicDepartments = useMemo(() => {
+    const list = [
+      { id: 'deals', label: '⚡ Flash Drops', badge: 'LIVE', badgeBg: THEME.rose },
+    ]
+
+    if (categories && categories.length > 0) {
+      categories.forEach(cat => {
+        list.push({
+          id: String(cat.id),
+          label: `${getCategoryEmoji(cat)} ${cat.name}`,
+          rawName: cat.name,
+        })
+      })
+    } else {
+      list.push(
+        { id: 'restaurant', label: '🍽️ Restaurant' },
+        { id: 'grocery', label: '🛒 Fresh Groceries' },
+        { id: 'bakery', label: '🥐 Bakery & Desserts' },
+        { id: 'tech', label: '📱 Electronics & Tech' },
+      )
+    }
+
+    list.push({ id: 'stores', label: '🏬 Brand Boutiques' })
+    return list
+  }, [categories])
 
   // Fetch Favorites from API
   useEffect(() => {
@@ -1093,15 +1132,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               {t('allDepartments')}
             </Button>
 
-            {[
-              { id: 'deals', label: '⚡ Flash Drops', badge: 'LIVE', badgeBg: THEME.rose },
-              { id: 'mobile', label: '📱 Mobile & Tech' },
-              { id: 'computers', label: '💻 Computing & Laptops' },
-              { id: 'grocery', label: '🛒 Pantry & Organic' },
-              { id: 'dining', label: '🍔 Chef Dining' },
-              { id: 'bakery', label: '🥐 French Bakery' },
-              { id: 'stores', label: '🏬 Brand Boutiques' },
-            ].map((dep) => {
+            {dynamicDepartments.map((dep) => {
               const isActive = selectedDepartment === dep.id
               return (
                 <Button

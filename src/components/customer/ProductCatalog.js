@@ -299,7 +299,11 @@ const ProductCatalog = ({
 
   // Sync external selectedDepartment prop from Top Departments Strip
   useEffect(() => {
-    if (!selectedDepartment) return
+    if (!selectedDepartment) {
+      setSelectedCategory(null)
+      setOnlyDeals(false)
+      return
+    }
 
     if (selectedDepartment === 'deals') {
       setOnlyDeals(true)
@@ -310,16 +314,27 @@ const ProductCatalog = ({
       topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
     } else {
       setOnlyDeals(false)
-      // Match department keyword to category name
+      // 1. Direct ID or Code match from database
+      const directMatch = categories.find(c =>
+        String(c.id) === String(selectedDepartment) ||
+        (c.code && c.code.toLowerCase() === selectedDepartment.toLowerCase())
+      )
+      if (directMatch) {
+        setSelectedCategory(directMatch.id)
+        return
+      }
+
+      // 2. Keyword fallback match
       const kw = selectedDepartment.toLowerCase()
       const matched = categories.find(c => {
         const n = c.name?.toLowerCase() || ''
-        if (kw === 'mobile') return n.includes('mobile') || n.includes('accessor')
+        const code = c.code?.toLowerCase() || ''
+        if (kw === 'restaurant' || kw === 'dining' || kw === 'food') return n.includes('restaurant') || n.includes('food') || n.includes('dining') || code.includes('restaurant')
+        if (kw === 'mobile' || kw === 'tech') return n.includes('mobile') || n.includes('tech') || n.includes('electron')
         if (kw === 'computers') return n.includes('computer') || n.includes('laptop')
-        if (kw === 'grocery') return n.includes('grocer') || n.includes('supermarket')
-        if (kw === 'dining') return n.includes('food') || n.includes('dining') || n.includes('restaurant')
-        if (kw === 'bakery') return n.includes('baker') || n.includes('patisserie')
-        return false
+        if (kw === 'grocery') return n.includes('grocer') || n.includes('supermarket') || n.includes('produce')
+        if (kw === 'bakery') return n.includes('baker') || n.includes('patisserie') || n.includes('dessert')
+        return n.toLowerCase() === kw
       })
       if (matched) {
         setSelectedCategory(matched.id)
