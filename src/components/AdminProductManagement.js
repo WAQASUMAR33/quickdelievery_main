@@ -596,7 +596,7 @@ const AdminProductManagement = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-none transition-colors ${
               showAnalytics 
                 ? 'bg-purple-600 text-white hover:bg-purple-700' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -610,7 +610,7 @@ const AdminProductManagement = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/admin/dashboard/products/add')}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-none hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Product

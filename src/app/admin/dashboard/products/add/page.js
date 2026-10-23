@@ -55,9 +55,12 @@ const BRAND = '#39772A'
 const BRAND_DARK = '#2E5F22'
 
 const tfStyle = {
-  '& .MuiOutlinedInput-root': { borderRadius: 0 },
-  '& .MuiInputBase-root': { borderRadius: 0 },
-  '& .MuiSelect-select': { borderRadius: 0 },
+  borderRadius: 0,
+  '& .MuiOutlinedInput-root': { borderRadius: '0px !important' },
+  '& .MuiOutlinedInput-notchedOutline': { borderRadius: '0px !important' },
+  '& fieldset': { borderRadius: '0px !important' },
+  '& .MuiInputBase-root': { borderRadius: '0px !important' },
+  '& .MuiSelect-select': { borderRadius: '0px !important' },
 }
 
 export default function AddProductPage() {
@@ -491,7 +494,31 @@ export default function AddProductPage() {
 
   return (
     <DashboardLayout>
-      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', px: { xs: 2, md: 4 }, py: 3, bgcolor: '#f8fafc' }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          width: '100%',
+          px: { xs: 2, md: 4 },
+          py: 3,
+          bgcolor: '#f8fafc',
+          '&, & *': {
+            borderRadius: '0px !important',
+          },
+          '& .MuiOutlinedInput-root': { borderRadius: '0px !important' },
+          '& .MuiOutlinedInput-notchedOutline': { borderRadius: '0px !important' },
+          '& fieldset': { borderRadius: '0px !important' },
+          '& .MuiInputBase-root': { borderRadius: '0px !important' },
+          '& .MuiButton-root': { borderRadius: '0px !important' },
+          '& .MuiIconButton-root': { borderRadius: '0px !important' },
+          '& .MuiCard-root': { borderRadius: '0px !important' },
+          '& .MuiPaper-root': { borderRadius: '0px !important' },
+          '& .MuiChip-root': { borderRadius: '0px !important' },
+          '& .MuiSelect-select': { borderRadius: '0px !important' },
+          '& .MuiMenu-paper': { borderRadius: '0px !important' },
+          '& .MuiDialog-paper': { borderRadius: '0px !important' },
+        }}
+      >
 
         {/* ── Top Bar Header ── */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>

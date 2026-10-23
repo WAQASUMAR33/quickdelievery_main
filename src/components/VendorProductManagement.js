@@ -573,7 +573,15 @@ const VendorProductManagement = () => {
     return <Chip label={status} size="small" variant="outlined" sx={{ borderRadius: 0 }} />
   }
 
-  const field = (sx = {}) => ({ sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 }, ...sx } })
+  const field = (sx = {}) => ({
+    sx: {
+      borderRadius: 0,
+      '& .MuiOutlinedInput-root': { borderRadius: '0px !important' },
+      '& .MuiOutlinedInput-notchedOutline': { borderRadius: '0px !important' },
+      '& fieldset': { borderRadius: '0px !important' },
+      ...sx,
+    }
+  })
 
   if (loading) {
     return (
@@ -605,7 +613,7 @@ const VendorProductManagement = () => {
             sx={{
               borderColor: '#cbd5e1',
               color: '#334155',
-              borderRadius: '10px',
+              borderRadius: 0,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: 13,
@@ -619,7 +627,7 @@ const VendorProductManagement = () => {
           <Button
             variant="contained" startIcon={<AddIcon />}
             onClick={() => router.push('/admin/dashboard/products/add')}
-            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: '10px', px: 3, py: 1, fontWeight: 800, textTransform: 'none' }}
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, px: 3, py: 1, fontWeight: 800, textTransform: 'none' }}
           >
             Add New Item
           </Button>
@@ -1007,11 +1015,24 @@ const VendorProductManagement = () => {
         </DialogActions>
       </Dialog>
 
-      {/* ── Edit Product Dialog ── */}
       <Dialog
-        open={showEditModal} onClose={() => setShowEditModal(false)}
-        scroll="paper" maxWidth="lg" fullWidth
-        sx={{ '& .MuiDialog-paper': { height: '90vh', maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: 0 } }}
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        scroll="paper"
+        maxWidth="lg"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            height: '90vh',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: '0px !important',
+            '&, & *': { borderRadius: '0px !important' },
+            '& .MuiOutlinedInput-notchedOutline': { borderRadius: '0px !important' },
+            '& fieldset': { borderRadius: '0px !important' },
+          }
+        }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 3, py: 2, bgcolor: '#ffffff', borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box>
