@@ -216,6 +216,8 @@ function BusinessRegisterInner() {
       .catch(err => console.error('Failed to fetch business categories:', err))
   }, [])
 
+  const [isEmailUnverified,  setIsEmailUnverified]  = useState(false)
+
   // Auto-populate user data & existing business profile from database
   useEffect(() => {
     if (!vendorEmail) return
@@ -225,6 +227,9 @@ function BusinessRegisterInner() {
       .then(d => {
         if (d.success && d.user) {
           const u = d.user
+          if (!u.emailVerification) {
+            setIsEmailUnverified(true)
+          }
           const nameParts = (u.username || '').trim().split(' ')
           const firstName = nameParts[0] || ''
           const lastName = nameParts.slice(1).join(' ') || ''
@@ -410,7 +415,20 @@ function BusinessRegisterInner() {
 
       <Container maxWidth="md" sx={{ py: 4 }}>
 
-        {/* ═══════════════ VENDOR ONBOARDING BANNER ════════════════════════ */}
+        {/* ═══════════════ UNVERIFIED EMAIL WARNING BANNER ═════════════════ */}
+        {isEmailUnverified && (
+          <Alert
+            severity="warning"
+            sx={{ mb: 3, borderRadius: 0, fontWeight: 600 }}
+            action={
+              <Button component={NextLink} href="/register" color="inherit" size="small" sx={{ fontWeight: 800 }}>
+                Verify Email Now
+              </Button>
+            }
+          >
+            Email verification required: Your account email is not yet verified. Please verify your email before submitting your business profile.
+          </Alert>
+        )}
 
         {/* ════════════════════════ STEPPER ════════════════════════════════ */}
         <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>

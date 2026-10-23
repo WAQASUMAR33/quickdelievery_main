@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -41,6 +41,10 @@ import StarIcon                   from '@mui/icons-material/Star'
 import CameraAltOutlinedIcon      from '@mui/icons-material/CameraAltOutlined'
 import DeleteOutlineIcon          from '@mui/icons-material/DeleteOutline'
 import CloudUploadOutlinedIcon    from '@mui/icons-material/CloudUploadOutlined'
+import MarkEmailReadOutlinedIcon  from '@mui/icons-material/MarkEmailReadOutlined'
+import RefreshOutlinedIcon        from '@mui/icons-material/RefreshOutlined'
+import EditOutlinedIcon           from '@mui/icons-material/EditOutlined'
+import KeyOutlinedIcon            from '@mui/icons-material/KeyOutlined'
 
 // Luxury Brand Tokens
 const SAPPHIRE = '#2563EB'
@@ -398,7 +402,7 @@ export default function RegisterPage() {
   const { isDark, toggleTheme } = useTheme()
   const router = useRouter()
 
-  // phase: 'select' | 'form'
+  // phase: 'select' | 'form' | 'verify'
   const [phase, setPhase] = useState('select')
   const [formData, setFormData] = useState({
     email: '',
@@ -409,6 +413,9 @@ export default function RegisterPage() {
     role: '',
     type: 'local',
   })
+  const [otpCode, setOtpCode] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [sendingOtp, setSendingOtp] = useState(false)
   const [profileImage, setProfileImage] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -416,6 +423,17 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
 
   const selectedRole = ROLES.find((r) => r.value === formData.role)
+
+  // Resend OTP countdown timer
+  useEffect(() => {
+    let timer
+    if (resendCooldown > 0) {
+      timer = setInterval(() => {
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0))
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }))
 
@@ -427,15 +445,90 @@ export default function RegisterPage() {
     if (formData.role) setPhase('form')
   }
 
-  const handleSubmit = async (e) => {
+  // Step 2: Validate form & send Hostinger OTP verification email
+  const handleRequestOtp = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!formData.displayName?.trim()) {
+      setError('Please enter your full legal name')
+      return
+    }
+    if (!formData.email?.trim() || !formData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
     }
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters')
+      return
+    }
+
+    setSendingOtp(true)
+    try {
+      const res = await fetch('/api/auth/register/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          role: formData.role || 'CUSTOMER',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setPhase('verify')
+        setResendCooldown(60)
+        setOtpCode('')
+      } else {
+        setError(data.error || 'Failed to send verification code. Please try again.')
+      }
+    } catch {
+      setError('Network error. Unable to reach verification service.')
+    } finally {
+      setSendingOtp(false)
+    }
+  }
+
+  // Resend OTP email handler
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || sendingOtp) return
+    setError('')
+    setSendingOtp(true)
+    try {
+      const res = await fetch('/api/auth/register/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          role: formData.role || 'CUSTOMER',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setResendCooldown(60)
+      } else {
+        setError(data.error || 'Failed to resend code. Please try again.')
+      }
+    } catch {
+      setError('Failed to resend verification email.')
+    } finally {
+      setSendingOtp(false)
+    }
+  }
+
+  // Step 3: Verify OTP code & complete account creation, then redirect to profile setup
+  const handleVerifyAndRegister = async (e) => {
+    if (e) e.preventDefault()
+    setError('')
+
+    const cleanOtp = otpCode.trim()
+    if (!cleanOtp || cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
+      setError('Please enter the 6-digit code received in your email')
       return
     }
 
@@ -449,7 +542,9 @@ export default function RegisterPage() {
         formData.role,
         formData.type,
         profileImage,
+        cleanOtp
       )
+
       if (result.success) {
         if (formData.role === 'VENDOR') {
           router.push(`/business-register?email=${encodeURIComponent(formData.email)}`)
@@ -459,10 +554,10 @@ export default function RegisterPage() {
           router.push('/customer')
         }
       } else {
-        setError(result.error || 'Registration failed. Please try again.')
+        setError(result.error || 'Verification failed. Please check the code and try again.')
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.')
+      setError('An unexpected error occurred during verification. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -629,7 +724,7 @@ export default function RegisterPage() {
                 >
                   <Box mb={3.5}>
                     <Chip
-                      label="STEP 1 OF 2"
+                      label="STEP 1 OF 3"
                       size="small"
                       sx={{
                         mb: 1.5,
@@ -843,7 +938,7 @@ export default function RegisterPage() {
                   )}
 
                   {/* Details Form */}
-                  <Box component="form" onSubmit={handleSubmit}>
+                  <Box component="form" onSubmit={handleRequestOtp}>
                     <Stack spacing={2.25}>
                       {/* Profile Photo Upload */}
                       <Box
@@ -989,8 +1084,8 @@ export default function RegisterPage() {
                         fullWidth
                         variant="contained"
                         size="large"
-                        disabled={loading}
-                        endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon sx={{ fontSize: 18 }} />}
+                        disabled={sendingOtp}
+                        endIcon={sendingOtp ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon sx={{ fontSize: 18 }} />}
                         sx={{
                           mt: 1,
                           py: 1.4,
@@ -1010,8 +1105,193 @@ export default function RegisterPage() {
                           },
                         }}
                       >
-                        {loading ? 'Creating Account…' : 'Complete Registration'}
+                        {sendingOtp ? 'Sending Verification Code…' : 'Verify Email & Continue'}
                       </Button>
+                    </Stack>
+                  </Box>
+                </motion.div>
+              )}
+
+              {/* ════ PHASE 3: EMAIL OTP VERIFICATION ════ */}
+              {phase === 'verify' && (
+                <motion.div
+                  key="verify"
+                  variants={slideIn}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.25 }}
+                >
+                  <Box mb={3.5}>
+                    <Button
+                      size="small"
+                      startIcon={<ArrowBackIcon sx={{ fontSize: 15 }} />}
+                      onClick={() => setPhase('form')}
+                      sx={{
+                        mb: 1.5,
+                        p: 0,
+                        minWidth: 0,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        color: SAPPHIRE,
+                        '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
+                      }}
+                    >
+                      Back to Credentials
+                    </Button>
+
+                    <Chip
+                      label="STEP 3 OF 3: EMAIL VERIFICATION"
+                      size="small"
+                      sx={{
+                        mb: 1.5,
+                        display: 'flex',
+                        width: 'fit-content',
+                        borderRadius: 0,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        letterSpacing: 1,
+                        bgcolor: isDark ? 'rgba(37, 99, 235, 0.15)' : 'rgba(37, 99, 235, 0.1)',
+                        color: SAPPHIRE,
+                        border: `1px solid ${isDark ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.25)'}`,
+                      }}
+                    />
+
+                    <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -0.5, mb: 1, fontSize: { xs: 24, sm: 28 } }}>
+                      Verify your email address
+                    </Typography>
+
+                    <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13.5, lineHeight: 1.6 }}>
+                      We have sent a 6-digit confirmation code to{' '}
+                      <Box component="span" sx={{ fontWeight: 800, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                        {formData.email}
+                      </Box>
+                      . Enter the code below to complete registration and proceed to your profile setup.
+                    </Typography>
+                  </Box>
+
+                  {/* Error Notification */}
+                  {error && (
+                    <Alert
+                      severity="error"
+                      sx={{
+                        mb: 3,
+                        borderRadius: 0,
+                        bgcolor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+                        border: '1px solid #EF4444',
+                        color: '#EF4444',
+                      }}
+                    >
+                      {error}
+                    </Alert>
+                  )}
+
+                  {/* Verification Form */}
+                  <Box component="form" onSubmit={handleVerifyAndRegister}>
+                    <Stack spacing={3}>
+                      {/* 6-digit OTP Input */}
+                      <Box>
+                        <TextField
+                          fullWidth
+                          autoFocus
+                          size="medium"
+                          label="6-Digit Verification Code"
+                          value={otpCode}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                            setOtpCode(val)
+                          }}
+                          placeholder="••••••"
+                          required
+                          inputProps={{
+                            maxLength: 6,
+                            style: {
+                              textAlign: 'center',
+                              letterSpacing: '14px',
+                              fontSize: 28,
+                              fontWeight: 900,
+                              fontFamily: 'monospace',
+                            },
+                          }}
+                          sx={fieldStyles}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <KeyOutlinedIcon sx={{ fontSize: 22, color: SAPPHIRE }} />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: isDark ? '#64748B' : '#94A3B8', fontSize: 11.5 }}>
+                          ⏱️ Code expires in 10 minutes. Please check your inbox and spam folder.
+                        </Typography>
+                      </Box>
+
+                      {/* Submit / Confirm Button */}
+                      <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        size="large"
+                        disabled={loading || otpCode.length !== 6}
+                        endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon sx={{ fontSize: 18 }} />}
+                        sx={{
+                          py: 1.4,
+                          fontWeight: 800,
+                          fontSize: 14,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                          borderRadius: 0,
+                          background: otpCode.length === 6 ? GRADIENT : undefined,
+                          color: '#FFFFFF',
+                          boxShadow: otpCode.length === 6 ? '0 6px 20px rgba(37, 99, 235, 0.35)' : 'none',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #1D4ED8 0%, #4338CA 50%, #6D28D9 100%)',
+                            boxShadow: '0 8px 25px rgba(37, 99, 235, 0.45)',
+                            transform: 'translateY(-1px)',
+                          },
+                        }}
+                      >
+                        {loading ? 'Verifying & Creating Profile…' : 'Verify Email & Create Profile'}
+                      </Button>
+
+                      {/* Resend & Change Email Actions */}
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" pt={1}>
+                        <Button
+                          size="small"
+                          disabled={resendCooldown > 0 || sendingOtp}
+                          onClick={handleResendOtp}
+                          startIcon={sendingOtp ? <CircularProgress size={14} /> : <RefreshOutlinedIcon sx={{ fontSize: 16 }} />}
+                          sx={{
+                            borderRadius: 0,
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            color: resendCooldown > 0 ? (isDark ? '#64748B' : '#94A3B8') : SAPPHIRE,
+                            '&:hover': { bgcolor: 'transparent', textDecoration: resendCooldown > 0 ? 'none' : 'underline' },
+                          }}
+                        >
+                          {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
+                        </Button>
+
+                        <Button
+                          size="small"
+                          onClick={() => setPhase('form')}
+                          startIcon={<EditOutlinedIcon sx={{ fontSize: 15 }} />}
+                          sx={{
+                            borderRadius: 0,
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            color: isDark ? '#94A3B8' : '#64748B',
+                            '&:hover': { bgcolor: 'transparent', color: SAPPHIRE },
+                          }}
+                        >
+                          Change Email
+                        </Button>
+                      </Stack>
                     </Stack>
                   </Box>
                 </motion.div>

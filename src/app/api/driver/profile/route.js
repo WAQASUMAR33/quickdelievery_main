@@ -105,6 +105,10 @@ export async function PUT(request) {
       return Response.json({ success: false, error: 'User is not a driver' }, { status: 403 })
     }
 
+    if (!existingUser.emailVerification) {
+      return Response.json({ success: false, error: 'Email verification required. Please verify your driver email first.' }, { status: 403 })
+    }
+
     // ── VALIDATIONS ──
     
     // CNIC Validation: XXXXX-XXXXXXX-X or 13 digits

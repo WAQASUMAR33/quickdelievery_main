@@ -27,6 +27,27 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
 
+    const cleanEmail = email.toLowerCase().trim()
+
+    // Enforce email verification check for merchant profile creation
+    const user = await prisma.users.findUnique({
+      where: { email: cleanEmail },
+    })
+
+    if (!user) {
+      return Response.json(
+        { success: false, error: 'Account not found. Please register and verify your email address first.' },
+        { status: 403 }
+      )
+    }
+
+    if (!user.emailVerification) {
+      return Response.json(
+        { success: false, error: 'Email verification required. Please verify your email before submitting your business profile.' },
+        { status: 403 }
+      )
+    }
+
     // Upsert: update if business already exists, create otherwise
     const businessData = {
         businessName,

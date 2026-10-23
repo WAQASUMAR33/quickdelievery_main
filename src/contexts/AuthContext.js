@@ -118,14 +118,14 @@ export default function AuthProvider({ children }) {
     loadUser()
   }, [loadUser])
 
-  const signUp = async (email, password, displayName, phoneNumber = '', role = 'CUSTOMER', type = 'local', image = null) => {
+  const signUp = async (email, password, displayName, phoneNumber = '', role = 'CUSTOMER', type = 'local', image = null, otp = '') => {
     try {
       setLoading(true)
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName, phoneNumber, role, type, image })
+        body: JSON.stringify({ email, password, displayName, phoneNumber, role, type, image, otp })
       })
 
       const result = await response.json()

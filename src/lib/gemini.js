@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 /**
  * Initialize Gemini client lazily
  */
-export function getGeminiModel(modelName = 'gemini-1.5-flash') {
+export function getGeminiModel(modelName = 'gemini-3.5-flash') {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey || apiKey.trim() === '' || apiKey === 'your_gemini_api_key_here') {
     return null
@@ -186,7 +186,7 @@ Do not include backticks, do not include markdown \`\`\`json. Return only pure r
  * Analyze an uploaded product image using Gemini Vision
  */
 export async function analyzeProductImageWithGemini(base64Data, mimeType = 'image/jpeg') {
-  const model = getGeminiModel('gemini-1.5-flash')
+  const model = getGeminiModel('gemini-3.5-flash') || getGeminiModel('gemini-3.5-flash-lite')
   if (!model) {
     return {
       success: false,
@@ -216,7 +216,19 @@ Respond strictly in valid JSON without backticks or markdown:
       },
     }
 
-    const result = await model.generateContent([prompt, imagePart])
+    let result
+    try {
+      result = await model.generateContent([prompt, imagePart])
+    } catch (primaryErr) {
+      console.warn('Gemini 3.5 Flash busy/failed, attempting fallback to gemini-3.5-flash-lite:', primaryErr.message)
+      const fallbackModel = getGeminiModel('gemini-3.5-flash-lite')
+      if (fallbackModel) {
+        result = await fallbackModel.generateContent([prompt, imagePart])
+      } else {
+        throw primaryErr
+      }
+    }
+
     const text = result.response.text().trim()
     const cleanedText = text.replace(/```json/gi, '').replace(/```/g, '').trim()
     const parsed = JSON.parse(cleanedText)
