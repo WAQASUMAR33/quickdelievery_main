@@ -27,7 +27,7 @@ export default function WhatsAppWidget() {
   }
 
   return (
-    <div className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-50 flex flex-col items-end`}>
+    <div className={`fixed bottom-18 md:bottom-6 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} z-40 flex flex-col items-end`}>
       {/* Interactive Popover Card */}
       <AnimatePresence>
         {isOpen && (
@@ -144,15 +144,15 @@ export default function WhatsAppWidget() {
       {/* Floating Launcher Button */}
       <motion.button
         type="button"
-        whileHover={{ scale: 1.08 }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-xl shadow-emerald-500/30 border border-emerald-400/40"
+        className="group relative flex items-center justify-center gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-none bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-xl shadow-emerald-500/25 border border-emerald-400/40 cursor-pointer"
         aria-label="Open WhatsApp Chat Support"
       >
         <span className="relative flex items-center justify-center">
           <MessageCircle className="w-5 h-5 fill-white/20" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-none bg-emerald-300 animate-ping" />
         </span>
         <span className="hidden sm:inline-block font-black tracking-tight">
           WhatsApp Support

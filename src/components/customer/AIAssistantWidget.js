@@ -126,13 +126,13 @@ export default function AIAssistantWidget() {
   return (
     <>
       {/* Floating Launcher Button */}
-      <div className={`fixed bottom-20 ${isRTL ? 'left-6' : 'right-6'} z-50`}>
+      <div className={`fixed bottom-32 md:bottom-20 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} z-40`}>
         <motion.button
           type="button"
-          whileHover={{ scale: 1.08 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500 hover:from-blue-700 hover:to-amber-600 text-white font-black text-xs shadow-xl shadow-indigo-600/30 border border-white/20"
+          className="group flex items-center justify-center gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-none bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500 hover:from-blue-700 hover:to-amber-600 text-white font-black text-xs shadow-xl shadow-indigo-600/25 border border-white/20 cursor-pointer"
           aria-label="Open AI Shopping Concierge"
         >
           <Sparkles className="w-5 h-5 text-amber-200 fill-amber-300 animate-pulse" />

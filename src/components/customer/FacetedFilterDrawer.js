@@ -20,7 +20,7 @@ import {
 import {
   Close as CloseIcon,
   Tune as TuneIcon,
-  RotateCcw as ResetIcon,
+  RestartAlt as ResetIcon,
   Check as CheckIcon,
   AttachMoney as MoneyIcon,
   LocalShipping as ShippingIcon,
@@ -29,11 +29,14 @@ import {
   Category as CategoryIcon,
 } from '@mui/icons-material'
 
+const EMPTY_FILTERS = {}
+const EMPTY_FACETS = {}
+
 export default function FacetedFilterDrawer({
   open,
   onClose,
-  facets = {},
-  selectedFilters = {},
+  facets = EMPTY_FACETS,
+  selectedFilters = EMPTY_FILTERS,
   onFilterChange,
   onResetFilters,
   totalResults = 0,
@@ -41,27 +44,28 @@ export default function FacetedFilterDrawer({
 }) {
   // Local working copy of filters
   const [localPrice, setLocalPrice] = useState([
-    selectedFilters.minPrice ?? 0,
-    selectedFilters.maxPrice ?? 2000,
+    selectedFilters?.minPrice ?? 0,
+    selectedFilters?.maxPrice ?? 2000,
   ])
-  const [selectedBrands, setSelectedBrands] = useState(selectedFilters.brands || [])
-  const [selectedColors, setSelectedColors] = useState(selectedFilters.colors || [])
-  const [inStockOnly, setInStockOnly] = useState(selectedFilters.inStock || false)
-  const [freeDeliveryOnly, setFreeDeliveryOnly] = useState(selectedFilters.freeDelivery || false)
-  const [minRating, setMinRating] = useState(selectedFilters.minRating || 0)
+  const [selectedBrands, setSelectedBrands] = useState(selectedFilters?.brands || [])
+  const [selectedColors, setSelectedColors] = useState(selectedFilters?.colors || [])
+  const [inStockOnly, setInStockOnly] = useState(selectedFilters?.inStock || false)
+  const [freeDeliveryOnly, setFreeDeliveryOnly] = useState(selectedFilters?.freeDelivery || false)
+  const [minRating, setMinRating] = useState(selectedFilters?.minRating || 0)
 
-  // Sync when drawer opens or selectedFilters change
+  // Sync when drawer opens
   useEffect(() => {
+    if (!open) return
     setLocalPrice([
-      selectedFilters.minPrice ?? facets.priceRange?.min ?? 0,
-      selectedFilters.maxPrice ?? facets.priceRange?.max ?? 2000,
+      selectedFilters?.minPrice ?? facets?.priceRange?.min ?? 0,
+      selectedFilters?.maxPrice ?? facets?.priceRange?.max ?? 2000,
     ])
-    setSelectedBrands(selectedFilters.brands || [])
-    setSelectedColors(selectedFilters.colors || [])
-    setInStockOnly(selectedFilters.inStock || false)
-    setFreeDeliveryOnly(selectedFilters.freeDelivery || false)
-    setMinRating(selectedFilters.minRating || 0)
-  }, [open, selectedFilters, facets])
+    setSelectedBrands(selectedFilters?.brands || [])
+    setSelectedColors(selectedFilters?.colors || [])
+    setInStockOnly(selectedFilters?.inStock || false)
+    setFreeDeliveryOnly(selectedFilters?.freeDelivery || false)
+    setMinRating(selectedFilters?.minRating || 0)
+  }, [open])
 
   const availableBrands = facets.brands || []
   const availableColors = facets.colors || []

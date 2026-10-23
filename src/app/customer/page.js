@@ -651,9 +651,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
         {/* ── 2. MAIN HEADER (Unique Sculpted Pill Search & Glass Actions) ── */}
         <Box sx={{ width: '100%', px: { xs: 1.5, sm: 3, md: 4, xl: 6 } }}>
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 3 }, minHeight: { xs: 60, md: 70 } }}>
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between', gap: { xs: 1, md: 1.5, lg: 2.5 }, minHeight: { xs: 58, md: 68 } }}>
             {/* Left: Mobile Drawer Trigger & Unique Brand Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1.5 }, flexShrink: 0 }}>
               <IconButton
                 onClick={() => setShowMobileSidebar(true)}
                 sx={{ display: { lg: 'none' }, color: isDark ? '#F8FAFC' : '#0F172A', p: 0.5 }}
@@ -668,16 +668,17 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.25,
+                  gap: { xs: 1, sm: 1.25 },
                   cursor: 'pointer',
                   userSelect: 'none',
+                  flexShrink: 0,
                 }}
               >
                 <Box
                   sx={{
-                    width: { xs: 38, md: 42 },
-                    height: { xs: 38, md: 42 },
-                    borderRadius: '12px',
+                    width: { xs: 36, sm: 38, md: 40 },
+                    height: { xs: 36, sm: 38, md: 40 },
+                    borderRadius: 0,
                     background: THEME.gradient,
                     display: 'flex',
                     alignItems: 'center',
@@ -685,11 +686,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     color: '#fff',
                     boxShadow: '0 8px 24px rgba(79, 70, 229, 0.35)',
                     border: '1px solid rgba(255,255,255,0.2)',
+                    flexShrink: 0,
                   }}
                 >
-                  <DeliveryDiningIcon sx={{ fontSize: 24 }} />
+                  <DeliveryDiningIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 } }} />
                 </Box>
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                     <Typography
                       variant="h6"
@@ -697,8 +699,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       sx={{
                         color: isDark ? '#FFFFFF' : '#0F172A',
                         letterSpacing: -0.6,
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
+                        fontSize: { xs: '1.15rem', sm: '1.3rem', lg: '1.45rem' },
                         lineHeight: 1,
+                        whiteSpace: 'nowrap',
                         fontFamily: 'var(--font-jakarta)',
                       }}
                     >
@@ -715,11 +718,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         bgcolor: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(37, 99, 235, 0.08)',
                         color: isDark ? '#A5B4FC' : '#2563EB',
                         border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(37, 99, 235, 0.2)',
-                        borderRadius: '20px',
+                        borderRadius: 0,
+                        display: { xs: 'none', lg: 'inline-flex' },
                       }}
                     />
                   </Box>
-                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600, display: { xs: 'none', xl: 'block' }, whiteSpace: 'nowrap' }}>
                     Curated Multi-Vendor Marketplace
                   </Typography>
                 </Box>
@@ -756,8 +760,8 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             />
 
             {/* Right: AI Concierge | User Account | Orders | Wishlist | Cart */}
-            <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5, md: 1.75 }}>
-              {/* Interactive AI Concierge Button */}
+            <Stack direction="row" alignItems="center" spacing={{ xs: 0.75, sm: 1, md: 1.25, lg: 1.5 }} sx={{ flexShrink: 0 }}>
+              {/* Interactive AI Concierge Button (Shown on desktop >= xl) */}
               <Button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
@@ -767,14 +771,14 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 size="small"
                 startIcon={<AutoAwesomeIcon sx={{ fontSize: 16, color: THEME.gold, animation: 'pulse 2s infinite' }} />}
                 sx={{
-                  display: { xs: 'none', sm: 'inline-flex' },
+                  display: { xs: 'none', xl: 'inline-flex' },
                   color: isDark ? '#FFFFFF' : '#1E293B',
                   textTransform: 'none',
                   fontWeight: 800,
                   fontSize: 12,
                   px: 1.75,
                   py: 0.7,
-                  borderRadius: '24px',
+                  borderRadius: 0,
                   background: isDark
                     ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(245, 158, 11, 0.22) 100%)'
                     : 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%)',
@@ -801,7 +805,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     fontWeight: 900,
                     bgcolor: THEME.gold,
                     color: '#000',
-                    borderRadius: '4px',
+                    borderRadius: 0,
                     px: 0.25,
                   }}
                 />
@@ -817,12 +821,12 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   sx={{
                     background: THEME.gradient,
                     color: '#fff',
-                    borderRadius: '24px',
+                    borderRadius: 0,
                     textTransform: 'none',
                     fontWeight: 800,
-                    px: { xs: 1.75, sm: 2.5 },
+                    px: { xs: 1.5, sm: 2, xl: 2.5 },
                     py: 0.85,
-                    fontSize: 13,
+                    fontSize: { xs: 12, sm: 13 },
                     boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
                     '&:hover': { opacity: 0.95 },
                   }}
@@ -836,9 +840,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1,
-                    px: 1.5,
+                    px: { xs: 0.75, sm: 1.25 },
                     py: 0.6,
-                    borderRadius: '24px',
+                    borderRadius: 0,
                     bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
                     border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E2E8F0',
                     cursor: 'pointer',
@@ -848,8 +852,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   <Avatar
                     src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
                     sx={{
-                      width: 30,
-                      height: 30,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 0,
                       background: THEME.gradient,
                       color: '#fff',
                       fontWeight: 800,
@@ -859,14 +864,14 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </Avatar>
                   <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
-                    <Typography variant="caption" sx={{ fontSize: 10.5, color: isDark ? '#94A3B8' : '#64748B', display: 'block', lineHeight: 1.1 }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', display: 'block', lineHeight: 1 }}>
                       Welcome,
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                      <Typography variant="body2" sx={{ fontSize: 12.5, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
+                      <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
                         {heroFirstName}
                       </Typography>
-                      <ExpandMoreIcon sx={{ fontSize: 16, color: isDark ? '#94A3B8' : '#64748B' }} />
+                      <ExpandMoreIcon sx={{ fontSize: 15, color: isDark ? '#94A3B8' : '#64748B' }} />
                     </Box>
                   </Box>
                 </Box>
@@ -877,15 +882,15 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 onClick={() => handleTabSwitch('wishlist')}
                 sx={{
                   color: effectiveTab === 'wishlist' ? THEME.gold : (isDark ? '#CBD5E1' : '#475569'),
-                  borderRadius: '50%',
-                  p: 1,
+                  borderRadius: 0,
+                  p: { xs: 0.75, sm: 1 },
                   bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
                   border: isDark ? '1px solid transparent' : '1px solid #E2E8F0',
                   '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0', color: isDark ? '#fff' : '#000' },
                 }}
                 title={t('wishlist')}
               >
-                <FavoriteBorderIcon sx={{ fontSize: 21 }} />
+                <FavoriteBorderIcon sx={{ fontSize: { xs: 19, sm: 21 } }} />
               </IconButton>
 
               {/* Shopping Bag Capsule Button */}
@@ -894,9 +899,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 sx={{
                   color: isDark ? '#FFFFFF' : '#0F172A',
                   textTransform: 'none',
-                  px: { xs: 1.25, sm: 2 },
+                  px: { xs: 1, sm: 1.5, xl: 2 },
                   py: 0.8,
-                  borderRadius: '24px',
+                  borderRadius: 0,
                   background: isDark
                     ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(245, 158, 11, 0.2) 100%)'
                     : 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%)',
@@ -919,17 +924,17 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       fontSize: 10,
                       minWidth: 18,
                       height: 18,
-                      borderRadius: '50%',
+                      borderRadius: 0,
                     }
                   }}
                 >
-                  <ShoppingBagIcon sx={{ fontSize: 21, color: THEME.gold }} />
+                  <ShoppingBagIcon sx={{ fontSize: { xs: 19, sm: 21 }, color: THEME.gold }} />
                 </Badge>
-                <Box sx={{ ml: 1.25, textAlign: 'left', display: { xs: 'none', sm: 'block' } }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#CBD5E1' : '#64748B', display: 'block', lineHeight: 1 }}>
+                <Box sx={{ ml: 1, textAlign: 'left', display: { xs: 'none', xl: 'block' } }}>
+                  <Typography variant="caption" sx={{ fontSize: 9.5, color: isDark ? '#CBD5E1' : '#64748B', display: 'block', lineHeight: 1 }}>
                     {t('cart')}
                   </Typography>
-                  <Typography variant="body2" sx={{ fontSize: 12.5, fontWeight: 800, color: isDark ? '#FFFFFF' : '#0F172A', lineHeight: 1.1 }}>
+                  <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#FFFFFF' : '#0F172A', lineHeight: 1.1 }}>
                     Rs. {getTotalPrice().toFixed(0)}
                   </Typography>
                 </Box>
@@ -938,13 +943,121 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           </Toolbar>
         </Box>
 
+        {/* ── Sticky Mobile Search Bar (< md screens, phones & portrait tablets) ── */}
+        <Box
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            bgcolor: isDark ? THEME.darkNavSub : '#F1F5F9',
+            px: { xs: 1.5, sm: 2.5 },
+            py: 0.75,
+            borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
+              borderRadius: 0,
+              border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
+              p: 0.35,
+              px: 1,
+              gap: 1,
+            }}
+          >
+            <Button
+              size="small"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('toggleMegaMenu'))
+                }
+              }}
+              sx={{
+                minWidth: 0,
+                p: 0.5,
+                px: 1,
+                borderRadius: 0,
+                fontSize: 11,
+                fontWeight: 800,
+                textTransform: 'none',
+                bgcolor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#DBEAFE',
+                color: THEME.primary,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Menu ▾
+            </Button>
+            <Box
+              component="input"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && effectiveTab !== 'products') {
+                  setActiveTab('products')
+                }
+              }}
+              placeholder="Search 161+ items, burgers, tech…"
+              sx={{
+                flex: 1,
+                height: 34,
+                border: 'none',
+                outline: 'none',
+                fontSize: 13,
+                color: isDark ? '#FFFFFF' : '#0F172A',
+                bgcolor: 'transparent',
+                fontFamily: 'inherit',
+                '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
+              }}
+            />
+            {searchQuery && (
+              <IconButton
+                size="small"
+                onClick={() => setSearchQuery('')}
+                sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B', borderRadius: 0 }}
+              >
+                <CloseIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            )}
+            <IconButton
+              size="small"
+              onClick={() => setMobileVisualModalOpen(true)}
+              sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B', borderRadius: 0 }}
+            >
+              <CameraAltIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => {
+                if (effectiveTab !== 'products') setActiveTab('products')
+              }}
+              sx={{
+                width: 30,
+                height: 30,
+                background: THEME.gradient,
+                color: '#FFFFFF',
+                borderRadius: 0,
+              }}
+            >
+              <SearchIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Box>
+
+          <VisualSearchModal
+            open={mobileVisualModalOpen}
+            onClose={() => setMobileVisualModalOpen(false)}
+            isDark={isDark}
+          />
+        </Box>
+
         {/* ── 3. CURATED DEPARTMENTS SUB-NAV STRIP ── */}
         <Box
           sx={{
             bgcolor: isDark ? THEME.darkNavSub : '#F8FAFC',
             borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
             borderBottom: isDark ? 'none' : '1px solid #E2E8F0',
-            px: { xs: 1.5, sm: 3, md: 4, xl: 6 },
+            px: { xs: 1.5, sm: 2.5, md: 3, xl: 6 },
             py: 0.6,
             display: 'flex',
             alignItems: 'center',
@@ -972,7 +1085,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 textTransform: 'none',
                 px: 1.75,
                 py: 0.5,
-                borderRadius: '20px',
+                borderRadius: 0,
                 bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
                 '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#CBD5E1' },
               }}
@@ -1005,7 +1118,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     textTransform: 'none',
                     px: 1.75,
                     py: 0.5,
-                    borderRadius: '20px',
+                    borderRadius: 0,
                     bgcolor: isActive ? THEME.primary : 'transparent',
                     border: isActive ? `1px solid ${THEME.primaryLight}` : '1px solid transparent',
                     boxShadow: isActive ? '0 4px 14px rgba(37, 99, 235, 0.4)' : 'none',
@@ -1027,7 +1140,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         fontWeight: 900,
                         bgcolor: dep.badgeBg || THEME.rose,
                         color: '#fff',
-                        borderRadius: '20px',
+                        borderRadius: 0,
                       }}
                     />
                   )}
@@ -1036,122 +1149,15 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
             })}
           </Stack>
 
-          {/* Right Status Badge */}
-          <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#06B6D4', boxShadow: '0 0 8px #06B6D4' }} />
-            <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11.5, fontWeight: 600 }}>
+          {/* Right Status Badge (Rendered cleanly on xl screens with flexShrink 0) */}
+          <Box sx={{ display: { xs: 'none', xl: 'flex' }, alignItems: 'center', gap: 1, flexShrink: 0, whiteSpace: 'nowrap' }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: 0, bgcolor: '#06B6D4', boxShadow: '0 0 8px #06B6D4' }} />
+            <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
               Express Delivery across Pakistan • Free on orders over <Box component="span" sx={{ color: isDark ? '#F1F5F9' : '#0F172A', fontWeight: 800 }}>Rs. 1,500</Box>
             </Typography>
           </Box>
         </Box>
       </AppBar>
-
-      {/* ── Mobile Search Strip (< md screens) ── */}
-      <Box
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          bgcolor: isDark ? THEME.darkNav : '#FFFFFF',
-          px: 1.5,
-          py: 1,
-          borderBottom: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9',
-            borderRadius: '24px',
-            border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1',
-            p: 0.35,
-            px: 1,
-            gap: 1,
-          }}
-        >
-          <Button
-            size="small"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('toggleMegaMenu'))
-              }
-            }}
-            sx={{
-              minWidth: 0,
-              p: 0.5,
-              px: 1,
-              borderRadius: '20px',
-              fontSize: 11,
-              fontWeight: 800,
-              textTransform: 'none',
-              bgcolor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#DBEAFE',
-              color: THEME.primary,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Menu ▾
-          </Button>
-          <Box
-            component="input"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && effectiveTab !== 'products') {
-                setActiveTab('products')
-              }
-            }}
-            placeholder="Search 161+ items, burgers, tech…"
-            sx={{
-              flex: 1,
-              height: 34,
-              border: 'none',
-              outline: 'none',
-              fontSize: 13,
-              color: isDark ? '#FFFFFF' : '#0F172A',
-              bgcolor: 'transparent',
-              fontFamily: 'inherit',
-              '&::placeholder': { color: isDark ? '#64748B' : '#94A3B8' },
-            }}
-          />
-          {searchQuery && (
-            <IconButton
-              size="small"
-              onClick={() => setSearchQuery('')}
-              sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B' }}
-            >
-              <CloseIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          )}
-          <IconButton
-            size="small"
-            onClick={() => setMobileVisualModalOpen(true)}
-            sx={{ p: 0.5, color: isDark ? '#94A3B8' : '#64748B' }}
-          >
-            <CameraAltIcon sx={{ fontSize: 18 }} />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => {
-              if (effectiveTab !== 'products') setActiveTab('products')
-            }}
-            sx={{
-              width: 32,
-              height: 32,
-              background: THEME.gradient,
-              color: '#FFFFFF',
-              borderRadius: '50%',
-            }}
-          >
-            <SearchIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        </Box>
-
-        <VisualSearchModal
-          open={mobileVisualModalOpen}
-          onClose={() => setMobileVisualModalOpen(false)}
-          isDark={isDark}
-        />
-      </Box>
 
       {/* ── Main Content Area (Full-Width Container) ── */}
       <Box sx={{ flex: 1, width: '100%', pb: { xs: 8, md: 2 }, display: 'flex', flexDirection: 'column' }}>

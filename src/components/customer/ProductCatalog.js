@@ -762,7 +762,7 @@ const ProductCatalog = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
         whileHover={{ y: -4 }}
-        className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-200 overflow-hidden cursor-pointer text-left"
+        className="group relative flex flex-col h-full min-h-[340px] rounded-none bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-200 overflow-hidden cursor-pointer text-left"
       >
         {/* Card Header Media & Badges */}
         <div className="relative aspect-square w-full bg-slate-50/70 dark:bg-slate-950/70 overflow-hidden flex items-center justify-center p-3">
@@ -1896,10 +1896,10 @@ const ProductCatalog = ({
           {/* Flash Deals Horizontal Carousel */}
           <div
             ref={flashDealsScrollRef}
-            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+            className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-hide scroll-smooth"
           >
             {discountedProducts.slice(0, 14).map((p, idx) => (
-              <div key={p.proId || idx} className="w-48 sm:w-52 flex-shrink-0">
+              <div key={p.proId || idx} className="w-48 sm:w-52 md:w-56 flex-shrink-0 flex flex-col">
                 {renderProductCard(p, idx)}
               </div>
             ))}
