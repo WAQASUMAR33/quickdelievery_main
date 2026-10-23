@@ -1,4 +1,3 @@
-import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -14,13 +13,6 @@ import AIAssistantWidget from "@/components/customer/AIAssistantWidget";
 
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
 export const metadata = {
   title: "QuickDelivery — Bespoke Multi-Vendor Marketplace & AI Concierge",
   description: "Explore electronics, laptops, supermarket groceries, and gourmet dining delivered fast.",
@@ -30,7 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${plusJakarta.variable} font-sans antialiased bg-slate-50 dark:bg-[#080C16] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
+        className="font-sans antialiased bg-slate-50 dark:bg-[#080C16] text-slate-900 dark:text-slate-100 transition-colors duration-200"
       >
         <ErrorBoundary>
           <ThemeProvider>
