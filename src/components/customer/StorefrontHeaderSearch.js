@@ -89,6 +89,13 @@ export default function StorefrontHeaderSearch({
   const containerRef = useRef(null)
   const debounceTimer = useRef(null)
 
+  const trendingTags = React.useMemo(() => {
+    if (Array.isArray(categories) && categories.length > 0) {
+      return categories.map((c) => c.name).filter(Boolean)
+    }
+    return TRENDING_TAGS
+  }, [categories])
+
   // Load recent searches on mount
   useEffect(() => {
     try {
@@ -687,7 +694,7 @@ export default function StorefrontHeaderSearch({
                   </Stack>
 
                   <Stack direction="row" flexWrap="wrap" gap={1}>
-                    {TRENDING_TAGS.map((tag) => (
+                    {trendingTags.map((tag) => (
                       <Chip
                         key={tag}
                         label={tag}

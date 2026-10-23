@@ -144,11 +144,8 @@ export default function VendorAnalytics({ vendorId }) {
 
   // Total sales revenue from DELIVERED orders
   const totalRevenue = useMemo(() => {
-    const deliveredRev = deliveredOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0)
-    if (deliveredRev > 0) return deliveredRev
-    // Fallback if no delivered orders yet: estimate inventory value
-    return products.reduce((sum, p) => sum + parseFloat(p.price || 0) * (p.stock || 0), 0)
-  }, [deliveredOrders, products])
+    return deliveredOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0)
+  }, [deliveredOrders])
 
   const averageOrderValue = useMemo(() => {
     const validOrders = orders.filter(o => o.status !== 'CANCELLED')

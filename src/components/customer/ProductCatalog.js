@@ -219,13 +219,112 @@ const ProductCatalog = ({
     return () => clearInterval(timer)
   }, [])
 
+  // Dynamic Hero Slides derived from real database categories and live product inventory
+  const heroSlides = useMemo(() => {
+    const categoryVisuals = {
+      restaurant: {
+        badge: 'GOURMET DINING & RESTAURANTS',
+        title: 'Handcrafted Burgers, Artisan Pizza & Chef Specials',
+        subtitle: 'Sizzling burgers, wood-fired pizzas, gourmet cuisine & chef-prepared meals delivered hot',
+        ctaText: 'Explore Restaurant',
+        bgGradient: 'from-[#1A0B16] via-[#4C0519] to-[#3B0764]',
+        accentColor: '#F43F5E',
+        defaultImage: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
+      },
+      groceries: {
+        badge: 'FARM DIRECT & ORGANIC PANTRY',
+        title: 'Everyday Fresh Groceries at Fair Prices',
+        subtitle: 'Farm-fresh organic produce, dairy essentials, cold-pressed oils & pantry staples',
+        ctaText: 'Shop Fresh Groceries',
+        bgGradient: 'from-[#061A14] via-[#064E3B] to-[#042F2C]',
+        accentColor: '#10B981',
+        defaultImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+      },
+      bakery: {
+        badge: 'ARTISAN PATISSERIE & DESSERTS',
+        title: 'Freshly Baked Pastries, Cakes & Delights',
+        subtitle: 'Authentic French butter croissants, celebration cakes, chocolate treats & sweet pastries',
+        ctaText: 'Taste Bakery Specials',
+        bgGradient: 'from-[#1F1300] via-[#78350F] to-[#451A03]',
+        accentColor: '#F59E0B',
+        defaultImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80',
+      },
+      electronics: {
+        badge: 'TECH & NEXT-GEN MOBILITY',
+        title: 'Power Up with Official Mobile & Tech Gear',
+        subtitle: 'GaN 100W Fast Chargers, Braided Type-C Cables, ANC Earbuds & Smartwatch Gear',
+        ctaText: 'Explore Electronics & Tech',
+        bgGradient: 'from-[#0B0F19] via-[#1E1B4B] to-[#312E81]',
+        accentColor: '#818CF8',
+        defaultImage: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80',
+      },
+    }
+
+    if (!categories || categories.length === 0) {
+      return [
+        {
+          id: 'default-1',
+          badge: categoryVisuals.restaurant.badge,
+          title: categoryVisuals.restaurant.title,
+          subtitle: categoryVisuals.restaurant.subtitle,
+          ctaText: categoryVisuals.restaurant.ctaText,
+          discount: 'VERIFIED MENUS',
+          deptId: null,
+          bgGradient: categoryVisuals.restaurant.bgGradient,
+          accentColor: categoryVisuals.restaurant.accentColor,
+          image: categoryVisuals.restaurant.defaultImage,
+        }
+      ]
+    }
+
+    return categories.map((cat) => {
+      const lower = `${cat.name || ''} ${cat.code || ''} ${cat.vertical || ''}`.toLowerCase()
+      let visual = categoryVisuals.restaurant
+      if (lower.includes('grocer') || lower.includes('produce') || lower.includes('supermarket')) visual = categoryVisuals.groceries
+      else if (lower.includes('baker') || lower.includes('dessert') || lower.includes('cake') || lower.includes('pastr')) visual = categoryVisuals.bakery
+      else if (lower.includes('tech') || lower.includes('electron') || lower.includes('gadget') || lower.includes('mobile') || lower.includes('computer')) visual = categoryVisuals.electronics
+      else if (lower.includes('restaurant') || lower.includes('food') || lower.includes('dining')) visual = categoryVisuals.restaurant
+      else {
+        visual = {
+          badge: `${cat.name.toUpperCase()} SPECIALS`,
+          title: `Discover Premium ${cat.name}`,
+          subtitle: `Browse top-rated products and verified merchant offerings in ${cat.name}`,
+          ctaText: `Explore ${cat.name}`,
+          bgGradient: 'from-[#0B0F19] via-[#1E293B] to-[#334155]',
+          accentColor: '#38BDF8',
+          defaultImage: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80',
+        }
+      }
+
+      // Compute dynamic discount from real database products in this category
+      const catProducts = products.filter(p => idsEqual(p.catId ?? p.category?.id, cat.id))
+      const discounts = catProducts.map(p => Number(p.discount || 0)).filter(d => d > 0)
+      const maxDiscount = discounts.length > 0 ? Math.max(...discounts) : 0
+      const discountText = maxDiscount > 0 ? `UP TO ${maxDiscount}% OFF` : `${catProducts.length} PRODUCTS IN STOCK`
+
+      return {
+        id: cat.id,
+        badge: visual.badge,
+        title: visual.title,
+        subtitle: visual.subtitle,
+        ctaText: visual.ctaText,
+        discount: discountText,
+        deptId: cat.id,
+        bgGradient: visual.bgGradient,
+        accentColor: visual.accentColor,
+        image: cat.image || visual.defaultImage,
+      }
+    })
+  }, [categories, products])
+
   // Auto-advance hero slides every 5 seconds
   useEffect(() => {
+    if (!heroSlides.length) return
     const slideTimer = setInterval(() => {
-      setActiveSlideIndex(prev => (prev + 1) % 4)
+      setActiveSlideIndex(prev => (prev + 1) % heroSlides.length)
     }, 5000)
     return () => clearInterval(slideTimer)
-  }, [])
+  }, [heroSlides.length])
 
   // Initial Data Fetching from RDS APIs
   useEffect(() => {
@@ -665,61 +764,6 @@ const ProductCatalog = ({
     if (onSelectDepartment) onSelectDepartment(null)
   }
 
-  // Hero Slides Data (Neo-Marketplace Curated Highlights)
-  const HERO_SLIDES = [
-    {
-      id: 1,
-      badge: 'TECH & NEXT-GEN MOBILITY',
-      title: 'Power Up with Official Mobile Gear',
-      subtitle: 'GaN 100W Fast Chargers, Braided Type-C Cables, ANC Earbuds & Smartwatch Bands',
-      ctaText: 'Explore Mobile Tech',
-      discount: 'UP TO 40% OFF',
-      vendorKeyword: 'ElectroZone',
-      deptId: 'mobile',
-      bgGradient: 'from-[#0B0F19] via-[#1E1B4B] to-[#312E81]',
-      accentColor: '#818CF8',
-      image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80',
-    },
-    {
-      id: 2,
-      badge: 'PRO WORKSTATIONS & GAMING',
-      title: 'Unleash Next-Gen Gaming & Computing',
-      subtitle: 'Core i7/Ryzen Laptops, Mechanical RGB Keyboards, NVMe SSDs & Precision Mice',
-      ctaText: 'Shop Computing',
-      discount: 'UP TO 35% OFF',
-      vendorKeyword: 'Apex',
-      deptId: 'computers',
-      bgGradient: 'from-[#090D16] via-[#0E2A36] to-[#042F2E]',
-      accentColor: '#06B6D4',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80',
-    },
-    {
-      id: 3,
-      badge: 'FARM DIRECT & ORGANIC PANTRY',
-      title: 'Everyday Fresh Groceries at Fair Prices',
-      subtitle: 'Farm-fresh organic produce, dairy essentials, cold-pressed oils & basmati grains',
-      ctaText: 'Order Pantry',
-      discount: 'FLAT 25% OFF',
-      vendorKeyword: 'Supermarket',
-      deptId: 'grocery',
-      bgGradient: 'from-[#061A14] via-[#064E3B] to-[#042F2C]',
-      accentColor: '#10B981',
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
-    },
-    {
-      id: 4,
-      badge: 'ARTISAN PATISSERIE & CHEF DINING',
-      title: 'Handcrafted Angus Burgers & French Pastries',
-      subtitle: 'Smashed double beef patties, wood-fired Neapolitan pizza, French croissants & macarons',
-      ctaText: 'Taste Gourmet',
-      discount: 'CHEF SPECIALS',
-      vendorKeyword: 'Burger',
-      deptId: 'dining',
-      bgGradient: 'from-[#1A0B16] via-[#4C0519] to-[#3B0764]',
-      accentColor: '#F43F5E',
-      image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
-    },
-  ]
 
   // Render Modern Bespoke Product Card (Grid View - Neo-Marketplace Iris & Slate aesthetic)
   const renderProductCard = (product, index) => {
@@ -1611,11 +1655,11 @@ const ProductCatalog = ({
         {/* Main Banner Slider (8 Cols on Desktop) */}
         <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg min-h-[300px] sm:min-h-[340px] flex flex-col justify-between p-6 sm:p-8 text-white bg-slate-900">
           {/* Active Slide Background */}
-          {HERO_SLIDES.map((slide, idx) => {
-            const isActive = activeSlideIndex === idx
+          {heroSlides.map((slide, idx) => {
+            const isActive = (activeSlideIndex % heroSlides.length) === idx
             return (
               <div
-                key={slide.id}
+                key={slide.id || idx}
                 className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient} transition-opacity duration-700 ${
                   isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 }`}
@@ -1630,48 +1674,57 @@ const ProductCatalog = ({
           })}
 
           {/* Slide Content */}
-          <div className="relative z-10 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-black tracking-wider uppercase mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>{HERO_SLIDES[activeSlideIndex].badge}</span>
-            </div>
+          {(() => {
+            const currentSlide = heroSlides[activeSlideIndex % heroSlides.length] || heroSlides[0]
+            if (!currentSlide) return null
+            return (
+              <div className="relative z-10 max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-black tracking-wider uppercase mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{currentSlide.badge}</span>
+                </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-2 drop-shadow-sm">
-              {HERO_SLIDES[activeSlideIndex].title}
-            </h1>
+                <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-2 drop-shadow-sm">
+                  {currentSlide.title}
+                </h1>
 
-            <p className="text-slate-200 text-xs sm:text-sm font-medium mb-6 line-clamp-2 max-w-lg leading-relaxed">
-              {HERO_SLIDES[activeSlideIndex].subtitle}
-            </p>
+                <p className="text-slate-200 text-xs sm:text-sm font-medium mb-6 line-clamp-2 max-w-lg leading-relaxed">
+                  {currentSlide.subtitle}
+                </p>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  const targetDept = HERO_SLIDES[activeSlideIndex].deptId
-                  if (onSelectDepartment) onSelectDepartment(targetDept)
-                }}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
-              >
-                <span>{HERO_SLIDES[activeSlideIndex].ctaText}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentSlide.deptId && onSelectDepartment) {
+                        onSelectDepartment(currentSlide.deptId)
+                      } else if (onSelectDepartment) {
+                        onSelectDepartment(null)
+                      }
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
+                  >
+                    <span>{currentSlide.ctaText}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
 
-              <span className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md text-white font-extrabold text-xs border border-white/20">
-                {HERO_SLIDES[activeSlideIndex].discount}
-              </span>
-            </div>
-          </div>
+                  <span className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md text-white font-extrabold text-xs border border-white/20">
+                    {currentSlide.discount}
+                  </span>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Slider Pagination Controls */}
           <div className="relative z-10 flex items-center justify-between pt-4 mt-auto border-t border-white/10">
             <div className="flex gap-1.5">
-              {HERO_SLIDES.map((_, i) => (
+              {heroSlides.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveSlideIndex(i)}
                   className={`h-2 rounded-full transition-all ${
-                    activeSlideIndex === i ? 'w-8 bg-indigo-400' : 'w-2 bg-white/40 hover:bg-white/70'
+                    (activeSlideIndex % heroSlides.length) === i ? 'w-8 bg-indigo-400' : 'w-2 bg-white/40 hover:bg-white/70'
                   }`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
@@ -1680,14 +1733,14 @@ const ProductCatalog = ({
 
             <div className="flex gap-2">
               <button
-                onClick={() => setActiveSlideIndex(prev => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1))}
+                onClick={() => setActiveSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
                 className="p-1.5 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md text-white transition-colors"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setActiveSlideIndex(prev => (prev + 1) % HERO_SLIDES.length)}
+                onClick={() => setActiveSlideIndex(prev => (prev + 1) % heroSlides.length)}
                 className="p-1.5 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md text-white transition-colors"
                 aria-label="Next slide"
               >
@@ -1732,7 +1785,13 @@ const ProductCatalog = ({
                 Curated Drop Discounts
               </h4>
               <p className="text-xs text-slate-300 line-clamp-1">
-                Save up to 45% on mobile tech, workstations & groceries!
+                {(() => {
+                  const maxDisc = Math.max(0, ...products.map(p => Number(p.discount || 0)))
+                  const catNames = categories.map(c => c.name).slice(0, 3).join(', ')
+                  return maxDisc > 0
+                    ? `Save up to ${maxDisc}% across ${catNames || 'our departments'}!`
+                    : `Exclusive marketplace deals across ${catNames || 'all categories'}!`
+                })()}
               </p>
             </div>
 
@@ -1756,7 +1815,10 @@ const ProductCatalog = ({
                 100% Authentic Brand Guarantees
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                Verified boutiques: ElectroZone, Apex Computers, Metro Fresh, and gourmet kitchens.
+                Verified boutiques:{' '}
+                {topShops.length > 0
+                  ? topShops.slice(0, 4).map(s => s.businessName || s.username).join(', ')
+                  : 'Official multi-vendor boutiques and verified merchant partners'}.
               </p>
             </div>
 

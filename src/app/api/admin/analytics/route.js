@@ -183,13 +183,11 @@ export async function GET(request) {
       }
     }
 
-    const chartTimeline = Array.from(chartMap.values()).map((item, idx) => {
-      const baselineRev = item.revenue > 0 ? item.revenue : (120 + ((idx * 37) % 180))
-      const baselineOrd = item.orders > 0 ? item.orders : (1 + ((idx * 3) % 6))
+    const chartTimeline = Array.from(chartMap.values()).map((item) => {
       return {
         ...item,
-        revenue: Math.round(baselineRev * 100) / 100,
-        orders: baselineOrd,
+        revenue: Math.round(item.revenue * 100) / 100,
+        orders: item.orders,
         actualRevenue: item.revenue,
         actualOrders: item.orders,
       }
@@ -216,7 +214,7 @@ export async function GET(request) {
 
     // ── 4. Vendors & Store Statistics ──
     const vendorUsers = allUsers.filter((u) => u.role === 'VENDOR')
-    const totalVendorsCount = Math.max(allBusinesses.length, vendorUsers.length)
+    const totalVendorsCount = allBusinesses.length || vendorUsers.length
     const approvedBusinesses = allBusinesses.filter(b => b.verificationStatus === 'APPROVED').length
     const pendingBusinesses = allBusinesses.filter(b => b.verificationStatus === 'PENDING').length
     const foodVendors = allBusinesses.filter(b => b.vertical === 'FOOD').length
@@ -230,46 +228,38 @@ export async function GET(request) {
         name: b.businessName,
         email: b.email,
         phone: b.phoneNumber1 || '—',
-        city: b.city || 'Sydney',
+        city: b.city || '—',
         state: b.state || '',
         vertical: b.vertical || 'FOOD',
         status: b.verificationStatus,
-        productCount: Math.max(storeProducts, 4 + (b.id % 6)),
+        productCount: storeProducts,
       }
     })
 
     // ── 5. Drivers & Fleet Telemetry Statistics ──
     const driverUsers = allUsers.filter((u) => u.role === 'DRIVER')
-    const totalDriversCount = Math.max(driverProfiles.length, driverUsers.length, 6)
+    const totalDriversCount = driverProfiles.length || driverUsers.length
     const onDutyDrivers = driverProfiles.filter(d => d.dutyStatus === 'ON_DUTY').length
     const onDeliveryDrivers = driverProfiles.filter(d => d.dutyStatus === 'ON_DELIVERY').length
     const offDutyDrivers = driverProfiles.filter(d => d.dutyStatus === 'OFF_DUTY').length
 
-    const activeDriversComputed = Math.max(onDutyDrivers + onDeliveryDrivers, 4)
+    const activeDriversComputed = onDutyDrivers + onDeliveryDrivers
 
-    // Driver Roster (Real records + realistic telemetry roster for operational command)
-    const driverRoster = driverProfiles.length > 0
-      ? driverProfiles.map(dp => ({
-          id: dp.id,
-          name: dp.user?.username || 'Driver Partner',
-          phone: dp.user?.phoneNumber || '—',
-          email: dp.user?.email || '—',
-          vehicle: dp.vehicleType || 'Motorcycle',
-          status: dp.dutyStatus,
-          shift: dp.shiftSchedule || 'Full Time',
-          deliveriesToday: 4 + (dp.id % 5),
-        }))
-      : [
-          { id: 101, name: 'Ali Hamza', phone: '+92 300 1234567', vehicle: 'Motorcycle 125cc', status: 'ON_DELIVERY', shift: 'Morning Shift', deliveriesToday: 8, zone: 'Downtown Central' },
-          { id: 102, name: 'Bilal Ahmed', phone: '+92 312 9876543', vehicle: 'Honda Pridor', status: 'ON_DUTY', shift: 'Full Time', deliveriesToday: 6, zone: 'Gulberg North' },
-          { id: 103, name: 'Usman Farooq', phone: '+92 333 4567890', vehicle: 'Electric Scooter', status: 'ON_DUTY', shift: 'Evening Shift', deliveriesToday: 5, zone: 'City Center' },
-          { id: 104, name: 'Kamran Shah', phone: '+92 345 6789012', vehicle: 'Motorcycle 70cc', status: 'ON_DELIVERY', shift: 'Full Time', deliveriesToday: 9, zone: 'West District' },
-          { id: 105, name: 'Zeeshan Malik', phone: '+92 301 2345678', vehicle: 'Yamaha YBR', status: 'OFF_DUTY', shift: 'Night Shift', deliveriesToday: 0, zone: 'Mall Road' },
-        ]
+    // Real driver roster from driver profiles
+    const driverRoster = driverProfiles.map(dp => ({
+      id: dp.id,
+      name: dp.user?.username || 'Driver Partner',
+      phone: dp.user?.phoneNumber || '—',
+      email: dp.user?.email || '—',
+      vehicle: dp.vehicleType || 'Motorcycle',
+      status: dp.dutyStatus || 'OFF_DUTY',
+      shift: dp.shiftSchedule || 'Standard',
+      deliveriesToday: allOrders.filter(o => o.driverId === dp.id && o.status === 'DELIVERED').length,
+    }))
 
     // ── 6. Customers & User Base Statistics ──
     const customerUsers = allUsers.filter((u) => u.role === 'CUSTOMER')
-    const totalCustomers = Math.max(customerUsers.length, 1)
+    const totalCustomers = customerUsers.length
     const verifiedUsers = allUsers.filter((u) => u.emailVerification).length
     const newCustomersThisPeriod = allUsers.filter(u => u.createdAt >= cutoffDate && u.role === 'CUSTOMER').length
 
@@ -282,36 +272,54 @@ export async function GET(request) {
     const foodProductsCount = allProducts.filter((p) => p.vertical === 'FOOD').length
     const groceryProductsCount = allProducts.filter((p) => p.vertical === 'GROCERY').length
 
-    // ── 8. Top Selling Products ──
+    // ── 8. Top Selling Products based on actual order items ──
+    const salesByProductId = {}
+    for (const order of allOrders) {
+      for (const item of (order.orderItems || [])) {
+        const pid = item.productId || item.product?.proId
+        if (!pid) continue
+        if (!salesByProductId[pid]) {
+          salesByProductId[pid] = { count: 0, revenue: 0 }
+        }
+        const qty = item.quantity || 1
+        const price = parseFloat(item.price || item.product?.price || 0)
+        salesByProductId[pid].count += qty
+        salesByProductId[pid].revenue += price * qty
+      }
+    }
+
     const topProducts = allProducts
+      .map(p => {
+        const sales = salesByProductId[p.proId] || { count: 0, revenue: 0 }
+        return {
+          id: p.proId,
+          name: p.proName,
+          price: parseFloat(p.price || 0),
+          category: p.category?.name || 'General',
+          salesCount: sales.count,
+          revenue: Math.round(sales.revenue * 100) / 100,
+        }
+      })
+      .sort((a, b) => (b.salesCount - a.salesCount) || (b.revenue - a.revenue))
       .slice(0, 5)
-      .map((p, idx) => ({
-        id: p.proId,
-        name: p.proName,
-        price: parseFloat(p.price || 0),
-        category: p.category?.name || 'General',
-        salesCount: 14 + (idx * 9) + ((allOrders.length * 3) % 25),
-        revenue: Math.round(parseFloat(p.price || 0) * (14 + (idx * 9))),
-      }))
-      .sort((a, b) => b.revenue - a.revenue)
 
     return Response.json({
       success: true,
       timestamp: Date.now(),
       range,
       kpis: {
-        grossRevenue: Math.round(Math.max(grossRevenue, 4820) * 100) / 100,
+        grossRevenue: Math.round(grossRevenue * 100) / 100,
         actualGrossRevenue: Math.round(grossRevenue * 100) / 100,
         deliveredRevenue: Math.round(deliveredRevenue * 100) / 100,
-        totalOrders: Math.max(totalOrdersCount, 28),
+        totalOrders: totalOrdersCount,
         actualOrders: totalOrdersCount,
         pendingOrders,
         processingOrders,
         shippedOrders,
         deliveredOrders,
         cancelledOrders,
-        avgOrderValue: Math.round(Math.max(avgOrderValue, 42.5) * 100) / 100,
-        deliverySuccessRate: Math.max(deliverySuccessRate, 96),
+        avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+        deliverySuccessRate,
         totalCustomers,
         totalVendors: totalVendorsCount,
         totalDrivers: totalDriversCount,
@@ -325,39 +333,39 @@ export async function GET(request) {
       },
       vendorStats: {
         total: totalVendorsCount,
-        approved: approvedBusinesses || totalVendorsCount,
+        approved: approvedBusinesses,
         pending: pendingBusinesses,
-        foodVendors: foodVendors || 4,
-        groceryVendors: groceryVendors || 2,
-        retailVendors: retailVendors || 1,
+        foodVendors,
+        groceryVendors,
+        retailVendors,
         stores: vendorRoster,
       },
       driverStats: {
         total: totalDriversCount,
         active: activeDriversComputed,
-        onDuty: Math.max(onDutyDrivers, 2),
-        onDelivery: Math.max(onDeliveryDrivers, 2),
-        offDuty: Math.max(offDutyDrivers, 2),
-        avgDropoffTime: '22 mins',
-        fleetOnTimeRate: '98.4%',
+        onDuty: onDutyDrivers,
+        onDelivery: onDeliveryDrivers,
+        offDuty: offDutyDrivers,
+        avgDropoffTime: '—',
+        fleetOnTimeRate: totalOrdersCount > 0 ? `${deliverySuccessRate}%` : '—',
         drivers: driverRoster,
       },
       orderStats: {
-        total: Math.max(totalOrdersCount, 28),
+        total: totalOrdersCount,
         pending: pendingOrders,
         processing: processingOrders,
         shipped: shippedOrders,
         delivered: deliveredOrders,
         cancelled: cancelledOrders,
-        foodOrders: Math.max(foodOrdersCount, 21),
-        groceryOrders: Math.max(groceryOrdersCount, 7),
-        codOrders: Math.max(codOrdersCount, 22),
-        cardOrders: Math.max(cardOrdersCount, 6),
+        foodOrders: foodOrdersCount,
+        groceryOrders: groceryOrdersCount,
+        codOrders: codOrdersCount,
+        cardOrders: cardOrdersCount,
       },
       customerStats: {
         total: totalCustomers,
         verified: verifiedUsers,
-        newThisPeriod: Math.max(newCustomersThisPeriod, 1),
+        newThisPeriod: newCustomersThisPeriod,
       },
       productStats: {
         total: totalProductCount,
@@ -371,10 +379,10 @@ export async function GET(request) {
       },
       chartTimeline,
       orderStatusBreakdown: [
-        { status: 'DELIVERED', label: 'Delivered', count: Math.max(deliveredOrders, 19), color: '#10B981' },
-        { status: 'PROCESSING', label: 'In Kitchen / Prep', count: Math.max(processingOrders, 4), color: '#3B82F6' },
-        { status: 'SHIPPED', label: 'Out for Delivery', count: Math.max(shippedOrders, 3), color: '#8B5CF6' },
-        { status: 'PENDING', label: 'Pending Dispatch', count: Math.max(pendingOrders, 2), color: '#F59E0B' },
+        { status: 'DELIVERED', label: 'Delivered', count: deliveredOrders, color: '#10B981' },
+        { status: 'PROCESSING', label: 'In Kitchen / Prep', count: processingOrders, color: '#3B82F6' },
+        { status: 'SHIPPED', label: 'Out for Delivery', count: shippedOrders, color: '#8B5CF6' },
+        { status: 'PENDING', label: 'Pending Dispatch', count: pendingOrders, color: '#F59E0B' },
         { status: 'CANCELLED', label: 'Cancelled', count: cancelledOrders, color: '#EF4444' },
       ],
       categoryDistribution: categoryDistribution.slice(0, 5),
