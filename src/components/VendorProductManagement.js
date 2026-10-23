@@ -60,7 +60,16 @@ import TableRowsOutlinedIcon    from '@mui/icons-material/TableRowsOutlined'
 import UploadOutlinedIcon       from '@mui/icons-material/UploadOutlined'
 import ViewListOutlinedIcon     from '@mui/icons-material/ViewListOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
+import DownloadOutlinedIcon     from '@mui/icons-material/DownloadOutlined'
+import UploadFileOutlinedIcon   from '@mui/icons-material/UploadFileOutlined'
+import InfoOutlinedIcon         from '@mui/icons-material/InfoOutlined'
+import LayersOutlinedIcon       from '@mui/icons-material/LayersOutlined'
+import LocalOfferOutlinedIcon   from '@mui/icons-material/LocalOfferOutlined'
+import RestaurantOutlinedIcon   from '@mui/icons-material/RestaurantOutlined'
+import FastfoodOutlinedIcon     from '@mui/icons-material/FastfoodOutlined'
+import AspectRatioOutlinedIcon  from '@mui/icons-material/AspectRatioOutlined'
 import { isRestaurantVendor }    from '@/lib/vendorHelpers'
+import { UNIFIED_PRODUCT_PHASES, UNIFIED_CSV_COLUMNS, normalizeProductToUnified } from '@/lib/unifiedProductSchema'
 
 const BRAND      = '#39772A'
 const BRAND_DARK = '#2E5F22'
@@ -78,6 +87,11 @@ const VendorProductManagement = () => {
   const [showColorPopup, setShowColorPopup] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
+  const [showFeedDialog, setShowFeedDialog] = useState(false)
+  const [activeEditPhase, setActiveEditPhase] = useState('all')
+  const [feedCsvText, setFeedCsvText] = useState('')
+  const [feedUploading, setFeedUploading] = useState(false)
+  const [feedImportResult, setFeedImportResult] = useState(null)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -99,26 +113,97 @@ const VendorProductManagement = () => {
   const isRestaurant = isRestaurantVendor(userData, vendorBusiness)
 
   const [formData, setFormData] = useState({
-    proName: '', description: '', catId: '', subCatId: '',
-    price: '', cost: '', discount: '', sku: '', barcode: '',
-    qnty: '', stock: '', status: true, images: [],
-    brandName: '', manufacturer: '', keyFeatures: [], productType: '',
-    variations: {}, sizeName: '', modelNumber: '', productDimensions: '',
-    packageWeight: '', salePrice: '', saleStartDate: '', saleEndDate: '',
-    currency: 'USD', conditionType: '', warranty: '', ingredients: '',
-    reviews: [], size: '', customSize: '', color: '', customColor: '',
-    // Food & Dining specific
+    // Phase 1: Core Identifiers & Taxonomy
+    sku: '',
+    proName: '',
+    brandName: '',
+    manufacturer: '',
+    barcode: '',
+    productIdType: 'NONE',
+    productType: '',
+    menuSectionName: '',
+    catId: '',
+    subCatId: '',
+
+    // Phase 2: Pricing, Availability & Offer Data
+    price: '',
+    cost: '',
+    discount: '0',
+    currency: 'PKR',
+    qnty: '50',
+    stock: '50',
+    status: true,
+    conditionType: 'Prepared Fresh',
+    fulfillmentChannel: 'DEFAULT',
+    salePrice: '',
+    saleStartDate: '',
+    saleEndDate: '',
+    maxOrderQuantity: '10',
+    taxCode: 'FOOD_PREP_STD',
+
+    // Phase 3: Discoverability, Content & Descriptions
+    bulletPoint1: '',
+    bulletPoint2: '',
+    bulletPoint3: '',
+    bulletPoint4: '',
+    bulletPoint5: '',
+    keyFeatures: [],
+    description: '',
+    genericKeywords: '',
+    targetAudience: '',
+
+    // Phase 4: Food, Dietary & Safety Compliance
+    ingredients: '',
+    allergenInformation: '',
+    dietType: 'Halal Certified',
+    isExpirationDatedProduct: true,
+    unitCount: '1',
+    unitCountType: 'serving',
+    hazmatType: 'Not Applicable - Perishable Food',
     isHalal: true,
     isVeg: false,
     prepTime: '20',
     calories: '',
     servings: '1-2 Persons',
     spiceLevel: 'Medium',
+
+    // Phase 5: Modifiers, Options & Variations
+    parentChild: 'Standalone',
+    parentSku: '',
+    variationTheme: '',
+    modifierGroupName: 'Add-ons & Options',
+    modifierItemName: '',
+    modifierPriceDelta: '150',
+    minSelections: '0',
+    maxSelections: '4',
     addons: [],
-    // Retail & Protection (Amazon / Daraz)
+    variations: {},
+    sizeName: '',
+    modelNumber: '',
+    size: '',
+    customSize: '',
+    color: '',
+    customColor: '',
     warrantyType: '1 Year Brand Warranty',
+    warranty: '',
     returnPolicy: '7 Days Replacement',
     isAuthenticGuaranteed: true,
+
+    // Phase 6: Image Media Assets
+    images: [],
+
+    // Phase 7: Dimensions, Weight & Shipping
+    itemWeight: '450',
+    itemWeightUnit: 'grams',
+    shippingWeight: '550',
+    shippingWeightUnit: 'grams',
+    itemLength: '15',
+    itemWidth: '15',
+    itemHeight: '12',
+    dimensionalUnit: 'cm',
+    productDimensions: '',
+    packageWeight: '',
+    reviews: [],
   })
 
   const [newAddon, setNewAddon] = useState({ name: '', price: '' })
@@ -189,6 +274,20 @@ const VendorProductManagement = () => {
 
       const variationsPayload = validAddons.length > 0 ? validAddons : null
 
+      // Build keyFeatures from 5 bullet points or keyFeatures array
+      const bulletPointsList = [
+        formData.bulletPoint1,
+        formData.bulletPoint2,
+        formData.bulletPoint3,
+        formData.bulletPoint4,
+        formData.bulletPoint5,
+      ].filter(Boolean)
+      const finalKeyFeatures = bulletPointsList.length > 0 ? bulletPointsList : (formData.keyFeatures?.filter(Boolean) || [])
+
+      // Formatted dimensional & weight strings
+      const formattedDimensions = `${formData.itemLength || 15}x${formData.itemWidth || 15}x${formData.itemHeight || 12} ${formData.dimensionalUnit || 'cm'}`
+      const formattedWeight = `${formData.itemWeight || 450} ${formData.itemWeightUnit || 'grams'}`
+
       const res = await authFetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -209,18 +308,18 @@ const VendorProductManagement = () => {
           stock: parseInt(formData.stock || 0),
           status: formData.status,
           proImages: formData.images,
-          brandName:         !isRestaurant ? (formData.brandName || null) : null,
-          manufacturer:      !isRestaurant ? (formData.manufacturer || null) : null,
-          productType:       !isRestaurant ? (formData.productType || null) : null,
-          modelNumber:       !isRestaurant ? (formData.modelNumber || null) : null,
-          sizeName:          !isRestaurant ? (formData.sizeName || null) : null,
-          conditionType:     !isRestaurant ? (formData.conditionType || null) : null,
-          productDimensions: !isRestaurant ? (formData.productDimensions || null) : null,
-          packageWeight:     !isRestaurant ? (formData.packageWeight || null) : null,
-          warranty:          !isRestaurant ? (formData.warrantyType || formData.warranty || null) : null,
-          size:              !isRestaurant ? (formData.size || null) : null,
-          color:             !isRestaurant ? (formData.color || null) : null,
-          keyFeatures:       formData.keyFeatures?.filter(Boolean) || [],
+          brandName:         formData.brandName || null,
+          manufacturer:      formData.manufacturer || null,
+          productType:       formData.productType || null,
+          modelNumber:       formData.modelNumber || null,
+          sizeName:          formData.sizeName || null,
+          conditionType:     formData.conditionType || null,
+          productDimensions: formattedDimensions,
+          packageWeight:     formattedWeight,
+          warranty:          formData.warrantyType || formData.warranty || null,
+          size:              formData.size || null,
+          color:             formData.color || null,
+          keyFeatures:       finalKeyFeatures,
           ingredients:       formData.ingredients || null,
           salePrice:         formData.salePrice ? parseFloat(formData.salePrice) : null,
           saleStartDate:     formData.saleStartDate || null,
@@ -284,6 +383,36 @@ const VendorProductManagement = () => {
     const isFood = isRestaurant || ['burger', 'pizza', 'sandwich', 'biryani', 'pasta', 'bbq', 'deal', 'meal', 'platter'].some(k => (product.proName || '').toLowerCase().includes(k))
     const isVeggie = (product.proName || '').toLowerCase().includes('veg') || (product.ingredients || '').toLowerCase().includes('vegetarian')
 
+    // Parse bullet points
+    let rawBullets = []
+    if (Array.isArray(product.keyFeatures)) {
+      rawBullets = product.keyFeatures
+    } else if (typeof product.keyFeatures === 'string') {
+      try { rawBullets = JSON.parse(product.keyFeatures || '[]') } catch { rawBullets = product.keyFeatures.split(/\n+/).filter(Boolean) }
+    }
+
+    // Dimensions parser
+    let parsedLength = '15', parsedWidth = '15', parsedHeight = '12', parsedDimUnit = 'cm'
+    if (product.productDimensions) {
+      const parts = product.productDimensions.match(/[\d.]+/g)
+      if (parts && parts.length >= 3) {
+        parsedLength = parts[0]
+        parsedWidth = parts[1]
+        parsedHeight = parts[2]
+      }
+      if (product.productDimensions.includes('inch')) parsedDimUnit = 'inches'
+    }
+
+    // Weight parser
+    let parsedWeight = '450', parsedWeightUnit = 'grams'
+    if (product.packageWeight) {
+      const num = parseFloat(product.packageWeight)
+      if (!isNaN(num)) parsedWeight = num.toString()
+      if (product.packageWeight.toLowerCase().includes('kg')) parsedWeightUnit = 'kg'
+      else if (product.packageWeight.toLowerCase().includes('oz')) parsedWeightUnit = 'oz'
+      else if (product.packageWeight.toLowerCase().includes('lb')) parsedWeightUnit = 'lbs'
+    }
+
     setFormData({
       proName: product.proName || '',
       description: product.description || '',
@@ -294,14 +423,50 @@ const VendorProductManagement = () => {
       discount: product.discount != null ? product.discount.toString() : '0',
       sku: product.sku || '',
       barcode: product.barcode || '',
+      productIdType: product.barcode ? 'UPC' : 'NONE',
+      productType: product.productType || '',
+      menuSectionName: product.category?.name || '',
       qnty: product.qnty != null ? product.qnty.toString() : '',
       stock: product.stock != null ? product.stock.toString() : '',
       status: product.status !== undefined ? Boolean(product.status) : true,
+      conditionType: product.conditionType || (isFood ? 'Prepared Fresh' : 'New'),
+      fulfillmentChannel: 'DEFAULT',
+      maxOrderQuantity: '10',
+      taxCode: isFood ? 'FOOD_PREP_STD' : 'RETAIL_GOODS_STD',
+      bulletPoint1: rawBullets[0] || '',
+      bulletPoint2: rawBullets[1] || '',
+      bulletPoint3: rawBullets[2] || '',
+      bulletPoint4: rawBullets[3] || '',
+      bulletPoint5: rawBullets[4] || '',
+      keyFeatures: rawBullets,
+      genericKeywords: `${product.proName} ${product.brandName || ''}`.trim(),
+      targetAudience: isFood ? 'Gourmet Diners, Food Lovers' : 'Unisex-Adult',
+      ingredients: product.ingredients || '',
+      allergenInformation: isFood ? 'Contains: Milk, Wheat, Eggs' : 'Not Applicable',
+      dietType: isFood ? 'Halal Certified' : 'Not Applicable',
+      isExpirationDatedProduct: isFood,
+      unitCount: '1',
+      unitCountType: isFood ? 'serving' : 'item',
+      hazmatType: 'Not Applicable',
+      parentChild: 'Standalone',
+      parentSku: '',
+      variationTheme: product.size ? 'Size' : (product.color ? 'Color' : ''),
+      modifierGroupName: 'Add-ons & Options',
+      modifierItemName: parsedAddons.map(a => a.name).join('; '),
+      modifierPriceDelta: parsedAddons[0]?.price || '150',
+      minSelections: '0',
+      maxSelections: '4',
+      itemWeight: parsedWeight,
+      itemWeightUnit: parsedWeightUnit,
+      shippingWeight: (parseFloat(parsedWeight) * 1.15).toFixed(0),
+      shippingWeightUnit: parsedWeightUnit,
+      itemLength: parsedLength,
+      itemWidth: parsedWidth,
+      itemHeight: parsedHeight,
+      dimensionalUnit: parsedDimUnit,
       images: Array.isArray(product.proImages) ? product.proImages : (typeof product.proImages === 'string' ? (JSON.parse(product.proImages || '[]') || []) : []),
       brandName: product.brandName || '',
       manufacturer: product.manufacturer || '',
-      keyFeatures: Array.isArray(product.keyFeatures) ? product.keyFeatures : (typeof product.keyFeatures === 'string' ? (JSON.parse(product.keyFeatures || '[]') || []) : []),
-      productType: product.productType || '',
       variations: product.variations || {},
       sizeName: product.sizeName || '',
       modelNumber: product.modelNumber || '',
@@ -311,12 +476,10 @@ const VendorProductManagement = () => {
       saleStartDate: product.saleStartDate || '',
       saleEndDate: product.saleEndDate || '',
       currency: product.currency || 'PKR',
-      conditionType: product.conditionType || '',
       warranty: product.warranty || '',
       warrantyType: product.warranty || '1 Year Brand Warranty',
       returnPolicy: '7 Days Replacement',
       isAuthenticGuaranteed: true,
-      ingredients: product.ingredients || '',
       reviews: product.reviews || [],
       size: product.size || '',
       customSize: '',
@@ -336,6 +499,7 @@ const VendorProductManagement = () => {
         { name: 'Chilled Soft Drink Can (330ml)', price: '120' },
       ] : []),
     })
+    setActiveEditPhase('all')
     setShowEditModal(true)
   }
 
@@ -361,6 +525,34 @@ const VendorProductManagement = () => {
 
   const handleRemoveImage = (index) => {
     setFormData(prev => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== index) }))
+  }
+
+  const handleFeedUpload = async () => {
+    if (!feedCsvText || !feedCsvText.trim()) {
+      toast.error('Please provide CSV data or select a file to upload')
+      return
+    }
+    setFeedUploading(true)
+    setFeedImportResult(null)
+    try {
+      const res = await authFetch('/api/products/feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/csv' },
+        body: feedCsvText,
+      })
+      const data = await res.json()
+      if (data.success) {
+        setFeedImportResult(data.data)
+        toast.success(`Catalog Ingestion Completed: ${data.data.created} created, ${data.data.updated} updated`)
+        fetchProducts()
+      } else {
+        toast.error(`Ingestion failed: ${data.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      toast.error(`Error uploading feed: ${err.message}`)
+    } finally {
+      setFeedUploading(false)
+    }
   }
 
   const filteredProducts = products.filter(p => {
@@ -405,13 +597,33 @@ const VendorProductManagement = () => {
             {isRestaurant ? 'Manage your restaurant menu items and track approval status' : 'Manage your product listings and track approval status'}
           </Typography>
         </Box>
-        <Button
-          variant="contained" startIcon={<AddIcon />}
-          onClick={() => router.push('/admin/dashboard/products/add')}
-          sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, px: 3, py: 1.5 }}
-        >
-          Add New
-        </Button>
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+          <Button
+            variant="outlined"
+            startIcon={<UploadFileOutlinedIcon />}
+            onClick={() => setShowFeedDialog(true)}
+            sx={{
+              borderColor: '#cbd5e1',
+              color: '#334155',
+              borderRadius: '10px',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 13,
+              px: 2,
+              py: 1,
+              '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: `${BRAND}08` },
+            }}
+          >
+            Unified Feed Tools (CSV / XML)
+          </Button>
+          <Button
+            variant="contained" startIcon={<AddIcon />}
+            onClick={() => router.push('/admin/dashboard/products/add')}
+            sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: '10px', px: 3, py: 1, fontWeight: 800, textTransform: 'none' }}
+          >
+            Add New Item
+          </Button>
+        </Stack>
       </Box>
 
       {/* ── Stats Cards ── */}
@@ -811,377 +1023,815 @@ const VendorProductManagement = () => {
           <IconButton size="small" onClick={() => setShowEditModal(false)}><CloseIcon /></IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: { xs: 2, md: 3.5 }, bgcolor: 'grey.50' }}>
+        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: { xs: 2, md: 3 }, bgcolor: 'grey.50' }}>
+          {/* Phase Filter Navigation Pills */}
+          <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+            {[
+              { id: 'all', label: 'All 7 Phases' },
+              { id: 'phase_1', label: 'Phase 1: Vital Info' },
+              { id: 'phase_2', label: 'Phase 2: Pricing & Offer' },
+              { id: 'phase_3', label: 'Phase 3: Discoverability' },
+              { id: 'phase_4', label: 'Phase 4: Food & Safety' },
+              { id: 'phase_5', label: 'Phase 5: Modifiers & Variations' },
+              { id: 'phase_6', label: 'Phase 6: Image Media Assets' },
+              { id: 'phase_7', label: 'Phase 7: Dimensions & Shipping' },
+            ].map(tab => (
+              <Button
+                key={tab.id}
+                size="small"
+                variant={activeEditPhase === tab.id ? 'contained' : 'outlined'}
+                onClick={() => setActiveEditPhase(tab.id)}
+                sx={{
+                  borderRadius: 0,
+                  textTransform: 'none',
+                  fontWeight: activeEditPhase === tab.id ? 800 : 600,
+                  fontSize: 12,
+                  whiteSpace: 'nowrap',
+                  bgcolor: activeEditPhase === tab.id ? BRAND : '#ffffff',
+                  borderColor: activeEditPhase === tab.id ? BRAND : '#cbd5e1',
+                  color: activeEditPhase === tab.id ? '#ffffff' : '#334155',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    bgcolor: activeEditPhase === tab.id ? BRAND_DARK : '#f8fafc',
+                    borderColor: activeEditPhase === tab.id ? BRAND_DARK : '#94a3b8',
+                  }
+                }}
+              >
+                {tab.label}
+              </Button>
+            ))}
+          </Box>
+
           <Stack spacing={3}>
-
-            {/* ── SECTION 1: Basic & Category Info ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                {isRestaurant ? 'Basic Information & Category' : 'Basic Information & Category'}
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-                <TextField
-                  size="small" fullWidth label={isRestaurant ? 'Food / Item Name *' : 'Product Name *'} value={formData.proName}
-                  onChange={e => setFormData({ ...formData, proName: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', md: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-
-                {/* Category (Product Category) */}
-                <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
-                  <InputLabel>Product Category *</InputLabel>
-                  <Select
-                    value={formData.catId ? String(formData.catId) : ''}
-                    label="Product Category *"
-                    onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
-                    sx={{ borderRadius: 0 }}
-                  >
-                    <MenuItem value=""><em>Select Category</em></MenuItem>
-                    {categories.map(c => <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>)}
-                    {formData.catId && !categories.some(c => String(c.id) === String(formData.catId)) && (
-                      <MenuItem value={String(formData.catId)}>{selectedProduct?.category?.name || `Category #${formData.catId}`}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-
-                {/* Subcategory */}
-                <FormControl size="small" fullWidth disabled={!formData.catId} sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 1' } }}>
-                  <InputLabel>Sub-category *</InputLabel>
-                  <Select
-                    value={formData.subCatId ? String(formData.subCatId) : ''}
-                    label="Sub-category *"
-                    onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
-                    sx={{ borderRadius: 0 }}
-                  >
-                    <MenuItem value=""><em>Select Sub-category</em></MenuItem>
-                    {(() => {
-                      const selCat = categories.find(c => String(c.id) === String(formData.catId))
-                      const targetCatId = selCat?.catId || formData.catId
-                      const filtered = subcategories.filter(s => String(s.catId) === String(targetCatId))
-                      const hasCurrent = filtered.some(s => String(s.subCatId) === String(formData.subCatId))
-                      return (
-                        <>
-                          {filtered.map(s => (
-                            <MenuItem key={s.subCatId} value={String(s.subCatId)}>{s.subCatName}</MenuItem>
-                          ))}
-                          {!hasCurrent && formData.subCatId && (
-                            <MenuItem value={String(formData.subCatId)}>
-                              {selectedProduct?.subCategory?.subCatName || `Subcategory #${formData.subCatId}`}
-                            </MenuItem>
-                          )}
-                        </>
-                      )
-                    })()}
-                  </Select>
-                </FormControl>
-
-                {/* Pricing & Inventory: 4 Equal Columns */}
-                <TextField
-                  size="small" fullWidth label="Base Price *" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.price}
-                  onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small" fullWidth label="Cost Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.cost}
-                  onChange={e => setFormData({ ...formData, cost: e.target.value })}
-                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small" fullWidth label="Discount %" type="number" inputProps={{ min: 0, max: 100 }} value={formData.discount}
-                  onChange={e => setFormData({ ...formData, discount: e.target.value })}
-                  InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField
-                  size="small" fullWidth label="Stock Quantity *" type="number" inputProps={{ min: 0 }} value={formData.stock}
-                  onChange={e => setFormData({ ...formData, stock: e.target.value, qnty: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-
-                {/* Full Width Description */}
-                <TextField
-                  size="small" fullWidth multiline rows={3} label="Product Description" placeholder="Describe the item, ingredients, key highlights…" value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  sx={{ width: '100%', minWidth: 0, gridColumn: '1 / -1', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-              </Box>
-            </Card>
-
-            {/* ── SECTION 2A: Restaurant Kitchen & Dietary Specifications (Food Vendors) ── */}
-            {isRestaurant && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                  Kitchen, Dietary & Recipe Settings
-                </Typography>
-
-                {/* Dietary Switches */}
-                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3, p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(formData.isHalal)}
-                        onChange={e => setFormData({ ...formData, isHalal: e.target.checked })}
-                        color="success"
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2" fontWeight={800} color="#166534">
-                          🥩 100% Halal Certified
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          (Displays Halal verification badge on storefront)
-                        </Typography>
-                      </Box>
-                    }
-                  />
-
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(formData.isVeg)}
-                        onChange={e => setFormData({ ...formData, isVeg: e.target.checked })}
-                        color="success"
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2" fontWeight={800} color="#166534">
-                          🌱 Pure Vegetarian Dish
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          (Highlights as green vegetarian selection)
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </Box>
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
-                  <TextField
-                    size="small" fullWidth label="Kitchen Prep Time" placeholder="e.g. 20" value={formData.prepTime || '20'}
-                    onChange={e => setFormData({ ...formData, prepTime: e.target.value })}
-                    InputProps={{ endAdornment: <InputAdornment position="end">Mins</InputAdornment> }}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <TextField
-                    size="small" fullWidth label="Calories" placeholder="e.g. 450" value={formData.calories || ''}
-                    onChange={e => setFormData({ ...formData, calories: e.target.value })}
-                    InputProps={{ endAdornment: <InputAdornment position="end">kcal</InputAdornment> }}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <TextField
-                    size="small" fullWidth label="Portion / Servings" placeholder="e.g. 1-2 Persons" value={formData.servings || '1-2 Persons'}
-                    onChange={e => setFormData({ ...formData, servings: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
-                    <InputLabel>Spice Level</InputLabel>
-                    <Select
-                      value={formData.spiceLevel || 'Medium'}
-                      label="Spice Level"
-                      onChange={e => setFormData({ ...formData, spiceLevel: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      <MenuItem value="Mild">Mild 🟢</MenuItem>
-                      <MenuItem value="Medium">Medium 🟡</MenuItem>
-                      <MenuItem value="Hot">Hot 🔴</MenuItem>
-                      <MenuItem value="Extra Hot">Extra Hot 🔥</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Card>
-            )}
-
-            {/* ── SECTION 2B: Food Add-ons & Modifiers (Amazon / Food Delivery Customizer) ── */}
-            {isRestaurant && (
+            {/* ── PHASE 1: Core Identifiers & Taxonomy (Vital Info) ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_1') && (
               <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={700} color="#111827" sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                    Food Add-ons & Modifiers (Customizer)
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Customers can customize their order by adding extras
-                  </Typography>
-                </Box>
-
-                {/* Existing Add-ons List */}
-                <Stack spacing={1.5} sx={{ mb: 2.5 }}>
-                  {(formData.addons || []).map((addon, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        p: 1.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" fontWeight={700} color="#111827">
-                          {addon.name}
-                        </Typography>
-                        <Chip
-                          label={`+ Rs. ${parseFloat(addon.price || 0).toLocaleString()}`}
-                          size="small"
-                          sx={{ height: 22, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af', borderRadius: 0 }}
-                        />
-                      </Box>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => {
-                          const updated = (formData.addons || []).filter((_, idx) => idx !== index)
-                          setFormData({ ...formData, addons: updated })
-                        }}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  ))}
-                  {(!formData.addons || formData.addons.length === 0) && (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-                      No custom add-ons configured yet. Add modifiers like extra cheese, dips, or drinks below.
+                  <Box>
+                    <Chip label="PHASE 1" size="small" sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Core Identifiers & Taxonomy (Vital Info)
                     </Typography>
-                  )}
-                </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      Fundamental catalog identification, barcode values, and taxonomy classification.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
 
-                {/* Add New Add-on Input Row */}
-                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' }, alignItems: 'center', pt: 1, borderTop: '1px dashed', borderColor: 'divider' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
                   <TextField
-                    size="small"
-                    label="Add-on Name"
-                    placeholder="e.g. Extra Cheddar Cheese, Garlic Mayo Dip"
-                    value={newAddon.name}
-                    onChange={e => setNewAddon({ ...newAddon, name: e.target.value })}
-                    sx={{ flex: 2, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    size="small" fullWidth label="Item SKU *"
+                    value={formData.sku}
+                    onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="e.g. QD-ANGUS-001"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
+
                   <TextField
-                    size="small"
-                    label="Extra Price (Rs.)"
-                    type="number"
-                    placeholder="e.g. 150"
-                    value={newAddon.price}
-                    onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
-                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                    sx={{ flex: 1, minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    size="small" fullWidth label={isRestaurant ? 'Product Name / Dish Title *' : 'Product Name *'}
+                    value={formData.proName}
+                    onChange={e => setFormData({ ...formData, proName: e.target.value })}
+                    placeholder="e.g. Truffle Angus Gourmet Burger"
+                    sx={{ width: '100%', gridColumn: { xs: '1 / -1', md: 'span 3' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      if (!newAddon.name.trim() || !newAddon.price) {
-                        toast.error('Please enter add-on name and price')
-                        return
-                      }
-                      setFormData({
-                        ...formData,
-                        addons: [...(formData.addons || []), { name: newAddon.name.trim(), price: newAddon.price }]
-                      })
-                      setNewAddon({ name: '', price: '' })
-                      toast.success('Add-on added')
-                    }}
-                    sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap', py: 1 }}
-                  >
-                    Add Option
-                  </Button>
+
+                  <TextField
+                    size="small" fullWidth label="Brand Name"
+                    value={formData.brandName}
+                    onChange={e => setFormData({ ...formData, brandName: e.target.value })}
+                    placeholder="Registered brand or restaurant kitchen"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Manufacturer / Producer"
+                    value={formData.manufacturer}
+                    onChange={e => setFormData({ ...formData, manufacturer: e.target.value })}
+                    placeholder="Maker or culinary producer"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Product ID (Barcode)"
+                    value={formData.barcode}
+                    onChange={e => setFormData({ ...formData, barcode: e.target.value })}
+                    placeholder="UPC, EAN, ISBN or blank for menu"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Product ID Type</InputLabel>
+                    <Select
+                      value={formData.productIdType || 'NONE'}
+                      label="Product ID Type"
+                      onChange={e => setFormData({ ...formData, productIdType: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {['UPC', 'EAN', 'GTIN', 'ASIN', 'ISBN', 'JAN', 'NONE'].map(t => (
+                        <MenuItem key={t} value={t}>{t}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    size="small" fullWidth label="Product Type / Subtype"
+                    value={formData.productType}
+                    onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                    placeholder="e.g. Grocery & Gourmet Food, Restaurant Items"
+                    sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Menu Section Name (Food)"
+                    value={formData.menuSectionName}
+                    onChange={e => setFormData({ ...formData, menuSectionName: e.target.value })}
+                    placeholder="e.g. Appetizers, Entrees, Chef Specials"
+                    sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  {/* Category */}
+                  <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Product Category *</InputLabel>
+                    <Select
+                      value={formData.catId ? String(formData.catId) : ''}
+                      label="Product Category *"
+                      onChange={e => setFormData({ ...formData, catId: e.target.value, subCatId: '' })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value=""><em>Select Category</em></MenuItem>
+                      {categories.map(c => <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  {/* Subcategory */}
+                  <FormControl size="small" fullWidth disabled={!formData.catId} sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Subcategory *</InputLabel>
+                    <Select
+                      value={formData.subCatId ? String(formData.subCatId) : ''}
+                      label="Subcategory *"
+                      onChange={e => setFormData({ ...formData, subCatId: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value=""><em>Select Subcategory</em></MenuItem>
+                      {(() => {
+                        const selCat = categories.find(c => String(c.id) === String(formData.catId))
+                        const targetCatId = selCat?.catId || formData.catId
+                        const filtered = subcategories.filter(s => String(s.catId) === String(targetCatId))
+                        return filtered.map(s => (
+                          <MenuItem key={s.subCatId} value={String(s.subCatId)}>{s.subCatName}</MenuItem>
+                        ))
+                      })()}
+                    </Select>
+                  </FormControl>
                 </Box>
               </Card>
             )}
 
-            {/* ── SECTION 2C: Specifications & Attributes (Only for Shop / Retail Vendors) ── */}
-            {!isRestaurant && (
+            {/* ── PHASE 2: Pricing, Availability & Offer Data ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_2') && (
               <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                  Specifications, Warranty & Return Policy (Amazon / Daraz Standard)
-                </Typography>
-
-                <Box sx={{ mb: 2.5, p: 2, bgcolor: '#eff6ff', border: '1px solid #bfdbfe' }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(formData.isAuthenticGuaranteed)}
-                        onChange={e => setFormData({ ...formData, isAuthenticGuaranteed: e.target.checked })}
-                        color="primary"
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2" fontWeight={800} color="#1e40af">
-                          🛡️ 100% Genuine Sealed Box Authenticity Guarantee
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          (Amazon Verified / Daraz Mall Authenticity Badge)
-                        </Typography>
-                      </Box>
-                    }
-                  />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 2" size="small" sx={{ bgcolor: '#dbeafe', color: '#1e40af', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Pricing, Availability & Offer Data
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Commercial regular baseline prices, stock thresholds, promotions, and tax classifications.
+                    </Typography>
+                  </Box>
                 </Box>
+                <Divider sx={{ mb: 2.5 }} />
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
                   <TextField
-                    size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung, Sony" value={formData.brandName}
-                    onChange={e => setFormData({ ...formData, brandName: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <TextField
-                    size="small" fullWidth label="Manufacturer" placeholder="e.g. Company Ltd" value={formData.manufacturer}
-                    onChange={e => setFormData({ ...formData, manufacturer: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
-                    <InputLabel>Product Type</InputLabel>
-                    <Select
-                      value={formData.productType || ''}
-                      label="Product Type"
-                      onChange={e => setFormData({ ...formData, productType: e.target.value })}
-                      sx={{ borderRadius: 0 }}
-                    >
-                      <MenuItem value=""><em>Select Product Type</em></MenuItem>
-                      {['Physical', 'Digital', 'Service', 'Subscription'].map(t => (
-                        <MenuItem key={t} value={t}>{t} Product</MenuItem>
-                      ))}
-                      {formData.productType && !['Physical', 'Digital', 'Service', 'Subscription'].some(t => t.toLowerCase() === formData.productType.toLowerCase()) && (
-                        <MenuItem value={formData.productType}>{formData.productType}</MenuItem>
-                      )}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    size="small" fullWidth label="Model Number" placeholder="e.g. MOD-2024" value={formData.modelNumber}
-                    onChange={e => setFormData({ ...formData, modelNumber: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    size="small" fullWidth label="Standard Price *" type="number" inputProps={{ step: '0.01', min: 0 }}
+                    value={formData.price}
+                    onChange={e => setFormData({ ...formData, price: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{formData.currency || 'PKR'}</InputAdornment> }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
 
-                  <TextField
-                    size="small" fullWidth label="Size Label / Name" placeholder="e.g. Standard, Family Pack" value={formData.sizeName}
-                    onChange={e => setFormData({ ...formData, sizeName: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
-                    <InputLabel>Condition</InputLabel>
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Currency</InputLabel>
                     <Select
-                      value={formData.conditionType || 'New'}
-                      label="Condition"
+                      value={formData.currency || 'PKR'}
+                      label="Currency"
+                      onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {['PKR', 'USD', 'EUR', 'GBP', 'AED', 'SAR'].map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    size="small" fullWidth label="Stock Quantity / Inventory *" type="number" inputProps={{ min: 0 }}
+                    value={formData.stock}
+                    onChange={e => setFormData({ ...formData, stock: e.target.value, qnty: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Condition Type</InputLabel>
+                    <Select
+                      value={formData.conditionType || (isRestaurant ? 'Prepared Fresh' : 'New')}
+                      label="Condition Type"
                       onChange={e => setFormData({ ...formData, conditionType: e.target.value })}
                       sx={{ borderRadius: 0 }}
                     >
-                      {['New', 'Used', 'Refurbished', 'Open Box'].map(c => (
-                        <MenuItem key={c} value={c}>{c}</MenuItem>
-                      ))}
+                      {['New', 'Prepared Fresh', 'Refurbished', 'Used'].map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                     </Select>
                   </FormControl>
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Fulfillment Channel</InputLabel>
+                    <Select
+                      value={formData.fulfillmentChannel || 'DEFAULT'}
+                      label="Fulfillment Channel"
+                      onChange={e => setFormData({ ...formData, fulfillmentChannel: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value="DEFAULT">DEFAULT (Merchant / Restaurant Delivery)</MenuItem>
+                      <MenuItem value="MERCHANT_DELIVERY">MERCHANT_DELIVERY (Direct Fleet)</MenuItem>
+                      <MenuItem value="EXPRESS_COURIER">EXPRESS_COURIER (QuickDelivery On-Demand)</MenuItem>
+                      <MenuItem value="AMAZON_NA">AMAZON_NA (FBA / Platform Fulfillment)</MenuItem>
+                    </Select>
+                  </FormControl>
+
                   <TextField
-                    size="small" fullWidth label="Dimensions" placeholder="e.g. 10 x 5 x 3 cm" value={formData.productDimensions}
-                    onChange={e => setFormData({ ...formData, productDimensions: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                  <TextField
-                    size="small" fullWidth label="Package Weight" placeholder="e.g. 500g, 1.2kg" value={formData.packageWeight}
-                    onChange={e => setFormData({ ...formData, packageWeight: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    size="small" fullWidth label="Special Sale Price" type="number" inputProps={{ step: '0.01', min: 0 }}
+                    value={formData.salePrice}
+                    onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{formData.currency || 'PKR'}</InputAdornment> }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
 
-                  {/* Amazon / Daraz Warranty Type Selector */}
-                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                  <TextField
+                    size="small" fullWidth label="Sale From Date" type="date"
+                    value={formData.saleStartDate ? formData.saleStartDate.slice(0, 10) : ''}
+                    onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Sale End Date" type="date"
+                    value={formData.saleEndDate ? formData.saleEndDate.slice(0, 10) : ''}
+                    onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Max Order Quantity" type="number" inputProps={{ min: 1 }}
+                    value={formData.maxOrderQuantity || '10'}
+                    onChange={e => setFormData({ ...formData, maxOrderQuantity: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Tax Code"
+                    value={formData.taxCode || (isRestaurant ? 'FOOD_PREP_STD' : 'RETAIL_GOODS_STD')}
+                    onChange={e => setFormData({ ...formData, taxCode: e.target.value })}
+                    placeholder="FOOD_PREP_STD / RETAIL_STD"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Cost Price" type="number" inputProps={{ step: '0.01', min: 0 }}
+                    value={formData.cost}
+                    onChange={e => setFormData({ ...formData, cost: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{formData.currency || 'PKR'}</InputAdornment> }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Standard Discount %" type="number" inputProps={{ min: 0, max: 100 }}
+                    value={formData.discount}
+                    onChange={e => setFormData({ ...formData, discount: e.target.value })}
+                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                </Box>
+              </Card>
+            )}
+
+            {/* ── PHASE 3: Discoverability, Content & Descriptions ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_3') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 3" size="small" sx={{ bgcolor: '#fef3c7', color: '#b45309', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Discoverability, Content & Descriptions
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      5 scannable feature highlights, narrative marketing copy, search tokens, and demographic targets.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Typography variant="subtitle2" fontWeight={700} mb={1}>
+                      Bullet Point 1 through Bullet Point 5 (Scannable Features / Core Ingredients)
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        size="small" fullWidth label="Bullet Point 1 *"
+                        value={formData.bulletPoint1}
+                        onChange={e => setFormData({ ...formData, bulletPoint1: e.target.value })}
+                        placeholder="Feature highlight 1 or core culinary ingredient..."
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                      <TextField
+                        size="small" fullWidth label="Bullet Point 2"
+                        value={formData.bulletPoint2}
+                        onChange={e => setFormData({ ...formData, bulletPoint2: e.target.value })}
+                        placeholder="Feature highlight 2..."
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                      <TextField
+                        size="small" fullWidth label="Bullet Point 3"
+                        value={formData.bulletPoint3}
+                        onChange={e => setFormData({ ...formData, bulletPoint3: e.target.value })}
+                        placeholder="Feature highlight 3..."
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                      <TextField
+                        size="small" fullWidth label="Bullet Point 4"
+                        value={formData.bulletPoint4}
+                        onChange={e => setFormData({ ...formData, bulletPoint4: e.target.value })}
+                        placeholder="Feature highlight 4..."
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                      <TextField
+                        size="small" fullWidth label="Bullet Point 5"
+                        value={formData.bulletPoint5}
+                        onChange={e => setFormData({ ...formData, bulletPoint5: e.target.value })}
+                        placeholder="Feature highlight 5..."
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                      />
+                    </Stack>
+                  </Box>
+
+                  <TextField
+                    size="small" fullWidth multiline rows={4} label="Product Description (Narrative Story) *"
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Narrative detailing product features, use cases, or preparation style..."
+                    sx={{ width: '100%', gridColumn: '1 / -1', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Generic Keywords (Search Terms)"
+                    value={formData.genericKeywords}
+                    onChange={e => setFormData({ ...formData, genericKeywords: e.target.value })}
+                    placeholder="Backend metadata search tokens (up to 200 bytes, comma-separated)"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Target Audience"
+                    value={formData.targetAudience}
+                    onChange={e => setFormData({ ...formData, targetAudience: e.target.value })}
+                    placeholder="e.g. Unisex-Adult, Gourmet Diners, Kids"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                </Box>
+              </Card>
+            )}
+
+            {/* ── PHASE 4: Food, Dietary & Safety Compliance ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_4') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 4" size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Food, Dietary & Safety Compliance
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Ingredient declarations ordered by weight, major allergen warnings, diet types, and shelf life.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                  <TextField
+                    size="small" fullWidth multiline rows={3} label="Ingredients (Ordered by weight)"
+                    value={formData.ingredients}
+                    onChange={e => setFormData({ ...formData, ingredients: e.target.value })}
+                    placeholder="e.g. Angus Beef (65%), Brioche Flour (Wheat, Butter, Eggs), Cheddar Cheese (Milk, Salt), Black Truffle Oil..."
+                    sx={{ width: '100%', gridColumn: '1 / -1', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Allergen Information"
+                    value={formData.allergenInformation}
+                    onChange={e => setFormData({ ...formData, allergenInformation: e.target.value })}
+                    placeholder="e.g. Contains: Milk, Wheat, Soy, Eggs. May contain traces of Sesame."
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Diet Type"
+                    value={formData.dietType}
+                    onChange={e => setFormData({ ...formData, dietType: e.target.value })}
+                    placeholder="e.g. Halal Certified, Gluten-Free, Vegan, High Protein"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <Box sx={{ p: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box>
+                      <Typography variant="body2" fontWeight={700}>Expiration Dated Product</Typography>
+                      <Typography variant="caption" color="text.secondary">Indicates items with short shelf life or prepared fresh consumption window</Typography>
+                    </Box>
+                    <Switch
+                      checked={Boolean(formData.isExpirationDatedProduct)}
+                      onChange={e => setFormData({ ...formData, isExpirationDatedProduct: e.target.checked })}
+                      color="success"
+                    />
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 1.5 }}>
+                    <TextField
+                      size="small" label="Unit Count" type="number" inputProps={{ min: 1 }}
+                      value={formData.unitCount || '1'}
+                      onChange={e => setFormData({ ...formData, unitCount: e.target.value })}
+                      sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                    />
+                    <FormControl size="small" sx={{ flex: 1.5 }}>
+                      <InputLabel>Unit Count Type</InputLabel>
+                      <Select
+                        value={formData.unitCountType || 'serving'}
+                        label="Unit Count Type"
+                        onChange={e => setFormData({ ...formData, unitCountType: e.target.value })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        {['serving', 'gram', 'kg', 'oz', 'ml', 'piece', 'item', 'pack'].map(u => (
+                          <MenuItem key={u} value={u}>{u}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  <TextField
+                    size="small" fullWidth label="Hazmat Type / Safety Info"
+                    value={formData.hazmatType || 'Not Applicable - Perishable Food'}
+                    onChange={e => setFormData({ ...formData, hazmatType: e.target.value })}
+                    placeholder="e.g. Not Applicable, Lithium Battery, Cold Storage Required"
+                    sx={{ width: '100%', gridColumn: '1 / -1', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  {/* Food Vendor Quick Badges */}
+                  <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <Typography variant="subtitle2" fontWeight={800} color="#166534" mb={1.5}>
+                      Food Kitchen Badges & Preparation Attributes
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 2 }}>
+                      <FormControlLabel
+                        control={<Switch checked={Boolean(formData.isHalal)} onChange={e => setFormData({ ...formData, isHalal: e.target.checked })} color="success" />}
+                        label={<Typography variant="body2" fontWeight={700} color="#166534">🥩 100% Halal Certified</Typography>}
+                      />
+                      <FormControlLabel
+                        control={<Switch checked={Boolean(formData.isVeg)} onChange={e => setFormData({ ...formData, isVeg: e.target.checked })} color="success" />}
+                        label={<Typography variant="body2" fontWeight={700} color="#166534">🌱 Pure Vegetarian</Typography>}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
+                      <TextField size="small" label="Prep Time (mins)" value={formData.prepTime || '20'}
+                        onChange={e => setFormData({ ...formData, prepTime: e.target.value })}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                      <TextField size="small" label="Calories (kcal)" value={formData.calories || ''}
+                        onChange={e => setFormData({ ...formData, calories: e.target.value })}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                      <TextField size="small" label="Portion / Servings" value={formData.servings || '1-2 Persons'}
+                        onChange={e => setFormData({ ...formData, servings: e.target.value })}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                      <FormControl size="small">
+                        <InputLabel>Spice Level</InputLabel>
+                        <Select value={formData.spiceLevel || 'Medium'} label="Spice Level"
+                          onChange={e => setFormData({ ...formData, spiceLevel: e.target.value })}
+                          sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                          <MenuItem value="Mild">Mild 🟢</MenuItem>
+                          <MenuItem value="Medium">Medium 🟡</MenuItem>
+                          <MenuItem value="Hot">Hot 🔴</MenuItem>
+                          <MenuItem value="Extra Hot">Extra Hot 🔥</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+                </Box>
+              </Card>
+            )}
+
+            {/* ── PHASE 5: Modifiers, Options & Variations (Customizations) ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_5') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 5" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7e22ce', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Modifiers, Options & Variations (Customizations)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Variant split hierarchies (Parent/Child), variation themes, and restaurant modifier add-on groups.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5, mb: 3 }}>
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Parent / Child</InputLabel>
+                    <Select
+                      value={formData.parentChild || 'Standalone'}
+                      label="Parent / Child"
+                      onChange={e => setFormData({ ...formData, parentChild: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value="Standalone">Standalone</MenuItem>
+                      <MenuItem value="Parent">Parent (Display Master)</MenuItem>
+                      <MenuItem value="Child">Child (Variant SKU)</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    size="small" fullWidth label="Parent SKU"
+                    value={formData.parentSku}
+                    onChange={e => setFormData({ ...formData, parentSku: e.target.value })}
+                    placeholder="Link to Parent SKU"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Variation Theme"
+                    value={formData.variationTheme}
+                    onChange={e => setFormData({ ...formData, variationTheme: e.target.value })}
+                    placeholder="e.g. Size, Color, Flavor, Portion"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Modifier Group Name"
+                    value={formData.modifierGroupName || 'Add-ons & Options'}
+                    onChange={e => setFormData({ ...formData, modifierGroupName: e.target.value })}
+                    placeholder="e.g. Choose Protein, Add-ons"
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Min Selections" type="number" inputProps={{ min: 0 }}
+                    value={formData.minSelections || '0'}
+                    onChange={e => setFormData({ ...formData, minSelections: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Max Selections" type="number" inputProps={{ min: 1 }}
+                    value={formData.maxSelections || '4'}
+                    onChange={e => setFormData({ ...formData, maxSelections: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                </Box>
+
+                {/* Interactive Modifiers / Add-ons List */}
+                <Box sx={{ p: 2.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', mb: 3 }}>
+                  <Typography variant="subtitle2" fontWeight={800} color="#111827" mb={1.5}>
+                    Active Modifiers & Add-on Items ({formData.addons?.length || 0})
+                  </Typography>
+
+                  <Stack spacing={1.5} sx={{ mb: 2 }}>
+                    {(formData.addons || []).map((addon, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: '#ffffff', border: '1px solid', borderColor: 'divider' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Typography variant="body2" fontWeight={700} color="#111827">{addon.name}</Typography>
+                          <Chip label={`+ Rs. ${parseFloat(addon.price || 0).toLocaleString()}`} size="small"
+                            sx={{ height: 22, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af', borderRadius: 0 }} />
+                        </Box>
+                        <IconButton size="small" color="error" onClick={() => setFormData({ ...formData, addons: formData.addons.filter((_, i) => i !== index) })}>
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                    {(!formData.addons || formData.addons.length === 0) && (
+                      <Typography variant="body2" color="text.secondary">No modifiers configured. Add options like Extra Cheese, Dips, or Slices below.</Typography>
+                    )}
+                  </Stack>
+
+                  {/* Add New Modifier Input */}
+                  <Box sx={{ display: 'flex', gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' }, alignItems: 'center' }}>
+                    <TextField size="small" label="Modifier Item Name" placeholder="e.g. Extra Cheddar Cheese, Grilled Chicken"
+                      value={newAddon.name} onChange={e => setNewAddon({ ...newAddon, name: e.target.value })}
+                      sx={{ flex: 2, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                    <TextField size="small" label="Price Delta (Rs.)" type="number" placeholder="e.g. 150"
+                      value={newAddon.price} onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
+                      InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                      sx={{ flex: 1, minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                    <Button variant="contained" startIcon={<AddIcon />}
+                      onClick={() => {
+                        if (!newAddon.name.trim() || !newAddon.price) { toast.error('Please enter modifier name and price'); return }
+                        setFormData({ ...formData, addons: [...(formData.addons || []), { name: newAddon.name.trim(), price: newAddon.price }] })
+                        setNewAddon({ name: '', price: '' })
+                        toast.success('Modifier added')
+                      }}
+                      sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      Add Modifier
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* Retail Size & Color Variant Pickers */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
+                      <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
+                    </Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Size</InputLabel>
+                      <Select value={formData.size || ''} label="Select Size" onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Standard</em></MenuItem>
+                        {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
+                      <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
+                    </Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Color</InputLabel>
+                      <Select value={formData.color || ''} label="Select Color" onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <MenuItem value=""><em>None / Default</em></MenuItem>
+                        {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+              </Card>
+            )}
+
+            {/* ── PHASE 6: Image Media Assets ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_6') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 6" size="small" sx={{ bgcolor: '#ffe4e6', color: '#be123c', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Image Media Assets
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Main high-resolution showcase image and secondary angle / packaging shots (up to 8).
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                <Box sx={{ border: '2px dashed', borderColor: uploadingImages ? 'grey.300' : 'divider', borderRadius: 0, p: 3, textAlign: 'center', bgcolor: 'grey.50' }}>
+                  {uploadingImages ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={28} sx={{ color: BRAND }} />
+                      <Typography variant="body2" color="text.secondary">Uploading high-resolution images...</Typography>
+                    </Box>
+                  ) : (
+                    <>
+                      <UploadOutlinedIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary" mb={2}>
+                        Upload main product photo and secondary angle shots (JPG, PNG, WebP)
+                      </Typography>
+                      <input type="file" multiple accept="image/*" onChange={e => handleImageUpload(e.target.files)}
+                        style={{ display: 'none' }} id="unified-edit-image-upload" disabled={uploadingImages} />
+                      <label htmlFor="unified-edit-image-upload">
+                        <Button component="span" variant="contained" startIcon={<UploadOutlinedIcon />} disabled={uploadingImages}
+                          sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}>
+                          Upload Gallery Images
+                        </Button>
+                      </label>
+                    </>
+                  )}
+
+                  {formData.images?.length > 0 && (
+                    <Box mt={3}>
+                      <Typography variant="body2" fontWeight={700} color="text.secondary" mb={1.5} textAlign="left">
+                        Active Gallery Assets ({formData.images.length}): Primary is Slot #1
+                      </Typography>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 1.5 }}>
+                        {formData.images.map((url, i) => (
+                          <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: i === 0 ? BRAND : 'divider', height: 100, bgcolor: '#ffffff', overflow: 'hidden' }}>
+                            <NextImage src={url} alt={`Upload ${i + 1}`} width={100} height={100} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+                            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, bgcolor: i === 0 ? BRAND : 'rgba(0,0,0,0.6)', color: '#ffffff', fontSize: 10, py: 0.25, textAlign: 'center', fontWeight: 800 }}>
+                              {i === 0 ? 'MAIN IMAGE' : `OTHER #${i}`}
+                            </Box>
+                            <IconButton size="small" onClick={() => handleRemoveImage(i)}
+                              sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(239, 68, 68, 0.9)', color: 'white', width: 22, height: 22, p: 0, '&:hover': { bgcolor: 'error.dark' } }}>
+                              <CloseIcon sx={{ fontSize: 13 }} />
+                            </IconButton>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </Card>
+            )}
+
+            {/* ── PHASE 7: Dimensions, Weight & Shipping ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_7') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 7" size="small" sx={{ bgcolor: '#e0e7ff', color: '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                      Dimensions, Weight & Shipping
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Net item metrics, shipping tare weight, package size dimensions, warranty, and return policies.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                  <TextField
+                    size="small" fullWidth label="Net Item Weight" type="number" inputProps={{ min: 0 }}
+                    value={formData.itemWeight}
+                    onChange={e => setFormData({ ...formData, itemWeight: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Item Weight Unit</InputLabel>
+                    <Select
+                      value={formData.itemWeightUnit || 'grams'}
+                      label="Item Weight Unit"
+                      onChange={e => setFormData({ ...formData, itemWeightUnit: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    size="small" fullWidth label="Shipping Weight" type="number" inputProps={{ min: 0 }}
+                    value={formData.shippingWeight}
+                    onChange={e => setFormData({ ...formData, shippingWeight: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Shipping Weight Unit</InputLabel>
+                    <Select
+                      value={formData.shippingWeightUnit || 'grams'}
+                      label="Shipping Weight Unit"
+                      onChange={e => setFormData({ ...formData, shippingWeightUnit: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {['grams', 'kg', 'oz', 'lbs'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    size="small" fullWidth label="Item Length" type="number" inputProps={{ min: 0 }}
+                    value={formData.itemLength}
+                    onChange={e => setFormData({ ...formData, itemLength: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Item Width" type="number" inputProps={{ min: 0 }}
+                    value={formData.itemWidth}
+                    onChange={e => setFormData({ ...formData, itemWidth: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <TextField
+                    size="small" fullWidth label="Item Height" type="number" inputProps={{ min: 0 }}
+                    value={formData.itemHeight}
+                    onChange={e => setFormData({ ...formData, itemHeight: e.target.value })}
+                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+
+                  <FormControl size="small" fullWidth sx={{ width: '100%' }}>
+                    <InputLabel>Dimensional Unit</InputLabel>
+                    <Select
+                      value={formData.dimensionalUnit || 'cm'}
+                      label="Dimensional Unit"
+                      onChange={e => setFormData({ ...formData, dimensionalUnit: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {['cm', 'inches', 'mm'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  {/* Amazon / Daraz Warranty & Return Policy */}
+                  <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
                     <InputLabel>Warranty Coverage (Amazon / Daraz)</InputLabel>
                     <Select
                       value={formData.warrantyType || formData.warranty || '1 Year Brand Warranty'}
@@ -1201,8 +1851,7 @@ const VendorProductManagement = () => {
                     </Select>
                   </FormControl>
 
-                  {/* Amazon / Daraz Return Policy Selector */}
-                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                  <FormControl size="small" fullWidth sx={{ width: '100%', gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
                     <InputLabel>Return & Resolution Policy</InputLabel>
                     <Select
                       value={formData.returnPolicy || '7 Days Replacement'}
@@ -1222,212 +1871,6 @@ const VendorProductManagement = () => {
               </Card>
             )}
 
-            {/* ── SECTION 3: Size & Color Variants (Only for Shop / Retail Vendors) ── */}
-            {!isRestaurant && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                  Product Variations (Size & Color)
-                </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                  {/* Left: Size */}
-                  <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Size Variant</Typography>
-                      <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setShowSizePopup(true)}
-                        sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND }, textTransform: 'none', fontWeight: 600 }}>
-                        + Add Custom Size
-                      </Button>
-                    </Box>
-                    <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
-                      <InputLabel>Select Size</InputLabel>
-                      <Select
-                        value={formData.size || ''}
-                        label="Select Size"
-                        onChange={e => setFormData({ ...formData, size: e.target.value })}
-                        sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
-                      >
-                        <MenuItem value=""><em>None / Standard</em></MenuItem>
-                        {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => (
-                          <MenuItem key={s} value={s}>{s}</MenuItem>
-                        ))}
-                        {formData.size && !['Small', 'Medium', 'Large', 'XL', 'XXL'].includes(formData.size) && (
-                          <MenuItem value={formData.size}>{formData.size}</MenuItem>
-                        )}
-                      </Select>
-                    </FormControl>
-                    {formData.size && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <StraightenOutlinedIcon fontSize="small" sx={{ color: '#059669' }} />
-                          <Typography variant="body2" fontWeight={700} sx={{ color: '#059669' }}>Selected: {formData.size}</Typography>
-                        </Box>
-                        <IconButton size="small" onClick={() => setFormData({ ...formData, size: '' })}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
-                  </Box>
-
-                  {/* Right: Color */}
-                  <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>Color Variant</Typography>
-                      <Button size="small" variant="outlined" startIcon={<PaletteOutlinedIcon />} onClick={() => setShowColorPopup(true)}
-                        sx={{ borderRadius: 0, borderColor: '#7c3aed', color: '#7c3aed', '&:hover': { bgcolor: '#f5f3ff', borderColor: '#7c3aed' }, textTransform: 'none', fontWeight: 600 }}>
-                        + Add Custom Color
-                      </Button>
-                    </Box>
-                    <FormControl fullWidth size="small" sx={{ width: '100%', minWidth: 0 }}>
-                      <InputLabel>Select Color</InputLabel>
-                      <Select
-                        value={formData.color || ''}
-                        label="Select Color"
-                        onChange={e => setFormData({ ...formData, color: e.target.value })}
-                        sx={{ borderRadius: 0, bgcolor: '#ffffff' }}
-                      >
-                        <MenuItem value=""><em>None / Default</em></MenuItem>
-                        {predefinedColors.map(c => (
-                          <MenuItem key={c.name} value={c.name}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: c.hex }} />
-                              {c.name}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                        {formData.color && !predefinedColors.some(c => c.name === formData.color) && (
-                          <MenuItem value={formData.color}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
-                              {formData.color}
-                            </Box>
-                          </MenuItem>
-                        )}
-                      </Select>
-                    </FormControl>
-                    {formData.color && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, p: 1.25, bgcolor: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #ccc', bgcolor: predefinedColors.find(c => c.name.toLowerCase() === formData.color.toLowerCase())?.hex || '#6B7280' }} />
-                          <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>Selected: {formData.color}</Typography>
-                        </Box>
-                        <IconButton size="small" onClick={() => setFormData({ ...formData, color: '' })}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-              </Card>
-            )}
-
-            {/* ── SECTION 4: Features & Ingredients ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Key Highlights & Ingredients
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700} mb={1}>Key Bullet Features</Typography>
-                  <Stack spacing={1}>
-                    {formData.keyFeatures.map((feat, i) => (
-                      <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <TextField size="small" fullWidth value={feat} placeholder="e.g. 100% Cotton, Organic, Waterproof"
-                          onChange={e => {
-                            const f = [...formData.keyFeatures]; f[i] = e.target.value
-                            setFormData({ ...formData, keyFeatures: f })
-                          }}
-                          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                        />
-                        <IconButton size="small" color="error"
-                          onClick={() => setFormData({ ...formData, keyFeatures: formData.keyFeatures.filter((_, j) => j !== i) })}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    ))}
-                    <Button size="small" variant="outlined" onClick={() => setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ''] })}
-                      sx={{ alignSelf: 'flex-start', borderRadius: 0, borderColor: BRAND, color: BRAND, textTransform: 'none', fontWeight: 600 }}>
-                      + Add Feature Bullet
-                    </Button>
-                  </Stack>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700} mb={1}>Ingredients / Dietary Info</Typography>
-                  <TextField size="small" fullWidth multiline rows={4} label="Ingredients List" placeholder="e.g. Flour, Sugar, Milk, Spices, Cocoa Powder…" value={formData.ingredients}
-                    onChange={e => setFormData({ ...formData, ingredients: e.target.value })}
-                    sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
-                </Box>
-              </Box>
-            </Card>
-
-            {/* ── SECTION 5: Sale Information ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Promotional & Sale Pricing
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2.5 }}>
-                <TextField size="small" fullWidth label="Special Sale Price" type="number" inputProps={{ step: '0.01', min: 0 }} value={formData.salePrice}
-                  onChange={e => setFormData({ ...formData, salePrice: e.target.value })}
-                  InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField size="small" fullWidth label="Sale Start Date" type="date" value={formData.saleStartDate ? formData.saleStartDate.slice(0, 10) : ''}
-                  onChange={e => setFormData({ ...formData, saleStartDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-                <TextField size="small" fullWidth label="Sale End Date" type="date" value={formData.saleEndDate ? formData.saleEndDate.slice(0, 10) : ''}
-                  onChange={e => setFormData({ ...formData, saleEndDate: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                />
-              </Box>
-            </Card>
-
-            {/* ── SECTION 6: Product Images ── */}
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                Product Gallery Images
-              </Typography>
-              <Box sx={{ border: '2px dashed', borderColor: uploadingImages ? 'grey.300' : 'divider', borderRadius: 0, p: 3, textAlign: 'center', bgcolor: 'grey.50' }}>
-                {uploadingImages ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <CircularProgress size={28} sx={{ color: BRAND }} />
-                    <Typography variant="body2" color="text.secondary">Uploading images...</Typography>
-                  </Box>
-                ) : (
-                  <>
-                    <UploadOutlinedIcon sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary" mb={2}>Select JPG, PNG or WebP images to update your product gallery</Typography>
-                    <input type="file" multiple accept="image/*" onChange={e => handleImageUpload(e.target.files)}
-                      style={{ display: 'none' }} id="edit-image-upload" disabled={uploadingImages} />
-                    <label htmlFor="edit-image-upload">
-                      <Button component="span" variant="contained" startIcon={<UploadOutlinedIcon />} disabled={uploadingImages}
-                        sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700 }}>
-                        Choose Images
-                      </Button>
-                    </label>
-                  </>
-                )}
-                {formData.images?.length > 0 && (
-                  <Box mt={2.5}>
-                    <Typography variant="body2" fontWeight={600} color="text.secondary" mb={1.5} textAlign="left">Gallery Images ({formData.images.length}):</Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 1.5 }}>
-                      {formData.images.map((url, i) => (
-                        <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: 'divider', height: 90, bgcolor: '#ffffff', overflow: 'hidden' }}>
-                          <NextImage src={url} alt={`Upload ${i + 1}`} width={90} height={90} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-                          <IconButton size="small" onClick={() => handleRemoveImage(i)}
-                            sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(239, 68, 68, 0.9)', color: 'white', width: 22, height: 22, p: 0, '&:hover': { bgcolor: 'error.dark' } }}>
-                            <CloseIcon sx={{ fontSize: 13 }} />
-                          </IconButton>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            </Card>
-
           </Stack>
         </DialogContent>
 
@@ -1438,9 +1881,210 @@ const VendorProductManagement = () => {
           </Button>
           <Button onClick={handleEditProduct} variant="contained"
             sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3 }}>
-            Update Product
+            Update Product (7-Phase Sync)
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* ── Unified Catalog Feed Tools Dialog (CSV / XML / JSON) ── */}
+      <Dialog
+        open={showFeedDialog}
+        onClose={() => setShowFeedDialog(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 0 } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}>
+          <Box>
+            <Typography variant="h6" fontWeight={800} color="#111827">
+              Unified Catalog Feed & Ingestion Engine
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Single-product data interchange template combining retail & food catalogs (Amazon & Daraz compatible)
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setShowFeedDialog(false)}><CloseIcon /></IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 3 }}>
+          <Stack spacing={3}>
+            {/* Step 1: Download Official Template */}
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#f8fafc' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+                1. Download Official 7-Phase Schema Template
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                Pre-formatted flat file templates containing sample records for both restaurant dishes and retail products.
+              </Typography>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadOutlinedIcon />}
+                  component="a"
+                  href="/api/products/feed?type=template&format=csv"
+                  download="unified_product_template.csv"
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                >
+                  Download Flat CSV
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadOutlinedIcon />}
+                  component="a"
+                  href="/api/products/feed?type=template&format=xml"
+                  download="unified_product_feed.xml"
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                >
+                  Download XML Feed
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadOutlinedIcon />}
+                  component="a"
+                  href="/api/products/feed?type=template&format=json"
+                  download="unified_product_schema.json"
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                >
+                  Download JSON Schema
+                </Button>
+              </Stack>
+            </Paper>
+
+            {/* Step 2: Export Current Catalog */}
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#f8fafc' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+                2. Export Store Inventory in Unified 7-Phase Format
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                Export your live listings including bullets, ingredients, allergens, modifiers, and dimensional weights.
+              </Typography>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadOutlinedIcon />}
+                  component="a"
+                  href={`/api/products/feed?type=export&format=csv&vendorId=${userData?.uid || ''}`}
+                  download="my_store_catalog.csv"
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                >
+                  Export Store CSV
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadOutlinedIcon />}
+                  component="a"
+                  href={`/api/products/feed?type=export&format=xml&vendorId=${userData?.uid || ''}`}
+                  download="my_store_catalog.xml"
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                >
+                  Export Store XML
+                </Button>
+              </Stack>
+            </Paper>
+
+            {/* Step 3: Bulk Upload / Ingest */}
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#ffffff' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+                3. Bulk Ingest / Upload Products (CSV File or Raw Text)
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                Upload or paste CSV rows matching the 7-phase schema to create or update listings in one batch.
+              </Typography>
+
+              <Box sx={{ mb: 2 }}>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  id="feed-file-upload-input"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const text = await file.text()
+                      setFeedCsvText(text)
+                      toast.success(`Loaded "${file.name}" into editor`)
+                    }
+                  }}
+                />
+                <label htmlFor="feed-file-upload-input">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    size="small"
+                    startIcon={<UploadFileOutlinedIcon />}
+                    sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, mb: 1.5 }}
+                  >
+                    Select CSV File from Computer
+                  </Button>
+                </label>
+              </Box>
+
+              <TextField
+                fullWidth
+                multiline
+                rows={6}
+                value={feedCsvText}
+                onChange={e => setFeedCsvText(e.target.value)}
+                placeholder="Paste CSV data here or select a file above...
+item_sku,product_name,brand_name,manufacturer,product_id,product_id_type,product_type,menu_section_name,price,currency,quantity,condition_type..."
+                sx={{
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  '& .MuiOutlinedInput-root': { borderRadius: 0 }
+                }}
+              />
+
+              {feedImportResult && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: '#f0fdf4', border: '1px solid #86efac' }}>
+                  <Typography variant="body2" fontWeight={800} color="#166534">
+                    Batch Results: {feedImportResult.created} Created, {feedImportResult.updated} Updated, {feedImportResult.failed} Failed (Total Processed: {feedImportResult.total})
+                  </Typography>
+                  {feedImportResult.errors?.length > 0 && (
+                    <Box sx={{ mt: 1, maxHeight: 80, overflowY: 'auto' }}>
+                      {feedImportResult.errors.map((err, idx) => (
+                        <Typography key={idx} variant="caption" color="error.main" display="block">
+                          Row {err.row}: {err.error}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => { setFeedCsvText(''); setFeedImportResult(null) }}
+                  sx={{ borderRadius: 0, textTransform: 'none' }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="contained"
+                  disabled={feedUploading || !feedCsvText.trim()}
+                  onClick={handleFeedUpload}
+                  startIcon={feedUploading ? <CircularProgress size={16} color="inherit" /> : <UploadOutlinedIcon />}
+                  sx={{
+                    bgcolor: BRAND,
+                    '&:hover': { bgcolor: BRAND_DARK },
+                    borderRadius: 0,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    px: 3,
+                  }}
+                >
+                  {feedUploading ? 'Processing Ingestion...' : 'Run Bulk Ingestion'}
+                </Button>
+              </Box>
+            </Paper>
+          </Stack>
+        </DialogContent>
       </Dialog>
 
       {/* ── Custom Size Dialog ── */}

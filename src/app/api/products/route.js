@@ -802,6 +802,8 @@ export async function PUT(request) {
           conditionType:     data.conditionType     || null,
           warranty:          data.warranty          || null,
           ingredients:       data.ingredients       || null,
+          keyFeatures:       data.keyFeatures ? (typeof data.keyFeatures === 'string' ? data.keyFeatures : JSON.stringify(data.keyFeatures)) : undefined,
+          variations:        data.variations !== undefined ? (typeof data.variations === 'string' ? data.variations : JSON.stringify(data.variations)) : undefined,
           sizeName:          data.sizeName          || null,
           size:              data.size              || null,
           color:             data.color             || null,

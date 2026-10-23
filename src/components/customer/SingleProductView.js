@@ -1758,14 +1758,16 @@ export default function SingleProductView({ productIdentifier, productId, initia
                 </h3>
                 <div className="border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 rounded-none">
                   {[
-                    { label: 'SKU / Product Code', val: product.sku || `QD-${product.proId}` },
-                    { label: 'Brand / Kitchen', val: product.brandName || supplierName },
-                    { label: 'Vertical / Department', val: product.vertical || 'FOOD' },
-                    { label: 'Category', val: product.category?.name || 'Gourmet Selection' },
-                    { label: 'Subcategory', val: product.subCategory?.subCatName || 'Specialty' },
-                    { label: 'Preparation / Dispatch', val: 'Fresh On Order (30-45 mins)' },
-                    { label: 'Quality Guarantee', val: '100% Authentic Genuine Product' },
-                    { label: 'Packaging', val: 'Sealed Tamper-Evident Delivery Bag' },
+                    { label: 'SKU / Product Code', val: product.sku || product.item_sku || `QD-${product.proId}` },
+                    { label: 'Product Barcode (UPC/EAN)', val: product.barcode || product.product_id || (isFoodItem ? 'Culinary Custom Dish (None)' : 'N/A') },
+                    { label: 'Brand / Kitchen', val: product.brandName || product.brand_name || supplierName },
+                    { label: 'Manufacturer / Producer', val: product.manufacturer || (isFoodItem ? `${supplierName} Artisanal Kitchen` : 'Authorized Producer') },
+                    { label: 'Taxonomy / Classification', val: product.productType || (isFoodItem ? 'Restaurant Culinary Dishes' : 'Standard Retail Catalog') },
+                    { label: 'Condition State', val: product.conditionType || (isFoodItem ? 'Prepared Fresh On Order' : 'Brand New Sealed') },
+                    { label: 'Fulfillment Channel', val: product.fulfillmentChannel === 'DEFAULT' ? 'DEFAULT (Merchant Express)' : (product.fulfillmentChannel || 'QuickDelivery Rapid Fleet') },
+                    { label: 'Dimensions (LxWxH)', val: product.productDimensions || 'Standard Form Factor' },
+                    { label: 'Net & Shipping Weight', val: product.packageWeight ? `${product.packageWeight} (Dispatch Ready)` : (isFoodItem ? '450g Net / 550g Packaged' : 'Standard Shipping Parcel') },
+                    { label: 'Warranty & Protection', val: product.warranty || (isFoodItem ? 'Freshness & Hygiene Guarantee' : '1 Year Official Brand Warranty') },
                   ].map((row, i) => (
                     <div key={i} className="grid grid-cols-2 p-3.5 text-xs font-medium">
                       <span className="text-slate-500 dark:text-slate-400 font-bold uppercase">{row.label}</span>
