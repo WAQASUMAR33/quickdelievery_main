@@ -1093,11 +1093,11 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         {/* ── 3. CURATED DEPARTMENTS SUB-NAV STRIP ── */}
         <Box
           sx={{
-            bgcolor: isDark ? THEME.darkNavSub : '#F8FAFC',
-            borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #E2E8F0',
-            borderBottom: isDark ? 'none' : '1px solid #E2E8F0',
+            bgcolor: isDark ? THEME.darkNavSub : '#F1F5F9',
+            borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #CBD5E1',
+            borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #CBD5E1',
             px: { xs: 1.5, sm: 2.5, md: 3, xl: 6 },
-            py: 0.6,
+            py: 0.75,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1108,7 +1108,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {/* Category Pill Buttons */}
-          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 'max-content' }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 'max-content' }}>
             <Button
               onClick={() => {
                 if (typeof window !== 'undefined') {
@@ -1116,17 +1116,24 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 }
               }}
               size="small"
-              startIcon={<MenuIcon sx={{ fontSize: 16 }} />}
+              startIcon={<MenuIcon sx={{ fontSize: 17 }} />}
               sx={{
-                color: isDark ? '#FFFFFF' : '#0F172A',
-                fontWeight: 800,
-                fontSize: 12,
+                color: isDark ? '#FFFFFF' : '#000000',
+                fontWeight: 900,
+                fontSize: 13,
+                letterSpacing: 0.2,
                 textTransform: 'none',
-                px: 1.75,
-                py: 0.5,
+                px: 2,
+                py: 0.6,
                 borderRadius: 0,
-                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
-                '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.12)' : '#CBD5E1' },
+                bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF',
+                border: isDark ? '1px solid rgba(255,255,255,0.18)' : '1.5px solid #0F172A',
+                boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
+                WebkitFontSmoothing: 'antialiased',
+                '&:hover': {
+                  bgcolor: isDark ? 'rgba(255,255,255,0.15)' : '#0F172A',
+                  color: '#FFFFFF',
+                },
               }}
             >
               {t('allDepartments')}
@@ -1143,19 +1150,32 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   }}
                   size="small"
                   sx={{
-                    color: isActive ? '#FFFFFF' : (isDark ? '#CBD5E1' : '#475569'),
-                    fontWeight: isActive ? 800 : 600,
-                    fontSize: 12,
+                    color: isActive ? '#FFFFFF' : (isDark ? '#FFFFFF' : '#000000'),
+                    fontWeight: isActive ? 900 : 750,
+                    fontSize: 13,
+                    letterSpacing: 0.15,
                     textTransform: 'none',
-                    px: 1.75,
-                    py: 0.5,
+                    px: 2,
+                    py: 0.6,
                     borderRadius: 0,
-                    bgcolor: isActive ? THEME.primary : 'transparent',
-                    border: isActive ? `1px solid ${THEME.primaryLight}` : '1px solid transparent',
-                    boxShadow: isActive ? '0 4px 14px rgba(37, 99, 235, 0.4)' : 'none',
+                    bgcolor: isActive
+                      ? THEME.primary
+                      : (isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF'),
+                    border: isActive
+                      ? `1.5px solid ${THEME.primaryLight}`
+                      : (isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid #CBD5E1'),
+                    boxShadow: isActive
+                      ? '0 3px 10px rgba(37, 99, 235, 0.4)'
+                      : (isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.04)'),
+                    WebkitFontSmoothing: 'antialiased',
+                    MozOsxFontSmoothing: 'grayscale',
+                    textRendering: 'optimizeLegibility',
                     '&:hover': {
-                      bgcolor: isActive ? THEME.primaryDark : (isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
-                      color: isDark || isActive ? '#FFFFFF' : '#0F172A',
+                      bgcolor: isActive
+                        ? THEME.primaryDark
+                        : (isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0'),
+                      color: isActive || isDark ? '#FFFFFF' : '#000000',
+                      borderColor: isActive ? THEME.primaryDark : '#94A3B8',
                     },
                   }}
                 >
@@ -1166,12 +1186,13 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       size="small"
                       sx={{
                         ml: 0.75,
-                        height: 16,
-                        fontSize: 8.5,
+                        height: 17,
+                        fontSize: 9,
                         fontWeight: 900,
                         bgcolor: dep.badgeBg || THEME.rose,
-                        color: '#fff',
+                        color: '#FFFFFF',
                         borderRadius: 0,
+                        letterSpacing: 0.5,
                       }}
                     />
                   )}
@@ -1182,9 +1203,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
           {/* Right Status Badge (Rendered cleanly on xl screens with flexShrink 0) */}
           <Box sx={{ display: { xs: 'none', xl: 'flex' }, alignItems: 'center', gap: 1, flexShrink: 0, whiteSpace: 'nowrap' }}>
-            <Box sx={{ width: 6, height: 6, borderRadius: 0, bgcolor: '#06B6D4', boxShadow: '0 0 8px #06B6D4' }} />
-            <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
-              Express Delivery across Pakistan • Free on orders over <Box component="span" sx={{ color: isDark ? '#F1F5F9' : '#0F172A', fontWeight: 800 }}>Rs. 1,500</Box>
+            <Box sx={{ width: 7, height: 7, borderRadius: 0, bgcolor: '#0284C7', boxShadow: '0 0 8px #0284C7' }} />
+            <Typography variant="caption" sx={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', WebkitFontSmoothing: 'antialiased' }}>
+              Express Delivery across Pakistan • Free on orders over <Box component="span" sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontWeight: 900 }}>Rs. 1,500</Box>
             </Typography>
           </Box>
         </Box>
