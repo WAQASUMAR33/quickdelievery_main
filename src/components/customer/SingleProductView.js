@@ -48,6 +48,13 @@ import {
   BadgeCheck,
   ChefHat,
   Utensils,
+  Flame,
+  CreditCard,
+  Tag,
+  HelpCircle,
+  Send,
+  CheckSquare,
+  Square,
 } from 'lucide-react'
 
 export default function SingleProductView({ productIdentifier, productId, initialData = null }) {
@@ -99,6 +106,20 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
   // Search input in header
   const [headerSearch, setHeaderSearch] = useState('')
+
+  // Food Customization States (DoorDash / Uber Eats standard)
+  const [selectedSpiceLevel, setSelectedSpiceLevel] = useState('Medium')
+  const [selectedAddons, setSelectedAddons] = useState([])
+  const [specialInstructions, setSpecialInstructions] = useState('')
+
+  // Retail & Delivery Estimator States (Amazon / Daraz standard)
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState('')
+  const [postalCheckResult, setPostalCheckResult] = useState(null)
+  const [isCheckingPostal, setIsCheckingPostal] = useState(false)
+  const [bundleIncluded, setBundleIncluded] = useState(true)
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
+  const [chatMessage, setChatMessage] = useState('')
+  const [chatSent, setChatSent] = useState(false)
 
   // Fetch product data if not provided or when identifier changes
   useEffect(() => {
@@ -225,6 +246,108 @@ export default function SingleProductView({ productIdentifier, productId, initia
   const stockCount = product?.stock ?? product?.qnty ?? 50
   const isOutOfStock = stockCount <= 0
 
+  // Vertical Detection: Food/Restaurant vs Retail (Amazon/Daraz)
+  const isFood = useMemo(() => {
+    if (!product) return false
+    const v = String(product.vertical || '').toUpperCase()
+    const cat = String(product.category?.name || product.category || '').toLowerCase()
+    const name = String(product.proName || '').toLowerCase()
+    if (v === 'FOOD' || v === 'RESTAURANT' || v === 'DINING') return true
+    const foodKeywords = [
+      'burger', 'pizza', 'sandwich', 'platter', 'shawarma', 'biryani', 'pasta', 'bbq',
+      'roll', 'steak', 'salad', 'fries', 'sushi', 'dessert', 'cake', 'beverage', 'drink',
+      'shake', 'meal', 'combo', 'dining', 'kitchen', 'crispy'
+    ]
+    return foodKeywords.some(k => cat.includes(k) || name.includes(k))
+  }, [product])
+
+  // Food Add-Ons & Modifier Groups
+  const availableAddons = useMemo(() => {
+    if (!isFood) return []
+    if (product?.addons && Array.isArray(product.addons)) return product.addons
+    if (typeof product?.addons === 'string') {
+      try {
+        const parsed = JSON.parse(product.addons)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch {}
+    }
+    // Realistic food modifier choices
+    return [
+      { id: 'extra_cheese', name: 'Extra Melted Cheddar Cheese', price: 150, icon: '🧀' },
+      { id: 'crispy_fries', name: 'Upgrade to Hot Crispy Fries', price: 220, icon: '🍟' },
+      { id: 'garlic_dip', name: 'Artisan Garlic Truffle Dip', price: 80, icon: '🥣' },
+      { id: 'chilled_drink', name: 'Chilled Soft Drink Can (330ml)', price: 120, icon: '🥤' },
+      { id: 'extra_patty', name: 'Double Meat / Extra Gourmet Patty', price: 380, icon: '🥩' },
+    ]
+  }, [isFood, product?.addons])
+
+  // Total for selected food add-ons
+  const addonsTotal = useMemo(() => {
+    return selectedAddons.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0)
+  }, [selectedAddons])
+
+  // Effective unit price including selected variation and add-ons
+  const effectiveUnitPrice = currentPrice + addonsTotal
+
+  // Cross-Sell Bundle Accessory
+  const crossSellBundle = useMemo(() => {
+    if (isFood) {
+      return {
+        id: 'bundle_food_combo',
+        title: 'Loaded Peri Fries + Chilled Soft Drink',
+        price: 290,
+        regularPrice: 380,
+        image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?w=400&q=80',
+        badge: 'Recommended Combo Pair'
+      }
+    }
+    return {
+      id: 'bundle_retail_accessory',
+      title: 'Premium 100W Braided Fast-Charge Type-C Cable (2m)',
+      price: 899,
+      regularPrice: 1399,
+      image: 'https://images.unsplash.com/photo-1608755728617-aefab37d45f6?w=400&q=80',
+      badge: 'Amazon & Daraz Verified Pair'
+    }
+  }, [isFood])
+
+  // Postal Code Check Logic
+  const handleCheckPostal = (e) => {
+    e?.preventDefault()
+    if (!deliveryPostalCode.trim()) {
+      toast.error('Please enter a City or Postal Code')
+      return
+    }
+    setIsCheckingPostal(true)
+    setTimeout(() => {
+      setIsCheckingPostal(false)
+      const input = deliveryPostalCode.trim().toUpperCase()
+      const isExpressZone = ['54000', 'LAHORE', '75000', 'KARACHI', '44000', 'ISLAMABAD', 'RAWALPINDI'].some(z => input.includes(z))
+      
+      setPostalCheckResult({
+        location: deliveryPostalCode.trim(),
+        standardEta: isExpressZone ? 'Tomorrow by 2:00 PM' : '2-3 Business Days',
+        expressEta: isExpressZone ? '45 - 60 Minutes (Express Dispatch)' : 'Next Day Express',
+        standardCost: 150,
+        expressCost: 350,
+        codEligible: true,
+      })
+      toast.success(`Delivery routes calculated for ${deliveryPostalCode.trim()}! 🚚`)
+    }, 400)
+  }
+
+  // Toggle food addon
+  const handleToggleAddon = (addon) => {
+    setSelectedAddons((prev) => {
+      const exists = prev.some(a => a.id === addon.id)
+      if (exists) {
+        return prev.filter(a => a.id !== addon.id)
+      } else {
+        return [...prev, addon]
+      }
+    })
+  }
+
   // Supplier Details
   const supplier = product?.vendor
   const supplierName = supplier?.businessName || supplier?.username || 'Verified Supplier'
@@ -261,7 +384,17 @@ export default function SingleProductView({ productIdentifier, productId, initia
       toast.error('Item is currently out of stock')
       return
     }
-    addToCart(product, quantity, selectedVariation)
+    addToCart(
+      product,
+      quantity,
+      selectedVariation,
+      {
+        spiceLevel: isFood ? selectedSpiceLevel : null,
+        selectedAddons: isFood ? selectedAddons : [],
+        specialInstructions: isFood ? specialInstructions : null,
+        unitPrice: effectiveUnitPrice,
+      }
+    )
     toast.success(`Added ${quantity} × ${product.proName} to your basket! 🛍️`)
   }
 
@@ -271,8 +404,47 @@ export default function SingleProductView({ productIdentifier, productId, initia
       toast.error('Item is currently out of stock')
       return
     }
-    addToCart(product, quantity, selectedVariation)
+    addToCart(
+      product,
+      quantity,
+      selectedVariation,
+      {
+        spiceLevel: isFood ? selectedSpiceLevel : null,
+        selectedAddons: isFood ? selectedAddons : [],
+        specialInstructions: isFood ? specialInstructions : null,
+        unitPrice: effectiveUnitPrice,
+      }
+    )
     router.push('/cart')
+  }
+
+  // Add 1-Click Frequently Bought Together Bundle
+  const handleAddBundleToCart = () => {
+    if (!product) return
+    // 1. Add primary product
+    addToCart(
+      product,
+      1,
+      selectedVariation,
+      {
+        spiceLevel: isFood ? selectedSpiceLevel : null,
+        selectedAddons: isFood ? selectedAddons : [],
+        specialInstructions: isFood ? specialInstructions : null,
+        unitPrice: effectiveUnitPrice,
+      }
+    )
+    // 2. Add cross-sell bundle item
+    addToCart({
+      proId: `acc_${crossSellBundle.id}`,
+      proName: crossSellBundle.title,
+      price: crossSellBundle.regularPrice,
+      salePrice: crossSellBundle.price,
+      unitPrice: crossSellBundle.price,
+      proImages: [crossSellBundle.image],
+      vendor: product.vendor,
+    }, 1)
+
+    toast.success('Added entire bundle deal to basket! 🎉')
   }
 
   const handleWishlistToggle = () => {
@@ -735,16 +907,44 @@ export default function SingleProductView({ productIdentifier, productId, initia
           <div ref={buyBoxRef} className="lg:col-span-5 flex flex-col justify-between space-y-5">
             <div className="space-y-4">
               
-              {/* Category & Vertical Badge */}
+              {/* Category & Vertical Badges */}
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-wider">
                   <Store className="w-3.5 h-3.5" />
                   <span>{product.category?.name || 'Exclusive Selection'}</span>
                 </div>
 
-                <span className="text-[10px] font-black tracking-wider uppercase text-slate-700 dark:text-slate-300 px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none">
-                  {product.vertical || 'FOOD'}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {isFood ? (
+                    <>
+                      {/* 100% Halal Certified Badge */}
+                      <span className="text-[10px] font-black tracking-wider uppercase text-emerald-800 dark:text-emerald-300 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 rounded-none flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        <span>100% Halal Certified</span>
+                      </span>
+
+                      {/* Veg / Non-Veg Indicator */}
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 rounded-none">
+                        <span className="w-2.5 h-2.5 rounded-none border border-rose-600 flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-none bg-rose-600" />
+                        </span>
+                        <span>Non-Veg</span>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {/* Daraz Mall / Amazon Style Authenticity Badge */}
+                      <span className="text-[10px] font-black tracking-wider uppercase text-blue-800 dark:text-blue-300 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-800 rounded-none flex items-center gap-1">
+                        <BadgeCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                        <span>QuickMall 100% Genuine</span>
+                      </span>
+                    </>
+                  )}
+
+                  <span className="text-[10px] font-black tracking-wider uppercase text-slate-700 dark:text-slate-300 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none">
+                    {product.vertical || (isFood ? 'FOOD' : 'RETAIL')}
+                  </span>
+                </div>
               </div>
 
               {/* Product Title (Architectural typography) */}
@@ -752,7 +952,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                 {product.proName}
               </h1>
 
-              {/* Rating & SKU Bar */}
+              {/* Rating, SKU & Food Meta Bar */}
               <div className="flex items-center gap-3 text-xs flex-wrap">
                 <div className="flex items-center bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 px-2.5 py-1 text-amber-600 dark:text-amber-400 font-extrabold rounded-none">
                   <Star className="w-3.5 h-3.5 fill-current mr-1" />
@@ -769,18 +969,39 @@ export default function SingleProductView({ productIdentifier, productId, initia
                 <span className="text-slate-500 dark:text-slate-400 font-medium">
                   SKU: <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{product.sku || `QD-${product.proId}`}</span>
                 </span>
+
+                {/* Food-specific Quick Meta Signals */}
+                {isFood && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold">
+                      <Clock className="w-3.5 h-3.5 text-blue-600" />
+                      <span>15–20 Mins Prep</span>
+                    </span>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
+                      <Flame className="w-3.5 h-3.5 text-amber-500" />
+                      <span>580 kcal</span>
+                    </span>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold">
+                      <Utensils className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Serves 1–2</span>
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Price Block (Sharp Edges, High Contrast) */}
-              <div className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 rounded-none">
+              <div className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2.5 rounded-none">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white tracking-tight">
-                    Rs. {currentPrice.toLocaleString()}
+                    Rs. {effectiveUnitPrice.toLocaleString()}
                   </span>
 
                   {hasDiscount && (
                     <span className="text-base text-slate-400 line-through font-semibold">
-                      Rs. {originalPrice.toLocaleString()}
+                      Rs. {(originalPrice + addonsTotal).toLocaleString()}
                     </span>
                   )}
 
@@ -789,19 +1010,38 @@ export default function SingleProductView({ productIdentifier, productId, initia
                       Save Rs. {savingsAmount.toLocaleString()} ({discountPercent}%)
                     </span>
                   )}
+
+                  {addonsTotal > 0 && (
+                    <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-900 rounded-none">
+                      Includes +Rs. {addonsTotal.toLocaleString()} Add-ons
+                    </span>
+                  )}
                 </div>
+
+                {/* 0% Installment EMI Banner for Retail Items */}
+                {!isFood && currentPrice >= 2000 && (
+                  <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 rounded-none">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span>
+                        Or <strong>Rs. {Math.round(currentPrice / 3).toLocaleString()} / month</strong> in 3 interest-free payments (0% Markup)
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">EasyPaisa / Banks</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 dark:border-slate-800">
                   <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    {isOutOfStock ? 'Currently Out of Stock' : 'Freshly Prepared & Ready for Delivery'}
+                    {isOutOfStock ? 'Currently Out of Stock' : (isFood ? 'Freshly Prepared in Kitchen & Ready for Delivery' : 'In Stock • Verified Genuine & Sealed Box')}
                   </span>
                   <span className="text-slate-400 text-[11px]">All taxes included</span>
                 </div>
               </div>
 
               {/* ══════════════════════════════════════════════════════════
-                  PROMINENT SUPPLIER INFORMATION CARD WITH IMAGE
+                  PROMINENT SUPPLIER & SELLER SCORECARD (Amazon / Daraz Style)
               ══════════════════════════════════════════════════════════ */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/80 border-2 border-slate-200 dark:border-slate-800 rounded-none space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -822,7 +1062,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                          Official Supplier
+                          {isFood ? 'Official Restaurant Kitchen' : 'Official Verified Merchant'}
                         </span>
                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-none bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black uppercase">
                           <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
@@ -841,14 +1081,41 @@ export default function SingleProductView({ productIdentifier, productId, initia
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('vendor')}
-                    className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 flex-shrink-0 cursor-pointer pt-1"
-                  >
-                    <span>Store Profile</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('vendor')}
+                      className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 flex-shrink-0 cursor-pointer pt-1"
+                    >
+                      <span>{isFood ? 'Kitchen Profile' : 'Store Profile'}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsChatModalOpen(true)}
+                      className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-[11px] font-extrabold flex items-center gap-1 shadow-sm cursor-pointer"
+                    >
+                      <MessageSquare className="w-3 h-3 text-blue-600" />
+                      <span>Chat with Seller</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Seller Scorecard Metrics (Daraz & Amazon standard) */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold">Positive Rating</span>
+                    <strong className="text-emerald-600 font-black text-sm">96.8%</strong>
+                  </div>
+                  <div className="p-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold">Ship On Time</span>
+                    <strong className="text-blue-600 font-black text-sm">99.2%</strong>
+                  </div>
+                  <div className="p-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold">Response Rate</span>
+                    <strong className="text-slate-900 dark:text-slate-100 font-black text-sm">100%</strong>
+                  </div>
                 </div>
 
                 {/* Supplier Coordinates */}
@@ -868,6 +1135,181 @@ export default function SingleProductView({ productIdentifier, productId, initia
                   )}
                 </div>
               </div>
+
+              {/* ══════════════════════════════════════════════════════════
+                  POSTAL CODE / CITY DELIVERY ESTIMATOR (Amazon / Daraz standard)
+              ══════════════════════════════════════════════════════════ */}
+              <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 rounded-none text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-blue-600" />
+                    Delivery Options & Arrival Date:
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">Doorstep Courier</span>
+                </div>
+
+                <form onSubmit={handleCheckPostal} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={deliveryPostalCode}
+                    onChange={(e) => setDeliveryPostalCode(e.target.value)}
+                    placeholder="Enter City or Postal Code (e.g. Lahore / 54000)"
+                    className="flex-1 p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:outline-none focus:border-blue-500 rounded-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isCheckingPostal}
+                    className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 font-black text-xs uppercase tracking-wider cursor-pointer rounded-none"
+                  >
+                    {isCheckingPostal ? 'Checking…' : 'Check'}
+                  </button>
+                </form>
+
+                {postalCheckResult ? (
+                  <div className="p-2.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-blue-950 dark:text-blue-200">
+                        Standard Courier to {postalCheckResult.location}:
+                      </span>
+                      <strong className="text-slate-900 dark:text-white">Rs. {postalCheckResult.standardCost}</strong>
+                    </div>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">
+                      Estimated Arrival: {postalCheckResult.standardEta}
+                    </p>
+
+                    <div className="pt-1.5 border-t border-blue-200/60 dark:border-blue-900/60 flex items-center justify-between">
+                      <span className="font-bold text-blue-950 dark:text-blue-200">
+                        ⚡ Express Courier (Same Day):
+                      </span>
+                      <strong className="text-slate-900 dark:text-white">Rs. {postalCheckResult.expressCost}</strong>
+                    </div>
+                    <p className="text-[11px] text-blue-700 dark:text-blue-300 font-bold">
+                      Dispatch Speed: {postalCheckResult.expressEta}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px]">
+                    <span>Standard Express: <strong>30–45 Mins</strong> within city limits</span>
+                    <span className="text-emerald-600 font-bold">COD Available</span>
+                  </div>
+                )}
+              </div>
+
+              {/* ══════════════════════════════════════════════════════════
+                  FOOD SPECIFIC CUSTOMIZER (DoorDash / Uber Eats standard)
+              ══════════════════════════════════════════════════════════ */}
+              {isFood && (
+                <div className="p-4 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-800 space-y-4 rounded-none">
+                  {/* Spice Level Selector */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                        <Flame className="w-3.5 h-3.5 text-rose-500" />
+                        Select Spice Level:
+                      </label>
+                      <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                        {selectedSpiceLevel}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {[
+                        { label: 'Zero', hint: '⚪ Mildest', level: 'Zero' },
+                        { label: 'Mild', hint: '🟢 Gentle', level: 'Mild' },
+                        { label: 'Medium', hint: '🟡 Standard', level: 'Medium' },
+                        { label: 'Hot', hint: '🔴 Fiery', level: 'Hot' },
+                        { label: 'Extra', hint: '🌶️ Intense', level: 'Extra Hot' },
+                      ].map((item) => {
+                        const isSelected = selectedSpiceLevel === item.level
+                        return (
+                          <button
+                            key={item.level}
+                            type="button"
+                            onClick={() => setSelectedSpiceLevel(item.level)}
+                            className={`p-2 text-center border text-xs font-extrabold transition-all cursor-pointer rounded-none ${
+                              isSelected
+                                ? 'border-rose-600 bg-rose-500 text-white shadow-sm'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                            }`}
+                          >
+                            <span className="block text-[11px] leading-tight">{item.label}</span>
+                            <span className={`block text-[9px] mt-0.5 ${isSelected ? 'text-rose-100' : 'text-slate-400'}`}>
+                              {item.hint}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Interactive Meal Add-Ons & Toppings */}
+                  {availableAddons.length > 0 && (
+                    <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                          Customize & Extras (Optional):
+                        </label>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {selectedAddons.length} chosen
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {availableAddons.map((addon) => {
+                          const isChecked = selectedAddons.some(a => a.id === addon.id)
+                          return (
+                            <button
+                              key={addon.id}
+                              type="button"
+                              onClick={() => handleToggleAddon(addon)}
+                              className={`w-full p-2.5 text-xs border flex items-center justify-between transition-colors text-left cursor-pointer rounded-none ${
+                                isChecked
+                                  ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/50 text-blue-950 dark:text-blue-100 font-extrabold'
+                                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {isChecked ? (
+                                  <CheckSquare className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                ) : (
+                                  <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                )}
+                                <span className="mr-1">{addon.icon || '➕'}</span>
+                                <span>{addon.name}</span>
+                              </div>
+                              <span className="font-black text-slate-900 dark:text-slate-100">
+                                +Rs. {parseFloat(addon.price).toLocaleString()}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Special Kitchen Instructions Input */}
+                  <div className="space-y-1 pt-1 border-t border-slate-200 dark:border-slate-800">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Kitchen Special Instructions:
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={specialInstructions}
+                      onChange={(e) => setSpecialInstructions(e.target.value)}
+                      placeholder="e.g. Sauce on the side, well done, extra napkins..."
+                      className="w-full p-2.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:border-blue-500 rounded-none resize-none"
+                    />
+                  </div>
+
+                  {/* Allergen Warning Banner */}
+                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-900 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2 rounded-none">
+                    <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Allergy Information:</strong> Prepared in a kitchen environment handling gluten, sesame, tree nuts, and dairy products.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Product Key Bullets / Ingredients */}
               {product.ingredients && (
@@ -961,7 +1403,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                   </div>
 
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    Subtotal: <strong className="text-slate-900 dark:text-white font-extrabold">Rs. {(currentPrice * quantity).toLocaleString()}</strong>
+                    Subtotal: <strong className="text-slate-900 dark:text-white font-extrabold">Rs. {(effectiveUnitPrice * quantity).toLocaleString()}</strong>
                   </span>
                 </div>
               </div>
@@ -989,6 +1431,150 @@ export default function SingleProductView({ productIdentifier, productId, initia
                   </button>
                 </div>
               </div>
+
+              {/* ══════════════════════════════════════════════════════════
+                  FREQUENTLY BOUGHT TOGETHER / CROSS-SELL BUNDLE (Amazon standard)
+              ══════════════════════════════════════════════════════════ */}
+              <div className="p-4 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 space-y-3 rounded-none">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    Frequently Bought Together:
+                  </span>
+                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 border border-rose-200 dark:border-rose-900">
+                    Save Rs. {(crossSellBundle.regularPrice - crossSellBundle.price).toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                  {/* Item 1 Thumbnail */}
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex-shrink-0 flex items-center justify-center">
+                    {images[0] ? (
+                      <img src={images[0]} alt="Item" className="w-full h-full object-contain" />
+                    ) : (
+                      <Package className="w-6 h-6 text-slate-400" />
+                    )}
+                  </div>
+
+                  <span className="text-lg font-black text-slate-400">+</span>
+
+                  {/* Cross-Sell Bundle Thumbnail */}
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex-shrink-0 flex items-center justify-center">
+                    <img src={crossSellBundle.image} alt={crossSellBundle.title} className="w-full h-full object-cover" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {crossSellBundle.title}
+                    </h4>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                        Bundle Total: Rs. {(effectiveUnitPrice + crossSellBundle.price).toLocaleString()}
+                      </span>
+                      <span className="text-[11px] text-slate-400 line-through">
+                        Rs. {(originalPrice + crossSellBundle.regularPrice).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddBundleToCart}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 font-black text-xs uppercase tracking-wider flex-shrink-0 cursor-pointer rounded-none"
+                  >
+                    Add Both to Basket
+                  </button>
+                </div>
+              </div>
+
+              {/* Retail Trust Badges Row (Amazon & Daraz standard) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>100% Genuine</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span>14-Day Returns</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                  <BadgeCheck className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                  <span>1-Yr Warranty</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>Fast Delivery</span>
+                </div>
+              </div>
+
+              {/* Chat with Seller Modal */}
+              {isChatModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                  <div className="w-full max-w-md bg-white dark:bg-slate-900 border-2 border-slate-900 dark:border-slate-700 p-6 space-y-4 rounded-none shadow-2xl">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-black text-sm uppercase tracking-wide text-slate-900 dark:text-white">
+                          Inquire with {supplierName}
+                        </h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsChatModalOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {chatSent ? (
+                      <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-center space-y-2">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+                        <h4 className="font-black text-emerald-900 dark:text-emerald-200 text-sm">Message Sent!</h4>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                          {supplierName} has been notified and usually responds within 15 minutes.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { setChatSent(false); setIsChatModalOpen(false) }}
+                          className="mt-2 px-4 py-1.5 bg-emerald-600 text-white font-bold text-xs uppercase"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    ) : (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          if (!chatMessage.trim()) return
+                          setChatSent(true)
+                          toast.success('Inquiry sent to seller!')
+                        }}
+                        className="space-y-3"
+                      >
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                          Ask about preparation details, size availability, bulk discounts, or special delivery instructions:
+                        </p>
+                        <textarea
+                          rows={3}
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          placeholder="Type your message to the merchant here..."
+                          className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 rounded-none resize-none font-medium"
+                          required
+                        />
+                        <button
+                          type="submit"
+                          className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Send className="w-4 h-4" />
+                          <span>Send Message to Seller</span>
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>

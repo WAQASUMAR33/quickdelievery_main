@@ -4,7 +4,16 @@ import { createContext, useContext, useReducer, useEffect, useState } from 'reac
 
 const CartContext = createContext()
 
-const getItemKey = (item) => `${item.proId}${item.selectedVariation ? '_' + item.selectedVariation.name : ''}`
+const getItemKey = (item) => {
+  if (!item) return ''
+  const varPart = item.selectedVariation ? `_${item.selectedVariation.name}` : ''
+  const spicePart = item.spiceLevel ? `_${item.spiceLevel}` : ''
+  const addonsPart = Array.isArray(item.selectedAddons) && item.selectedAddons.length > 0
+    ? `_${item.selectedAddons.map(a => a.id || a.name).sort().join(',')}`
+    : ''
+  const customId = item.customItemKey ? `_${item.customItemKey}` : ''
+  return `${item.proId}${varPart}${spicePart}${addonsPart}${customId}`
+}
 
 const cartReducer = (state, action) => {
   switch (action.type) {
@@ -101,9 +110,20 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('quickdelivery_held_bills', JSON.stringify(heldBills))
   }, [heldBills])
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, variation = null, options = {}) => {
     const qtyToAdd = Math.max(1, Math.floor(Number(quantity) || 1))
-    dispatch({ type: 'ADD_TO_CART', payload: product, qtyToAdd })
+    const itemToAdd = {
+      ...product,
+      ...(variation ? { selectedVariation: variation } : (product.selectedVariation ? { selectedVariation: product.selectedVariation } : {})),
+      ...(options.spiceLevel || product.spiceLevel ? { spiceLevel: options.spiceLevel || product.spiceLevel } : {}),
+      ...(options.selectedAddons || product.selectedAddons ? { selectedAddons: options.selectedAddons || product.selectedAddons } : {}),
+      ...(options.specialInstructions || product.specialInstructions ? { specialInstructions: options.specialInstructions || product.specialInstructions } : {}),
+      ...(options.unitPrice || product.unitPrice ? { 
+        unitPrice: options.unitPrice || product.unitPrice,
+        salePrice: options.unitPrice || product.unitPrice,
+      } : {}),
+    }
+    dispatch({ type: 'ADD_TO_CART', payload: itemToAdd, qtyToAdd })
   }
 
   const removeFromCart = (itemKey) => {
@@ -120,7 +140,7 @@ export const CartProvider = ({ children }) => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      const price = parseFloat(item.salePrice) || parseFloat(item.price) || 0
+      const price = parseFloat(item.unitPrice) || parseFloat(item.salePrice) || parseFloat(item.price) || 0
       return total + (price * item.quantity)
     }, 0)
   }

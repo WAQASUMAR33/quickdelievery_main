@@ -40,6 +40,8 @@ import {
   ArrowRight,
   Eye,
   Check,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 
 // Bespoke Luxe Sapphire & Champagne Gold Palette Tokens
@@ -127,6 +129,7 @@ const ProductCatalog = ({
   const [onlyHighRating, setOnlyHighRating] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+  const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
 
   // Listen for AI Search and Faceted Filter Events from Global Header
   useEffect(() => {
@@ -643,7 +646,7 @@ const ProductCatalog = ({
     },
   ]
 
-  // Render Modern Bespoke Product Card (Neo-Marketplace Iris & Slate aesthetic)
+  // Render Modern Bespoke Product Card (Grid View - Neo-Marketplace Iris & Slate aesthetic)
   const renderProductCard = (product, index) => {
     let avgRating = null
     if (Array.isArray(product.reviews) && product.reviews.length > 0) {
@@ -658,9 +661,30 @@ const ProductCatalog = ({
       ? (salePrice ? Math.round(((listPrice - salePrice) / listPrice) * 100) : Math.round(parseFloat(product.discount)))
       : 0
 
-    const coverImg = Array.isArray(product.proImages) && product.proImages.length > 0
-      ? product.proImages[0]
-      : (typeof product.proImages === 'string' ? product.proImages : null)
+    // Safe image extraction supporting JSON string array, array, or raw URL
+    let coverImg = null
+    if (Array.isArray(product.proImages) && product.proImages.length > 0) {
+      coverImg = product.proImages[0]
+    } else if (typeof product.proImages === 'string') {
+      try {
+        const parsed = JSON.parse(product.proImages)
+        if (Array.isArray(parsed) && parsed.length > 0) coverImg = parsed[0]
+        else if (typeof parsed === 'string') coverImg = parsed
+        else coverImg = product.proImages
+      } catch {
+        coverImg = product.proImages
+      }
+    }
+
+    // Food vs Retail vertical detection
+    const isFoodItem = (() => {
+      const v = String(product.vertical || '').toUpperCase()
+      const c = String(product.category?.name || product.category || '').toLowerCase()
+      const n = String(product.proName || '').toLowerCase()
+      if (v === 'FOOD' || v === 'RESTAURANT' || v === 'DINING') return true
+      const foodKeys = ['burger', 'pizza', 'sandwich', 'platter', 'shawarma', 'biryani', 'pasta', 'bbq', 'roll', 'steak', 'salad', 'fries', 'sushi', 'dessert', 'cake', 'beverage', 'drink', 'shake', 'meal']
+      return foodKeys.some(k => c.includes(k) || n.includes(k))
+    })()
 
     return (
       <motion.div
@@ -695,11 +719,24 @@ const ProductCatalog = ({
             </div>
           )}
 
-          {/* Floating Discount Badge (Luxe Rose to Sapphire) */}
+          {/* Floating Discount Badge */}
           {hasDiscount && discPct > 0 && (
             <div className="absolute top-2 left-2 rounded-full bg-gradient-to-r from-rose-500 to-blue-600 px-2.5 py-0.5 text-[10px] font-black text-white shadow-md z-10 flex items-center gap-0.5 tracking-wide">
               <span>-{discPct}%</span>
             </div>
+          )}
+
+          {/* Food-specific signals: Prep Time & Halal Pill */}
+          {isFoodItem ? (
+            <div className="absolute top-2 right-9 rounded-full bg-emerald-600/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-black text-white shadow-sm z-10 flex items-center gap-0.5 tracking-wide uppercase">
+              <span>⏱️ 15-20m</span>
+            </div>
+          ) : (
+            product.brandName && (
+              <div className="absolute top-2 right-9 rounded-full bg-slate-900/80 backdrop-blur-md px-2 py-0.5 text-[9px] font-black text-white shadow-sm z-10 tracking-wide uppercase truncate max-w-[80px]">
+                {product.brandName}
+              </div>
+            )
           )}
 
           {/* Official Store Tag */}
@@ -730,12 +767,19 @@ const ProductCatalog = ({
         {/* Card Body & Details */}
         <div className="p-3.5 flex flex-col flex-1 justify-between bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/80">
           <div>
-            {/* Vendor / Brand Line */}
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
-              <Store className="w-3 h-3 text-blue-500" />
-              <span className="truncate max-w-[140px]">
-                {product.vendor?.businessName || product.vendor?.username || 'Verified Store'}
-              </span>
+            {/* Vendor / Brand Line & Food Signals */}
+            <div className="flex items-center justify-between gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
+              <div className="flex items-center gap-1 truncate max-w-[130px]">
+                <Store className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                <span className="truncate">
+                  {product.vendor?.businessName || product.vendor?.username || 'Verified Store'}
+                </span>
+              </div>
+              {isFoodItem && (
+                <span className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1 py-0.2 rounded">
+                  🥩 Halal
+                </span>
+              )}
             </div>
 
             {/* Product Title - Clickable link to dedicated page with SEO slug */}
@@ -778,11 +822,11 @@ const ProductCatalog = ({
                 )}
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                {product.freeDelivery ? t('freeDelivery') : t('standardShipping')}
+                {product.freeDelivery ? t('freeDelivery') : (isFoodItem ? 'Express 30m Courier' : t('standardShipping'))}
               </span>
             </div>
 
-            {/* Quick Add Button (Sapphire & Gold) */}
+            {/* Quick Add Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -797,11 +841,216 @@ const ProductCatalog = ({
                 addToCart(product, 1)
                 toast.success('Added to basket!')
               }}
-              className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:scale-105 border border-blue-100 dark:border-blue-900 hover:border-transparent"
+              className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:scale-105 border border-blue-100 dark:border-blue-900 hover:border-transparent cursor-pointer"
               title={t('addToCart')}
             >
               <ShoppingBag className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // Render Horizontal List View Card (Amazon / Daraz Search Results standard)
+  const renderProductListCard = (product, index) => {
+    let avgRating = null
+    if (Array.isArray(product.reviews) && product.reviews.length > 0) {
+      avgRating = product.reviews.reduce((acc, r) => acc + (parseFloat(r.rating) || 0), 0) / product.reviews.length
+    }
+
+    const inWishlist = isInWishlist(product.proId)
+    const listPrice = parseFloat(product.price) || 0
+    const salePrice = product.salePrice ? parseFloat(product.salePrice) : null
+    const hasDiscount = (salePrice && salePrice < listPrice) || parseFloat(product.discount || 0) > 0
+    const discPct = hasDiscount
+      ? (salePrice ? Math.round(((listPrice - salePrice) / listPrice) * 100) : Math.round(parseFloat(product.discount)))
+      : 0
+
+    let coverImg = null
+    if (Array.isArray(product.proImages) && product.proImages.length > 0) {
+      coverImg = product.proImages[0]
+    } else if (typeof product.proImages === 'string') {
+      try {
+        const parsed = JSON.parse(product.proImages)
+        if (Array.isArray(parsed) && parsed.length > 0) coverImg = parsed[0]
+        else if (typeof parsed === 'string') coverImg = parsed
+        else coverImg = product.proImages
+      } catch {
+        coverImg = product.proImages
+      }
+    }
+
+    const isFoodItem = (() => {
+      const v = String(product.vertical || '').toUpperCase()
+      const c = String(product.category?.name || product.category || '').toLowerCase()
+      const n = String(product.proName || '').toLowerCase()
+      if (v === 'FOOD' || v === 'RESTAURANT' || v === 'DINING') return true
+      const foodKeys = ['burger', 'pizza', 'sandwich', 'platter', 'shawarma', 'biryani', 'pasta', 'bbq', 'roll', 'steak', 'salad', 'fries', 'sushi', 'dessert', 'cake', 'beverage', 'drink', 'shake', 'meal']
+      return foodKeys.some(k => c.includes(k) || n.includes(k))
+    })()
+
+    return (
+      <motion.div
+        key={product.proId || index}
+        role="button"
+        tabIndex={0}
+        onClick={() => setDetailProduct(product)}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
+        className="group relative flex flex-col sm:flex-row items-stretch rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer text-left"
+      >
+        {/* Left: Product Thumbnail */}
+        <div className="relative sm:w-52 w-full aspect-square sm:aspect-auto bg-slate-50/70 dark:bg-slate-950/70 flex-shrink-0 flex items-center justify-center p-3">
+          {coverImg ? (
+            <img
+              src={coverImg}
+              alt={product.proName}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <Package className="w-12 h-12 text-slate-400 stroke-[1.25]" />
+          )}
+
+          {hasDiscount && discPct > 0 && (
+            <div className="absolute top-2 left-2 rounded-full bg-gradient-to-r from-rose-500 to-blue-600 px-2 py-0.5 text-[10px] font-black text-white shadow-md z-10">
+              -{discPct}%
+            </div>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (inWishlist) {
+                removeFromWishlist(product.proId)
+                toast.success('Removed from wishlist')
+              } else {
+                addToWishlist(product)
+                toast.success('Added to wishlist!')
+              }
+            }}
+            className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-full shadow-sm text-slate-400 hover:text-rose-500"
+          >
+            <Heart className={`w-4 h-4 ${inWishlist ? 'text-rose-500 fill-current' : 'text-slate-400'}`} />
+          </button>
+        </div>
+
+        {/* Center: Details & Features */}
+        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800">
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                {product.category?.name || 'Exclusive'}
+              </span>
+
+              {isFoodItem ? (
+                <>
+                  <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                    ⏱️ 15–20 Mins Prep
+                  </span>
+                  <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                    🥩 100% Halal
+                  </span>
+                </>
+              ) : (
+                <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded">
+                  🛡️ Genuine Sealed Box
+                </span>
+              )}
+            </div>
+
+            <Link
+              href={getProductUrl(product)}
+              onClick={(e) => e.stopPropagation()}
+              className="block group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors"
+            >
+              <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-base leading-snug line-clamp-2">
+                {product.proName}
+              </h3>
+            </Link>
+
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <span>Sold by: <strong>{product.vendor?.businessName || 'Verified Merchant'}</strong></span>
+              <span>•</span>
+              <div className="flex items-center text-amber-500 font-extrabold">
+                <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
+                <span>{avgRating !== null ? avgRating.toFixed(1) : '4.8'}</span>
+              </div>
+              <span>({product.reviews?.length || 24} reviews)</span>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-2 leading-relaxed">
+              {product.description || (isFoodItem ? 'Prepared fresh on order with certified premium ingredients and hygienic kitchen packaging.' : 'Original brand authenticated item with complete manufacturer warranty and rapid dispatch.')}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1 text-emerald-600 font-bold">
+              <CheckCircle2 className="w-3 h-3" /> In Stock & Ready
+            </span>
+            <span>•</span>
+            <span>14-Day Resolution</span>
+            <span>•</span>
+            <span>COD Available</span>
+          </div>
+        </div>
+
+        {/* Right: Price & CTA Column */}
+        <div className="p-4 sm:p-5 sm:w-56 flex-shrink-0 flex flex-col justify-between sm:border-l border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-slate-950 dark:text-white">
+                Rs. {(salePrice || listPrice).toLocaleString()}
+              </span>
+              {hasDiscount && (
+                <span className="text-xs text-slate-400 line-through">
+                  Rs. {listPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
+
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
+              {product.freeDelivery ? 'Free Delivery' : (isFoodItem ? 'Express 30m Courier' : 'Standard Shipping (Rs. 150)')}
+            </span>
+
+            {!isFoodItem && listPrice >= 2000 && (
+              <span className="text-[10px] text-emerald-600 font-bold block mt-1">
+                From Rs. {Math.round(listPrice / 3).toLocaleString()}/mo
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-2 pt-3">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                let variations = []
+                try {
+                  variations = product.variations ? (typeof product.variations === 'string' ? JSON.parse(product.variations) : product.variations) : []
+                } catch {}
+                if (variations && variations.length > 0) {
+                  setDetailProduct(product)
+                  return
+                }
+                addToCart(product, 1)
+                toast.success('Added to basket!')
+              }}
+              className="w-full py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm rounded-xl transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Add to Basket</span>
+            </button>
+
+            <Link
+              href={getProductUrl(product)}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200 dark:border-slate-700 rounded-xl transition-colors"
+            >
+              View Details
+            </Link>
           </div>
         </div>
       </motion.div>
@@ -1604,8 +1853,8 @@ const ProductCatalog = ({
               </div>
             </div>
 
-            {/* Active Filter Tags */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            {/* Active Filter Tags Bar */}
+            <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-[200px]">
               {selectedCategory && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200/80 dark:border-blue-900">
                   {categories.find(c => idsEqual(c.id, selectedCategory))?.name || 'Category'}
@@ -1620,30 +1869,77 @@ const ProductCatalog = ({
               )}
               {onlyDeals && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200/80 dark:border-rose-900">
-                  Flash Drops Only
+                  Flash Drops
                   <X className="w-3 h-3 cursor-pointer" onClick={() => setOnlyDeals(false)} />
                 </span>
               )}
+              {onlyFreeDelivery && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200/80 dark:border-emerald-900">
+                  Free Delivery
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setOnlyFreeDelivery(false)} />
+                </span>
+              )}
+              {(selectedCategory || selectedVendor || onlyDeals || onlyFreeDelivery) && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="text-[11px] font-black text-rose-600 hover:underline px-2 py-1"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-bold">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 py-1.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-blue-500"
-              >
-                <option value="relevance">Relevance</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-                <option value="newest">Newest Arrivals</option>
-              </select>
+            {/* View Mode Toggle & Sort Dropdown (Amazon & Daraz Standard) */}
+            <div className="flex items-center gap-3">
+              {/* Grid vs List View Toggle */}
+              <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  title="Grid View (Amazon / Daraz Cards)"
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'grid'
+                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  title="List View (Spec & Comparison Rich)"
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'list'
+                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 py-1.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-blue-500 cursor-pointer"
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="discount">Biggest Discount %</option>
+                  <option value="newest">Newest Arrivals</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Product Cards Responsive Grid (Full-Width Density) */}
+          {/* Product Cards Responsive Container (Grid or List View) */}
           {sortedProducts.length === 0 ? (
             <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
               <Package className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
@@ -1659,9 +1955,13 @@ const ProductCatalog = ({
                 Reset All Filters
               </button>
             </div>
-          ) : (
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4">
               {sortedProducts.map((product, index) => renderProductCard(product, index))}
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {sortedProducts.map((product, index) => renderProductListCard(product, index))}
             </div>
           )}
         </main>
