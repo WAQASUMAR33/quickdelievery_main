@@ -111,6 +111,59 @@ export async function GET(request) {
       skip: pool ? 0 : (page - 1) * limit,
     })
 
+    // Also include Super App SubOrders if in pool mode or specific driver assigned
+    let formattedSubOrders = []
+    try {
+      const subOrderWhere = {}
+      if (pool) {
+        subOrderWhere.driverId = null
+        subOrderWhere.status = { in: ['ACCEPTED', 'PREPARING', 'READY_FOR_DISPATCH'] }
+      } else if (driverId) {
+        subOrderWhere.driverId = driverId
+      }
+
+      const rawSubOrders = await prisma.subOrder.findMany({
+        where: subOrderWhere,
+        include: {
+          items: { include: { product: true } },
+          masterOrder: { include: { user: true } },
+        },
+        take: 50,
+      })
+
+      formattedSubOrders = rawSubOrders.map((s) => ({
+        id: s.id,
+        isSubOrder: true,
+        subOrderNumber: s.subOrderNumber,
+        status: s.status,
+        totalAmount: s.subtotal,
+        serviceCharge: s.deliveryFee,
+        paymentMethod: s.masterOrder?.paymentMethod || 'ONLINE_PAYMENT',
+        shippingAddress: s.masterOrder?.shippingAddress || 'Customer Address',
+        deliveryLatitude: s.masterOrder?.deliveryLatitude || 31.5204,
+        deliveryLongitude: s.masterOrder?.deliveryLongitude || 74.3587,
+        fulfillmentTrack: s.fulfillmentTrack,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        orderItems: s.items.map((itm) => ({
+          id: itm.id,
+          product: {
+            proName: itm.productName,
+            price: itm.price,
+            vendor: { username: s.vendorId },
+          },
+          quantity: itm.quantity,
+          price: itm.price,
+        })),
+        user: s.masterOrder?.user,
+      }))
+    } catch (e) {
+      // Graceful fallback if no suborders table
+    }
+
+    // Combine legacy orders and super app sub-orders
+    rawOrders = [...rawOrders, ...formattedSubOrders]
+
     // Fetch registered businesses to connect real restaurant and store locations
     const allBusinesses = await prisma.business.findMany({
       select: {
@@ -325,8 +378,43 @@ export async function PUT(request) {
       dataToUpdate.driverId = numericDriverId
     }
 
+    const parsedOrderId = parseInt(orderId, 10)
+
+    // Check if order exists in legacy Order table or SubOrder table
+    const existingLegacyOrder = await prisma.order.findUnique({ where: { id: parsedOrderId } })
+
+    if (!existingLegacyOrder) {
+      // Check SubOrder
+      const existingSubOrder = await prisma.subOrder.findUnique({ where: { id: parsedOrderId } })
+      if (existingSubOrder) {
+        const subData = {}
+        if (status) {
+          subData.status = status === 'SHIPPED' ? 'DISPATCHED' : status
+        }
+        if (driverId !== undefined && driverId !== null) {
+          subData.driverId = parseInt(driverId, 10)
+        }
+
+        const updatedSub = await prisma.subOrder.update({
+          where: { id: parsedOrderId },
+          data: subData,
+          include: {
+            items: true,
+            masterOrder: { include: { user: true } },
+          },
+        })
+
+        return Response.json({
+          success: true,
+          data: updatedSub,
+          isSubOrder: true,
+          message: `Sub-order status updated to ${subData.status || 'ASSIGNED'}`,
+        })
+      }
+    }
+
     const updatedOrder = await prisma.order.update({
-      where: { id: parseInt(orderId, 10) },
+      where: { id: parsedOrderId },
       data: dataToUpdate,
       include: {
         orderItems: {

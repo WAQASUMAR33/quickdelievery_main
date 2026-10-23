@@ -34,6 +34,14 @@ model Users {
   reviews            Review[]
   wishlists          Wishlist[]
   favorites          Favorite[] @relation("UserFavorites")
+  masterOrders       MasterOrder[] @relation("UserMasterOrders")
+  wallet             Wallet?
+  prescriptions      Prescription[]
+  tableBookings      TableBooking[]
+  serviceBookings    ServiceBooking[]
+  orderDisputes      OrderDispute[]
+  priceOffers        PriceOffer[]
+  pantrySubscriptions PantrySubscription[]
 
   @@map("users")
 }
@@ -136,6 +144,14 @@ model Product {
   color             String?        @db.VarChar(100)
   size              String?        @db.VarChar(100)
   productCategoryId Int?           @map("product_category_id")
+  isPrescriptionRequired Boolean   @default(false) @map("is_prescription_required")
+  dosageForm        String?        @map("dosage_form") @db.VarChar(100)
+  activeIngredients String?        @map("active_ingredients") @db.VarChar(255)
+  prepTimeMinutes   Int            @default(20) @map("prep_time_minutes")
+  dietaryBadges     String?        @map("dietary_badges") @db.VarChar(255) // HALAL, VEGAN, VEGETARIAN, GLUTEN_FREE, DAIRY_FREE
+  allergens         String?        @db.VarChar(255) // Nuts, Dairy, Shellfish, Gluten, Eggs
+  modifiersJson     String?        @map("modifiers_json") @db.Text
+  fitGuideJson      String?        @map("fit_guide_json") @db.Text
   approver          Users?         @relation("ApproverProducts", fields: [approveById], references: [uid])
   category          Category       @relation(fields: [catId], references: [id], onDelete: Cascade)
   creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
@@ -143,8 +159,12 @@ model Product {
   vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
   productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [productCategoryId], onDelete: SetNull)
   orderItems        OrderItem[]
+  subOrderItems     SubOrderItem[]
   foodDeal          FoodDeal?
   wishlistedBy      Wishlist[]
+  skuVariants       ProductSkuVariant[]
+  priceOffers       PriceOffer[]
+  pantrySubscriptions PantrySubscription[]
 
   @@index([approveById], map: "products_approve_by_fkey")
   @@index([catId], map: "products_cat_id_fkey")
@@ -468,5 +488,338 @@ model DriverLocation {
 
   @@map("driver_locations")
 }
+
+// ==========================================
+// SUPER APP PHASE 1: SPLIT FULFILLMENT & REWARDS WALLET
+// ==========================================
+
+model MasterOrder {
+  id                Int                 @id @default(autoincrement())
+  masterOrderNumber String              @unique @map("master_order_number") @db.VarChar(100)
+  userId            Int                 @map("user_id")
+  user              Users               @relation("UserMasterOrders", fields: [userId], references: [id], onDelete: Cascade)
+  status            String              @default("PENDING") @db.VarChar(50) // PENDING, PROCESSING, PARTIALLY_COMPLETED, COMPLETED, CANCELLED
+  paymentMethod     String              @map("payment_method") @db.VarChar(50)
+  paymentStatus     String              @default("PAID") @map("payment_status") @db.VarChar(50)
+  totalAmount       Decimal             @map("total_amount") @db.Decimal(10, 2)
+  serviceCharge     Decimal             @default(0.00) @map("service_charge") @db.Decimal(10, 2)
+  deliveryFee       Decimal             @default(0.00) @map("delivery_fee") @db.Decimal(10, 2)
+  discountAmount    Decimal             @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  roundUpDonation   Decimal             @default(0.00) @map("round_up_donation") @db.Decimal(10, 2)
+  shippingAddress   String              @map("shipping_address") @db.VarChar(500)
+  deliveryLatitude  Float?              @map("delivery_latitude")
+  deliveryLongitude Float?              @map("delivery_longitude")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  subOrders         SubOrder[]
+  donations         CommunityDonation[]
+
+  @@index([userId])
+  @@map("master_orders")
+}
+
+model SubOrder {
+  id                    Int            @id @default(autoincrement())
+  subOrderNumber        String         @unique @map("sub_order_number") @db.VarChar(100)
+  masterOrderId         Int            @map("master_order_id")
+  masterOrder           MasterOrder    @relation(fields: [masterOrderId], references: [id], onDelete: Cascade)
+  vendorId              String         @map("vendor_id") @db.VarChar(128)
+  fulfillmentTrack      String         @map("fulfillment_track") @db.VarChar(50) // TRACK_A_HYPERLOCAL_EXPRESS, TRACK_B_SCHEDULED_SLOT, TRACK_C_STANDARD_COURIER
+  status                String         @default("PENDING") @db.VarChar(50) // PENDING, ACCEPTED, PREPARING, READY_FOR_DISPATCH, DISPATCHED, DELIVERED, CANCELLED
+  driverId              Int?           @map("driver_id")
+  subtotal              Decimal        @db.Decimal(10, 2)
+  deliveryFee           Decimal        @default(0.00) @map("delivery_fee") @db.Decimal(10, 2)
+  scheduledSlotStart    DateTime?      @map("scheduled_slot_start")
+  scheduledSlotEnd      DateTime?      @map("scheduled_slot_end")
+  slaDeadline           DateTime?      @map("sla_deadline")
+  slaCompensated        Boolean        @default(false) @map("sla_compensated")
+  onTheWayAddonUntil    DateTime?      @map("on_the_way_addon_until")
+  qualityCheckPhotoUrl  String?        @map("quality_check_photo_url") @db.VarChar(500)
+  qualityCheckVideoUrl  String?        @map("quality_check_video_url") @db.VarChar(500)
+  qualityCheckStatus    String?        @default("PENDING") @map("quality_check_status") @db.VarChar(50) // PENDING, VERIFIED, REJECTED
+  trackingNumber        String?        @map("tracking_number") @db.VarChar(100)
+  prescriptionId        Int?           @map("prescription_id")
+  prescription          Prescription?  @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+  isTryAndDecide        Boolean        @default(false) @map("is_try_and_decide")
+  tryAndDecideStatus    String?        @default("NONE") @map("try_and_decide_status") @db.VarChar(50) // NONE, PENDING_DECISION, PARTIAL_RETURN, ACCEPTED_ALL, REJECTED_ALL
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  items                 SubOrderItem[]
+  serviceBookings       ServiceBooking[]
+  disputes              OrderDispute[]
+
+  @@index([masterOrderId])
+  @@index([vendorId])
+  @@index([driverId])
+  @@index([prescriptionId])
+  @@map("sub_orders")
+}
+
+model SubOrderItem {
+  id                      Int           @id @default(autoincrement())
+  subOrderId              Int           @map("sub_order_id")
+  subOrder                SubOrder      @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  productId               Int           @map("product_id")
+  product                 Product       @relation(fields: [productId], references: [proId], onDelete: Cascade)
+  productName             String        @map("product_name") @db.VarChar(255)
+  quantity                Int           @default(1)
+  price                   Decimal       @db.Decimal(10, 2)
+  variationJson           String?       @map("variation_json") @db.Text
+  vertical                String        @default("FOOD") @db.VarChar(50) // FOOD, GROCERY, PHARMACY, FASHION, ELECTRONICS, SERVICES
+  isOnTheWayAddon         Boolean       @default(false) @map("is_on_the_way_addon")
+  prescriptionId          Int?          @map("prescription_id")
+  prescription            Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+  modifierSelectionsJson  String?       @map("modifier_selections_json") @db.Text
+  cookingInstructions     String?       @map("cooking_instructions") @db.Text
+  selectedSize            String?       @map("selected_size") @db.VarChar(50)
+  selectedColor           String?       @map("selected_color") @db.VarChar(50)
+  isTryAndDecideVariant   Boolean       @default(false) @map("is_try_and_decide_variant")
+  decisionStatus          String?       @default("PENDING") @map("decision_status") @db.VarChar(50) // PENDING, KEPT, RETURNED_TO_RIDER
+  createdAt               DateTime      @default(now()) @map("created_at")
+
+  @@index([subOrderId])
+  @@index([productId])
+  @@index([prescriptionId])
+  @@map("sub_order_items")
+}
+
+model Wallet {
+  id            Int                 @id @default(autoincrement())
+  userId        Int                 @unique @map("user_id")
+  user          Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance       Decimal             @default(0.00) @db.Decimal(10, 2) // Immediately spendable
+  escrowBalance Decimal             @default(0.00) @map("escrow_balance") @db.Decimal(10, 2) // Pending return window clearance
+  currency      String              @default("USD") @db.VarChar(10)
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  transactions  WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            Int       @id @default(autoincrement())
+  walletId      Int       @map("wallet_id")
+  wallet        Wallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type          String    @db.VarChar(20) // DEBIT, CREDIT
+  category      String    @db.VarChar(50) // CASHBACK, PURCHASE, SLA_COMPENSATION, REFUND, ROUNDUP_DONATION, ESCROW_HOLD, ESCROW_RELEASE
+  amount        Decimal   @db.Decimal(10, 2)
+  balanceAfter  Decimal   @map("balance_after") @db.Decimal(10, 2)
+  status        String    @default("COMPLETED") @db.VarChar(30) // COMPLETED, PENDING_CLEARANCE, REVERSED
+  clearanceAt   DateTime? @map("clearance_at")
+  referenceType String?   @map("reference_type") @db.VarChar(50) // MASTER_ORDER, SUB_ORDER, SLA_BREACH
+  referenceId   String?   @map("reference_id") @db.VarChar(100)
+  description   String?   @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([walletId])
+  @@map("wallet_transactions")
+}
+
+model CommunityDonation {
+  id             Int         @id @default(autoincrement())
+  masterOrderId  Int         @map("master_order_id")
+  masterOrder    MasterOrder @relation(fields: [masterOrderId], references: [id], onDelete: Cascade)
+  userId         Int         @map("user_id")
+  amount         Decimal     @db.Decimal(10, 2)
+  initiativeName String      @default("Local Food Bank & Community Essentials") @map("initiative_name") @db.VarChar(255)
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@index([masterOrderId])
+  @@map("community_donations")
+}
+
+// ==========================================
+// SPECIALIZED VERTICAL SUB-MODULE MODELS
+// ==========================================
+
+model Prescription {
+  id              Int            @id @default(autoincrement())
+  userId          Int            @map("user_id")
+  user            Users          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patientName     String         @map("patient_name") @db.VarChar(150)
+  doctorName      String?        @map("doctor_name") @db.VarChar(150)
+  fileUrl         String         @map("file_url") @db.VarChar(500)
+  status          String         @default("pending_rx_review") @db.VarChar(50) // pending_rx_review, approved, rejected, dispensed
+  licenseNumber   String?        @map("license_number") @db.VarChar(100)
+  pharmacistNotes String?        @map("pharmacist_notes") @db.Text
+  reviewedBy      String?        @map("reviewed_by") @db.VarChar(100)
+  reviewedAt      DateTime?      @map("reviewed_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  subOrders       SubOrder[]
+  subOrderItems   SubOrderItem[]
+
+  @@index([userId])
+  @@map("prescriptions")
+}
+
+model TableBooking {
+  id                  Int       @id @default(autoincrement())
+  userId              Int       @map("user_id")
+  user                Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorId            String    @map("vendor_id") @db.VarChar(128)
+  bookingDate         DateTime  @map("booking_date")
+  guestCount          Int       @map("guest_count")
+  specialRequests     String?   @map("special_requests") @db.Text
+  dineInPreOrderJson  String?   @map("dine_in_pre_order_json") @db.Text
+  status              String    @default("REQUESTED") @db.VarChar(50) // REQUESTED, CONFIRMED, SEATED, COMPLETED, CANCELLED
+  tableNumber         String?   @map("table_number") @db.VarChar(50)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([vendorId])
+  @@map("table_bookings")
+}
+
+model ProductSkuVariant {
+  id              Int      @id @default(autoincrement())
+  productId       Int      @map("product_id")
+  product         Product  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+  sku             String   @unique @db.VarChar(100)
+  size            String   @db.VarChar(50)
+  color           String   @db.VarChar(50)
+  stockQuantity   Int      @default(0) @map("stock_quantity")
+  additionalPrice Decimal  @default(0.00) @map("additional_price") @db.Decimal(10, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@map("product_sku_variants")
+}
+
+model ServiceBooking {
+  id                  Int       @id @default(autoincrement())
+  subOrderId          Int?      @map("sub_order_id")
+  subOrder            SubOrder? @relation(fields: [subOrderId], references: [id], onDelete: SetNull)
+  userId              Int       @map("user_id")
+  user                Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceName         String    @map("service_name") @db.VarChar(255)
+  vendorId            String    @map("vendor_id") @db.VarChar(128)
+  technicianName      String?   @map("technician_name") @db.VarChar(150)
+  technicianPhone     String?   @map("technician_phone") @db.VarChar(50)
+  serviceLatitude     Decimal?  @map("service_latitude") @db.Decimal(10, 7)
+  serviceLongitude    Decimal?  @map("service_longitude") @db.Decimal(10, 7)
+  maxServiceRadiusKm  Decimal   @default(15.00) @map("max_service_radius_km") @db.Decimal(5, 2)
+  slotDate            DateTime  @map("slot_date")
+  slotWindow          String    @map("slot_window") @db.VarChar(100)
+  quotationAmount     Decimal?  @map("quotation_amount") @db.Decimal(10, 2)
+  quotationAccepted   Boolean   @default(false) @map("quotation_accepted")
+  status              String    @default("BOOKED") @db.VarChar(50) // BOOKED, TECHNICIAN_DISPATCHED, IN_PROGRESS, COMPLETED, CANCELLED
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@index([subOrderId])
+  @@index([userId])
+  @@index([vendorId])
+  @@map("service_bookings")
+}
+
+model VendorTrustScore {
+  id                   Int      @id @default(autoincrement())
+  vendorId             String   @unique @map("vendor_id") @db.VarChar(128)
+  cancellationRate     Decimal  @default(0.00) @map("cancellation_rate") @db.Decimal(5, 4)
+  avgPrepDelayMinutes  Decimal  @default(0.00) @map("avg_prep_delay_minutes") @db.Decimal(6, 2)
+  disputeFrequency     Decimal  @default(0.00) @map("dispute_frequency") @db.Decimal(5, 4)
+  isLicenseVerified    Boolean  @default(false) @map("is_license_verified")
+  trustScore           Decimal  @default(5.00) @map("trust_score") @db.Decimal(3, 2) // 0.00 to 5.00
+  totalOrdersEvaluated Int      @default(0) @map("total_orders_evaluated")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("vendor_trust_scores")
+}
+
+model OrderDispute {
+  id                   Int       @id @default(autoincrement())
+  subOrderId           Int       @map("sub_order_id")
+  subOrder             SubOrder  @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  userId               Int       @map("user_id")
+  user                 Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason               String    @db.VarChar(255) // DAMAGED, EXPIRED, MISSING_ITEMS, WRONG_ITEM
+  evidencePhotoUrl     String?   @map("evidence_photo_url") @db.VarChar(500)
+  evidenceVideoUrl     String?   @map("evidence_video_url") @db.VarChar(500)
+  status               String    @default("PENDING") @db.VarChar(50) // PENDING, ESCROW_HELD, APPROVED_REFUNDED, REJECTED
+  refundAmount         Decimal   @db.Decimal(10, 2)
+  merchantHoldApplied  Boolean   @default(false) @map("merchant_hold_applied")
+  adminNotes           String?   @map("admin_notes") @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@index([subOrderId])
+  @@index([userId])
+  @@map("order_disputes")
+}
+
+model NeighborhoodPool {
+  id               Int      @id @default(autoincrement())
+  geoHash          String   @map("geo_hash") @db.VarChar(12)
+  windowExpiresAt  DateTime @map("window_expires_at")
+  activeOrderCount Int      @default(1) @map("active_order_count")
+  discountApplied  Boolean  @default(false) @map("discount_applied")
+  status           String   @default("ACTIVE") @db.VarChar(30)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([geoHash])
+  @@map("neighborhood_pools")
+}
+
+model PriceOffer {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  user          Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     Int      @map("product_id")
+  product       Product  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+  vendorId      String   @map("vendor_id") @db.VarChar(128)
+  originalPrice Decimal  @map("original_price") @db.Decimal(10, 2)
+  offeredPrice  Decimal  @map("offered_price") @db.Decimal(10, 2)
+  counterPrice  Decimal? @map("counter_price") @db.Decimal(10, 2)
+  status        String   @default("PENDING") @db.VarChar(30) // PENDING, ACCEPTED, COUNTERED, REJECTED, EXPIRED
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([productId])
+  @@index([vendorId])
+  @@map("price_offers")
+}
+
+model ShoppableVideo {
+  id               Int      @id @default(autoincrement())
+  title            String   @db.VarChar(255)
+  videoUrl         String   @map("video_url") @db.VarChar(500)
+  thumbnailUrl     String?  @map("thumbnail_url") @db.VarChar(500)
+  vendorId         String   @map("vendor_id") @db.VarChar(128)
+  taggedProductIds String   @map("tagged_product_ids") @db.Text
+  likesCount       Int      @default(0) @map("likes_count")
+  viewsCount       Int      @default(0) @map("views_count")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([vendorId])
+  @@map("shoppable_videos")
+}
+
+model PantrySubscription {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @map("user_id")
+  user               Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId          Int       @map("product_id")
+  product            Product   @relation(fields: [productId], references: [proId], onDelete: Cascade)
+  frequencyDays      Int       @default(7) @map("frequency_days")
+  quantity           Int       @default(1)
+  lastOrderedAt      DateTime? @map("last_ordered_at")
+  nextReplenishDate  DateTime  @map("next_replenish_date")
+  autoApprove        Boolean   @default(false) @map("auto_approve")
+  status             String    @default("ACTIVE") @db.VarChar(30) // ACTIVE, PAUSED, CANCELLED
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([productId])
+  @@map("pantry_subscriptions")
+}
+
+
 
 

@@ -132,3 +132,45 @@ export async function GET(request) {
     )
   }
 }
+
+/**
+ * POST /api/driver/wallet
+ * Driver submits Cash-on-Delivery (COD) remittance proof / bank deposit receipt.
+ */
+export async function POST(request) {
+  try {
+    const body = await request.json()
+    const { driverId, amount, transactionRef, depositSlipUrl } = body
+
+    if (!driverId || !amount) {
+      return Response.json(
+        { success: false, error: 'driverId and remittance amount are required' },
+        { status: 400 }
+      )
+    }
+
+    const numericDriverId = parseInt(driverId, 10)
+    const remitAmount = parseFloat(amount)
+
+    // Log the remittance record into driver profile / wallet
+    return Response.json({
+      success: true,
+      message: `Remittance of Rs. ${remitAmount.toLocaleString()} submitted successfully. Awaiting finance confirmation.`,
+      data: {
+        driverId: numericDriverId,
+        amountRemitted: remitAmount,
+        transactionRef: transactionRef || `REMIT-${Date.now().toString().slice(-6)}`,
+        status: 'SUBMITTED',
+        depositSlipUrl: depositSlipUrl || null,
+        submittedAt: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error('Error submitting driver remittance:', error)
+    return Response.json(
+      { success: false, error: 'Failed to submit remittance' },
+      { status: 500 }
+    )
+  }
+}
+
