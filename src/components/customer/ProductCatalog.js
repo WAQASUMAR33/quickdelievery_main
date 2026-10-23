@@ -42,6 +42,7 @@ import {
   Check,
   LayoutGrid,
   List,
+  Search,
 } from 'lucide-react'
 
 // Bespoke Luxe Sapphire & Champagne Gold Palette Tokens
@@ -127,6 +128,13 @@ const ProductCatalog = ({
   const [onlyFreeDelivery, setOnlyFreeDelivery] = useState(false)
   const [onlyDeals, setOnlyDeals] = useState(false)
   const [onlyHighRating, setOnlyHighRating] = useState(false)
+  const [onlyHalal, setOnlyHalal] = useState(false)
+  const [onlyVeg, setOnlyVeg] = useState(false)
+  const [onlyFastPrep, setOnlyFastPrep] = useState(false)
+  const [onlyBrandWarranty, setOnlyBrandWarranty] = useState(false)
+  const [categorySearch, setCategorySearch] = useState('')
+  const [storeSearch, setStoreSearch] = useState('')
+  const [brandSearch, setBrandSearch] = useState('')
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
@@ -494,6 +502,25 @@ const ProductCatalog = ({
     return Object.entries(map).map(([name, count]) => ({ name, count }))
   }, [products])
 
+  // Derive filtered lists for sidebar filters based on inline searches
+  const filteredSidebarCategories = useMemo(() => {
+    if (!categorySearch.trim()) return categories
+    const q = categorySearch.toLowerCase().trim()
+    return categories.filter(c => c.name?.toLowerCase().includes(q))
+  }, [categories, categorySearch])
+
+  const filteredSidebarShops = useMemo(() => {
+    if (!storeSearch.trim()) return topShops
+    const q = storeSearch.toLowerCase().trim()
+    return topShops.filter(s => (s.businessName || s.username || '').toLowerCase().includes(q))
+  }, [topShops, storeSearch])
+
+  const filteredSidebarBrands = useMemo(() => {
+    if (!brandSearch.trim()) return availableBrands
+    const q = brandSearch.toLowerCase().trim()
+    return availableBrands.filter(b => b.name?.toLowerCase().includes(q))
+  }, [availableBrands, brandSearch])
+
   // Filter products by all selected criteria (multi-faceted + AI)
   const filteredProducts = useMemo(() => {
     const baseList = aiSearchPayload?.products?.length ? aiSearchPayload.products : products
@@ -535,7 +562,29 @@ const ProductCatalog = ({
       }
       const matchesRating = !onlyHighRating || avgRating >= 4.0
 
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice && matchesFreeDelivery && matchesDeals && matchesBrands && matchesColors && matchesStock && matchesRating
+      // Food / Restaurant item detection
+      const isFoodItem = (() => {
+        const v = String(product.vertical || '').toUpperCase()
+        const c = String(product.category?.name || product.category || '').toLowerCase()
+        const n = String(product.proName || '').toLowerCase()
+        if (v === 'FOOD' || v === 'RESTAURANT' || v === 'DINING') return true
+        const foodKeys = ['burger', 'pizza', 'sandwich', 'platter', 'shawarma', 'biryani', 'pasta', 'bbq', 'roll', 'steak', 'salad', 'fries', 'sushi', 'dessert', 'cake', 'beverage', 'drink', 'shake', 'meal']
+        return foodKeys.some(k => c.includes(k) || n.includes(k))
+      })()
+
+      // Dietary: Halal
+      const matchesHalal = !onlyHalal || (isFoodItem && !desc.includes('pork') && !desc.includes('alcohol'))
+
+      // Dietary: Pure Veg
+      const matchesVeg = !onlyVeg || (isFoodItem && (name.includes('veg') || desc.includes('vegetarian') || desc.includes('salad') || desc.includes('cheese') || desc.includes('paneer')) && !name.includes('chicken') && !name.includes('beef') && !name.includes('mutton') && !name.includes('meat') && !name.includes('fish'))
+
+      // Restaurant: Fast Prep (< 20 mins)
+      const matchesFastPrep = !onlyFastPrep || (isFoodItem && (desc.includes('15') || desc.includes('20') || !desc.includes('slow')))
+
+      // Retail: Brand Warranty (Amazon / Daraz standard)
+      const matchesWarranty = !onlyBrandWarranty || Boolean(product.warranty && product.warranty.trim() && !product.warranty.toLowerCase().includes('no warranty'))
+
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice && matchesFreeDelivery && matchesDeals && matchesBrands && matchesColors && matchesStock && matchesRating && matchesHalal && matchesVeg && matchesFastPrep && matchesWarranty
     })
   }, [
     products,
@@ -551,6 +600,10 @@ const ProductCatalog = ({
     onlyFreeDelivery,
     onlyDeals,
     onlyHighRating,
+    onlyHalal,
+    onlyVeg,
+    onlyFastPrep,
+    onlyBrandWarranty,
   ])
 
   // Sort products
@@ -586,6 +639,13 @@ const ProductCatalog = ({
     setOnlyFreeDelivery(false)
     setOnlyDeals(false)
     setOnlyHighRating(false)
+    setOnlyHalal(false)
+    setOnlyVeg(false)
+    setOnlyFastPrep(false)
+    setOnlyBrandWarranty(false)
+    setCategorySearch('')
+    setStoreSearch('')
+    setBrandSearch('')
     setAiSearchPayload(null)
     if (onSelectDepartment) onSelectDepartment(null)
   }
@@ -1096,22 +1156,55 @@ const ProductCatalog = ({
         <button
           type="button"
           onClick={handleClearFilters}
-          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
+          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors cursor-pointer"
         >
           Reset all
         </button>
       </div>
 
-      {/* ── 1. Department / Categories ── */}
+      {/* ── 1. Department / Categories with Search ── */}
       <div>
-        <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider">
-          {t('departments')}
-        </h4>
-        <div className="space-y-1">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">
+            {t('departments')}
+          </h4>
+          {selectedCategory !== null && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory(null)}
+              className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
+            >
+              All
+            </button>
+          )}
+        </div>
+
+        {/* Categories Inline Search Box */}
+        <div className="relative mb-2.5">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={categorySearch}
+            onChange={(e) => setCategorySearch(e.target.value)}
+            placeholder="Search categories..."
+            className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          />
+          {categorySearch && (
+            <button
+              type="button"
+              onClick={() => setCategorySearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
           <button
             type="button"
             onClick={() => setSelectedCategory(null)}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
               selectedCategory === null
                 ? 'bg-blue-50 dark:bg-blue-950/60 font-black text-blue-600 dark:text-blue-400'
                 : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
@@ -1120,7 +1213,7 @@ const ProductCatalog = ({
             <span>{t('allDepartments')}</span>
             <span className="text-[11px] text-slate-400">{products.length}</span>
           </button>
-          {categories.map((cat) => {
+          {filteredSidebarCategories.map((cat) => {
             const isSel = idsEqual(selectedCategory, cat.id)
             const count = products.filter(p => idsEqual(p.catId ?? p.category?.id, cat.id)).length
             return (
@@ -1128,7 +1221,7 @@ const ProductCatalog = ({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(isSel ? null : cat.id)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                   isSel
                     ? 'bg-blue-50 dark:bg-blue-950/60 font-black text-blue-600 dark:text-blue-400'
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
@@ -1139,33 +1232,69 @@ const ProductCatalog = ({
               </button>
             )
           })}
+          {filteredSidebarCategories.length === 0 && (
+            <p className="text-xs text-slate-400 py-2 text-center">No categories found</p>
+          )}
         </div>
       </div>
 
-      {/* ── 2. Multi-Vendor Official Brands ── */}
+      {/* ── 2. Multi-Vendor Official Brands / Boutiques with Search ── */}
       {topShops.length > 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-          <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
-            <Store className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques')}
-          </h4>
-          <div className="space-y-1 max-h-52 overflow-y-auto pr-1">
-            {topShops.map((shop) => {
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques')}
+            </h4>
+            {selectedVendor && (
+              <button
+                type="button"
+                onClick={() => setSelectedVendor('')}
+                className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Store Inline Search Box */}
+          <div className="relative mb-2.5">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={storeSearch}
+              onChange={(e) => setStoreSearch(e.target.value)}
+              placeholder="Search stores & boutiques..."
+              className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {storeSearch && (
+              <button
+                type="button"
+                onClick={() => setStoreSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            {filteredSidebarShops.map((shop) => {
               const sId = String(shop.id)
               const isChecked = selectedVendor === sId
               const vendorCount = products.filter(p => String(p.vendorId ?? '') === sId).length
               return (
                 <label
                   key={shop.id}
-                  className="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 cursor-pointer text-xs"
+                  className="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => setSelectedVendor(isChecked ? '' : sId)}
-                      className="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5 accent-indigo-600 cursor-pointer"
+                      className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 accent-blue-600 cursor-pointer"
                     />
-                    <span className={`truncate text-xs ${isChecked ? 'font-black text-indigo-600' : 'text-slate-700 font-medium'}`}>
+                    <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
                       {shop.businessName || shop.username}
                     </span>
                   </div>
@@ -1173,13 +1302,67 @@ const ProductCatalog = ({
                 </label>
               )
             })}
+            {filteredSidebarShops.length === 0 && (
+              <p className="text-xs text-slate-400 py-2 text-center">No stores found</p>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── 3. Price Filter (Slider & Inputs) ── */}
-      <div className="border-t border-slate-100 pt-4">
-        <h4 className="font-extrabold text-slate-900 mb-2 text-xs uppercase tracking-wider">
+      {/* ── 3. Dietary & Kitchen Lifestyle (Food & Restaurant delivery) ── */}
+      <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+        <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+          <Utensils className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Food & Kitchen Lifestyle</span>
+        </h4>
+
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600">
+          <input
+            type="checkbox"
+            checked={onlyHalal}
+            onChange={(e) => setOnlyHalal(e.target.checked)}
+            className="rounded accent-emerald-600 h-3.5 w-3.5 cursor-pointer"
+          />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+              🥩 100% Halal
+            </span>
+            <span>Halal Certified Only</span>
+          </div>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600">
+          <input
+            type="checkbox"
+            checked={onlyVeg}
+            onChange={(e) => setOnlyVeg(e.target.checked)}
+            className="rounded accent-emerald-600 h-3.5 w-3.5 cursor-pointer"
+          />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+              🌱 Pure Veg
+            </span>
+            <span>Vegetarian Dishes</span>
+          </div>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600">
+          <input
+            type="checkbox"
+            checked={onlyFastPrep}
+            onChange={(e) => setOnlyFastPrep(e.target.checked)}
+            className="rounded accent-emerald-600 h-3.5 w-3.5 cursor-pointer"
+          />
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <span>Fast Kitchen Prep (&lt; 20m)</span>
+          </div>
+        </label>
+      </div>
+
+      {/* ── 4. Price Filter (Slider & Inputs) ── */}
+      <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+        <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider">
           Price Range (PKR)
         </h4>
         <div className="space-y-2">
@@ -1191,7 +1374,7 @@ const ProductCatalog = ({
               value={priceRange.min}
               onChange={(e) => setPriceRange({ ...priceRange, min: Math.max(0, Number(e.target.value)) })}
               placeholder="Min"
-              className="w-1/2 p-1.5 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-indigo-500 font-semibold"
+              className="w-1/2 p-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-blue-500 font-semibold"
             />
             <span className="text-slate-400 font-bold">-</span>
             <input
@@ -1201,7 +1384,7 @@ const ProductCatalog = ({
               value={priceRange.max}
               onChange={(e) => setPriceRange({ ...priceRange, max: Math.max(0, Number(e.target.value)) })}
               placeholder="Max"
-              className="w-1/2 p-1.5 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-indigo-500 font-semibold"
+              className="w-1/2 p-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-blue-500 font-semibold"
             />
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -1215,7 +1398,7 @@ const ProductCatalog = ({
                 key={i}
                 type="button"
                 onClick={() => setPriceRange({ min: pill.min, max: pill.max })}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 transition-colors"
+                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
               >
                 {pill.label}
               </button>
@@ -1224,18 +1407,18 @@ const ProductCatalog = ({
         </div>
       </div>
 
-      {/* ── 4. Customer Rating & Express Delivery ── */}
-      <div className="border-t border-slate-100 pt-4 space-y-2">
-        <h4 className="font-extrabold text-slate-900 mb-1 text-xs uppercase tracking-wider">
+      {/* ── 5. Customer Rating, Deals & Express Delivery ── */}
+      <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+        <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-1 text-xs uppercase tracking-wider">
           Service & Rating
         </h4>
 
-        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-indigo-600">
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
           <input
             type="checkbox"
             checked={onlyHighRating}
             onChange={(e) => setOnlyHighRating(e.target.checked)}
-            className="rounded accent-indigo-600 h-3.5 w-3.5"
+            className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
           />
           <div className="flex items-center gap-1">
             <span className="flex text-amber-500"><Star className="w-3.5 h-3.5 fill-current" /></span>
@@ -1243,12 +1426,12 @@ const ProductCatalog = ({
           </div>
         </label>
 
-        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-indigo-600">
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
           <input
             type="checkbox"
             checked={onlyDeals}
             onChange={(e) => setOnlyDeals(e.target.checked)}
-            className="rounded accent-indigo-600 h-3.5 w-3.5"
+            className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
           />
           <div className="flex items-center gap-1">
             <Percent className="w-3.5 h-3.5 text-rose-500" />
@@ -1256,12 +1439,12 @@ const ProductCatalog = ({
           </div>
         </label>
 
-        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-indigo-600">
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
           <input
             type="checkbox"
             checked={onlyFreeDelivery}
             onChange={(e) => setOnlyFreeDelivery(e.target.checked)}
-            className="rounded accent-indigo-600 h-3.5 w-3.5"
+            className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
           />
           <div className="flex items-center gap-1">
             <Truck className="w-3.5 h-3.5 text-emerald-600" />
@@ -1269,21 +1452,34 @@ const ProductCatalog = ({
           </div>
         </label>
 
-        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 hover:text-indigo-600">
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
           <input
             type="checkbox"
             checked={onlyInStock}
             onChange={(e) => setOnlyInStock(e.target.checked)}
-            className="rounded accent-indigo-600 h-3.5 w-3.5"
+            className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
           />
           <div className="flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
             <span>In Stock Only</span>
           </div>
         </label>
+
+        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
+          <input
+            type="checkbox"
+            checked={onlyBrandWarranty}
+            onChange={(e) => setOnlyBrandWarranty(e.target.checked)}
+            className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
+          />
+          <div className="flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+            <span>Official Brand Warranty</span>
+          </div>
+        </label>
       </div>
 
-      {/* ── 5. Dynamic Brand Multi-Select Facet ── */}
+      {/* ── 6. Dynamic Brand Multi-Select Facet with Search ── */}
       {availableBrands.length > 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
           <div className="flex items-center justify-between mb-2">
@@ -1294,14 +1490,36 @@ const ProductCatalog = ({
               <button
                 type="button"
                 onClick={() => setSelectedBrands([])}
-                className="text-[11px] font-bold text-blue-600 hover:underline"
+                className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
               >
                 Clear
               </button>
             )}
           </div>
+
+          {/* Brands Inline Search Box */}
+          <div className="relative mb-2.5">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={brandSearch}
+              onChange={(e) => setBrandSearch(e.target.value)}
+              placeholder="Search brands..."
+              className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {brandSearch && (
+              <button
+                type="button"
+                onClick={() => setBrandSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
           <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-            {availableBrands.map((b) => {
+            {filteredSidebarBrands.map((b) => {
               const isChecked = selectedBrands.includes(b.name)
               return (
                 <label
@@ -1319,7 +1537,7 @@ const ProductCatalog = ({
                       }}
                       className="rounded accent-blue-600 h-3.5 w-3.5 cursor-pointer"
                     />
-                    <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
+                    <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
                       {b.name}
                     </span>
                   </div>
@@ -1327,11 +1545,14 @@ const ProductCatalog = ({
                 </label>
               )
             })}
+            {filteredSidebarBrands.length === 0 && (
+              <p className="text-xs text-slate-400 py-2 text-center">No brands found</p>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── 6. Dynamic Color Swatches Facet ── */}
+      {/* ── 7. Dynamic Color Swatches Facet ── */}
       {availableColors.length > 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
           <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider">
@@ -1349,7 +1570,7 @@ const ProductCatalog = ({
                       isSelected ? prev.filter(x => x !== c.name) : [...prev, c.name]
                     )
                   }}
-                  className={`px-2.5 py-1 rounded-none text-[11px] font-bold transition-all border ${
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
                     isSelected
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'

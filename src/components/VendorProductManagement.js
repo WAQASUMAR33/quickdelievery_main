@@ -39,6 +39,8 @@ import ToggleButton     from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
+import Switch           from '@mui/material/Switch'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import toast            from 'react-hot-toast'
 
 import AddIcon                  from '@mui/icons-material/Add'
@@ -104,8 +106,22 @@ const VendorProductManagement = () => {
     variations: {}, sizeName: '', modelNumber: '', productDimensions: '',
     packageWeight: '', salePrice: '', saleStartDate: '', saleEndDate: '',
     currency: 'USD', conditionType: '', warranty: '', ingredients: '',
-    reviews: [], size: '', customSize: '', color: '', customColor: ''
+    reviews: [], size: '', customSize: '', color: '', customColor: '',
+    // Food & Dining specific
+    isHalal: true,
+    isVeg: false,
+    prepTime: '20',
+    calories: '',
+    servings: '1-2 Persons',
+    spiceLevel: 'Medium',
+    addons: [],
+    // Retail & Protection (Amazon / Daraz)
+    warrantyType: '1 Year Brand Warranty',
+    returnPolicy: '7 Days Replacement',
+    isAuthenticGuaranteed: true,
   })
+
+  const [newAddon, setNewAddon] = useState({ name: '', price: '' })
 
   const predefinedColors = [
     { name: 'Black',  hex: '#000000' }, { name: 'White',  hex: '#FFFFFF' },
@@ -165,6 +181,14 @@ const VendorProductManagement = () => {
     if (!selectedProduct) return
     try {
       const selectedCat = categories.find(c => String(c.id) === String(formData.catId))
+
+      // Build structured variations payload from valid add-ons / modifiers
+      const validAddons = Array.isArray(formData.addons)
+        ? formData.addons.filter(a => a && a.name && a.name.trim() && a.price !== '')
+        : []
+
+      const variationsPayload = validAddons.length > 0 ? validAddons : null
+
       const res = await authFetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -193,7 +217,7 @@ const VendorProductManagement = () => {
           conditionType:     !isRestaurant ? (formData.conditionType || null) : null,
           productDimensions: !isRestaurant ? (formData.productDimensions || null) : null,
           packageWeight:     !isRestaurant ? (formData.packageWeight || null) : null,
-          warranty:          !isRestaurant ? (formData.warranty || null) : null,
+          warranty:          !isRestaurant ? (formData.warrantyType || formData.warranty || null) : null,
           size:              !isRestaurant ? (formData.size || null) : null,
           color:             !isRestaurant ? (formData.color || null) : null,
           keyFeatures:       formData.keyFeatures?.filter(Boolean) || [],
@@ -202,6 +226,7 @@ const VendorProductManagement = () => {
           saleStartDate:     formData.saleStartDate || null,
           saleEndDate:       formData.saleEndDate || null,
           currency:          formData.currency || 'PKR',
+          variations:        variationsPayload,
         }),
       })
       const r = await res.json()
@@ -242,6 +267,23 @@ const VendorProductManagement = () => {
       initialCatId = match ? String(match.id) : String(product.catId)
     }
 
+    // Parse existing variations / add-ons
+    let parsedAddons = []
+    if (product.variations) {
+      try {
+        const v = typeof product.variations === 'string' ? JSON.parse(product.variations) : product.variations
+        if (Array.isArray(v)) {
+          parsedAddons = v.map(item => ({
+            name: item.name || item.title || '',
+            price: item.price != null ? item.price.toString() : '0',
+          }))
+        }
+      } catch {}
+    }
+
+    const isFood = isRestaurant || ['burger', 'pizza', 'sandwich', 'biryani', 'pasta', 'bbq', 'deal', 'meal', 'platter'].some(k => (product.proName || '').toLowerCase().includes(k))
+    const isVeggie = (product.proName || '').toLowerCase().includes('veg') || (product.ingredients || '').toLowerCase().includes('vegetarian')
+
     setFormData({
       proName: product.proName || '',
       description: product.description || '',
@@ -271,12 +313,28 @@ const VendorProductManagement = () => {
       currency: product.currency || 'PKR',
       conditionType: product.conditionType || '',
       warranty: product.warranty || '',
+      warrantyType: product.warranty || '1 Year Brand Warranty',
+      returnPolicy: '7 Days Replacement',
+      isAuthenticGuaranteed: true,
       ingredients: product.ingredients || '',
       reviews: product.reviews || [],
       size: product.size || '',
       customSize: '',
       color: product.color || '',
       customColor: '',
+      // Food & Dining specific
+      isHalal: product.isHalal !== undefined ? Boolean(product.isHalal) : true,
+      isVeg: product.isVeg !== undefined ? Boolean(product.isVeg) : isVeggie,
+      prepTime: product.prepTime || '20',
+      calories: product.calories || '',
+      servings: product.servings || '1-2 Persons',
+      spiceLevel: product.spiceLevel || 'Medium',
+      addons: parsedAddons.length > 0 ? parsedAddons : (isFood ? [
+        { name: 'Extra Melted Cheddar Cheese', price: '150' },
+        { name: 'Upgrade to Hot Crispy Fries', price: '220' },
+        { name: 'Artisan Garlic Truffle Dip', price: '80' },
+        { name: 'Chilled Soft Drink Can (330ml)', price: '120' },
+      ] : []),
     })
     setShowEditModal(true)
   }
@@ -456,6 +514,21 @@ const VendorProductManagement = () => {
                     <Typography variant="body2" fontWeight={600}>{product.proName}</Typography>
                     <Typography variant="caption" color="text.secondary" display="block">{product.category?.name} — {product.subCategory?.subCatName}</Typography>
                     <Typography variant="caption" color="text.disabled">SKU: {product.sku}</Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                      {isRestaurant ? (
+                        <>
+                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
+                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                        </>
+                      ) : (
+                        <>
+                          {product.brandName && (
+                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                          )}
+                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                        </>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">{product.category?.name}</Typography>
@@ -520,6 +593,23 @@ const VendorProductManagement = () => {
                   <Typography variant="subtitle1" fontWeight={700}>{product.proName}</Typography>
                   <Typography variant="caption" color="text.secondary">{product.category?.name} — {product.subCategory?.subCatName}</Typography>
                   <Typography variant="caption" color="text.disabled" display="block">SKU: {product.sku}</Typography>
+
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
+                    {isRestaurant ? (
+                      <>
+                        <Chip label="🥩 100% Halal" size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
+                        <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                      </>
+                    ) : (
+                      <>
+                        {product.brandName && (
+                          <Chip label={product.brandName} size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                        )}
+                        <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                      </>
+                    )}
+                  </Box>
+
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
                     <Typography variant="h6" fontWeight={700}>Rs. {product.price}</Typography>
                     <ApprovalChip status={product.approvalStatus} />
@@ -542,6 +632,21 @@ const VendorProductManagement = () => {
                     <Typography variant="body1" fontWeight={600}>{product.proName}</Typography>
                     <Typography variant="caption" color="text.secondary">{product.category?.name} — {product.subCategory?.subCatName}</Typography>
                     <Typography variant="caption" color="text.disabled" display="block">SKU: {product.sku}</Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                      {isRestaurant ? (
+                        <>
+                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
+                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                        </>
+                      ) : (
+                        <>
+                          {product.brandName && (
+                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                          )}
+                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                        </>
+                      )}
+                    </Box>
                   </Box>
                   <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
                     <Typography variant="h6" fontWeight={700}>Rs. {product.price}</Typography>
@@ -803,15 +908,218 @@ const VendorProductManagement = () => {
               </Box>
             </Card>
 
-            {/* ── SECTION 2: Specifications & Attributes (Only for Shop / Retail Vendors) ── */}
+            {/* ── SECTION 2A: Restaurant Kitchen & Dietary Specifications (Food Vendors) ── */}
+            {isRestaurant && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  Kitchen, Dietary & Recipe Settings
+                </Typography>
+
+                {/* Dietary Switches */}
+                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3, p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={Boolean(formData.isHalal)}
+                        onChange={e => setFormData({ ...formData, isHalal: e.target.checked })}
+                        color="success"
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" fontWeight={800} color="#166534">
+                          🥩 100% Halal Certified
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          (Displays Halal verification badge on storefront)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={Boolean(formData.isVeg)}
+                        onChange={e => setFormData({ ...formData, isVeg: e.target.checked })}
+                        color="success"
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" fontWeight={800} color="#166534">
+                          🌱 Pure Vegetarian Dish
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          (Highlights as green vegetarian selection)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
+                  <TextField
+                    size="small" fullWidth label="Kitchen Prep Time" placeholder="e.g. 20" value={formData.prepTime || '20'}
+                    onChange={e => setFormData({ ...formData, prepTime: e.target.value })}
+                    InputProps={{ endAdornment: <InputAdornment position="end">Mins</InputAdornment> }}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <TextField
+                    size="small" fullWidth label="Calories" placeholder="e.g. 450" value={formData.calories || ''}
+                    onChange={e => setFormData({ ...formData, calories: e.target.value })}
+                    InputProps={{ endAdornment: <InputAdornment position="end">kcal</InputAdornment> }}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <TextField
+                    size="small" fullWidth label="Portion / Servings" placeholder="e.g. 1-2 Persons" value={formData.servings || '1-2 Persons'}
+                    onChange={e => setFormData({ ...formData, servings: e.target.value })}
+                    sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
+                    <InputLabel>Spice Level</InputLabel>
+                    <Select
+                      value={formData.spiceLevel || 'Medium'}
+                      label="Spice Level"
+                      onChange={e => setFormData({ ...formData, spiceLevel: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      <MenuItem value="Mild">Mild 🟢</MenuItem>
+                      <MenuItem value="Medium">Medium 🟡</MenuItem>
+                      <MenuItem value="Hot">Hot 🔴</MenuItem>
+                      <MenuItem value="Extra Hot">Extra Hot 🔥</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Card>
+            )}
+
+            {/* ── SECTION 2B: Food Add-ons & Modifiers (Amazon / Food Delivery Customizer) ── */}
+            {isRestaurant && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight={700} color="#111827" sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                    Food Add-ons & Modifiers (Customizer)
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Customers can customize their order by adding extras
+                  </Typography>
+                </Box>
+
+                {/* Existing Add-ons List */}
+                <Stack spacing={1.5} sx={{ mb: 2.5 }}>
+                  {(formData.addons || []).map((addon, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        p: 1.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="body2" fontWeight={700} color="#111827">
+                          {addon.name}
+                        </Typography>
+                        <Chip
+                          label={`+ Rs. ${parseFloat(addon.price || 0).toLocaleString()}`}
+                          size="small"
+                          sx={{ height: 22, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af', borderRadius: 0 }}
+                        />
+                      </Box>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          const updated = (formData.addons || []).filter((_, idx) => idx !== index)
+                          setFormData({ ...formData, addons: updated })
+                        }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                  {(!formData.addons || formData.addons.length === 0) && (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                      No custom add-ons configured yet. Add modifiers like extra cheese, dips, or drinks below.
+                    </Typography>
+                  )}
+                </Stack>
+
+                {/* Add New Add-on Input Row */}
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' }, alignItems: 'center', pt: 1, borderTop: '1px dashed', borderColor: 'divider' }}>
+                  <TextField
+                    size="small"
+                    label="Add-on Name"
+                    placeholder="e.g. Extra Cheddar Cheese, Garlic Mayo Dip"
+                    value={newAddon.name}
+                    onChange={e => setNewAddon({ ...newAddon, name: e.target.value })}
+                    sx={{ flex: 2, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <TextField
+                    size="small"
+                    label="Extra Price (Rs.)"
+                    type="number"
+                    placeholder="e.g. 150"
+                    value={newAddon.price}
+                    onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
+                    sx={{ flex: 1, minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      if (!newAddon.name.trim() || !newAddon.price) {
+                        toast.error('Please enter add-on name and price')
+                        return
+                      }
+                      setFormData({
+                        ...formData,
+                        addons: [...(formData.addons || []), { name: newAddon.name.trim(), price: newAddon.price }]
+                      })
+                      setNewAddon({ name: '', price: '' })
+                      toast.success('Add-on added')
+                    }}
+                    sx={{ bgcolor: BRAND, '&:hover': { bgcolor: BRAND_DARK }, borderRadius: 0, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap', py: 1 }}
+                  >
+                    Add Option
+                  </Button>
+                </Box>
+              </Card>
+            )}
+
+            {/* ── SECTION 2C: Specifications & Attributes (Only for Shop / Retail Vendors) ── */}
             {!isRestaurant && (
               <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
                 <Typography variant="subtitle1" fontWeight={700} color="#111827" mb={2.5} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
-                  Specifications & Attributes
+                  Specifications, Warranty & Return Policy (Amazon / Daraz Standard)
                 </Typography>
+
+                <Box sx={{ mb: 2.5, p: 2, bgcolor: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={Boolean(formData.isAuthenticGuaranteed)}
+                        onChange={e => setFormData({ ...formData, isAuthenticGuaranteed: e.target.checked })}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" fontWeight={800} color="#1e40af">
+                          🛡️ 100% Genuine Sealed Box Authenticity Guarantee
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          (Amazon Verified / Daraz Mall Authenticity Badge)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Box>
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2.5 }}>
                   <TextField
-                    size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung" value={formData.brandName}
+                    size="small" fullWidth label="Brand Name" placeholder="e.g. Nike, Samsung, Sony" value={formData.brandName}
                     onChange={e => setFormData({ ...formData, brandName: e.target.value })}
                     sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
@@ -851,18 +1159,14 @@ const VendorProductManagement = () => {
                   <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0 }}>
                     <InputLabel>Condition</InputLabel>
                     <Select
-                      value={formData.conditionType || ''}
+                      value={formData.conditionType || 'New'}
                       label="Condition"
                       onChange={e => setFormData({ ...formData, conditionType: e.target.value })}
                       sx={{ borderRadius: 0 }}
                     >
-                      <MenuItem value=""><em>Select Condition</em></MenuItem>
                       {['New', 'Used', 'Refurbished', 'Open Box'].map(c => (
                         <MenuItem key={c} value={c}>{c}</MenuItem>
                       ))}
-                      {formData.conditionType && !['New', 'Used', 'Refurbished', 'Open Box'].some(c => c.toLowerCase() === formData.conditionType.toLowerCase()) && (
-                        <MenuItem value={formData.conditionType}>{formData.conditionType}</MenuItem>
-                      )}
                     </Select>
                   </FormControl>
                   <TextField
@@ -876,30 +1180,42 @@ const VendorProductManagement = () => {
                     sx={{ width: '100%', minWidth: 0, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
 
-                  <TextField
-                    size="small" fullWidth label="Warranty" placeholder="e.g. 1 Year Official Warranty" value={formData.warranty}
-                    onChange={e => setFormData({ ...formData, warranty: e.target.value })}
-                    sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' }, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-                  />
+                  {/* Amazon / Daraz Warranty Type Selector */}
                   <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
-                    <InputLabel>Currency</InputLabel>
+                    <InputLabel>Warranty Coverage (Amazon / Daraz)</InputLabel>
                     <Select
-                      value={formData.currency || 'PKR'}
-                      label="Currency"
-                      onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                      value={formData.warrantyType || formData.warranty || '1 Year Brand Warranty'}
+                      label="Warranty Coverage (Amazon / Daraz)"
+                      onChange={e => setFormData({ ...formData, warrantyType: e.target.value, warranty: e.target.value })}
                       sx={{ borderRadius: 0 }}
                     >
                       {[
-                        { v: 'PKR', l: 'PKR — Pakistani Rupee' },
-                        { v: 'USD', l: 'USD — US Dollar' },
-                        { v: 'AED', l: 'AED — UAE Dirham' },
-                        { v: 'SAR', l: 'SAR — Saudi Riyal' },
-                        { v: 'GBP', l: 'GBP — British Pound' },
-                        { v: 'EUR', l: 'EUR — Euro' },
-                      ].map(c => <MenuItem key={c.v} value={c.v}>{c.l}</MenuItem>)}
-                      {formData.currency && !['PKR', 'USD', 'AED', 'SAR', 'GBP', 'EUR'].includes(formData.currency) && (
-                        <MenuItem value={formData.currency}>{formData.currency}</MenuItem>
-                      )}
+                        '1 Year Official Brand Warranty',
+                        '2 Years Official Brand Warranty',
+                        '6 Months Brand Warranty',
+                        '3 Months Seller Warranty',
+                        '7 Days Replacement Warranty',
+                        '7 Days Checking Warranty',
+                        'No Warranty',
+                      ].map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  {/* Amazon / Daraz Return Policy Selector */}
+                  <FormControl size="small" fullWidth sx={{ width: '100%', minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'span 2' } }}>
+                    <InputLabel>Return & Resolution Policy</InputLabel>
+                    <Select
+                      value={formData.returnPolicy || '7 Days Replacement'}
+                      label="Return & Resolution Policy"
+                      onChange={e => setFormData({ ...formData, returnPolicy: e.target.value })}
+                      sx={{ borderRadius: 0 }}
+                    >
+                      {[
+                        '7 Days Free Return / Refund',
+                        '14 Days Replacement Guarantee',
+                        '30 Days Buyer Protection',
+                        'Non-Returnable (Hygiene / Perishable)',
+                      ].map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
                     </Select>
                   </FormControl>
                 </Box>
