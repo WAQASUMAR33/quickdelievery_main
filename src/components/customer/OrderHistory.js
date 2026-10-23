@@ -308,7 +308,7 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="w-full space-y-6 pb-12">
       {/* ── Page Header ── */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
         <div>

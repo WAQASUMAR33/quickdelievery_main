@@ -1617,7 +1617,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
             
             {/* 1. Description */}
             {activeTab === 'description' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full max-w-5xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full">
                 <div>
                   <h3 className="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-2">
                     Product Description
@@ -1647,7 +1647,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 2. Supplier & Kitchen Info (PROMINENT WITH IMAGE & BANNER) */}
             {activeTab === 'vendor' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-6">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-6">
                 <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-none overflow-hidden">
                   
                   {/* Supplier Header Cover Photo */}
@@ -1752,7 +1752,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 3. Specifications */}
             {activeTab === 'specs' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-3">
                   Technical Specifications & Record
                 </h3>
@@ -1778,7 +1778,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
             {/* 4. Customer Reviews */}
             {activeTab === 'reviews' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full max-w-5xl">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 w-full">
                 
                 {/* Rating Overview Box */}
                 <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 items-center rounded-none">

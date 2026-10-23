@@ -316,7 +316,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="w-full px-3 sm:px-6 lg:px-8 xl:px-12 py-4 sm:py-6">
       
       {/* ── Top Header & Breadcrumb ── */}
       <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/80 dark:border-slate-800">

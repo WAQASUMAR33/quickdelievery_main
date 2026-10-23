@@ -203,7 +203,7 @@ export default function VendorAnalytics({ vendorId }) {
   }
 
   return (
-    <Box sx={{ pb: 6, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ pb: 6, width: '100%' }}>
       {/* ════════════════════════ 1. EXECUTIVE STORE HEADER ════════════════════════ */}
       <Paper
         elevation={0}

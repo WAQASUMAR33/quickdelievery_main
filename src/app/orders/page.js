@@ -7,7 +7,7 @@ import { ArrowLeft, ShoppingBag } from 'lucide-react'
 export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 md:p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full">
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/customer"
