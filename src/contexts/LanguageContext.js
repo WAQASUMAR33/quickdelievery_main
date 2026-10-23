@@ -74,19 +74,19 @@ const translations = {
     exploreAllDrops: 'EXPLORE ALL DROPS',
 
     // Boutiques section
-    verifiedBoutiques: 'Verified Brand Boutiques',
-    genuineBrandsSubtitle: '100% genuine brands & verified multi-vendor storefronts',
+    verifiedBoutiques: 'Featured Stores & Restaurants',
+    genuineBrandsSubtitle: '100% verified merchants, restaurants & supermarkets',
     verified: 'Verified',
     productsCount: 'Products',
-    visitBoutique: 'Visit Boutique →',
-    viewingBoutique: 'Viewing Boutique',
+    visitBoutique: 'Visit Store →',
+    viewingBoutique: 'Viewing Store',
 
     // Filter sidebar
     filterCatalog: 'Filter Catalog',
     resetAll: 'Reset all',
     departments: 'Departments',
     allDepartments: 'All Departments',
-    officialBoutiques: 'Official Boutiques',
+    officialBoutiques: 'Featured Stores & Restaurants',
     priceRangePkr: 'Price Range (PKR)',
     serviceRating: 'Service & Rating',
     starsAbove: '4.0 Stars & Above',
@@ -210,8 +210,8 @@ const translations = {
     exploreAllDrops: 'عرض كل التخفيضات',
 
     // Boutiques section
-    verifiedBoutiques: 'المتاجر والماركات المعتمدة',
-    genuineBrandsSubtitle: 'علامات تجارية أصلية 100% ومتاجر متعددة البائعين موثقة',
+    verifiedBoutiques: 'المتاجر والمطاعم المميزة',
+    genuineBrandsSubtitle: 'متاجر ومطاعم وسوبرماركت معتمدة 100%',
     verified: 'معتمد',
     productsCount: 'منتجات',
     visitBoutique: 'زيارة المتجر ←',
@@ -222,7 +222,7 @@ const translations = {
     resetAll: 'إعادة ضبط',
     departments: 'الأقسام',
     allDepartments: 'جميع الأقسام',
-    officialBoutiques: 'المتاجر الرسمية',
+    officialBoutiques: 'المتاجر والمطاعم المميزة',
     priceRangePkr: 'نطاق السعر (روبية)',
     serviceRating: 'الخدمة والتقييم',
     starsAbove: '4.0 نجوم فأكثر',
@@ -346,19 +346,19 @@ const translations = {
     exploreAllDrops: 'TOUTES LES OFFRES',
 
     // Boutiques section
-    verifiedBoutiques: 'Boutiques & Marques Officielles',
-    genuineBrandsSubtitle: '100% marques d’origine et vendeurs certifiés',
+    verifiedBoutiques: 'Commerces & Restaurants Partenaires',
+    genuineBrandsSubtitle: 'Commerçants, restaurants et supermarchés 100% vérifiés',
     verified: 'Vérifié',
     productsCount: 'Produits',
-    visitBoutique: 'Visiter la Boutique →',
-    viewingBoutique: 'Boutique en cours',
+    visitBoutique: 'Visiter le commerce →',
+    viewingBoutique: 'Commerce actif',
 
     // Filter sidebar
     filterCatalog: 'Filtrer le Catalogue',
     resetAll: 'Réinitialiser',
     departments: 'Rayons',
     allDepartments: 'Tous les rayons',
-    officialBoutiques: 'Boutiques Officielles',
+    officialBoutiques: 'Commerces & Restaurants Partenaires',
     priceRangePkr: 'Prix (PKR)',
     serviceRating: 'Services & Notes',
     starsAbove: '4.0 étoiles & plus',
@@ -482,19 +482,19 @@ const translations = {
     exploreAllDrops: 'TUTTE LE OFFERTE',
 
     // Boutiques section
-    verifiedBoutiques: 'Boutique & Brand Ufficiali',
-    genuineBrandsSubtitle: '100% marchi autentici e venditori accreditati',
+    verifiedBoutiques: 'Negozi e Ristoranti in Evidenza',
+    genuineBrandsSubtitle: '100% commercianti, ristoranti e supermercati verificati',
     verified: 'Verificato',
     productsCount: 'Prodotti',
-    visitBoutique: 'Visita Boutique →',
-    viewingBoutique: 'Boutique Attiva',
+    visitBoutique: 'Visita negozio →',
+    viewingBoutique: 'Negozio attivo',
 
     // Filter sidebar
     filterCatalog: 'Filtra Catalogo',
     resetAll: 'Reimposta',
     departments: 'Reparti',
     allDepartments: 'Tutti i reparti',
-    officialBoutiques: 'Boutique Ufficiali',
+    officialBoutiques: 'Negozi e Ristoranti in Evidenza',
     priceRangePkr: 'Prezzo (PKR)',
     serviceRating: 'Servizi & Valutazioni',
     starsAbove: 'Da 4.0 Stelle in su',

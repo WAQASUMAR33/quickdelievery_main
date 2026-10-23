@@ -62,6 +62,16 @@ function idsEqual(a, b) {
   return Number.isFinite(na) && Number.isFinite(nb) && na === nb
 }
 
+function productMatchesShop(product, shop) {
+  if (!product || !shop) return false
+  const pVendor = String(product.vendorId ?? '').trim().toLowerCase()
+  if (!pVendor) return false
+  if (shop.uid && pVendor === String(shop.uid).trim().toLowerCase()) return true
+  if (shop.email && pVendor === String(shop.email).trim().toLowerCase()) return true
+  if (shop.id && pVendor === String(shop.id).trim().toLowerCase()) return true
+  return false
+}
+
 function mergeProductRelationIds(p) {
   if (!p || typeof p !== 'object') return p
   return {
@@ -658,7 +668,15 @@ const ProductCatalog = ({
 
       const matchesCategory = selectedCategory == null || idsEqual(productCatId, selectedCategory)
       const matchesSubcategory = selectedSubcategory == null || idsEqual(productSubId, selectedSubcategory)
-      const matchesVendor = !selectedVendor || String(product.vendorId ?? '') === String(selectedVendor)
+      let matchesVendor = true
+      if (selectedVendor) {
+        const targetShop = topShops.find(s => String(s.id) === String(selectedVendor) || String(s.uid) === String(selectedVendor))
+        if (targetShop) {
+          matchesVendor = productMatchesShop(product, targetShop)
+        } else {
+          matchesVendor = String(product.vendorId ?? '') === String(selectedVendor)
+        }
+      }
 
       const price = parseFloat(product.salePrice || product.price) || 0
       const matchesPrice = price >= priceRange.min && price <= priceRange.max
@@ -718,6 +736,7 @@ const ProductCatalog = ({
     onlyVeg,
     onlyFastPrep,
     onlyBrandWarranty,
+    topShops,
   ])
 
   // Sort products
@@ -1322,7 +1341,7 @@ const ProductCatalog = ({
               type="text"
               value={storeSearch}
               onChange={(e) => setStoreSearch(e.target.value)}
-              placeholder="Search stores & boutiques..."
+              placeholder="Search stores & restaurants..."
               className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
             {storeSearch && (
@@ -1340,7 +1359,7 @@ const ProductCatalog = ({
             {filteredSidebarShops.map((shop) => {
               const sId = String(shop.id)
               const isChecked = selectedVendor === sId
-              const vendorCount = products.filter(p => String(p.vendorId ?? '') === sId).length
+              const vendorCount = products.filter(p => productMatchesShop(p, shop)).length
               return (
                 <label
                   key={shop.id}
@@ -1809,16 +1828,16 @@ const ProductCatalog = ({
             <div>
               <div className="flex items-center gap-2 mb-2 text-cyan-400">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300">Bespoke Multi-Vendor Mall</span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300">Verified Stores & Restaurants</span>
               </div>
               <h4 className="font-extrabold text-sm text-slate-100 mb-1">
                 100% Authentic Brand Guarantees
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                Verified boutiques:{' '}
+                Verified merchants:{' '}
                 {topShops.length > 0
                   ? topShops.slice(0, 4).map(s => s.businessName || s.username).join(', ')
-                  : 'Official multi-vendor boutiques and verified merchant partners'}.
+                  : 'Official stores, restaurants and verified merchant partners'}.
               </p>
             </div>
 
@@ -1831,7 +1850,7 @@ const ProductCatalog = ({
                 }}
                 className="font-extrabold text-indigo-400 hover:text-indigo-300 hover:underline"
               >
-                View Boutiques →
+                View Stores & Restaurants →
               </button>
             </div>
           </div>
@@ -1992,10 +2011,10 @@ const ProductCatalog = ({
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques')}
+                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques') || 'Featured Stores & Restaurants'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                100% genuine brands & verified multi-vendor storefronts
+                100% verified merchants, restaurants & supermarkets
               </p>
             </div>
 
@@ -2025,7 +2044,7 @@ const ProductCatalog = ({
               const sId = String(shop.id)
               const isSelected = selectedVendor === sId
               const logo = shop.urlLogo || shop.urlCoverPhoto || null
-              const count = products.filter(p => String(p.vendorId ?? '') === sId).length
+              const count = products.filter(p => productMatchesShop(p, shop)).length
 
               return (
                 <button
@@ -2069,7 +2088,7 @@ const ProductCatalog = ({
 
                   <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                     <span className="font-extrabold text-blue-600 dark:text-blue-400 group-hover:underline">
-                      {isSelected ? 'Viewing Boutique' : 'Visit Boutique →'}
+                      {isSelected ? (t('viewingBoutique') || 'Viewing Store') : (t('visitBoutique') || 'Visit Store →')}
                     </span>
                     <span className="text-amber-500 font-extrabold flex items-center gap-0.5">
                       <Star className="w-3 h-3 fill-current" /> 4.9
