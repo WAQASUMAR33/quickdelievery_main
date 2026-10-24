@@ -5,7 +5,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const address = searchParams.get('address')
-    const googleKey = process.env.GOOGLE_GEOCODING_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY || 'AIzaSyAcrb8vKlJwdIpLc3BJUeUxgjwL79P3xfc'
+    const googleKey = process.env.GOOGLE_GEOCODING_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
 
     // 1. IP Geolocation request
     if (type === 'ip') {
