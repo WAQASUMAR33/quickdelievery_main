@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles'
 import ImageUploadField from '@/components/ui/ImageUploadField'
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
+import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber, parsePhoneAndCountry } from '@/lib/countryData'
 
 import AppBar            from '@mui/material/AppBar'
 import Toolbar           from '@mui/material/Toolbar'
@@ -84,8 +85,9 @@ const STEPS = [
 // ─── Initial form state ───────────────────────────────────────────────────────
 const INITIAL = {
   firstName: '', lastName: '', email: '', cnicNo: '', phoneNumber1: '', phoneNumber2: '',
+  country: 'Pakistan',
   businessName: '', categoryId: '', businessCategoryId: '', businessTypeId: '',
-  buildingPlaceName: '', streetAddress: '', houseNumber: '', state: '', city: '', postalCode: '',
+  buildingPlaceName: '', streetAddress: '', houseNumber: '', state: 'Punjab', city: '', postalCode: '',
   urlCnicFront: '', urlCnicBack: '', ntnNo: '',
   bankName: '', bankIbanNo: '', bankAccountTitle: '', billingAddress: '',
   urlLogo: '', urlCoverPhoto: '', urlRestaurantImages: '',
@@ -167,6 +169,12 @@ function BusinessRegisterInner() {
   const [categories,         setCategories]         = useState([])
   const [businessCategories, setBusinessCategories] = useState([])
 
+  // ── Country, State & Phone Formatting State ───────────────────────────────────
+  const [selectedCountry, setSelectedCountry] = useState(getCountry('PK'))
+  const [phone1Local,     setPhone1Local]     = useState('')
+  const [phone2Local,     setPhone2Local]     = useState('')
+  const [isCustomState,   setIsCustomState]   = useState(false)
+
   // ── Google Maps state ────────────────────────────────────────────────────────
   const mapRef       = useRef(null)
   const searchBoxRef = useRef(null)
@@ -233,6 +241,15 @@ function BusinessRegisterInner() {
           const nameParts = (u.username || '').trim().split(' ')
           const firstName = nameParts[0] || ''
           const lastName = nameParts.slice(1).join(' ') || ''
+          
+          if (u.phoneNumber) {
+            const parsed = parsePhoneAndCountry(u.phoneNumber, selectedCountry.code)
+            if (parsed.nationalNumber) {
+              setPhone1Local(parsed.nationalNumber)
+              if (parsed.country) setSelectedCountry(parsed.country)
+            }
+          }
+
           setFormData(p => ({
             ...p,
             email: u.email || p.email,
@@ -249,8 +266,21 @@ function BusinessRegisterInner() {
       .then(d => {
         if (d.success && d.data) {
           const b = d.data
+          const c = getCountry(b.country || 'PK')
+          setSelectedCountry(c)
+
+          const p1 = parsePhoneAndCountry(b.phoneNumber1, c.code)
+          const p2 = parsePhoneAndCountry(b.phoneNumber2, c.code)
+          if (p1.nationalNumber) setPhone1Local(p1.nationalNumber)
+          if (p2.nationalNumber) setPhone2Local(p2.nationalNumber)
+
+          if (b.state && !c.states.includes(b.state)) {
+            setIsCustomState(true)
+          }
+
           setFormData(p => ({
             ...p,
+            country: b.country || c.name,
             businessName: b.businessName || p.businessName,
             categoryId: b.categoryId ? String(b.categoryId) : (b.category?.id ? String(b.category.id) : p.categoryId),
             businessCategoryId: b.businessCategoryId ? String(b.businessCategoryId) : p.businessCategoryId,
@@ -263,7 +293,7 @@ function BusinessRegisterInner() {
             buildingPlaceName: b.buildingPlaceName || p.buildingPlaceName,
             streetAddress: b.streetAddress || p.streetAddress,
             houseNumber: b.houseNumber || p.houseNumber,
-            state: b.state || p.state,
+            state: b.state || (c.states[0] || p.state),
             city: b.city || p.city,
             postalCode: b.postalCode || p.postalCode,
             urlCnicFront: b.urlCnicFront || p.urlCnicFront,
@@ -297,11 +327,55 @@ function BusinessRegisterInner() {
     }))
   }
 
+  // ── Country change handler (auto synchronizes dialCode, masks, and state options) ──
+  const handleCountryChange = (e) => {
+    const code = e.target.value
+    const c = getCountry(code)
+    setSelectedCountry(c)
+    setIsCustomState(false)
+
+    // Reformat phone numbers under new country mask
+    const reformat1 = formatNationalPhone(phone1Local, c.code)
+    const reformat2 = formatNationalPhone(phone2Local, c.code)
+    setPhone1Local(reformat1)
+    setPhone2Local(reformat2)
+
+    setFormData(p => ({
+      ...p,
+      country: c.name,
+      state: c.states[0] || '',
+      phoneNumber1: reformat1 ? buildFullPhoneNumber(reformat1, c.code) : '',
+      phoneNumber2: reformat2 ? buildFullPhoneNumber(reformat2, c.code) : '',
+    }))
+  }
+
+  // ── Phone 1 Change handler with live mask formatting ──
+  const handlePhone1Change = (e) => {
+    const raw = e.target.value
+    const formatted = formatNationalPhone(raw, selectedCountry.code)
+    setPhone1Local(formatted)
+    setFormData(p => ({
+      ...p,
+      phoneNumber1: formatted ? buildFullPhoneNumber(formatted, selectedCountry.code) : '',
+    }))
+  }
+
+  // ── Phone 2 Change handler with live mask formatting ──
+  const handlePhone2Change = (e) => {
+    const raw = e.target.value
+    const formatted = formatNationalPhone(raw, selectedCountry.code)
+    setPhone2Local(formatted)
+    setFormData(p => ({
+      ...p,
+      phoneNumber2: formatted ? buildFullPhoneNumber(formatted, selectedCountry.code) : '',
+    }))
+  }
+
   const validateStep = () => {
     const d = formData
     const rules = {
-      1: [d.firstName, d.lastName, d.email, d.cnicNo, d.phoneNumber1],
-      2: [d.businessName, d.categoryId, d.businessCategoryId, d.businessTypeId, d.streetAddress, d.state, d.city, d.postalCode],
+      1: [d.firstName, d.lastName, d.email, d.cnicNo, d.phoneNumber1, d.country],
+      2: [d.businessName, d.categoryId, d.businessCategoryId, d.businessTypeId, d.streetAddress, d.state, d.city, d.postalCode, d.country],
       3: [d.urlCnicFront, d.urlCnicBack],
       4: [d.bankName, d.bankIbanNo, d.bankAccountTitle, d.billingAddress],
       5: [],
@@ -329,6 +403,7 @@ function BusinessRegisterInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email:               formData.email,
+          country:             formData.country || selectedCountry.name,
           businessName:        formData.businessName,
           categoryId:          formData.categoryId ? parseInt(formData.categoryId) : null,
           businessCategoryId:  formData.businessCategoryId ? parseInt(formData.businessCategoryId) : null,
@@ -504,28 +579,79 @@ function BusinessRegisterInner() {
                       }}
                     />
 
+                    {/* Country Selector with Flags */}
+                    <FormControl fullWidth required sx={fieldSx}>
+                      <InputLabel id="country-select-label">Country / Nationality</InputLabel>
+                      <Select
+                        labelId="country-select-label"
+                        name="country"
+                        label="Country / Nationality"
+                        value={selectedCountry.code}
+                        onChange={handleCountryChange}
+                        startAdornment={
+                          <InputAdornment position="start">
+                            <Typography sx={{ fontSize: 20, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                          </InputAdornment>
+                        }
+                      >
+                        {COUNTRIES.map(c => (
+                          <MenuItem key={c.code} value={c.code}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                <Typography sx={{ fontSize: 20, lineHeight: 1 }}>{c.flag}</Typography>
+                                <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
+                              </Box>
+                              <Chip label={c.dialCode} size="small" variant="outlined" sx={{ height: 22, fontSize: 11, fontWeight: 700 }} />
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
                     <TextField
-                      fullWidth label="CNIC Number" name="cnicNo"
+                      fullWidth label="CNIC / National ID" name="cnicNo"
                       value={formData.cnicNo} onChange={onChange}
-                      placeholder="35201-1234567-1" required sx={fieldSx}
+                      placeholder={selectedCountry.code === 'PK' ? "35201-1234567-1" : "National ID or Resident Permit #"} required sx={fieldSx}
                       InputProps={{ startAdornment: adornment(CreditCardOutlinedIcon) }}
                     />
 
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6}>
                         <TextField
-                          fullWidth label="Phone Number 1" name="phoneNumber1" type="tel"
-                          value={formData.phoneNumber1} onChange={onChange}
-                          placeholder="+92 300 1234567" required sx={fieldSx}
-                          InputProps={{ startAdornment: adornment(PhoneOutlinedIcon) }}
+                          fullWidth label="Mobile Phone 1 (Primary)" name="phoneNumber1" type="tel"
+                          value={phone1Local} onChange={handlePhone1Change}
+                          placeholder={selectedCountry.placeholder}
+                          helperText={`Format: ${selectedCountry.dialCode} ${selectedCountry.phoneMask}`}
+                          required sx={fieldSx}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, bgcolor: '#f1f5f9', px: 1, py: 0.4, border: '1px solid #cbd5e1' }}>
+                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#334155' }}>{selectedCountry.dialCode}</Typography>
+                                </Box>
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <TextField
-                          fullWidth label="Phone Number 2 (Optional)" name="phoneNumber2" type="tel"
-                          value={formData.phoneNumber2} onChange={onChange}
-                          placeholder="+92 321 7654321" sx={fieldSx}
-                          InputProps={{ startAdornment: adornment(PhoneOutlinedIcon) }}
+                          fullWidth label="Mobile Phone 2 (Optional)" name="phoneNumber2" type="tel"
+                          value={phone2Local} onChange={handlePhone2Change}
+                          placeholder={selectedCountry.placeholder}
+                          helperText={`Format: ${selectedCountry.dialCode} ${selectedCountry.phoneMask}`}
+                          sx={fieldSx}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, bgcolor: '#f1f5f9', px: 1, py: 0.4, border: '1px solid #cbd5e1' }}>
+                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#334155' }}>{selectedCountry.dialCode}</Typography>
+                                </Box>
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </Grid>
                     </Grid>
@@ -706,21 +832,107 @@ function BusinessRegisterInner() {
 
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={4}>
+                        {/* Country Selector */}
+                        <FormControl fullWidth required sx={fieldSx}>
+                          <InputLabel id="biz-country-select-label">Country / Region</InputLabel>
+                          <Select
+                            labelId="biz-country-select-label"
+                            name="country"
+                            label="Country / Region"
+                            value={selectedCountry.code}
+                            onChange={handleCountryChange}
+                            startAdornment={
+                              <InputAdornment position="start">
+                                <Typography sx={{ fontSize: 18, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                              </InputAdornment>
+                            }
+                          >
+                            {COUNTRIES.map(c => (
+                              <MenuItem key={c.code} value={c.code}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{c.flag}</Typography>
+                                  <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
+                                </Box>
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        {/* Dynamic State / Province Selector */}
+                        {isCustomState ? (
+                          <TextField
+                            fullWidth
+                            label="State / Province"
+                            name="state"
+                            value={formData.state}
+                            onChange={onChange}
+                            placeholder="Enter state or province"
+                            required
+                            sx={fieldSx}
+                            InputProps={{
+                              startAdornment: adornment(PublicOutlinedIcon),
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Button
+                                    size="small"
+                                    onClick={() => {
+                                      setIsCustomState(false)
+                                      if (selectedCountry.states?.length) {
+                                        setFormData(p => ({ ...p, state: selectedCountry.states[0] }))
+                                      }
+                                    }}
+                                    sx={{ textTransform: 'none', fontSize: 11, p: 0.5, minWidth: 0, color: BRAND }}
+                                  >
+                                    List
+                                  </Button>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        ) : (
+                          <FormControl fullWidth required sx={fieldSx}>
+                            <InputLabel id="biz-state-select-label">State / Province</InputLabel>
+                            <Select
+                              labelId="biz-state-select-label"
+                              name="state"
+                              label="State / Province"
+                              value={formData.state}
+                              onChange={(e) => {
+                                if (e.target.value === '__OTHER__') {
+                                  setIsCustomState(true)
+                                  setFormData(p => ({ ...p, state: '' }))
+                                } else {
+                                  setFormData(p => ({ ...p, state: e.target.value }))
+                                }
+                              }}
+                              startAdornment={adornment(PublicOutlinedIcon)}
+                            >
+                              <MenuItem value="" disabled><em>Select state / province…</em></MenuItem>
+                              {(selectedCountry.states || []).map(st => (
+                                <MenuItem key={st} value={st}>{st}</MenuItem>
+                              ))}
+                              <Divider sx={{ my: 0.5 }} />
+                              <MenuItem value="__OTHER__" sx={{ color: BRAND, fontWeight: 700 }}>
+                                + Other / Custom State...
+                              </MenuItem>
+                            </Select>
+                          </FormControl>
+                        )}
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
                         <TextField
                           fullWidth label="City" name="city"
                           value={formData.city} onChange={onChange}
-                          placeholder="Lahore" required sx={fieldSx}
+                          placeholder={selectedCountry.code === 'PK' ? "Lahore" : (selectedCountry.code === 'SA' ? "Riyadh" : "Dubai")} required sx={fieldSx}
                           InputProps={{ startAdornment: adornment(PublicOutlinedIcon) }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          fullWidth label="State / Province" name="state"
-                          value={formData.state} onChange={onChange}
-                          placeholder="Punjab" required sx={fieldSx}
-                          InputProps={{ startAdornment: adornment(PublicOutlinedIcon) }}
-                        />
-                      </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2}>
                       <Grid item xs={12} sm={4}>
                         <TextField
                           fullWidth label="Postal Code" name="postalCode"
@@ -948,6 +1160,8 @@ function BusinessRegisterInner() {
                           ['Business', formData.businessName],
                           ['Owner',    `${formData.firstName} ${formData.lastName}`],
                           ['Email',    formData.email],
+                          ['Phone',    formData.phoneNumber1],
+                          ['Country',  `${selectedCountry.flag} ${formData.country || selectedCountry.name}`],
                           ['Location', `${formData.city}, ${formData.state}`],
                         ].map(([key, val]) => (
                           <Box key={key} sx={{ display: 'flex', gap: 1 }}>

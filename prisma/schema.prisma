@@ -258,6 +258,7 @@ model Business {
   streetAddress       String           @map("street_address") @db.VarChar(500)
   houseNumber         String?          @map("house_number") @db.VarChar(50)
   state               String           @db.VarChar(100)
+  country             String?          @default("Pakistan") @db.VarChar(100)
   city                String           @db.VarChar(100)
   postalCode          String           @map("postal_code") @db.VarChar(20)
   urlCnicFront        String           @map("url_cnic_front") @db.VarChar(500)

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
 import toast from 'react-hot-toast'
+import { getCountry } from '@/lib/countryData'
 
 import Alert            from '@mui/material/Alert'
 import Avatar           from '@mui/material/Avatar'
@@ -414,7 +415,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                     <PhoneOutlinedIcon sx={{ fontSize: 16 }} /> {business.phoneNumber1}
                   </Box>
                   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                    <LocationOnOutlinedIcon sx={{ fontSize: 16 }} /> {business.city}, {business.state}
+                    <LocationOnOutlinedIcon sx={{ fontSize: 16 }} /> {getCountry(business.country || 'Pakistan').flag} {business.city ? `${business.city}, ` : ''}{business.state || ''}{business.country ? `, ${business.country}` : ''}
                   </Box>
                 </Typography>
               </Box>
@@ -520,11 +521,20 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
                   </Grid>
                 </Grid>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <TextField {...tfReadOnly} fullWidth label="City" value={business.city || '—'} InputProps={{ readOnly: true }} />
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      {...tfReadOnly}
+                      fullWidth
+                      label="Country / Region"
+                      value={`${getCountry(business.country || 'Pakistan').flag} ${business.country || 'Pakistan'}`}
+                      InputProps={{ readOnly: true }}
+                    />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12} sm={4}>
                     <TextField {...tfReadOnly} fullWidth label="State / Province" value={business.state || '—'} InputProps={{ readOnly: true }} />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField {...tfReadOnly} fullWidth label="City" value={business.city || '—'} InputProps={{ readOnly: true }} />
                   </Grid>
                 </Grid>
                 <TextField {...tfReadOnly} fullWidth label="Billing Address" value={business.billingAddress || ''} InputProps={{ readOnly: true }} />

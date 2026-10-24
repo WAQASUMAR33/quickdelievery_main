@@ -18,6 +18,11 @@ import Alert            from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider          from '@mui/material/Divider'
 import Chip             from '@mui/material/Chip'
+import FormControl      from '@mui/material/FormControl'
+import InputLabel       from '@mui/material/InputLabel'
+import Select           from '@mui/material/Select'
+import MenuItem         from '@mui/material/MenuItem'
+import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber } from '@/lib/countryData'
 
 // Icons
 import PersonOutlinedIcon         from '@mui/icons-material/PersonOutlined'
@@ -421,6 +426,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState(getCountry('PK'))
+  const [nationalPhone, setNationalPhone] = useState('')
 
   const selectedRole = ROLES.find((r) => r.value === formData.role)
 
@@ -436,6 +443,28 @@ export default function RegisterPage() {
   }, [resendCooldown])
 
   const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }))
+
+  const handleCountryChange = (e) => {
+    const code = e.target.value
+    const c = getCountry(code)
+    setSelectedCountry(c)
+    const formatted = formatNationalPhone(nationalPhone, c.code)
+    setNationalPhone(formatted)
+    setFormData((p) => ({
+      ...p,
+      phoneNumber: formatted ? buildFullPhoneNumber(formatted, c.code) : '',
+    }))
+  }
+
+  const handlePhoneChange = (e) => {
+    const raw = e.target.value
+    const formatted = formatNationalPhone(raw, selectedCountry.code)
+    setNationalPhone(formatted)
+    setFormData((p) => ({
+      ...p,
+      phoneNumber: formatted ? buildFullPhoneNumber(formatted, selectedCountry.code) : '',
+    }))
+  }
 
   const selectRole = (value) => {
     setFormData((p) => ({ ...p, role: value }))
@@ -991,6 +1020,34 @@ export default function RegisterPage() {
                         }}
                       />
 
+                      {/* Country Selector with Flags */}
+                      <FormControl fullWidth size="small" sx={fieldStyles}>
+                        <InputLabel id="reg-country-label">Country / Region</InputLabel>
+                        <Select
+                          labelId="reg-country-label"
+                          label="Country / Region"
+                          value={selectedCountry.code}
+                          onChange={handleCountryChange}
+                          startAdornment={
+                            <InputAdornment position="start">
+                              <Typography sx={{ fontSize: 18, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                            </InputAdornment>
+                          }
+                        >
+                          {COUNTRIES.map(c => (
+                            <MenuItem key={c.code} value={c.code}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{c.flag}</Typography>
+                                  <Typography sx={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Typography>
+                                </Box>
+                                <Chip label={c.dialCode} size="small" variant="outlined" sx={{ height: 20, fontSize: 10.5, fontWeight: 700 }} />
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+
                       {/* Phone Number */}
                       <TextField
                         fullWidth
@@ -998,15 +1055,28 @@ export default function RegisterPage() {
                         label="Mobile Phone Number"
                         name="phoneNumber"
                         type="tel"
-                        value={formData.phoneNumber}
-                        onChange={handleChange}
-                        placeholder="+92 300 1234567"
+                        value={nationalPhone}
+                        onChange={handlePhoneChange}
+                        placeholder={selectedCountry.placeholder}
+                        helperText={`Format: ${selectedCountry.dialCode} ${selectedCountry.phoneMask}`}
                         required
                         sx={fieldStyles}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <PhoneOutlinedIcon sx={{ fontSize: 18, color: isDark ? '#94A3B8' : '#64748B' }} />
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+                                px: 1, py: 0.35,
+                                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #CBD5E1',
+                              }}>
+                                <Typography sx={{ fontSize: 16, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#F1F5F9' : '#0F172A' }}>
+                                  {selectedCountry.dialCode}
+                                </Typography>
+                              </Box>
                             </InputAdornment>
                           ),
                         }}
