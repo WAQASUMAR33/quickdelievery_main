@@ -137,27 +137,137 @@ const translations = {
     registerDriver: 'Register as Delivery Partner',
     customerCare: 'Customer Care',
     copyright: 'QuickDelivery Multi-Vendor Marketplace. High-Speed Cloud Storefront.',
+
+    // MegaMenu & Categories
+    allDepartmentsCollections: 'All Departments & Collections',
+    browseCompleteCatalog: 'Browse our complete catalog of verified vendor products.',
+    browseAllCatalog: 'Browse all catalog items',
+    featuredDepartments: 'Featured Departments',
+    clickAboveToBrowse: 'Click above to browse all products in',
+    subcategories: 'Subcategories',
+
+    // Wishlist
+    loginRequired: 'Login Required',
+    pleaseLoginWishlist: 'Please login to view your wishlist',
+    remove: 'Remove',
+    savedForLater: 'saved for later',
+    searchWishlistPlaceholder: 'Search wishlist...',
+    sortOldest: 'Oldest First',
+    sortName: 'Name A-Z',
+    wishlistEmpty: 'Your wishlist is empty',
+    wishlistEmptySub: 'Start adding products you love to keep track of them and purchase later.',
+    browseProducts: 'Browse Products',
+    noItemsFound: 'No items found',
+    adjustSearchOrFilters: 'Try adjusting your search or filters',
+
+    // Profile & Account
+    personalInformation: 'Personal Information',
+    editProfile: 'Edit Profile',
+    saving: 'Saving...',
+    save: 'Save',
+    cancel: 'Cancel',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    email: 'Email',
+    phone: 'Phone',
+    address: 'Address',
+    city: 'City',
+    state: 'State',
+    zipCode: 'Zip Code',
+    dateOfBirth: 'Date of Birth',
+    gender: 'Gender',
+    selectGender: 'Select Gender',
+    male: 'Male',
+    female: 'Female',
+    other: 'Other',
+    myProfile: 'My Profile',
+    manageAccountSettings: 'Manage your account settings and preferences',
+    profile: 'Profile',
+    security: 'Security',
+    notifications: 'Notifications',
+    payment: 'Payment',
+    customer: 'Customer',
+    verifiedCustomer: 'Verified Customer',
+    unverified: 'Unverified',
+    addressLocationDetails: 'Address & Location Details',
+    accountMetadata: 'Account Metadata',
+
+    // Product View & Merchant Details
+    officialKitchen: 'Official Restaurant Kitchen',
+    officialMerchant: 'Official Verified Merchant',
+    specialty: 'Specialty',
+    diningKitchen: 'Dining & Kitchen',
+    retailBoutique: 'Retail Boutique',
+    kitchenProfile: 'Kitchen Profile',
+    storeProfile: 'Store Profile',
+    chatWithSeller: 'Chat with Seller',
+    frequentlyBoughtTogether: 'Frequently Bought Together:',
+    saveRs: 'Save Rs.',
+    descriptionFeatures: 'Description & Features',
+    supplierKitchenInfo: 'Supplier & Kitchen Info',
+    specifications: 'Specifications',
+    onlyItemsReady: 'Only limited items ready in kitchen!',
+
+    // Footer & Links
+    customerAccountSignIn: 'Customer Account & Sign In',
+    createCustomerAccount: 'Create Free Customer Account',
+    trackActiveOrders: 'Track Active Orders',
+    vendorPortal: 'Vendor Merchant Portal',
+    driverPortal: 'Driver Operations Login',
+    liveDispatchHours: 'Live Dispatch Hours: 24/7 Nationwide',
+    footerOrderHelp: 'Need help with an existing order? Access live tracking or message customer care directly in your',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    merchantAgreement: 'Merchant Agreement',
   },
 
   ar: {
-    // Top utility ribbon
+    // Top utility ribbon & header
     deliverTo: 'التوصيل إلى:',
     allRegions: 'باكستان (جميع المناطق)',
     liveStatus: 'معتمد وموثق سحابياً بأعلى سرعة',
-    partnerWithUs: 'انضم كشريك',
+    highSpeedCdn: 'شبكة CDN فائقة السرعة • متوافق مع المتاجر المتعددة',
+    partnerWithUs: 'انضم كشريك معنا',
     zeroFee: 'عمولة 0%',
     trackOrder: 'تتبع الطلب',
-    support247: 'دعم 24/7',
-    expressNotice: 'توصيل سريع لجميع المناطق • شحن مجاني للطلبات فوق 1,500 روبية',
-
-    // Header & Search
+    support247: 'دعم العملاء 24/7',
+    expressNotice: 'توصيل فائق السرعة لجميع المناطق • شحن مجاني للطلبات فوق 1,500 روبية',
     allCollections: 'جميع المجموعات',
-    searchPlaceholder: 'ابحث في أكثر من 161 منتجاً من التكنولوجيا والأجهزة والبقالة والمطاعم…',
+    searchPlaceholder: 'ابحث في أكثر من 161 منتجاً من الإلكترونيات، الحواسيب، البقالة، وأطباق الشيف…',
+    searchItemsPlaceholder: 'ابحث في أكثر من 161 منتجاً، وجبات، تكنولوجيا…',
     signIn: 'تسجيل الدخول',
-    myAccount: 'حسابي',
+    signInRegister: 'تسجيل الدخول / فتح حساب جديد',
+    myAccount: 'حسابي الشخصي',
     bag: 'السلة',
+    cart: 'السلة',
+    myBasket: 'سلتي',
+    tapToViewBill: 'اضغط لعرض الفاتورة وإتمام الطلب',
+    items: 'منتجات',
+    item: 'منتج',
+    checkout: 'إتمام الطلب',
+    curatedMarketplace: 'سوق متكامل للمتاجر والمطاعم المعتمدة',
+    boutiqueMall: 'سوق المتاجر المعتمدة',
+    menu: 'القائمة ▾',
+    askAi: '✦ استشر المساعد الذكي',
+    aiPro: 'احترافي',
+    welcome: 'أهلاً بك،',
+    mainMenu: 'القائمة الرئيسية',
+    exploreHome: 'الرئيسية والاستكشاف',
+    myOrders: 'طلباتي',
+    favourites: 'المفضلة',
+    wishlist: 'قائمة الرغبات',
+    profileSettings: 'إعدادات الحساب',
+    signOut: 'تسجيل الخروج',
+    lightMode: 'الوضع النهاري',
+    darkMode: 'الوضع الليلي',
+    goodMorning: 'صباح الخير',
+    goodAfternoon: 'مساء الخير',
+    goodEvening: 'مساء الخير',
+    allProducts: 'جميع المنتجات المتوفرة',
 
-    // Department pills
+    // Department pills & categories
+    allDepartments: 'جميع الأقسام',
+    departments: 'الأقسام الرئيسية',
     deptAll: '✦ كل المجموعات',
     deptDrops: '⚡ عروض البرق',
     deptMobile: '📱 إلكترونيات وهواتف',
@@ -166,6 +276,23 @@ const translations = {
     deptDining: '🍔 وجبات شيف فاخرة',
     deptBakery: '🥐 مخبوزات فرنسية',
     deptBoutiques: '🏬 المتاجر المعتمدة',
+    brandBoutiques: 'المتاجر والمطاعم المعتمدة',
+    flashDrops: 'عروض البرق الحصرية',
+    officialBoutiques: 'المتاجر والمطاعم المميزة',
+    featuredStores: 'المتاجر والمطاعم المميزة',
+
+    // Specific Database Category Names
+    Restaurant: 'مطاعم ومأكولات فاخرة',
+    'Fresh Groceries': 'بقالة وخضار طازجة',
+    'Bakery & Desserts': 'مخبوزات وحلويات فاخرة',
+    'Electronics & Tech': 'إلكترونيات وأجهزة ذكية',
+    'Grocery & Supermarket': 'بقالة وسوبرماركت',
+    'Bakery & Patisserie': 'مخبوزات ومعجنات فرنسية',
+    'Electronics & Technology': 'إلكترونيات وتكنولوجيا',
+    'Clothing & Fashion': 'أزياء وملابس عصرية',
+    'Healthcare & Pharmacy': 'صيدلية ورعاية صحية',
+    'Home & Living': 'مستلزمات المنزل والديكور',
+    'Beauty & Personal Care': 'جمال وعناية شخصية',
 
     // Hero slides
     slide1Badge: 'تكنولوجيا وأجهزة الجيل القادم',
@@ -181,55 +308,62 @@ const translations = {
     slide3Badge: 'بقالة عضوية مباشرة من المزارع',
     slide3Title: 'أفضل المنتجات الغذائية الطازجة بأسعار عادلة',
     slide3Subtitle: 'خضار وفواكه عضوية، ألبان طازجة، زيوت معصورة على البارد وأرز بسمتي فاخر',
-    slide3Cta: 'اطلب البقالة',
+    slide3Cta: 'اطلب البقالة الطازجة',
 
     slide4Badge: 'مخبوزات فرنسية ومطاعم شيف عالمية',
     slide4Title: 'برغر أنغوس مصنوع يدوياً ومعجنات فرنسية',
     slide4Subtitle: 'برغر لحم بقري مدخن، بيتزا نابولية بالحطب، كرواسون وماكرون فاخر',
-    slide4Cta: 'تذوق الأطباق',
+    slide4Cta: 'تذوق أطباق الشيف',
 
-    // Bento cards
+    // Bento cards & trust badges
     limitedDrops: 'عروض حصرية محدودة',
     closingIn: 'ينتهي خلال',
     curatedDropDiscounts: 'تخفيضات مختارة لك',
-    dropSubtitle: 'وفر حتى 45% على معدات التكنولوجيا، الحواسيب والبقالة!',
-    exploreDrops: 'استكشف العروض',
+    dropSubtitle: 'وفر حتى 45% على معدات التكنولوجيا، الحواسيب والبقالة الطازجة!',
+    exploreDrops: 'استكشف العروض الحصرية',
     bespokeMall: 'سوق الماركات الفاخرة متعدد المتاجر',
-    authenticGuarantee: 'ضمان أصلي 100% معتمد',
-    authenticSubtitle: 'متاجر موثقة: ElectroZone و Apex Computers و Metro Fresh وأشهر المطابخ.',
-    easyReturns: 'إرجاع سهل خلال 7 أيام',
-    viewBoutiques: 'عرض المتاجر ←',
-
-    // Departments section
-    exploreDepartments: 'استكشف الأقسام',
-    items: 'منتج',
-
-    // Flash sale
-    flashDrops: 'عروض البرق الحصرية',
+    authenticGuarantee: 'ضمان منتجات أصلية 100% معتمدة',
+    authenticSubtitle: 'متاجر موثقة: ElectroZone و Apex Computers و Metro Fresh وأشهر المطابخ العالمية.',
+    easyReturns: 'إرجاع سهل ومضمون خلال 7 أيام',
+    viewBoutiques: 'عرض المتاجر والمطاعم ←',
+    exploreDepartments: 'استكشف الأقسام الرئيسية',
     endsIn: 'ينتهي في:',
-    exploreAllDrops: 'عرض كل التخفيضات',
-
-    // Boutiques section
+    exploreAllDrops: 'عرض كل التخفيضات ←',
     verifiedBoutiques: 'المتاجر والمطاعم المميزة',
-    genuineBrandsSubtitle: 'متاجر ومطاعم وسوبرماركت معتمدة 100%',
-    verified: 'معتمد',
+    genuineBrandsSubtitle: 'متاجر ومطاعم وسوبرماركت معتمدة وموثقة 100%',
+    verified: 'معتمد وموثق',
     productsCount: 'منتجات',
     visitBoutique: 'زيارة المتجر ←',
-    viewingBoutique: 'أنت تتصفح المتجر',
+    viewingBoutique: 'أنت تتصفح هذا المتجر الآن',
+    verifiedMenus: 'قوائم طعام معتمدة',
+    upToOff: 'خصم يصل إلى',
+    productsInStock: 'منتجات متوفرة بالمخزن',
 
     // Filter sidebar
     filterCatalog: 'تصفية المنتجات',
     resetAll: 'إعادة ضبط',
-    departments: 'الأقسام',
-    allDepartments: 'جميع الأقسام',
-    officialBoutiques: 'المتاجر والمطاعم المميزة',
+    resetAllFilters: 'إعادة ضبط جميع الفلاتر',
+    halalCertified: 'ذبح حلال معتمد 100%',
+    pureVeg: 'أطباق نباتية طازجة',
+    fastPrep: 'تحضير سريع بالمطبخ (أقل من 20 دقيقة)',
     priceRangePkr: 'نطاق السعر (روبية)',
+    under1k: 'أقل من 1,000',
+    '1kTo3k': '1,000 - 3,000',
+    '3kTo10k': '3,000 - 10,000',
+    '10kPlus': 'أكثر من 10,000',
     serviceRating: 'الخدمة والتقييم',
     starsAbove: '4.0 نجوم فأكثر',
     onSaleOnly: 'عروض التخفيض فقط',
     freeExpressDelivery: 'توصيل مجاني سريع',
+    inStockOnly: 'المتوفر بالمخزن فقط',
+    officialWarranty: 'ضمان الوكيل الرسمي المعتمد',
+    brands: 'العلامات التجارية',
+    searchBrands: 'ابحث في العلامات التجارية...',
+    clear: 'مسح',
+    clearAll: 'مسح الكل',
+    filters: 'الفلاتر',
 
-    // Catalog grid
+    // Catalog grid & Sorting
     catalogResults: 'نتائج البحث',
     showing: 'عرض',
     of: 'من أصل',
@@ -238,41 +372,301 @@ const translations = {
     sortPriceLow: 'السعر: من الأقل للأعلى',
     sortPriceHigh: 'السعر: من الأعلى للأقل',
     sortRating: 'الأعلى تقييماً',
+    sortDiscount: 'أعلى نسبة خصم %',
     sortNewest: 'أحدث المنتجات',
     noProductsFound: 'لم يتم العثور على منتجات',
-    noProductsSubtitle: 'لا توجد منتجات تطابق اختياراتك الحالية. جرب إعادة تعيين الفلاتر.',
+    noProductsSubtitle: 'لا توجد منتجات تطابق اختياراتك الحالية. جرب إعادة تعيين الفلاتر أو تغيير كلمة البحث.',
 
     // Product card & modal
     inStock: 'متوفر بالمخزن',
-    freeDelivery: 'شحن مجاني',
+    inStockReady: 'متوفر بالمخزن وجاهز للشحن الفوري',
+    freeDelivery: 'توصيل مجاني',
     standardShipping: 'شحن قياسي',
+    expressCourier: 'توصيل سريع خلال 30 دقيقة',
+    fromRs: 'ابتداءً من',
     addToBasket: 'أضف إلى السلة',
-    buyNow: 'اشتري الآن',
-    selectOption: 'اختر الصنف:',
+    addToCart: 'أضف إلى السلة',
+    buyNow: 'شراء الآن',
+    viewDetails: 'عرض التفاصيل',
+    officialBoutique: 'متجر معتمد',
+    selectOption: 'اختر الصنف / القياس:',
     quantity: 'الكمية:',
-    reviews: 'تقييمات',
+    reviews: 'تقييمات العملاء',
+    viewFullPage: 'عرض صفحة المنتج الكاملة مع التقييمات والمواصفات ←',
 
     // AI & WhatsApp
-    askAi: '✦ مستشار الذكاء الاصطناعي',
+    askAiTitle: '✦ مستشار التسوق بالذكاء الاصطناعي',
     aiAssistantTitle: 'مساعد التسوق بالذكاء الاصطناعي',
     aiSubtitle: 'مساعدك الذكي لاكتشاف المنتجات، اقتراح باقات التوفير وإعداد وجبات الطعام',
     whatsappSupport: 'دعم مباشر عبر واتساب',
     onlineNow: 'متصل الآن',
 
     // Footer
-    expressFastDelivery: 'توصيل فائق السرعة',
-    expressFastDeliverySub: 'تتبع حي ومباشر مع مناديب توصيل معتمدين',
+    expressFastDelivery: 'توصيل فائق السرعة والموثوقية',
+    expressFastDeliverySub: 'تتبع مباشر ولحظي مع مناديب توصيل معتمدين',
     genuineBrands: 'ماركات أصلية 100%',
-    genuineBrandsSub: 'متاجر وبائعون معتمدون ومرخصون',
-    easyReturnsSub: 'استرجاع فوري للأموال دون تعقيدات',
-    supportSub: 'محادثة مباشرة وخط مساعدة مخصص',
-    footerAbout: 'منصتك المتميزة للأجهزة والحواسيب ومستلزمات البقالة الطازجة وأرقى المأكولات.',
+    genuineBrandsSub: 'متاجر وبائعون معتمدون ومرخصون رسمياً',
+    easyReturnsSub: 'استرجاع فوري للأموال دون تعقيدات وضمان شامل',
+    supportSub: 'محادثة مباشرة وخط مساعدة مخصص على مدار الساعة',
+    footerAbout: 'منصتك المتميزة للأجهزة والحواسيب ومستلزمات البقالة الطازجة وأرقى مأكولات الشيف العالمية.',
     quickNav: 'روابط سريعة',
     becomePartner: 'انضم كشريك معنا',
     sellZeroComm: 'بع منتجاتك مع QuickDelivery (0% عمولة)',
-    registerDriver: 'سجل كسائق توصيل',
-    customerCare: 'خدمة العملاء',
+    registerDriver: 'سجل كسائق توصيل معتمد',
+    customerCare: 'خدمة ودعم العملاء',
     copyright: 'سوق QuickDelivery متعدد المتاجر. منصة سحابية فائقة السرعة.',
+
+    // Cart & Checkout
+    orderSummary: 'ملخص الطلب',
+    subtotal: 'المجموع الفرعي',
+    serviceFee: 'رسوم الخدمة',
+    deliveryFee: 'رسوم التوصيل',
+    totalAmount: 'المبلغ الإجمالي',
+    proceedToCheckout: 'متابعة الدفع والطلب',
+    cashOnDelivery: 'الدفع عند الاستلام',
+    cardPayment: 'بطاقة ائتمان / مدى',
+    shippingAddress: 'عنوان التوصيل',
+    deliveryNotes: 'ملاحظات التوصيل للسائق',
+    phoneNumber: 'رقم الهاتف للتواصل',
+    placeOrder: 'تأكيد وإرسال الطلب',
+    cartEmpty: 'سلة المشتريات فارغة',
+    cartEmptySubtitle: 'يبدو أنك لم تضف أي منتجات إلى سلتك بعد.',
+    startShopping: 'ابدأ التسوق الآن',
+
+    // MegaMenu & Categories
+    allDepartmentsCollections: 'جميع الأقسام والمجموعات',
+    browseCompleteCatalog: 'تصفح تشكيلتنا الكاملة من منتجات المتاجر المعتمدة',
+    browseAllCatalog: 'تصفح جميع المنتجات',
+    featuredDepartments: 'الأقسام المميزة',
+    clickAboveToBrowse: 'اضغط أعلاه لتصفح جميع منتجات',
+    subcategories: 'الأقسام الفرعية',
+
+    // Wishlist
+    loginRequired: 'تسجيل الدخول مطلوب',
+    pleaseLoginWishlist: 'يرجى تسجيل الدخول لعرض قائمة الرغبات الخاصة بك',
+    remove: 'إزالة',
+    savedForLater: 'تم حفظها لوقت لاحق',
+    searchWishlistPlaceholder: 'ابحث في قائمة الرغبات...',
+    sortOldest: 'الأقدم أولاً',
+    sortName: 'الاسم: أ - ي',
+    wishlistEmpty: 'قائمة الرغبات فارغة',
+    wishlistEmptySub: 'ابدأ بإضافة المنتجات التي تحبها لتتبعها وشرائها لاحقاً.',
+    browseProducts: 'تصفح المنتجات',
+    noItemsFound: 'لم يتم العثور على عناصر',
+    adjustSearchOrFilters: 'جرب تعديل البحث أو الفلاتر',
+
+    // Profile & Account
+    personalInformation: 'المعلومات الشخصية',
+    editProfile: 'تعديل الملف الشخصي',
+    saving: 'جارٍ الحفظ...',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    firstName: 'الاسم الأول',
+    lastName: 'اسم العائلة',
+    email: 'البريد الإلكتروني',
+    phone: 'رقم الهاتف',
+    address: 'العنوان',
+    city: 'المدينة',
+    state: 'المنطقة / المحافظة',
+    zipCode: 'الرمز البريدي',
+    dateOfBirth: 'تاريخ الميلاد',
+    gender: 'الجنس',
+    selectGender: 'اختر الجنس',
+    male: 'ذكر',
+    female: 'أنثى',
+    other: 'أخرى',
+    myProfile: 'ملفي الشخصي',
+    manageAccountSettings: 'إدارة إعدادات حسابك وتفضيلاتك',
+    profile: 'الملف الشخصي',
+    security: 'الأمان',
+    notifications: 'الإشعارات',
+    payment: 'الدفع',
+    customer: 'عميل',
+    verifiedCustomer: 'عميل موثق',
+    unverified: 'غير موثق',
+    addressLocationDetails: 'تفاصيل العنوان والموقع',
+    accountMetadata: 'بيانات الحساب',
+
+    // Product View & Merchant Details
+    officialKitchen: 'مطبخ ومطعم رسمي معتمد',
+    officialMerchant: 'متجر معتمد وموثق رسمياً',
+    specialty: 'التخصص',
+    diningKitchen: 'مأكولات ومطبخ',
+    retailBoutique: 'متجر تجزئة',
+    kitchenProfile: 'ملف المطبخ',
+    storeProfile: 'ملف المتجر',
+    chatWithSeller: 'محادثة البائع',
+    frequentlyBoughtTogether: 'يتم شراؤها معاً بشكل متكرر:',
+    saveRs: 'وفر',
+    descriptionFeatures: 'الوصف والمميزات',
+    supplierKitchenInfo: 'معلومات المورد والمطبخ',
+    specifications: 'المواصفات',
+    onlyItemsReady: 'تبقت قطع محدودة فقط جاهزة في المطبخ!',
+
+    // Footer & Links
+    customerAccountSignIn: 'حساب العميل وتسجيل الدخول',
+    createCustomerAccount: 'إنشاء حساب عميل مجاناً',
+    trackActiveOrders: 'تتبع الطلبات النشطة',
+    vendorPortal: 'بوابة البائعين والتجار',
+    driverPortal: 'تسجيل دخول عمليات المناديب',
+    liveDispatchHours: 'ساعات العمل والإرسال: على مدار الساعة طوال أيام الأسبوع',
+    footerOrderHelp: 'هل تحتاج مساعدة بطلب قائم؟ يمكنك التتبع المباشر أو التواصل مع الدعم في قسم',
+    privacyPolicy: 'سياسة الخصوصية',
+    termsOfService: 'شروط الخدمة',
+    merchantAgreement: 'اتفاقية التاجر',
+
+    // ── Direct Natural English Phrase Mappings for instant drop-in resolution ──
+    'Explore & Home': 'الرئيسية واستكشاف المنتجات',
+    'My Orders': 'طلباتي',
+    'Favourites': 'المفضلة',
+    'Wishlist': 'قائمة الرغبات',
+    'Profile Settings': 'إعدادات الحساب',
+    'All Collections': 'جميع المجموعات',
+    'Flash Drops': 'عروض البرق الحصرية',
+    'Mobile & Tech': 'إلكترونيات وهواتف',
+    'Computing & Laptops': 'حواسيب ولابتوب',
+    'Pantry & Organic': 'بقالة وخضار طازجة',
+    'Chef Dining': 'وجبات شيف فاخرة',
+    'French Bakery': 'مخبوزات فرنسية',
+    'Brand Boutiques': 'المتاجر المعتمدة',
+    'Good morning': 'صباح الخير',
+    'Good afternoon': 'مساء الخير',
+    'Good evening': 'مساء الخير',
+    'Deliver to:': 'التوصيل إلى:',
+    'Sign In': 'تسجيل الدخول',
+    'My Account': 'حسابي',
+    'Bag': 'السلة',
+    'Cart': 'السلة',
+    'Menu ▾': 'القائمة ▾',
+    'High-Speed CDN • Multi-Store Ready': 'شبكة CDN فائقة السرعة • دعم المتاجر المتعددة',
+    'Curated Multi-Vendor Marketplace': 'سوق متكامل للمتاجر المتعددة',
+    'BOUTIQUE MALL': 'سوق الماركات',
+    '0% FEE': 'عمولة 0%',
+    'PRO': 'احترافي',
+    'Filters': 'الفلاتر',
+    'Clear All': 'مسح الكل',
+    'Clear': 'مسح',
+    'In Stock Only': 'المتوفر فقط بالمخزن',
+    'Official Brand Warranty': 'ضمان رسمي معتمد',
+    'Free Express Delivery': 'توصيل مجاني سريع',
+    'On Sale / Flash Drops': 'عروض التخفيض فقط',
+    '4.0 Stars & Above': '4.0 نجوم فأكثر',
+    'Price Range (PKR)': 'نطاق السعر (روبية)',
+    'Service & Rating': 'الخدمة والتقييم',
+    'Search brands...': 'ابحث في الماركات...',
+    'Under 1k': 'أقل من 1,000',
+    '1k - 3k': '1,000 - 3,000',
+    '3k - 10k': '3,000 - 10,000',
+    '10k+': 'أكثر من 10,000',
+    'Halal Certified Only': 'ذبح حلال معتمد فقط',
+    'Vegetarian Dishes': 'أطباق نباتية طازجة',
+    'Fast Kitchen Prep (< 20m)': 'تحضير سريع بالمطبخ (< 20 دقيقة)',
+    'Free Delivery': 'توصيل مجاني',
+    'Standard Shipping': 'شحن قياسي',
+    'From Rs.': 'ابتداءً من',
+    'Add to Basket': 'أضف إلى السلة',
+    'View Details': 'عرض التفاصيل',
+    'Buy Now': 'شراء الآن',
+    'Select Option:': 'اختر الصنف:',
+    'Quantity:': 'الكمية:',
+    'Reviews': 'تقييمات',
+    'In Stock': 'متوفر بالمخزن',
+    'Verified': 'معتمد وموثق',
+    'Products': 'منتجات',
+    'Reset all': 'إعادة ضبط',
+    'Reset All Filters': 'إعادة ضبط جميع الفلاتر',
+    'Sort:': 'ترتيب حسب:',
+    'Relevance': 'الأكثر صلة',
+    'Price: Low to High': 'السعر: من الأقل للأعلى',
+    'Price: High to Low': 'السعر: من الأعلى للأقل',
+    'Highest Rated': 'الأعلى تقييماً',
+    'Biggest Discount %': 'أعلى نسبة خصم %',
+    'Newest Arrivals': 'أحدث المنتجات',
+    'No products found': 'لم يتم العثور على منتجات',
+    'Ends in:': 'ينتهي في:',
+    'EXPLORE ALL DROPS': 'عرض كل التخفيضات ←',
+    'Limited Drops': 'عروض حصرية محدودة',
+    'CLOSING IN': 'ينتهي قريباً',
+    'Curated Drop Discounts': 'تخفيضات مختارة لك',
+    'Explore Drops': 'استكشف العروض',
+    '100% Authentic Brand Guarantees': 'ضمان منتجات أصلية 100%',
+    '7-Day Easy Returns': 'إرجاع سهل خلال 7 أيام',
+    'View Stores & Restaurants →': 'عرض المتاجر والمطاعم ←',
+    'Visit Store →': 'زيارة المتجر ←',
+    'Viewing Store': 'أنت تتصفح هذا المتجر',
+    'Featured Stores & Restaurants': 'المتاجر والمطاعم المميزة',
+    '100% verified merchants, restaurants & supermarkets': 'تجار ومطاعم وسوبرماركت معتمدة 100%',
+    'Explore Departments': 'استكشف الأقسام الرئيسية',
+    'items': 'منتجات',
+    'My Basket': 'سلتي',
+    'Tap to view bill & checkout': 'اضغط لعرض الفاتورة وإتمام الطلب',
+    'Sign In / Register': 'تسجيل الدخول / إنشاء حساب',
+    'Express Delivery across Pakistan • Free on orders over Rs. 1,500': 'توصيل سريع لجميع المناطق • شحن مجاني للطلبات فوق 1,500 روبية',
+    'View Full Product Page with Reviews & Specifications →': 'عرض صفحة المنتج الكاملة مع التقييمات والمواصفات ←',
+    'Order Summary': 'ملخص الطلب',
+    'Subtotal': 'المجموع الفرعي',
+    'Service Fee': 'رسوم الخدمة',
+    'Delivery Fee': 'رسوم التوصيل',
+    'Total Amount': 'المبلغ الإجمالي',
+    'Proceed to Checkout': 'متابعة الدفع',
+    'Cash on Delivery': 'الدفع عند الاستلام',
+    'Credit / Debit Card': 'بطاقة ائتمان / مدى',
+    'Shipping Address': 'عنوان التوصيل',
+    'Delivery Notes': 'ملاحظات التوصيل للسائق',
+    'Phone Number': 'رقم الهاتف للتواصل',
+    'Place Order': 'تأكيد وإرسال الطلب',
+    'Your Cart is Empty': 'سلة المشتريات فارغة',
+    'Looks like you haven\'t added anything to your cart yet.': 'يبدو أنك لم تضف أي منتجات إلى سلتك بعد.',
+    'Start Shopping': 'ابدأ التسوق الآن',
+    'Categories': 'الأقسام والتصنيفات',
+    'Personal Information': 'المعلومات الشخصية',
+    'Edit Profile': 'تعديل الملف الشخصي',
+    'My Profile': 'ملفي الشخصي',
+    'Manage your account settings and preferences': 'إدارة إعدادات حسابك وتفضيلاتك',
+    'Profile': 'الملف الشخصي',
+    'Security': 'الأمان',
+    'Notifications': 'الإشعارات',
+    'Payment': 'الدفع',
+    'First Name': 'الاسم الأول',
+    'Last Name': 'اسم العائلة',
+    'Email': 'البريد الإلكتروني',
+    'Phone': 'رقم الهاتف',
+    'Address': 'العنوان',
+    'City': 'المدينة',
+    'State': 'المنطقة / المحافظة',
+    'Zip Code': 'الرمز البريدي',
+    'Date of Birth': 'تاريخ الميلاد',
+    'Gender': 'الجنس',
+    'Save': 'حفظ',
+    'Cancel': 'إلغاء',
+    'Search wishlist...': 'ابحث في قائمة الرغبات...',
+    'Your wishlist is empty': 'قائمة الرغبات فارغة',
+    'Start adding products you love to keep track of them and purchase later.': 'ابدأ بإضافة المنتجات التي تحبها لتتبعها وشرائها لاحقاً.',
+    'Browse Products': 'تصفح المنتجات',
+    'No items found': 'لم يتم العثور على عناصر',
+    'Try adjusting your search or filters': 'جرب تعديل البحث أو الفلاتر',
+    'Description & Features': 'الوصف والمميزات',
+    'Supplier & Kitchen Info': 'معلومات المورد والمطبخ',
+    'Specifications': 'المواصفات',
+    'Customer Reviews': 'تقييمات العملاء',
+    'Frequently Bought Together:': 'يتم شراؤها معاً بشكل متكرر:',
+    'Chat with Seller': 'محادثة البائع',
+    'Kitchen Profile': 'ملف المطبخ',
+    'Store Profile': 'ملف المتجر',
+    'Official Restaurant Kitchen': 'مطبخ ومطعم رسمي معتمد',
+    'Official Verified Merchant': 'متجر معتمد وموثق رسمياً',
+    'Specialty': 'التخصص',
+    'Dining & Kitchen': 'مأكولات ومطبخ',
+    'Retail Boutique': 'متجر تجزئة',
+    'Privacy Policy': 'سياسة الخصوصية',
+    'Terms of Service': 'شروط الخدمة',
+    'Merchant Agreement': 'اتفاقية التاجر',
+    'Customer Account & Sign In': 'حساب العميل وتسجيل الدخول',
+    'Create Free Customer Account': 'إنشاء حساب عميل مجاناً',
+    'Track Active Orders': 'تتبع الطلبات النشطة',
+    'Vendor Merchant Portal': 'بوابة البائعين والتجار',
+    'Driver Operations Login': 'تسجيل دخول عمليات المناديب',
+    'Live Dispatch Hours: 24/7 Nationwide': 'ساعات العمل والإرسال: على مدار الساعة طوال أيام الأسبوع',
   },
 
   fr: {
@@ -548,11 +942,14 @@ const translations = {
   },
 }
 
+// Add normalized alias so 'sa' or 'SA' points directly to Arabic translations
+translations.sa = translations.ar
+
 export const LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇬🇧', dir: 'ltr' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦', dir: 'rtl' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷', dir: 'ltr' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹', dir: 'ltr' },
+  { code: 'en', name: 'English', label: 'English (UK)', flag: '🇬🇧', dir: 'ltr' },
+  { code: 'ar', name: 'العربية', label: 'العربية (SA)', flag: '🇸🇦', dir: 'rtl' },
+  { code: 'fr', name: 'Français', label: 'Français (FR)', flag: '🇫🇷', dir: 'ltr' },
+  { code: 'it', name: 'Italiano', label: 'Italiano (IT)', flag: '🇮🇹', dir: 'ltr' },
 ]
 
 const LanguageContext = createContext({
@@ -560,6 +957,7 @@ const LanguageContext = createContext({
   setLanguage: () => {},
   t: (key) => key,
   isRTL: false,
+  availableLanguages: LANGUAGES,
 })
 
 export const LanguageProvider = ({ children }) => {
@@ -567,30 +965,55 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     const saved = localStorage.getItem('qd_preferred_lang')
-    if (saved && translations[saved]) {
-      setLanguageState(saved)
+    if (saved) {
+      const lower = saved.toLowerCase()
+      const target = (lower === 'sa' || lower === 'ar') ? 'ar' : lower
+      if (translations[target]) {
+        setLanguageState(target)
+      }
     }
   }, [])
 
   useEffect(() => {
-    const isRtl = language === 'ar'
+    const isRtl = language === 'ar' || language === 'sa'
     if (typeof document !== 'undefined') {
       document.documentElement.dir = isRtl ? 'rtl' : 'ltr'
-      document.documentElement.lang = language
+      document.documentElement.lang = isRtl ? 'ar' : language
     }
   }, [language])
 
   const setLanguage = (langCode) => {
-    if (translations[langCode]) {
-      setLanguageState(langCode)
-      localStorage.setItem('qd_preferred_lang', langCode)
+    const raw = String(langCode || '').trim()
+    const lower = raw.toLowerCase()
+    const target = (lower === 'sa' || lower === 'ar') ? 'ar' : lower
+    if (translations[target]) {
+      setLanguageState(target)
+      localStorage.setItem('qd_preferred_lang', target)
     }
   }
 
   const t = (key) => {
+    if (key === null || key === undefined) return ''
+    const strKey = String(key)
     const currentDict = translations[language] || translations.en
-    return currentDict[key] ?? translations.en[key] ?? key
+    if (currentDict && currentDict[strKey] !== undefined) {
+      return currentDict[strKey]
+    }
+    const trimmed = strKey.trim()
+    if (currentDict && currentDict[trimmed] !== undefined) {
+      return currentDict[trimmed]
+    }
+    // Also try case-insensitive key search if needed
+    if (currentDict) {
+      const lower = trimmed.toLowerCase()
+      for (const [k, v] of Object.entries(currentDict)) {
+        if (k.toLowerCase() === lower) return v
+      }
+    }
+    return translations.en[strKey] ?? translations.en[trimmed] ?? strKey
   }
+
+  const isRTL = language === 'ar' || language === 'sa'
 
   return (
     <LanguageContext.Provider
@@ -598,7 +1021,7 @@ export const LanguageProvider = ({ children }) => {
         language,
         setLanguage,
         t,
-        isRTL: language === 'ar',
+        isRTL,
         availableLanguages: LANGUAGES,
       }}
     >

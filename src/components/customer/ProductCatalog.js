@@ -233,37 +233,37 @@ const ProductCatalog = ({
   const heroSlides = useMemo(() => {
     const categoryVisuals = {
       restaurant: {
-        badge: 'GOURMET DINING & RESTAURANTS',
-        title: 'Handcrafted Burgers, Artisan Pizza & Chef Specials',
-        subtitle: 'Sizzling burgers, wood-fired pizzas, gourmet cuisine & chef-prepared meals delivered hot',
-        ctaText: 'Explore Restaurant',
+        badge: t('slide4Badge') || 'GOURMET DINING & RESTAURANTS',
+        title: t('slide4Title') || 'Handcrafted Burgers, Artisan Pizza & Chef Specials',
+        subtitle: t('slide4Subtitle') || 'Sizzling burgers, wood-fired pizzas, gourmet cuisine & chef-prepared meals delivered hot',
+        ctaText: t('slide4Cta') || 'Explore Restaurant',
         bgGradient: 'from-[#1A0B16] via-[#4C0519] to-[#3B0764]',
         accentColor: '#F43F5E',
         defaultImage: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
       },
       groceries: {
-        badge: 'FARM DIRECT & ORGANIC PANTRY',
-        title: 'Everyday Fresh Groceries at Fair Prices',
-        subtitle: 'Farm-fresh organic produce, dairy essentials, cold-pressed oils & pantry staples',
-        ctaText: 'Shop Fresh Groceries',
+        badge: t('slide3Badge') || 'FARM DIRECT & ORGANIC PANTRY',
+        title: t('slide3Title') || 'Everyday Fresh Groceries at Fair Prices',
+        subtitle: t('slide3Subtitle') || 'Farm-fresh organic produce, dairy essentials, cold-pressed oils & pantry staples',
+        ctaText: t('slide3Cta') || 'Shop Fresh Groceries',
         bgGradient: 'from-[#061A14] via-[#064E3B] to-[#042F2C]',
         accentColor: '#10B981',
         defaultImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
       },
       bakery: {
-        badge: 'ARTISAN PATISSERIE & DESSERTS',
-        title: 'Freshly Baked Pastries, Cakes & Delights',
-        subtitle: 'Authentic French butter croissants, celebration cakes, chocolate treats & sweet pastries',
-        ctaText: 'Taste Bakery Specials',
+        badge: t('slide4Badge') || 'ARTISAN PATISSERIE & DESSERTS',
+        title: t('slide4Title') || 'Freshly Baked Pastries, Cakes & Delights',
+        subtitle: t('slide4Subtitle') || 'Authentic French butter croissants, celebration cakes, chocolate treats & sweet pastries',
+        ctaText: t('slide4Cta') || 'Taste Bakery Specials',
         bgGradient: 'from-[#1F1300] via-[#78350F] to-[#451A03]',
         accentColor: '#F59E0B',
         defaultImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80',
       },
       electronics: {
-        badge: 'TECH & NEXT-GEN MOBILITY',
-        title: 'Power Up with Official Mobile & Tech Gear',
-        subtitle: 'GaN 100W Fast Chargers, Braided Type-C Cables, ANC Earbuds & Smartwatch Gear',
-        ctaText: 'Explore Electronics & Tech',
+        badge: t('slide1Badge') || 'TECH & NEXT-GEN MOBILITY',
+        title: t('slide1Title') || 'Power Up with Official Mobile & Tech Gear',
+        subtitle: t('slide1Subtitle') || 'GaN 100W Fast Chargers, Braided Type-C Cables, ANC Earbuds & Smartwatch Gear',
+        ctaText: t('slide1Cta') || 'Explore Electronics & Tech',
         bgGradient: 'from-[#0B0F19] via-[#1E1B4B] to-[#312E81]',
         accentColor: '#818CF8',
         defaultImage: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80',
@@ -278,7 +278,7 @@ const ProductCatalog = ({
           title: categoryVisuals.restaurant.title,
           subtitle: categoryVisuals.restaurant.subtitle,
           ctaText: categoryVisuals.restaurant.ctaText,
-          discount: 'VERIFIED MENUS',
+          discount: t('verifiedMenus') || 'VERIFIED MENUS',
           deptId: null,
           bgGradient: categoryVisuals.restaurant.bgGradient,
           accentColor: categoryVisuals.restaurant.accentColor,
@@ -295,11 +295,12 @@ const ProductCatalog = ({
       else if (lower.includes('tech') || lower.includes('electron') || lower.includes('gadget') || lower.includes('mobile') || lower.includes('computer')) visual = categoryVisuals.electronics
       else if (lower.includes('restaurant') || lower.includes('food') || lower.includes('dining')) visual = categoryVisuals.restaurant
       else {
+        const catTranslated = t(cat.name) || cat.name
         visual = {
-          badge: `${cat.name.toUpperCase()} SPECIALS`,
-          title: `Discover Premium ${cat.name}`,
-          subtitle: `Browse top-rated products and verified merchant offerings in ${cat.name}`,
-          ctaText: `Explore ${cat.name}`,
+          badge: `${catTranslated.toUpperCase()} SPECIALS`,
+          title: `Discover Premium ${catTranslated}`,
+          subtitle: `Browse top-rated products and verified merchant offerings in ${catTranslated}`,
+          ctaText: `Explore ${catTranslated}`,
           bgGradient: 'from-[#0B0F19] via-[#1E293B] to-[#334155]',
           accentColor: '#38BDF8',
           defaultImage: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80',
@@ -310,7 +311,7 @@ const ProductCatalog = ({
       const catProducts = products.filter(p => idsEqual(p.catId ?? p.category?.id, cat.id))
       const discounts = catProducts.map(p => Number(p.discount || 0)).filter(d => d > 0)
       const maxDiscount = discounts.length > 0 ? Math.max(...discounts) : 0
-      const discountText = maxDiscount > 0 ? `UP TO ${maxDiscount}% OFF` : `${catProducts.length} PRODUCTS IN STOCK`
+      const discountText = maxDiscount > 0 ? `${t('upToOff') || 'UP TO'} ${maxDiscount}% OFF` : `${catProducts.length} ${t('productsInStock') || 'PRODUCTS IN STOCK'}`
 
       return {
         id: cat.id,
@@ -325,7 +326,7 @@ const ProductCatalog = ({
         image: cat.image || visual.defaultImage,
       }
     })
-  }, [categories, products])
+  }, [categories, products, t, isRTL])
 
   // Auto-advance hero slides every 5 seconds
   useEffect(() => {
@@ -1150,12 +1151,12 @@ const ProductCatalog = ({
             </div>
 
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
-              {product.freeDelivery ? 'Free Delivery' : (isFoodItem ? 'Express 30m Courier' : 'Standard Shipping (Rs. 150)')}
+              {product.freeDelivery ? (t('freeDelivery') || 'Free Delivery') : (isFoodItem ? (t('expressCourier') || 'Express 30m Courier') : (t('standardShipping') || 'Standard Shipping (Rs. 150)'))}
             </span>
 
             {!isFoodItem && listPrice >= 2000 && (
               <span className="text-[10px] text-emerald-600 font-bold block mt-1">
-                From Rs. {Math.round(listPrice / 3).toLocaleString()}/mo
+                {t('fromRs') || 'From'} Rs. {Math.round(listPrice / 3).toLocaleString()}/mo
               </span>
             )}
           </div>
@@ -1179,7 +1180,7 @@ const ProductCatalog = ({
               className="w-full py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm rounded-xl transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Add to Basket</span>
+              <span>{t('addToBasket') || 'Add to Basket'}</span>
             </button>
 
             <Link
@@ -1187,7 +1188,7 @@ const ProductCatalog = ({
               onClick={(e) => e.stopPropagation()}
               className="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200 dark:border-slate-700 rounded-xl transition-colors"
             >
-              View Details
+              {t('viewDetails') || 'View Details'}
             </Link>
           </div>
         </div>
@@ -1236,7 +1237,7 @@ const ProductCatalog = ({
           onClick={handleClearFilters}
           className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors cursor-pointer"
         >
-          Reset all
+          {t('resetAll') || 'Reset all'}
         </button>
       </div>
 
@@ -1405,7 +1406,7 @@ const ProductCatalog = ({
             <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
               🥩 100% Halal
             </span>
-            <span>Halal Certified Only</span>
+            <span>{t('halalCertified') || 'Halal Certified Only'}</span>
           </div>
         </label>
 
@@ -1420,7 +1421,7 @@ const ProductCatalog = ({
             <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
               🌱 Pure Veg
             </span>
-            <span>Vegetarian Dishes</span>
+            <span>{t('pureVeg') || 'Vegetarian Dishes'}</span>
           </div>
         </label>
 
@@ -1433,7 +1434,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-500" />
-            <span>Fast Kitchen Prep (&lt; 20m)</span>
+            <span>{t('fastPrep') || 'Fast Kitchen Prep (< 20m)'}</span>
           </div>
         </label>
       </div>
@@ -1441,7 +1442,7 @@ const ProductCatalog = ({
       {/* ── 4. Price Filter (Slider & Inputs) ── */}
       <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
         <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-2 text-xs uppercase tracking-wider">
-          Price Range (PKR)
+          {t('priceRangePkr') || 'Price Range (PKR)'}
         </h4>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -1478,7 +1479,7 @@ const ProductCatalog = ({
                 onClick={() => setPriceRange({ min: pill.min, max: pill.max })}
                 className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
               >
-                {pill.label}
+                {t(pill.label) || pill.label}
               </button>
             ))}
           </div>
@@ -1488,7 +1489,7 @@ const ProductCatalog = ({
       {/* ── 5. Customer Rating, Deals & Express Delivery ── */}
       <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
         <h4 className="font-extrabold text-slate-900 dark:text-slate-100 mb-1 text-xs uppercase tracking-wider">
-          Service & Rating
+          {t('serviceRating') || 'Service & Rating'}
         </h4>
 
         <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600">
@@ -1500,7 +1501,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1">
             <span className="flex text-amber-500"><Star className="w-3.5 h-3.5 fill-current" /></span>
-            <span>4.0 Stars & Above</span>
+            <span>{t('starsAbove') || '4.0 Stars & Above'}</span>
           </div>
         </label>
 
@@ -1513,7 +1514,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1">
             <Percent className="w-3.5 h-3.5 text-rose-500" />
-            <span>On Sale / Flash Drops</span>
+            <span>{t('onSaleOnly') || 'On Sale / Flash Drops'}</span>
           </div>
         </label>
 
@@ -1526,7 +1527,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1">
             <Truck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Free Express Delivery</span>
+            <span>{t('freeExpressDelivery') || 'Free Express Delivery'}</span>
           </div>
         </label>
 
@@ -1539,7 +1540,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-            <span>In Stock Only</span>
+            <span>{t('inStockOnly') || 'In Stock Only'}</span>
           </div>
         </label>
 
@@ -1552,7 +1553,7 @@ const ProductCatalog = ({
           />
           <div className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            <span>Official Brand Warranty</span>
+            <span>{t('officialWarranty') || 'Official Brand Warranty'}</span>
           </div>
         </label>
       </div>
@@ -1562,7 +1563,7 @@ const ProductCatalog = ({
         <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">
-              Brands ({availableBrands.length})
+              {t('brands') || 'Brands'} ({availableBrands.length})
             </h4>
             {selectedBrands.length > 0 && (
               <button
@@ -1570,7 +1571,7 @@ const ProductCatalog = ({
                 onClick={() => setSelectedBrands([])}
                 className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
               >
-                Clear
+                {t('clear') || 'Clear'}
               </button>
             )}
           </div>
@@ -1582,7 +1583,7 @@ const ProductCatalog = ({
               type="text"
               value={brandSearch}
               onChange={(e) => setBrandSearch(e.target.value)}
-              placeholder="Search brands..."
+              placeholder={t('searchBrands') || 'Search brands...'}
               className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
             {brandSearch && (
@@ -1780,9 +1781,9 @@ const ProductCatalog = ({
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/25 border border-indigo-400/30 text-[11px] font-black tracking-wider uppercase text-cyan-300">
-                  <Flame className="w-3.5 h-3.5 text-rose-400 fill-current" /> Limited Drops
+                  <Flame className="w-3.5 h-3.5 text-rose-400 fill-current" /> {t('limitedDrops') || 'Limited Drops'}
                 </span>
-                <span className="text-[11px] font-black text-indigo-200">CLOSING IN</span>
+                <span className="text-[11px] font-black text-indigo-200">{t('closingIn') || 'CLOSING IN'}</span>
               </div>
 
               {/* Live Ticking Countdown Box */}
@@ -1801,14 +1802,14 @@ const ProductCatalog = ({
               </div>
 
               <h4 className="font-black text-base text-white leading-tight mb-1">
-                Curated Drop Discounts
+                {t('curatedDropDiscounts') || 'Curated Drop Discounts'}
               </h4>
               <p className="text-xs text-slate-300 line-clamp-1">
                 {(() => {
                   const maxDisc = Math.max(0, ...products.map(p => Number(p.discount || 0)))
-                  const catNames = categories.map(c => c.name).slice(0, 3).join(', ')
+                  const catNames = categories.map(c => t(c.name) || c.name).slice(0, 3).join(', ')
                   return maxDisc > 0
-                    ? `Save up to ${maxDisc}% across ${catNames || 'our departments'}!`
+                    ? `${t('upToOff') || 'Save up to'} ${maxDisc}% (${catNames || 'our departments'})!`
                     : `Exclusive marketplace deals across ${catNames || 'all categories'}!`
                 })()}
               </p>
@@ -1817,9 +1818,9 @@ const ProductCatalog = ({
             <button
               type="button"
               onClick={() => setOnlyDeals(true)}
-              className="relative z-10 mt-3 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-colors text-center"
+              className="relative z-10 mt-3 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-colors text-center cursor-pointer"
             >
-              Explore Drops
+              {t('exploreDrops') || 'Explore Drops'}
             </button>
           </div>
 
@@ -1828,29 +1829,26 @@ const ProductCatalog = ({
             <div>
               <div className="flex items-center gap-2 mb-2 text-cyan-400">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300">Verified Stores & Restaurants</span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300">{t('verifiedBoutiques') || 'Verified Stores & Restaurants'}</span>
               </div>
               <h4 className="font-extrabold text-sm text-slate-100 mb-1">
-                100% Authentic Brand Guarantees
+                {t('authenticGuarantee') || '100% Authentic Brand Guarantees'}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                Verified merchants:{' '}
-                {topShops.length > 0
-                  ? topShops.slice(0, 4).map(s => s.businessName || s.username).join(', ')
-                  : 'Official stores, restaurants and verified merchant partners'}.
+                {t('authenticSubtitle') || 'Verified merchants: ElectroZone, Apex Computers, Metro Fresh and official partners.'}
               </p>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-              <span className="text-slate-400 font-medium">7-Day Easy Returns</span>
+              <span className="text-slate-400 font-medium">{t('easyReturns') || '7-Day Easy Returns'}</span>
               <button
                 type="button"
                 onClick={() => {
                   topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="font-extrabold text-indigo-400 hover:text-indigo-300 hover:underline"
+                className="font-extrabold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer"
               >
-                View Stores & Restaurants →
+                {t('viewBoutiques') || 'View Stores & Restaurants →'}
               </button>
             </div>
           </div>
@@ -1916,10 +1914,10 @@ const ProductCatalog = ({
                   <span className={`mt-2 text-xs font-black text-center truncate max-w-[90px] ${
                     isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400'
                   }`}>
-                    {cat.name}
+                    {t(cat.name) || cat.name}
                   </span>
                   <span className="text-[10px] text-slate-400 font-bold">
-                    {count} items
+                    {count} {t('items') || 'items'}
                   </span>
                 </button>
               )
@@ -1945,7 +1943,7 @@ const ProductCatalog = ({
 
               {/* Ticking Timer Countdown Pill */}
               <div className="flex items-center gap-1 text-xs font-extrabold text-slate-700 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-full">
-                <span className="text-[11px] text-rose-700 font-bold uppercase">Ends in:</span>
+                <span className="text-[11px] text-rose-700 font-bold uppercase">{t('endsIn') || 'Ends in:'}</span>
                 <span className="font-mono bg-rose-600 text-white px-1.5 py-0.5 rounded text-[11px]">
                   {String(timeLeft.hours).padStart(2, '0')}
                 </span>
@@ -1964,9 +1962,9 @@ const ProductCatalog = ({
               <button
                 type="button"
                 onClick={() => setOnlyDeals(true)}
-                className="text-xs font-black text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+                className="text-xs font-black text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>EXPLORE ALL DROPS</span>
+                <span>{t('exploreAllDrops') || 'EXPLORE ALL DROPS'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
@@ -2072,9 +2070,9 @@ const ProductCatalog = ({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100 dark:fill-emerald-950" />
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">Verified</span>
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">{t('verified') || 'Verified'}</span>
                       </div>
-                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{count} Products</span>
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{count} {t('productsCount') || 'Products'}</span>
                     </div>
                   </div>
 
@@ -2157,15 +2155,15 @@ const ProductCatalog = ({
                 onClick={() => setShowMobileFilters(true)}
                 className="lg:hidden px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
               >
-                <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Filters
+                <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {t('filters') || 'Filters'}
               </button>
 
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
-                  {t('allProducts')}
+                  {t('allProducts') || 'All Products'}
                 </h2>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Showing <strong>{sortedProducts.length}</strong> of {products.length} products
+                  {t('showing') || 'Showing'} <strong>{sortedProducts.length}</strong> {t('of') || 'of'} {products.length} {t('productsCount') || 'products'}
                 </span>
               </div>
             </div>
@@ -2174,7 +2172,7 @@ const ProductCatalog = ({
             <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-[200px]">
               {selectedCategory && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200/80 dark:border-blue-900">
-                  {categories.find(c => idsEqual(c.id, selectedCategory))?.name || 'Category'}
+                  {t(categories.find(c => idsEqual(c.id, selectedCategory))?.name) || 'Category'}
                   <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
                 </span>
               )}
@@ -2186,13 +2184,13 @@ const ProductCatalog = ({
               )}
               {onlyDeals && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200/80 dark:border-rose-900">
-                  Flash Drops
+                  {t('flashDrops') || 'Flash Drops'}
                   <X className="w-3 h-3 cursor-pointer" onClick={() => setOnlyDeals(false)} />
                 </span>
               )}
               {onlyFreeDelivery && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200/80 dark:border-emerald-900">
-                  Free Delivery
+                  {t('freeDelivery') || 'Free Delivery'}
                   <X className="w-3 h-3 cursor-pointer" onClick={() => setOnlyFreeDelivery(false)} />
                 </span>
               )}
@@ -2200,9 +2198,9 @@ const ProductCatalog = ({
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="text-[11px] font-black text-rose-600 hover:underline px-2 py-1"
+                  className="text-[11px] font-black text-rose-600 hover:underline px-2 py-1 cursor-pointer"
                 >
-                  Clear All
+                  {t('clearAll') || 'Clear All'}
                 </button>
               )}
             </div>
@@ -2239,18 +2237,18 @@ const ProductCatalog = ({
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">Sort:</span>
+                <span className="text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">{t('sortBy') || 'Sort:'}</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 py-1.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-blue-500 cursor-pointer"
                 >
-                  <option value="relevance">Relevance</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="discount">Biggest Discount %</option>
-                  <option value="newest">Newest Arrivals</option>
+                  <option value="relevance">{t('sortRelevance') || 'Relevance'}</option>
+                  <option value="price-low">{t('sortPriceLow') || 'Price: Low to High'}</option>
+                  <option value="price-high">{t('sortPriceHigh') || 'Price: High to Low'}</option>
+                  <option value="rating">{t('sortRating') || 'Highest Rated'}</option>
+                  <option value="discount">{t('sortDiscount') || 'Biggest Discount %'}</option>
+                  <option value="newest">{t('sortNewest') || 'Newest Arrivals'}</option>
                 </select>
               </div>
             </div>
@@ -2260,16 +2258,16 @@ const ProductCatalog = ({
           {sortedProducts.length === 0 ? (
             <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
               <Package className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 mb-1">No products found</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 mb-1">{t('noProductsFound') || 'No products found'}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 max-w-sm mx-auto">
-                No items matched your current filters. Try resetting the filters or modifying your search terms.
+                {t('noProductsSubtitle') || 'No items matched your current filters. Try resetting the filters or modifying your search terms.'}
               </p>
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md transition-colors"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md transition-colors cursor-pointer"
               >
-                Reset All Filters
+                {t('resetAllFilters') || 'Reset All Filters'}
               </button>
             </div>
           ) : viewMode === 'grid' ? (
@@ -2355,10 +2353,10 @@ const ProductCatalog = ({
                 <div className="flex items-center gap-2">
                   <Store className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                    {detailProduct.vendor?.businessName || detailProduct.vendor?.username || 'Official Boutique'}
+                    {detailProduct.vendor?.businessName || detailProduct.vendor?.username || (t('officialBoutique') || 'Official Boutique')}
                   </span>
                   <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-black">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Verified
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> {t('verified') || 'Verified'}
                   </span>
                 </div>
                 <button
@@ -2421,11 +2419,11 @@ const ProductCatalog = ({
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3 flex-wrap">
                       <div className="flex items-center text-amber-500 font-extrabold">
                         <Star className="w-4 h-4 fill-current mr-0.5" />
-                        <span>4.8 (24 Reviews)</span>
+                        <span>4.8 (24 {t('reviews') || 'Reviews'})</span>
                       </div>
                       <span>•</span>
                       <span className="font-bold text-slate-700 dark:text-slate-300">
-                        {[detailProduct.category?.name, detailProduct.subCategory?.subCatName].filter(Boolean).join(' / ')}
+                        {[detailProduct.category?.name, detailProduct.subCategory?.subCatName].filter(Boolean).map(c => t(c) || c).join(' / ')}
                       </span>
                     </div>
 
@@ -2442,7 +2440,7 @@ const ProductCatalog = ({
                         )}
                       </div>
                       <span className="text-xs text-emerald-700 dark:text-emerald-400 font-bold block mt-0.5">
-                        ✓ {t('inStock')} & Ready to Ship
+                        ✓ {t('inStockReady') || 'In Stock & Ready to Ship'}
                       </span>
                     </div>
 
@@ -2457,7 +2455,7 @@ const ProductCatalog = ({
                     {parsedVariations.length > 0 && (
                       <div className="mb-4">
                         <h4 className="font-black text-xs text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
-                          Select Option:
+                          {t('selectOption') || 'Select Option:'}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {parsedVariations.map((v, i) => (
@@ -2480,7 +2478,7 @@ const ProductCatalog = ({
 
                     {/* Quantity Selector */}
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Quantity:</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{t('quantity') || 'Quantity:'}</span>
                       <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800">
                         <button
                           type="button"
@@ -2513,10 +2511,10 @@ const ProductCatalog = ({
                           toast.success(`Added ${modalQty} item(s) to basket!`)
                           setDetailProduct(null)
                         }}
-                        className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                        className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
                       >
                         <ShoppingBag className="w-4 h-4" />
-                        <span>{t('addToCart')}</span>
+                        <span>{t('addToBasket') || 'Add to Basket'}</span>
                       </button>
 
                       <button
@@ -2526,9 +2524,9 @@ const ProductCatalog = ({
                           setDetailProduct(null)
                           window.dispatchEvent(new CustomEvent('openCart'))
                         }}
-                        className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-colors"
+                        className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-colors cursor-pointer"
                       >
-                        Buy Now
+                        {t('buyNow') || 'Buy Now'}
                       </button>
                     </div>
 
@@ -2538,7 +2536,7 @@ const ProductCatalog = ({
                       className="w-full py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
-                      <span>View Full Product Page with Reviews & Specifications →</span>
+                      <span>{t('viewFullPage') || 'View Full Product Page with Reviews & Specifications →'}</span>
                     </Link>
                   </div>
                 </div>

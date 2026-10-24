@@ -180,10 +180,10 @@ export default function StorefrontHeaderSearch({
 
   // Get active category display name
   const activeCategoryLabel = React.useMemo(() => {
-    if (searchCategory === 'all') return 'All Collections'
+    if (searchCategory === 'all') return t('allCollections') || 'All Collections'
     const found = categories.find((c) => String(c.id) === String(searchCategory))
-    return found ? found.name : 'Collections'
-  }, [searchCategory, categories])
+    return found ? (t(found.name) || found.name) : (t('allCollections') || 'Collections')
+  }, [searchCategory, categories, t])
 
   const handleExecuteSearch = async (term) => {
     const q = (term !== undefined ? term : searchQuery)?.trim()
@@ -642,7 +642,7 @@ export default function StorefrontHeaderSearch({
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <HistoryIcon sx={{ fontSize: 16, color: THEME?.primary || '#2563EB' }} />
                         <Typography variant="caption" sx={{ fontWeight: 800, fontSize: 11.5, letterSpacing: 0.5, textTransform: 'uppercase', color: isDark ? '#94A3B8' : '#64748B' }}>
-                          Recent Searches
+                          {t('recentSearches') || 'Recent Searches'}
                         </Typography>
                       </Stack>
                       <Button
@@ -650,7 +650,7 @@ export default function StorefrontHeaderSearch({
                         onClick={clearAllRecent}
                         sx={{ fontSize: 11, fontWeight: 700, color: '#EF4444', textTransform: 'none', p: 0, minWidth: 0 }}
                       >
-                        Clear All
+                        {t('clearAll') || 'Clear All'}
                       </Button>
                     </Stack>
 
@@ -689,7 +689,7 @@ export default function StorefrontHeaderSearch({
                   <Stack direction="row" alignItems="center" spacing={1} mb={1.25}>
                     <TrendingIcon sx={{ fontSize: 16, color: '#F59E0B' }} />
                     <Typography variant="caption" sx={{ fontWeight: 800, fontSize: 11.5, letterSpacing: 0.5, textTransform: 'uppercase', color: isDark ? '#94A3B8' : '#64748B' }}>
-                      Popular Trending Searches
+                      {t('popularTrending') || 'Popular Trending Searches'}
                     </Typography>
                   </Stack>
 

@@ -27,6 +27,8 @@ import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined'
 import StoreMallDirectoryOutlinedIcon from '@mui/icons-material/StoreMallDirectoryOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import RestaurantMenuOutlinedIcon from '@mui/icons-material/RestaurantMenuOutlined'
+import { isRestaurantVendor } from '@/lib/restaurant/categoryHelper'
 
 const BRAND = '#D70F64'
 const BRAND_DARK = '#B50B52'
@@ -157,6 +159,35 @@ export default function VendorDashboardView() {
               >
                 Live Kitchen Queue
               </Button>
+
+              {/* Direct Link to Restaurant POS & ERP System */}
+              {isRestaurantVendor(userData) && (
+                <Button
+                  onClick={() => router.push('/vendor/dashboard/restaurant')}
+                  startIcon={<RestaurantMenuOutlinedIcon sx={{ fontSize: 18 }} />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: 13,
+                    px: 2,
+                    py: 0.9,
+                    borderRadius: '12px',
+                    whiteSpace: 'nowrap',
+                    color: '#065f46',
+                    bgcolor: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      bgcolor: '#d1fae5',
+                      borderColor: '#6ee7b7',
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  Restaurant POS & ERP
+                </Button>
+              )}
             </Stack>
 
             {/* Right: Quick Actions Group */}

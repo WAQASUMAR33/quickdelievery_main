@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import AnimatedCard from '@/components/ui/AnimatedCard'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react'
 
 const WishlistPage = () => {
+  const { t, isRTL } = useLanguage()
   const { items, removeFromWishlist, clearWishlist, getTotalWishlistItems } = useWishlist()
   const { addToCart, isInCart } = useCart()
   const { user } = useAuth()
@@ -37,8 +39,8 @@ const WishlistPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-600 mb-2">Login Required</h2>
-          <p className="text-gray-500">Please login to view your wishlist</p>
+          <h2 className="text-2xl font-bold text-gray-600 mb-2">{t('loginRequired') || 'Login Required'}</h2>
+          <p className="text-gray-500">{t('pleaseLoginWishlist') || 'Please login to view your wishlist'}</p>
         </div>
       </div>
     )
@@ -169,7 +171,7 @@ const WishlistPage = () => {
                 className="flex-1 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white py-2 px-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>Add to Cart</span>
+                <span>{t('addToCart') || 'Add to Cart'}</span>
               </motion.button>
               
               <motion.button
@@ -179,7 +181,7 @@ const WishlistPage = () => {
                 className="px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 flex items-center justify-center space-x-2 border border-transparent dark:border-slate-700"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className={viewMode === 'list' ? 'hidden lg:inline' : ''}>Remove</span>
+                <span className={viewMode === 'list' ? 'hidden lg:inline' : ''}>{t('remove') || 'Remove'}</span>
               </motion.button>
             </div>
           </div>
@@ -199,10 +201,10 @@ const WishlistPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 flex items-center space-x-3">
             <Heart className="text-[#F25D49]" />
-            <span>My Wishlist</span>
+            <span>{t('wishlist') || 'My Wishlist'}</span>
           </h1>
           <p className="text-gray-600 dark:text-slate-400 mt-2">
-            {getTotalWishlistItems()} {getTotalWishlistItems() === 1 ? 'item' : 'items'} saved for later
+            {getTotalWishlistItems()} {getTotalWishlistItems() === 1 ? (t('item') || 'item') : (t('items') || 'items')} {t('savedForLater') || 'saved for later'}
           </p>
         </div>
 
@@ -215,7 +217,7 @@ const WishlistPage = () => {
               className="px-4 py-2 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center space-x-2 border border-red-200 dark:border-red-900/40"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Clear All</span>
+              <span>{t('clearAll') || 'Clear All'}</span>
             </motion.button>
           </div>
         )}
@@ -235,7 +237,7 @@ const WishlistPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" />
               <input
                 type="text"
-                placeholder="Search wishlist..."
+                placeholder={t('searchWishlistPlaceholder') || 'Search wishlist...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-slate-500"
@@ -249,10 +251,10 @@ const WishlistPage = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#F25D49] focus:border-transparent"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="name">Name A-Z</option>
-                <option value="price">Price Low-High</option>
+                <option value="newest">{t('sortNewest') || 'Newest First'}</option>
+                <option value="oldest">{t('sortOldest') || 'Oldest First'}</option>
+                <option value="name">{t('sortName') || 'Name A-Z'}</option>
+                <option value="price">{t('sortPriceLow') || 'Price Low-High'}</option>
               </select>
 
               {/* View Mode */}
@@ -302,9 +304,9 @@ const WishlistPage = () => {
               <Heart className="w-12 h-12 text-[#F25D49]" />
             </motion.div>
             
-            <h3 className="text-2xl font-bold text-gray-700 dark:text-slate-200 mb-3">Your wishlist is empty</h3>
+            <h3 className="text-2xl font-bold text-gray-700 dark:text-slate-200 mb-3">{t('wishlistEmpty') || 'Your wishlist is empty'}</h3>
             <p className="text-gray-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-              Start adding products you love to keep track of them and purchase later.
+              {t('wishlistEmptySub') || 'Start adding products you love to keep track of them and purchase later.'}
             </p>
             
             <motion.div
@@ -315,7 +317,7 @@ const WishlistPage = () => {
             >
               <div className="bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center space-x-2 cursor-pointer">
                 <Package2 className="w-5 h-5" />
-                <span>Browse Products</span>
+                <span>{t('browseProducts') || 'Browse Products'}</span>
                 <ArrowRight className="w-4 h-4" />
               </div>
             </motion.div>
@@ -330,8 +332,8 @@ const WishlistPage = () => {
             {filteredItems.length === 0 ? (
               <div className="text-center py-12">
                 <Search className="w-16 h-16 text-gray-400 dark:text-slate-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 dark:text-slate-300 mb-2">No items found</h3>
-                <p className="text-gray-500 dark:text-slate-400">Try adjusting your search or filters</p>
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-slate-300 mb-2">{t('noItemsFound') || 'No items found'}</h3>
+                <p className="text-gray-500 dark:text-slate-400">{t('adjustSearchOrFilters') || 'Try adjusting your search or filters'}</p>
               </div>
             ) : (
               <div className={

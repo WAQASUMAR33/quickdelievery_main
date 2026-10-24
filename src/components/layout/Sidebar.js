@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
 import Box             from '@mui/material/Box'
 import List            from '@mui/material/List'
@@ -39,6 +39,8 @@ import ExpandLessIcon            from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon            from '@mui/icons-material/ExpandMore'
 import HistoryOutlinedIcon       from '@mui/icons-material/HistoryOutlined'
 import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
+import RestaurantMenuOutlinedIcon from '@mui/icons-material/RestaurantMenuOutlined'
+import { isRestaurantVendor }    from '@/lib/restaurant/categoryHelper'
 
 const BRAND      = '#D70F64'
 const BG         = '#0f1724'   // deep navy
@@ -118,6 +120,28 @@ const DEFAULT_ITEMS = [
   { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,  path: '/admin/dashboard/settings' },
 ]
 
+const RESTAURANT_MENU_ITEM = {
+  id: 'restaurant-pos',
+  label: 'Restaurant Management',
+  icon: RestaurantMenuOutlinedIcon,
+  path: '/vendor/dashboard/restaurant',
+  badge: 'POS',
+  children: [
+    { id: 'pos',          label: 'Touch POS & Tables',     path: '/vendor/dashboard/restaurant?tab=pos' },
+    { id: 'kds',          label: 'Live Kitchen KDS',       path: '/vendor/dashboard/restaurant?tab=kds' },
+    { id: 'orders',       label: 'Active Orders & Bills',  path: '/vendor/dashboard/restaurant?tab=orders' },
+    { id: 'reservations', label: 'Table Reservations',     path: '/vendor/dashboard/restaurant?tab=reservations' },
+    { id: 'menu',         label: 'Menu Catalog & Margins', path: '/vendor/dashboard/restaurant?tab=menu' },
+    { id: 'recipes',      label: 'Recipe BOM Formulations',path: '/vendor/dashboard/restaurant?tab=recipes' },
+    { id: 'inventory',    label: 'Stock Levels & Alerts',  path: '/vendor/dashboard/restaurant?tab=inventory' },
+    { id: 'transfers',    label: 'Stock Transfers & Waste',path: '/vendor/dashboard/restaurant?tab=transfers' },
+    { id: 'khata',        label: 'Customer & Vendor Khata',path: '/vendor/dashboard/restaurant?tab=khata' },
+    { id: 'dayend',       label: 'Day-End Z-Report',       path: '/vendor/dashboard/restaurant?tab=dayend' },
+    { id: 'reports',      label: 'Executive BI Analytics', path: '/vendor/dashboard/restaurant?tab=reports' },
+    { id: 'hardware',     label: 'Hardware & PRA Fiscal',  path: '/vendor/dashboard/restaurant?tab=hardware' },
+  ]
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 const Sidebar = () => {
   const [collapsed, setCollapsed]     = useState(false)
@@ -125,6 +149,7 @@ const Sidebar = () => {
   const { user, userData, logout }    = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const toggle = (id) => setExpanded(p => ({ ...p, [id]: !p[id] }))
   const go     = (path) => router.push(path)
@@ -134,17 +159,51 @@ const Sidebar = () => {
     catch (e) { console.error('Logout error:', e) }
   }
 
+  // Auto-expand restaurant menu if currently on restaurant route
+  useEffect(() => {
+    if (pathname?.startsWith('/vendor/dashboard/restaurant')) {
+      setExpanded(p => ({ ...p, 'restaurant-pos': true }))
+    }
+  }, [pathname])
+
   const isActive = (path) => {
     if (!path) return false
-    const p = path.replace(/\/$/, '')
-    const cur = pathname.replace(/\/$/, '')
+    const [pathBase, pathQuery] = path.split('?')
+    const p = pathBase.replace(/\/$/, '')
+    const cur = (pathname || '').replace(/\/$/, '')
+
+    if (pathQuery) {
+      const urlParams = new URLSearchParams(pathQuery)
+      const tabParam = urlParams.get('tab')
+      const currentTab = searchParams ? searchParams.get('tab') : null
+      return cur === p && (tabParam === currentTab || (!currentTab && tabParam === 'pos'))
+    }
+
     if (p === '/admin/dashboard') return cur === '/admin/dashboard'
     if (p === '/vendor/dashboard') return cur === '/vendor/dashboard'
+    if (p === '/vendor/dashboard/restaurant') return cur === '/vendor/dashboard/restaurant'
     return cur === p || cur.startsWith(`${p}/`)
   }
 
   const role  = userData?.role || 'CUSTOMER'
-  const items = role === 'ADMIN' ? ADMIN_ITEMS : role === 'VENDOR' ? VENDOR_ITEMS : role === 'DRIVER' ? DRIVER_ITEMS : DEFAULT_ITEMS
+  const isRestaurant = isRestaurantVendor(userData) || (pathname && pathname.startsWith('/vendor/dashboard/restaurant'))
+
+  let items = role === 'ADMIN' ? ADMIN_ITEMS : role === 'DRIVER' ? DRIVER_ITEMS : role === 'VENDOR' ? VENDOR_ITEMS : DEFAULT_ITEMS
+
+  if (role === 'VENDOR' && (isRestaurant || true)) {
+    // Elevate Restaurant ERP & POS directly under Dashboard
+    items = [
+      VENDOR_ITEMS[0], // Dashboard
+      RESTAURANT_MENU_ITEM,
+      ...VENDOR_ITEMS.slice(1)
+    ]
+  } else if (role === 'ADMIN') {
+    items = [
+      ...ADMIN_ITEMS.slice(0, 5),
+      RESTAURANT_MENU_ITEM,
+      ...ADMIN_ITEMS.slice(5)
+    ]
+  }
 
   // ── NavItem sub-component ──────────────────────────────────────────────────
   const NavItem = ({ item }) => {
@@ -194,6 +253,22 @@ const Sidebar = () => {
                 lineHeight: 1.3,
               }}
             />
+            {item.badge && (
+              <Chip
+                label={item.badge}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.625rem',
+                  fontWeight: 800,
+                  bgcolor: '#10b981',
+                  color: '#ffffff',
+                  borderRadius: '6px',
+                  ml: 0.5,
+                  mr: hasChildren ? 0.5 : 0,
+                }}
+              />
+            )}
             {hasChildren && (
               isExpanded
                 ? <ExpandLessIcon sx={{ fontSize: 16, opacity: 0.6 }} />

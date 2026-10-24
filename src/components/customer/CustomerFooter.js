@@ -177,22 +177,22 @@ const CustomerFooter = () => {
                         <ul className="space-y-2.5 text-xs sm:text-sm">
                             <li>
                                 <Link href="/" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Flash Drops & All Collections
+                                    {t('flashDrops')} & {t('allCollections')}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/login" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Customer Account & Sign In
+                                    {t('customerAccountSignIn') || 'Customer Account & Sign In'}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/register" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Create Free Customer Account
+                                    {t('createCustomerAccount') || 'Create Free Customer Account'}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/customer" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Track Active Orders
+                                    {t('trackActiveOrders') || 'Track Active Orders'}
                                 </Link>
                             </li>
                         </ul>
@@ -216,12 +216,12 @@ const CustomerFooter = () => {
                             </li>
                             <li>
                                 <Link href="/login" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Vendor Merchant Portal
+                                    {t('vendorPortal') || 'Vendor Merchant Portal'}
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/login" className={`transition-colors ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
-                                    Driver Operations Login
+                                    {t('driverPortal') || 'Driver Operations Login'}
                                 </Link>
                             </li>
                         </ul>
@@ -239,7 +239,7 @@ const CustomerFooter = () => {
                             </li>
                             <li className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 <Clock className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-indigo-400' : 'text-blue-600'}`} />
-                                <span>Live Dispatch Hours: 24/7 Nationwide</span>
+                                <span>{t('liveDispatchHours') || 'Live Dispatch Hours: 24/7 Nationwide'}</span>
                             </li>
                         </ul>
                         <div className={`mt-4 p-3.5 rounded-2xl border transition-colors ${
@@ -248,7 +248,7 @@ const CustomerFooter = () => {
                                 : 'bg-white border-slate-200 shadow-sm text-slate-600'
                         }`}>
                             <p className="text-xs leading-relaxed">
-                                Need help with an existing order? Access live tracking or message customer care directly in your <Link href="/customer" className={`font-bold hover:underline ${isDark ? 'text-indigo-400' : 'text-blue-600'}`}>Orders</Link> section.
+                                {t('footerOrderHelp') || 'Need help with an existing order? Access live tracking or message customer care directly in your'} <Link href="/customer" className={`font-bold hover:underline ${isDark ? 'text-indigo-400' : 'text-blue-600'}`}>{t('myOrders') || 'Orders'}</Link>.
                             </p>
                         </div>
                     </div>
@@ -268,13 +268,13 @@ const CustomerFooter = () => {
                         </p>
                         <div className="flex flex-wrap items-center gap-6">
                             <Link href="/" className={`transition-colors ${isDark ? 'hover:text-indigo-400' : 'hover:text-blue-600'}`}>
-                                Privacy Policy
+                                {t('privacyPolicy') || 'Privacy Policy'}
                             </Link>
                             <Link href="/" className={`transition-colors ${isDark ? 'hover:text-indigo-400' : 'hover:text-blue-600'}`}>
-                                Terms of Service
+                                {t('termsOfService') || 'Terms of Service'}
                             </Link>
                             <Link href="/" className={`transition-colors ${isDark ? 'hover:text-indigo-400' : 'hover:text-blue-600'}`}>
-                                Merchant Agreement
+                                {t('merchantAgreement') || 'Merchant Agreement'}
                             </Link>
                         </div>
                     </div>

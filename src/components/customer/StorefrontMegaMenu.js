@@ -25,6 +25,7 @@ import {
   Check as CheckIcon,
   WidgetsOutlined as AllIcon,
 } from '@mui/icons-material'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 // Get appropriate icon for category based on code or name
 function getCategoryIcon(code = '', name = '') {
@@ -55,6 +56,8 @@ export default function StorefrontMegaMenu({
   isDark = true,
   THEME = {},
 }) {
+  const { t, isRTL } = useLanguage()
+
   // Currently highlighted category in the dropdown (for instant preview of subcategories)
   const [highlightedCatId, setHighlightedCatId] = useState(null)
 
@@ -127,7 +130,9 @@ export default function StorefrontMegaMenu({
       sx={{
         position: 'absolute',
         top: 'calc(100% + 8px)',
-        left: 0,
+        left: isRTL ? 'auto' : 0,
+        right: isRTL ? 0 : 'auto',
+        direction: isRTL ? 'rtl' : 'ltr',
         width: { xs: '96vw', sm: 580, md: 660 },
         maxWidth: '96vw',
         bgcolor: isDark ? '#0A0F1D' : '#FFFFFF',
@@ -153,7 +158,8 @@ export default function StorefrontMegaMenu({
         <Box
           sx={{
             width: { xs: '100%', sm: 250, md: 270 },
-            borderRight: { xs: 'none', sm: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0' },
+            borderRight: { xs: 'none', sm: !isRTL && (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0') },
+            borderLeft: { xs: 'none', sm: isRTL && (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0') },
             borderBottom: { xs: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E2E8F0', sm: 'none' },
             bgcolor: isDark ? '#060A14' : '#F8FAFC',
             p: 1,
@@ -175,7 +181,7 @@ export default function StorefrontMegaMenu({
               color: isDark ? '#94A3B8' : '#64748B',
             }}
           >
-            Categories
+            {t('departments') || 'Categories'}
           </Typography>
 
           {/* Option: All Collections */}
@@ -215,7 +221,7 @@ export default function StorefrontMegaMenu({
             <Stack direction="row" spacing={1.25} alignItems="center">
               <AllIcon sx={{ fontSize: 18, color: THEME?.primary || '#2563EB' }} />
               <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 13 }}>
-                All Collections
+                {t('allCollections') || 'All Collections'}
               </Typography>
             </Stack>
             <Stack direction="row" spacing={0.5} alignItems="center">
@@ -297,7 +303,7 @@ export default function StorefrontMegaMenu({
                       fontSize: 13,
                     }}
                   >
-                    {cat.name}
+                    {t(cat.name) || cat.name}
                   </Typography>
                 </Stack>
 
@@ -318,6 +324,7 @@ export default function StorefrontMegaMenu({
                     sx={{
                       fontSize: 16,
                       color: isHighlighted ? THEME?.primary || '#2563EB' : isDark ? '#64748B' : '#94A3B8',
+                      transform: isRTL ? 'rotate(180deg)' : 'none',
                     }}
                   />
                 </Stack>
@@ -363,18 +370,18 @@ export default function StorefrontMegaMenu({
                     variant="subtitle2"
                     sx={{ fontWeight: 800, fontSize: 14, color: isDark ? '#FFFFFF' : '#0F172A' }}
                   >
-                    {activeCategory.name}
+                    {t(activeCategory.name) || activeCategory.name}
                   </Typography>
                   <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11 }}>
-                    {activeCategory.description || 'Browse all catalog items'}
+                    {activeCategory.description ? (t(activeCategory.description) || activeCategory.description) : (t('browseAllCatalog') || 'Browse all catalog items')}
                   </Typography>
                 </Box>
 
                 <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: THEME?.primary || '#2563EB' }}>
                   <Typography variant="caption" sx={{ fontWeight: 800, fontSize: 11 }}>
-                    View All ({activeCategory._count?.products || 0})
+                    {t('viewAll') || 'View All'} ({activeCategory._count?.products || 0})
                   </Typography>
-                  <ArrowForwardIcon sx={{ fontSize: 12 }} />
+                  <ArrowForwardIcon sx={{ fontSize: 12, transform: isRTL ? 'rotate(180deg)' : 'none' }} />
                 </Stack>
               </Box>
 
@@ -391,7 +398,7 @@ export default function StorefrontMegaMenu({
                   color: isDark ? '#94A3B8' : '#64748B',
                 }}
               >
-                Subcategories ({activeCategory.subCategories?.length || 0})
+                {t('subcategories') || 'Subcategories'} ({activeCategory.subCategories?.length || 0})
               </Typography>
 
               {Array.isArray(activeCategory.subCategories) && activeCategory.subCategories.length > 0 ? (
@@ -419,24 +426,24 @@ export default function StorefrontMegaMenu({
                         '&:hover': {
                           bgcolor: isDark ? 'rgba(37, 99, 235, 0.12)' : '#EFF6FF',
                           borderColor: isDark ? 'rgba(37, 99, 235, 0.3)' : '#BFDBFE',
-                          transform: 'translateX(3px)',
+                          transform: isRTL ? 'translateX(-3px)' : 'translateX(3px)',
                         },
                       }}
                     >
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: THEME?.primary || '#2563EB' }} />
                         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 12.5 }}>
-                          {sub.subCatName}
+                          {t(sub.subCatName) || sub.subCatName}
                         </Typography>
                       </Stack>
-                      <ChevronRightIcon sx={{ fontSize: 14, color: isDark ? '#64748B' : '#94A3B8' }} />
+                      <ChevronRightIcon sx={{ fontSize: 14, color: isDark ? '#64748B' : '#94A3B8', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
                     </Box>
                   ))}
                 </Stack>
               ) : (
                 <Box sx={{ py: 2, textAlign: 'center' }}>
                   <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12 }}>
-                    Click above to browse all products in {activeCategory.name}
+                    {t('clickAboveToBrowse') || 'Click above to browse all products in'} {t(activeCategory.name) || activeCategory.name}
                   </Typography>
                 </Box>
               )}
@@ -457,10 +464,10 @@ export default function StorefrontMegaMenu({
                 }}
               >
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, fontSize: 14, color: isDark ? '#FFFFFF' : '#0F172A' }}>
-                  All Departments & Collections
+                  {t('allDepartmentsCollections') || 'All Departments & Collections'}
                 </Typography>
                 <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11 }}>
-                  Browse our complete catalog of {totalProducts || 161}+ verified vendor products.
+                  {t('browseCompleteCatalog') || `Browse our complete catalog of ${totalProducts || 161}+ verified vendor products.`}
                 </Typography>
               </Box>
 
@@ -476,7 +483,7 @@ export default function StorefrontMegaMenu({
                   color: isDark ? '#94A3B8' : '#64748B',
                 }}
               >
-                Featured Departments
+                {t('featuredDepartments') || 'Featured Departments'}
               </Typography>
 
               <Stack spacing={0.5}>
@@ -497,18 +504,18 @@ export default function StorefrontMegaMenu({
                       borderRadius: 0,
                       '&:hover': {
                         bgcolor: isDark ? 'rgba(37, 99, 235, 0.12)' : '#EFF6FF',
-                        transform: 'translateX(3px)',
+                        transform: isRTL ? 'translateX(-3px)' : 'translateX(3px)',
                       },
                     }}
                   >
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: THEME?.primary || '#2563EB' }} />
                       <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 12.5 }}>
-                        {c.name}
+                        {t(c.name) || c.name}
                       </Typography>
                     </Stack>
                     <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 11, fontWeight: 700 }}>
-                      {c._count?.products || 0} items
+                      {c._count?.products || 0} {t('items') || 'items'}
                     </Typography>
                   </Box>
                 ))}
@@ -521,7 +528,7 @@ export default function StorefrontMegaMenu({
             <Stack direction="row" spacing={1} flexWrap="wrap">
               <Chip
                 icon={<BoltIcon sx={{ fontSize: '13px !important', color: '#F59E0B' }} />}
-                label="Flash Drops"
+                label={t('flashDrops') || 'Flash Drops'}
                 size="small"
                 onClick={() => {
                   if (onApplyFilter) onApplyFilter('deals')
@@ -542,7 +549,7 @@ export default function StorefrontMegaMenu({
 
               <Chip
                 icon={<ShippingIcon sx={{ fontSize: '13px !important', color: '#10B981' }} />}
-                label="Free Delivery"
+                label={t('freeDelivery') || 'Free Delivery'}
                 size="small"
                 onClick={() => {
                   if (onApplyFilter) onApplyFilter('freeDelivery')
@@ -563,7 +570,7 @@ export default function StorefrontMegaMenu({
 
               <Chip
                 icon={<StarIcon sx={{ fontSize: '13px !important', color: '#FBBF24' }} />}
-                label="Top Rated"
+                label={t('topRated') || 'Top Rated'}
                 size="small"
                 onClick={() => {
                   if (onApplyFilter) onApplyFilter('highRating')
@@ -599,11 +606,12 @@ export default function StorefrontMegaMenu({
                   color: '#EF4444',
                   textTransform: 'none',
                   borderRadius: 0,
-                  ml: 'auto !important',
+                  ml: isRTL ? '0 !important' : 'auto !important',
+                  mr: isRTL ? 'auto !important' : '0 !important',
                   '&:hover': { bgcolor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEE2E2' },
                 }}
               >
-                Reset
+                {t('clear') || 'Reset'}
               </Button>
             </Stack>
           </Box>

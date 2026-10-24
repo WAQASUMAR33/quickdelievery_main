@@ -106,11 +106,11 @@ function getCategoryEmoji(cat) {
   return '📦'
 }
 
-function storefrontGreeting() {
+function storefrontGreeting(t = (k) => k) {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return t('goodMorning') || 'Good morning'
+  if (h < 18) return t('goodAfternoon') || 'Good afternoon'
+  return t('goodEvening') || 'Good evening'
 }
 
 export default function CustomerDashboard({ initialTab = 'products' }) {
@@ -168,11 +168,11 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   const { isGuest, navTabs, effectiveTab } = useMemo(() => {
     const guest = userData?.role === 'GUEST' || !userData
     const tabDefs = [
-      { id: 'products',  label: 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
-      { id: 'orders',    label: 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
-      { id: 'favorites', label: 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
-      { id: 'wishlist',  label: 'Wishlist',       icon: <FavoriteBorderIcon />, activeIcon: <FavoriteIcon />, protected: true },
-      { id: 'profile',   label: 'Profile Settings', icon: <PersonOutlineIcon />, activeIcon: <PersonIcon />, protected: true },
+      { id: 'products',  label: t('exploreHome') || 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
+      { id: 'orders',    label: t('myOrders') || 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
+      { id: 'favorites', label: t('favourites') || 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
+      { id: 'wishlist',  label: t('wishlist') || 'Wishlist',       icon: <FavoriteBorderIcon />, activeIcon: <FavoriteIcon />, protected: true },
+      { id: 'profile',   label: t('profileSettings') || 'Profile Settings', icon: <PersonOutlineIcon />, activeIcon: <PersonIcon />, protected: true },
     ]
     const allowed = tabDefs.filter(tab => !guest || !tab.protected)
     const allowedIds = new Set(allowed.map(t => t.id))
@@ -183,7 +183,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
       navTabs: tabDefs,
       effectiveTab: allowedIds.has(activeTab) ? activeTab : 'products',
     }
-  }, [userData?.role, activeTab, userData])
+  }, [userData?.role, activeTab, userData, t, language])
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -198,29 +198,30 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
   const dynamicDepartments = useMemo(() => {
     const list = [
-      { id: 'deals', label: '⚡ Flash Drops', badge: 'LIVE', badgeBg: THEME.rose },
+      { id: 'deals', label: t('flashDrops') || '⚡ Flash Drops', badge: 'LIVE', badgeBg: THEME.rose },
     ]
 
     if (categories && categories.length > 0) {
       categories.forEach(cat => {
+        const catTranslated = t(cat.name) || cat.name
         list.push({
           id: String(cat.id),
-          label: `${getCategoryEmoji(cat)} ${cat.name}`,
+          label: `${getCategoryEmoji(cat)} ${catTranslated}`,
           rawName: cat.name,
         })
       })
     } else {
       list.push(
-        { id: 'restaurant', label: '🍽️ Restaurant' },
-        { id: 'grocery', label: '🛒 Fresh Groceries' },
-        { id: 'bakery', label: '🥐 Bakery & Desserts' },
-        { id: 'tech', label: '📱 Electronics & Tech' },
+        { id: 'restaurant', label: `🍽️ ${t('Restaurant') || 'Restaurant'}` },
+        { id: 'grocery', label: `🛒 ${t('Fresh Groceries') || 'Fresh Groceries'}` },
+        { id: 'bakery', label: `🥐 ${t('Bakery & Desserts') || 'Bakery & Desserts'}` },
+        { id: 'tech', label: `📱 ${t('Electronics & Tech') || 'Electronics & Tech'}` },
       )
     }
 
-    list.push({ id: 'stores', label: '🏬 Brand Boutiques' })
+    list.push({ id: 'stores', label: t('brandBoutiques') || '🏬 Brand Boutiques' })
     return list
-  }, [categories])
+  }, [categories, t, language])
 
   // Fetch Favorites from API
   useEffect(() => {
@@ -306,7 +307,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
       {/* Navigation List */}
       <Typography variant="caption" fontWeight={700} color="text.disabled" textTransform="uppercase" letterSpacing={1} sx={{ px: 1.5, mb: 1, fontSize: 11 }}>
-        Main Menu
+        {t('mainMenu') || 'Main Menu'}
       </Typography>
 
       <List sx={{ p: 0, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
@@ -374,13 +375,13 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               <ShoppingBagIcon sx={{ color: isDark ? THEME.goldLight : THEME.primaryDark, fontSize: 24 }} />
             </Badge>
             <Typography variant="body2" fontWeight={800} sx={{ color: isDark ? '#F1F5F9' : 'text.primary' }}>
-              My Basket
+              {t('myBasket') || 'My Basket'}
             </Typography>
           </Box>
-          <Chip label={`${getTotalItems()} items`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: isDark ? 'rgba(255,255,255,0.1)' : '#ffffff', color: isDark ? '#fff' : THEME.primaryDark, borderRadius: '6px' }} />
+          <Chip label={`${getTotalItems()} ${t('items') || 'items'}`} size="small" sx={{ fontWeight: 700, fontSize: 11, bgcolor: isDark ? 'rgba(255,255,255,0.1)' : '#ffffff', color: isDark ? '#fff' : THEME.primaryDark, borderRadius: '6px' }} />
         </Box>
         <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : 'text.secondary' }} display="block">
-          Tap to view bill & checkout
+          {t('tapToViewBill') || 'Tap to view bill & checkout'}
         </Typography>
       </Box>
 
@@ -405,7 +406,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)',
             }}
           >
-            Sign In / Register
+            {t('signInRegister') || 'Sign In / Register'}
           </Button>
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -590,7 +591,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', boxShadow: '0 0 8px #10B981' }} />
                 <Typography variant="caption" sx={{ fontSize: 11.5, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
-                  High-Speed CDN • Multi-Store Ready
+                  {t('highSpeedCdn') || 'High-Speed CDN • Multi-Store Ready'}
                 </Typography>
               </Box>
             </Stack>
@@ -617,7 +618,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     <MenuItem key={lang.code} value={lang.code} sx={{ fontSize: 12, fontWeight: 600 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <span>{lang.flag}</span>
-                        <span>{lang.label}</span>
+                        <span>{lang.label || lang.name}</span>
                       </Box>
                     </MenuItem>
                   ))}
@@ -653,7 +654,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   {t('partnerWithUs')}
                 </Typography>
                 <Chip
-                  label="0% FEE"
+                  label={t('zeroFee') || '0% FEE'}
                   size="small"
                   sx={{
                     height: 16,
@@ -747,7 +748,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                       Quick<Box component="span" sx={{ color: isDark ? THEME.primaryLight : THEME.primary }}>Delivery</Box>
                     </Typography>
                     <Chip
-                      label="BOUTIQUE MALL"
+                      label={t('boutiqueMall') || 'BOUTIQUE MALL'}
                       size="small"
                       sx={{
                         height: 18,
@@ -763,7 +764,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     />
                   </Box>
                   <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600, display: { xs: 'none', xl: 'block' }, whiteSpace: 'nowrap' }}>
-                    Curated Multi-Vendor Marketplace
+                    {t('curatedMarketplace') || 'Curated Multi-Vendor Marketplace'}
                   </Typography>
                 </Box>
               </Box>
@@ -902,9 +903,9 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   >
                     {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </Avatar>
-                  <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: isRTL ? 'right' : 'left' }}>
                     <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', display: 'block', lineHeight: 1 }}>
-                      Welcome,
+                      {t('welcome') || 'Welcome,'}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                       <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
@@ -1025,7 +1026,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 whiteSpace: 'nowrap',
               }}
             >
-              Menu ▾
+              {t('menu') || 'Menu ▾'}
             </Button>
             <Box
               component="input"
@@ -1037,7 +1038,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   setActiveTab('products')
                 }
               }}
-              placeholder="Search 161+ items, burgers, tech…"
+              placeholder={t('searchItemsPlaceholder') || 'Search 161+ items, burgers, tech…'}
               sx={{
                 flex: 1,
                 height: 34,
@@ -1205,7 +1206,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           <Box sx={{ display: { xs: 'none', xl: 'flex' }, alignItems: 'center', gap: 1, flexShrink: 0, whiteSpace: 'nowrap' }}>
             <Box sx={{ width: 7, height: 7, borderRadius: 0, bgcolor: '#0284C7', boxShadow: '0 0 8px #0284C7' }} />
             <Typography variant="caption" sx={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', WebkitFontSmoothing: 'antialiased' }}>
-              Express Delivery across Pakistan • Free on orders over <Box component="span" sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontWeight: 900 }}>Rs. 1,500</Box>
+              {t('expressNotice') || 'Express Delivery across Pakistan • Free on orders over Rs. 1,500'}
             </Typography>
           </Box>
         </Box>
@@ -1239,20 +1240,20 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         </Box>
         <MenuItem onClick={() => { setActiveTab('orders'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
           <ListItemIcon><ShoppingBagOutlinedIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>My Orders</ListItemText>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>{t('myOrders') || 'My Orders'}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => { setActiveTab('wishlist'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
           <ListItemIcon><FavoriteBorderIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>Wishlist</ListItemText>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>{t('wishlist') || 'Wishlist'}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => { setActiveTab('profile'); setUserMenuAnchor(null) }} sx={{ py: 1.25 }}>
           <ListItemIcon><SettingsOutlinedIcon sx={{ color: THEME.primaryDark }} /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>Profile Settings</ListItemText>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>{t('profileSettings') || 'Profile Settings'}</ListItemText>
         </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
+        <Divider />
         <MenuItem onClick={handleSignOut} sx={{ py: 1.25, color: 'error.main' }}>
           <ListItemIcon><LogoutOutlinedIcon sx={{ color: 'error.main' }} /></ListItemIcon>
-          <ListItemText primaryTypographyProps={{ fontWeight: 700 }}>Sign Out</ListItemText>
+          <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>{t('signOut') || 'Sign Out'}</ListItemText>
         </MenuItem>
       </Menu>
 
@@ -1291,7 +1292,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'products' ? <HomeIcon sx={{ fontSize: 22 }} /> : <HomeOutlinedIcon sx={{ fontSize: 22 }} />}
-          {t('home')}
+          {t('exploreHome') || 'Home'}
         </Button>
 
         <Button
@@ -1308,7 +1309,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 22 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />}
-          {t('myOrders')}
+          {t('myOrders') || 'Orders'}
         </Button>
 
         {/* Center Prominent Cart Button */}
@@ -1331,7 +1332,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           >
             <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />
           </Badge>
-          {t('cart')}
+          {t('cart') || 'Cart'}
         </Button>
 
         <Button
@@ -1348,7 +1349,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'wishlist' ? <FavoriteIcon sx={{ fontSize: 22 }} /> : <FavoriteBorderIcon sx={{ fontSize: 22 }} />}
-          {t('wishlist')}
+          {t('wishlist') || 'Wishlist'}
         </Button>
 
         <Button
@@ -1365,7 +1366,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           }}
         >
           {effectiveTab === 'profile' ? <PersonIcon sx={{ fontSize: 22 }} /> : <PersonOutlineIcon sx={{ fontSize: 22 }} />}
-          {isGuest ? 'Sign In' : 'Account'}
+          {isGuest ? (t('signIn') || 'Sign In') : (t('myAccount') || 'Account')}
         </Button>
       </Paper>
 

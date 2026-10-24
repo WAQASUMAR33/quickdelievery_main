@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
 import { 
   Package, 
@@ -105,6 +106,7 @@ function printOrderReceipt(order) {
 const OrderHistory = () => {
   const { user, userData } = useAuth()
   const { clearCart, addToCart } = useCart()
+  const { t, isRTL } = useLanguage()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -351,10 +353,10 @@ const OrderHistory = () => {
       {/* ── Segmented Status Filter Tabs ── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100 dark:border-slate-800">
         {[
-          { id: 'all', label: 'All Orders', count: statusCounts.all },
-          { id: 'active', label: 'In Progress', count: statusCounts.active },
-          { id: 'delivered', label: 'Delivered', count: statusCounts.delivered },
-          { id: 'cancelled', label: 'Cancelled', count: statusCounts.cancelled },
+          { id: 'all', label: t('allOrders') || 'All Orders', count: statusCounts.all },
+          { id: 'active', label: t('inProgress') || 'In Progress', count: statusCounts.active },
+          { id: 'delivered', label: t('delivered') || 'Delivered', count: statusCounts.delivered },
+          { id: 'cancelled', label: t('cancelled') || 'Cancelled', count: statusCounts.cancelled },
         ].map((tab) => {
           const isActive = filterStatus === tab.id
           return (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
 import { 
   User, 
@@ -172,6 +173,7 @@ function CustomerAdminView({ customerData, profileData }) {
 }
 
 const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
+  const { t, isRTL } = useLanguage()
   const { user, userData, loadUserData } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
@@ -239,10 +241,10 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
   }, [activeUser, activeEmail])
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'payment', label: 'Payment', icon: CreditCard }
+    { id: 'profile', label: t('profile') || 'Profile', icon: User },
+    { id: 'security', label: t('security') || 'Security', icon: Shield },
+    { id: 'notifications', label: t('notifications') || 'Notifications', icon: Bell },
+    { id: 'payment', label: t('payment') || 'Payment', icon: CreditCard }
   ]
 
   const handleSave = async () => {
@@ -342,7 +344,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
       {/* Profile Form */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
+          <h3 className="text-xl font-semibold text-gray-800">{t('personalInformation') || 'Personal Information'}</h3>
           {!isAdminView && (
             !isEditing ? (
               <button
@@ -350,7 +352,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Edit className="w-4 h-4" />
-                <span>Edit Profile</span>
+                <span>{t('editProfile') || 'Edit Profile'}</span>
               </button>
             ) : (
               <div className="flex space-x-2">
@@ -360,7 +362,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                  <span>{isSaving ? (t('saving') || 'Saving...') : (t('save') || 'Save')}</span>
                 </button>
                 <button
                   onClick={handleCancel}
@@ -368,7 +370,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   <X className="w-4 h-4" />
-                  <span>Cancel</span>
+                  <span>{t('cancel') || 'Cancel'}</span>
                 </button>
               </div>
             )
@@ -377,7 +379,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('firstName') || 'First Name'}</label>
             <input
               type="text"
               value={profileData.firstName}
@@ -388,7 +390,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('lastName') || 'Last Name'}</label>
             <input
               type="text"
               value={profileData.lastName}
@@ -399,7 +401,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('email') || 'Email'}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -412,7 +414,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('phone') || 'Phone'}</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -426,7 +428,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('address') || 'Address'}</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
               <textarea
@@ -440,7 +442,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('city') || 'City'}</label>
             <input
               type="text"
               value={profileData.city}
@@ -451,7 +453,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('state') || 'State'}</label>
             <input
               type="text"
               value={profileData.state}
@@ -462,7 +464,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('zipCode') || 'Zip Code'}</label>
             <input
               type="text"
               value={profileData.zipCode}
@@ -473,7 +475,7 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('dateOfBirth') || 'Date of Birth'}</label>
             <input
               type="date"
               value={profileData.dateOfBirth}
@@ -484,17 +486,17 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('gender') || 'Gender'}</label>
             <select
               value={profileData.gender}
               onChange={(e) => setProfileData({...profileData, gender: e.target.value})}
               disabled={!isEditing}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
             >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
+              <option value="">{t('selectGender') || 'Select Gender'}</option>
+              <option value="male">{t('male') || 'Male'}</option>
+              <option value="female">{t('female') || 'Female'}</option>
+              <option value="other">{t('other') || 'Other'}</option>
             </select>
           </div>
         </div>
@@ -637,8 +639,8 @@ const CustomerProfile = ({ isAdminView = false, customerData = null }) => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
-        <p className="text-gray-600">Manage your account settings and preferences</p>
+        <h1 className="text-3xl font-bold text-gray-800">{t('myProfile') || 'My Profile'}</h1>
+        <p className="text-gray-600">{t('manageAccountSettings') || 'Manage your account settings and preferences'}</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">

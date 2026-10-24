@@ -9,6 +9,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api'
 import toast from 'react-hot-toast'
 import NextLink from 'next/link'
 import { getProductUrl } from '@/lib/productSlug'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { 
   ShoppingBag, 
   Plus, 
@@ -49,6 +50,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
   } = useCart()
 
   const { user, userData } = useAuth()
+  const { t, isRTL } = useLanguage()
   const isGuest = !userData || userData.role === 'GUEST' || userData.id === 'guest' || String(userData.id) === 'guest'
 
   const subtotalCart = getTotalPrice()
@@ -242,27 +244,27 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
 
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold uppercase tracking-wider mb-3 border border-emerald-200 dark:border-emerald-800">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            Order Confirmed #{orderSuccess.id}
+            {t('orderConfirmed') || 'Order Confirmed'} #{orderSuccess.id}
           </span>
 
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-slate-100 mb-2">
-            Your Order is on the way!
+            {t('orderSuccessSubtitle') || 'Your Order is on the way!'}
           </h2>
           <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            The kitchen has received your order and rider dispatch is in progress. Estimated arrival in <span className="font-bold text-gray-900 dark:text-slate-100">20-30 minutes</span>.
+            {t('orderKitchenNotice') || 'The kitchen has received your order and rider dispatch is in progress.'}
           </p>
 
           <div className="bg-gray-50 dark:bg-slate-800/80 rounded-none p-4 mb-6 border border-gray-100 dark:border-slate-700 text-left space-y-2 text-xs sm:text-sm text-gray-700 dark:text-slate-300">
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Delivery Address:</span>
+              <span className="text-gray-500 dark:text-slate-400">{t('shippingAddress') || 'Delivery Address:'}</span>
               <span className="font-bold truncate max-w-[240px] text-gray-900 dark:text-slate-100">{shippingAddress}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Payment Method:</span>
+              <span className="text-gray-500 dark:text-slate-400">{t('paymentMethod') || 'Payment Method:'}</span>
               <span className="font-bold uppercase text-gray-900 dark:text-slate-100">{paymentMethod.replace(/_/g, ' ')}</span>
             </div>
             <div className="flex justify-between text-base font-black text-gray-900 dark:text-slate-100 pt-2 border-t border-gray-200 dark:border-slate-700">
-              <span>Total Paid:</span>
+              <span>{t('totalAmount') || 'Total Paid:'}</span>
               <span className="text-[#4f46e5] dark:text-indigo-400">Rs. {effectiveTotal.toLocaleString()}</span>
             </div>
           </div>
@@ -270,16 +272,16 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => onNavigateOrders?.()}
-              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Truck className="w-4 h-4" />
-              Track Live Order
+              {t('trackOrder') || 'Track Live Order'}
             </button>
             <button
               onClick={() => onNavigateExplore?.()}
-              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-none font-bold text-sm transition-colors border border-transparent dark:border-slate-700"
+              className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-none font-bold text-sm transition-colors border border-transparent dark:border-slate-700 cursor-pointer"
             >
-              Continue Exploring
+              {t('startShopping') || 'Continue Exploring'}
             </button>
           </div>
         </motion.div>
@@ -299,16 +301,16 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
           <div className="w-24 h-24 bg-gradient-to-tr from-violet-100 to-indigo-50 dark:from-slate-800 dark:to-indigo-950/40 rounded-none flex items-center justify-center mx-auto mb-6 border border-indigo-100 dark:border-slate-700 shadow-sm">
             <ShoppingBag className="w-12 h-12 text-[#6366f1] dark:text-indigo-400" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 dark:text-slate-100 mb-2">Your basket is empty</h2>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-slate-100 mb-2">{t('cartEmpty') || 'Your basket is empty'}</h2>
           <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">
-            Hungry? Discover curated restaurant meals, hot deals, and daily grocery essentials delivered in minutes.
+            {t('cartEmptySubtitle') || 'Hungry? Discover curated restaurant meals, hot deals, and daily grocery essentials delivered in minutes.'}
           </p>
           <button
             onClick={() => onNavigateExplore?.()}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white rounded-none font-black text-sm shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" />
-            Explore Stores &amp; Menus
+            {t('startShopping') || 'Explore Stores & Menus'}
           </button>
         </motion.div>
       </div>
@@ -323,23 +325,23 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigateExplore?.()}
-            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-indigo-400 transition-colors p-2 -ml-2 rounded-none hover:bg-gray-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-1 text-xs sm:text-sm font-bold text-gray-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-indigo-400 transition-colors p-2 -ml-2 rounded-none hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Menu
+            {t('exploreHome') || 'Back to Menu'}
           </button>
           <span className="text-gray-300 dark:text-slate-700">|</span>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-slate-100 flex items-center gap-2">
-            Checkout
+            {t('checkout') || 'Checkout'}
             <span className="text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-[#4f46e5] dark:text-indigo-400 px-2.5 py-0.5 rounded-none border border-indigo-100 dark:border-indigo-900/50">
-              {getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'}
+              {getTotalItems()} {getTotalItems() === 1 ? (t('item') || 'item') : (t('items') || 'items')}
             </span>
           </h1>
         </div>
 
         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-none bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
           <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Estimated Delivery: 20-30 mins</span>
+          <span>{t('expressCourier') || 'Estimated Delivery: 20-30 mins'}</span>
         </div>
       </div>
 
@@ -688,17 +690,17 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
 
             <div className="space-y-2.5 text-sm text-gray-600 dark:text-slate-300">
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Items Subtotal</span>
+                <span className="text-gray-500 dark:text-slate-400">{t('subtotal') || 'Items Subtotal'}</span>
                 <span className="font-bold text-gray-900 dark:text-slate-100">Rs. {subtotalCart.toLocaleString()}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Delivery Fee</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">FREE</span>
+                <span className="text-gray-500 dark:text-slate-400">{t('deliveryFee') || 'Delivery Fee'}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{t('freeDelivery') || 'FREE'}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Platform &amp; Service Fee</span>
+                <span className="text-gray-500 dark:text-slate-400">{t('serviceFee') || 'Platform & Service Fee'}</span>
                 <span className="font-bold text-gray-900 dark:text-slate-100">Rs. {serviceChargeAmt.toLocaleString()}</span>
               </div>
 
@@ -712,7 +714,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
 
             <div className="pt-3 border-t border-gray-200 dark:border-slate-800 flex justify-between items-baseline">
               <div>
-                <span className="text-base font-extrabold text-gray-900 dark:text-slate-100 block">Total (incl. VAT)</span>
+                <span className="text-base font-extrabold text-gray-900 dark:text-slate-100 block">{t('totalAmount') || 'Total (incl. VAT)'}</span>
                 <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">All taxes &amp; charges included</span>
               </div>
               <span className="text-2xl sm:text-3xl font-black text-[#4f46e5] dark:text-indigo-400 tracking-tight">
@@ -726,7 +728,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 href="/login"
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:scale-[1.01]"
               >
-                Sign In to Place Order
+                {t('signInRegister') || 'Sign In to Place Order'}
                 <ChevronRight className="w-5 h-5" />
               </NextLink>
             ) : (
@@ -734,17 +736,17 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
                 type="button"
                 disabled={isCheckingOut || items.length === 0}
                 onClick={handlePlaceOrder}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-none bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#7c3aed] text-white font-black text-base shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
               >
                 {isCheckingOut ? (
                   <span className="flex items-center gap-2">
                     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-none animate-spin" />
-                    Placing Your Order…
+                    {t('placingOrder') || 'Placing Your Order…'}
                   </span>
                 ) : (
                   <>
                     <ShoppingBag className="w-5 h-5" />
-                    Place Order • Rs. {effectiveTotal.toLocaleString()}
+                    {t('placeOrder') || 'Place Order'} • Rs. {effectiveTotal.toLocaleString()}
                   </>
                 )}
               </button>

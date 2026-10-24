@@ -5,12 +5,15 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { StyledEngineProvider } from '@mui/material/styles'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function MaterialUIProvider({ children }) {
   const { isDark } = useTheme()
+  const { isRTL } = useLanguage()
 
   const theme = useMemo(() => {
     return createTheme({
+      direction: isRTL ? 'rtl' : 'ltr',
       palette: {
         mode: isDark ? 'dark' : 'light',
         primary: {
