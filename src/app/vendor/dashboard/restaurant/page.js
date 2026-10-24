@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -60,7 +60,7 @@ import {
   SendHorizontal
 } from 'lucide-react'
 
-export default function RestaurantManagementPage() {
+function RestaurantManagementContent() {
   const { user, userData, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -3089,5 +3089,19 @@ export default function RestaurantManagementPage() {
 
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function RestaurantManagementPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 font-bold text-sm">
+          Loading Restaurant Management ERP…
+        </div>
+      }
+    >
+      <RestaurantManagementContent />
+    </Suspense>
   )
 }

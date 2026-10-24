@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
@@ -143,7 +143,7 @@ const RESTAURANT_MENU_ITEM = {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-const Sidebar = () => {
+const SidebarContent = () => {
   const [collapsed, setCollapsed]     = useState(false)
   const [expanded,  setExpanded]      = useState({})
   const { user, userData, logout }    = useAuth()
@@ -463,4 +463,22 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar
+export default function Sidebar(props) {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            width: 260,
+            minHeight: '100vh',
+            bgcolor: '#0D141C',
+            borderRight: '1px solid #1E293B',
+            flexShrink: 0,
+          }}
+        />
+      }
+    >
+      <SidebarContent {...props} />
+    </Suspense>
+  )
+}

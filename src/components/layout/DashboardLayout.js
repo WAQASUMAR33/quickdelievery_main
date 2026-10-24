@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
@@ -88,7 +88,9 @@ const DashboardLayout = ({ children }) => {
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'flex-start' }}>
 
       {/* Sidebar */}
-      <Sidebar />
+      <Suspense fallback={<Box sx={{ width: 260, minHeight: '100vh', bgcolor: '#0D141C', flexShrink: 0 }} />}>
+        <Sidebar />
+      </Suspense>
 
       {/* Right panel */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>

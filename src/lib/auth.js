@@ -37,5 +37,38 @@ export function verifyToken(token) {
 // Get user ID from token
 export function getUserIdFromToken(token) {
   const decoded = verifyToken(token);
-  return decoded ? decoded.userId : null;
+  return decoded ? (decoded.userId || decoded.id) : null;
+}
+
+// Verify auth from request headers or cookies
+export async function verifyAuth(request) {
+  try {
+    const authHeader = request?.headers?.get?.('authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else {
+      const cookieHeader = request?.headers?.get?.('cookie') || '';
+      const match = cookieHeader.match(/(?:token|auth_token)=([^;]+)/);
+      if (match) token = match[1];
+    }
+    if (!token) {
+      return { success: false, error: 'No token provided' };
+    }
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return { success: false, error: 'Invalid or expired token' };
+    }
+    const userId = decoded.userId || decoded.id;
+    return {
+      success: true,
+      user: {
+        ...decoded,
+        id: userId,
+        userId: userId,
+      },
+    };
+  } catch (err) {
+    return { success: false, error: err.message || 'Authentication failed' };
+  }
 }

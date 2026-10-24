@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyAuth } from '@/lib/auth'
-
-const prisma = new PrismaClient()
 
 export async function POST(request, { params }) {
   try {
@@ -11,8 +9,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = authResult.user.id
-    const orderId = parseInt(params.id)
+    const userId = authResult.user.id || authResult.user.userId
+    const resolvedParams = await params
+    const orderId = parseInt(resolvedParams?.id)
 
     if (isNaN(orderId)) {
       return NextResponse.json({ success: false, error: 'Invalid order ID' }, { status: 400 })
