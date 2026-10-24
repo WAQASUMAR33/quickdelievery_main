@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles'
 import ImageUploadField from '@/components/ui/ImageUploadField'
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
-import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber, parsePhoneAndCountry } from '@/lib/countryData'
+import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber, parsePhoneAndCountry, getCountryFlagUrl } from '@/lib/countryData'
 
 import AppBar            from '@mui/material/AppBar'
 import Toolbar           from '@mui/material/Toolbar'
@@ -24,6 +24,7 @@ import FormControl       from '@mui/material/FormControl'
 import InputLabel        from '@mui/material/InputLabel'
 import Select            from '@mui/material/Select'
 import MenuItem          from '@mui/material/MenuItem'
+import Autocomplete     from '@mui/material/Autocomplete'
 import Divider           from '@mui/material/Divider'
 import Alert             from '@mui/material/Alert'
 import Chip              from '@mui/material/Chip'
@@ -328,8 +329,11 @@ function BusinessRegisterInner() {
   }
 
   // ── Country change handler (auto synchronizes dialCode, masks, and state options) ──
-  const handleCountryChange = (e) => {
-    const code = e.target.value
+  const handleCountryChange = (targetOrCode) => {
+    const code = typeof targetOrCode === 'string'
+      ? targetOrCode
+      : (targetOrCode?.code || targetOrCode?.target?.value)
+    if (!code) return
     const c = getCountry(code)
     setSelectedCountry(c)
     setIsCustomState(false)
@@ -535,6 +539,7 @@ function BusinessRegisterInner() {
               {/* ─── STEP 1 · Personal Info ─────────────────────────────── */}
               {step === 1 && (
                 <motion.div key="s1"
+                  style={{ width: '100%' }}
                   initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
                 >
@@ -545,9 +550,9 @@ function BusinessRegisterInner() {
                     Tell us about yourself — the business owner
                   </Typography>
 
-                  <Stack spacing={2.5}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                  <Stack spacing={2.5} sx={{ width: '100%' }}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="First Name" name="firstName"
                           value={formData.firstName} onChange={onChange}
@@ -555,7 +560,7 @@ function BusinessRegisterInner() {
                           InputProps={{ startAdornment: adornment(PersonOutlinedIcon) }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Last Name" name="lastName"
                           value={formData.lastName} onChange={onChange}
@@ -579,34 +584,131 @@ function BusinessRegisterInner() {
                       }}
                     />
 
-                    {/* Country Selector with Flags */}
-                    <FormControl fullWidth required sx={fieldSx}>
-                      <InputLabel id="country-select-label">Country / Nationality</InputLabel>
-                      <Select
-                        labelId="country-select-label"
-                        name="country"
-                        label="Country / Nationality"
-                        value={selectedCountry.code}
-                        onChange={handleCountryChange}
-                        startAdornment={
-                          <InputAdornment position="start">
-                            <Typography sx={{ fontSize: 20, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
-                          </InputAdornment>
-                        }
-                      >
-                        {COUNTRIES.map(c => (
-                          <MenuItem key={c.code} value={c.code}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                <Typography sx={{ fontSize: 20, lineHeight: 1 }}>{c.flag}</Typography>
-                                <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
+                    {/* Country Selector with Flags & Search */}
+                    <Autocomplete
+                      fullWidth
+                      size="small"
+                      options={COUNTRIES}
+                      value={selectedCountry}
+                      disableClearable
+                      getOptionLabel={(option) => `${option.name} (${option.dialCode})`}
+                      isOptionEqualToValue={(option, val) => option.code === val?.code}
+                      onChange={(event, newValue) => {
+                        if (newValue) handleCountryChange(newValue)
+                      }}
+                      filterOptions={(options, { inputValue }) => {
+                        const q = (inputValue || '').toLowerCase().trim()
+                        if (!q) return options
+                        return options.filter((c) =>
+                          c.name.toLowerCase().includes(q) ||
+                          c.code.toLowerCase().includes(q) ||
+                          c.dialCode.toLowerCase().includes(q)
+                        )
+                      }}
+                      slotProps={{
+                        paper: {
+                          sx: {
+                            borderRadius: 1,
+                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.12)',
+                            maxHeight: 280,
+                          },
+                        },
+                      }}
+                      renderOption={(props, option) => {
+                        const { key, ...otherProps } = props
+                        return (
+                          <Box
+                            component="li"
+                            key={key || option.code}
+                            {...otherProps}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              py: 1,
+                              px: 1.5,
+                              gap: 1.5,
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #F1F5F9',
+                              '&:hover': {
+                                bgcolor: '#F0FDF4 !important',
+                              },
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                              <Box
+                                component="img"
+                                loading="lazy"
+                                src={getCountryFlagUrl(option.code)}
+                                alt={option.name}
+                                sx={{
+                                  width: 24,
+                                  height: 16,
+                                  objectFit: 'cover',
+                                  borderRadius: '2px',
+                                  boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ fontWeight: 600, fontSize: 13, color: '#0F172A', noWrap: true }}>
+                                  {option.name}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748B', fontSize: 10.5 }}>
+                                  ISO: {option.code}
+                                </Typography>
                               </Box>
-                              <Chip label={c.dialCode} size="small" variant="outlined" sx={{ height: 22, fontSize: 11, fontWeight: 700 }} />
                             </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                            <Chip
+                              label={option.dialCode}
+                              size="small"
+                              sx={{
+                                height: 22,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                bgcolor: '#DCFCE7',
+                                color: BRAND,
+                                borderRadius: 1,
+                                flexShrink: 0,
+                              }}
+                            />
+                          </Box>
+                        )
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Country / Nationality"
+                          placeholder="Search country, code, or dial code..."
+                          required
+                          sx={fieldSx}
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: (
+                              <>
+                                <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                                  <Box
+                                    component="img"
+                                    loading="lazy"
+                                    src={getCountryFlagUrl(selectedCountry?.code || 'PK')}
+                                    alt={selectedCountry?.name || 'Country'}
+                                    sx={{
+                                      width: 24,
+                                      height: 16,
+                                      objectFit: 'cover',
+                                      borderRadius: '2px',
+                                      boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                </InputAdornment>
+                                {params.InputProps.startAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
 
                     <TextField
                       fullWidth label="CNIC / National ID" name="cnicNo"
@@ -615,8 +717,8 @@ function BusinessRegisterInner() {
                       InputProps={{ startAdornment: adornment(CreditCardOutlinedIcon) }}
                     />
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Mobile Phone 1 (Primary)" name="phoneNumber1" type="tel"
                           value={phone1Local} onChange={handlePhone1Change}
@@ -627,7 +729,13 @@ function BusinessRegisterInner() {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, bgcolor: '#f1f5f9', px: 1, py: 0.4, border: '1px solid #cbd5e1' }}>
-                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                  <Box
+                                    component="img"
+                                    loading="lazy"
+                                    src={getCountryFlagUrl(selectedCountry.code)}
+                                    alt=""
+                                    sx={{ width: 20, height: 14, objectFit: 'cover', borderRadius: '2px' }}
+                                  />
                                   <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#334155' }}>{selectedCountry.dialCode}</Typography>
                                 </Box>
                               </InputAdornment>
@@ -635,7 +743,7 @@ function BusinessRegisterInner() {
                           }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Mobile Phone 2 (Optional)" name="phoneNumber2" type="tel"
                           value={phone2Local} onChange={handlePhone2Change}
@@ -646,7 +754,13 @@ function BusinessRegisterInner() {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, bgcolor: '#f1f5f9', px: 1, py: 0.4, border: '1px solid #cbd5e1' }}>
-                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                  <Box
+                                    component="img"
+                                    loading="lazy"
+                                    src={getCountryFlagUrl(selectedCountry.code)}
+                                    alt=""
+                                    sx={{ width: 20, height: 14, objectFit: 'cover', borderRadius: '2px' }}
+                                  />
                                   <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#334155' }}>{selectedCountry.dialCode}</Typography>
                                 </Box>
                               </InputAdornment>
@@ -662,6 +776,7 @@ function BusinessRegisterInner() {
               {/* ─── STEP 2 · Business Details ──────────────────────────── */}
               {step === 2 && (
                 <motion.div key="s2"
+                  style={{ width: '100%' }}
                   initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
                 >
@@ -672,7 +787,7 @@ function BusinessRegisterInner() {
                     Tell us about your restaurant or store
                   </Typography>
 
-                  <Stack spacing={2.5}>
+                  <Stack spacing={2.5} sx={{ width: '100%' }}>
                     <TextField
                       fullWidth label="Business Name" name="businessName"
                       value={formData.businessName} onChange={onChange}
@@ -716,8 +831,8 @@ function BusinessRegisterInner() {
                       </Select>
                     </FormControl>
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }}>
                           <InputLabel id="biz-category-select-label">Business Category</InputLabel>
                           <Select
@@ -754,7 +869,7 @@ function BusinessRegisterInner() {
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <FormControl fullWidth required sx={{ ...fieldSx, minWidth: 240 }} disabled={!formData.businessCategoryId}>
                           <InputLabel id="biz-type-select-label">Business Type</InputLabel>
                           <Select
@@ -789,8 +904,6 @@ function BusinessRegisterInner() {
                       </Box>
                     )}
 
-
-
                     <Divider>
                       <Chip
                         icon={<LocationOnOutlinedIcon />}
@@ -804,8 +917,8 @@ function BusinessRegisterInner() {
                       />
                     </Divider>
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Building / Place Name (Optional)" name="buildingPlaceName"
                           value={formData.buildingPlaceName} onChange={onChange}
@@ -813,7 +926,7 @@ function BusinessRegisterInner() {
                           InputProps={{ startAdornment: adornment(HomeOutlinedIcon) }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Shop / Unit No. (Optional)" name="houseNumber"
                           value={formData.houseNumber} onChange={onChange}
@@ -830,36 +943,131 @@ function BusinessRegisterInner() {
                       InputProps={{ startAdornment: adornment(LocationOnOutlinedIcon) }}
                     />
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
+                    {/* Aligned 2x2 Location Grid: Country + State, City + Postal Code */}
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         {/* Country Selector */}
-                        <FormControl fullWidth required sx={fieldSx}>
-                          <InputLabel id="biz-country-select-label">Country / Region</InputLabel>
-                          <Select
-                            labelId="biz-country-select-label"
-                            name="country"
-                            label="Country / Region"
-                            value={selectedCountry.code}
-                            onChange={handleCountryChange}
-                            startAdornment={
-                              <InputAdornment position="start">
-                                <Typography sx={{ fontSize: 18, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
-                              </InputAdornment>
-                            }
-                          >
-                            {COUNTRIES.map(c => (
-                              <MenuItem key={c.code} value={c.code}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{c.flag}</Typography>
-                                  <Typography sx={{ fontWeight: 600 }}>{c.name}</Typography>
+                        <Autocomplete
+                          fullWidth
+                          size="small"
+                          options={COUNTRIES}
+                          value={selectedCountry}
+                          disableClearable
+                          getOptionLabel={(option) => `${option.name} (${option.dialCode})`}
+                          isOptionEqualToValue={(option, val) => option.code === val?.code}
+                          onChange={(event, newValue) => {
+                            if (newValue) handleCountryChange(newValue)
+                          }}
+                          filterOptions={(options, { inputValue }) => {
+                            const q = (inputValue || '').toLowerCase().trim()
+                            if (!q) return options
+                            return options.filter((c) =>
+                              c.name.toLowerCase().includes(q) ||
+                              c.code.toLowerCase().includes(q) ||
+                              c.dialCode.toLowerCase().includes(q)
+                            )
+                          }}
+                          slotProps={{
+                            paper: {
+                              sx: {
+                                borderRadius: 1,
+                                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.12)',
+                                maxHeight: 280,
+                              },
+                            },
+                          }}
+                          renderOption={(props, option) => {
+                            const { key, ...otherProps } = props
+                            return (
+                              <Box
+                                component="li"
+                                key={key || option.code}
+                                {...otherProps}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  py: 1,
+                                  px: 1.5,
+                                  gap: 1.5,
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid #F1F5F9',
+                                  '&:hover': {
+                                    bgcolor: '#F0FDF4 !important',
+                                  },
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                                  <Box
+                                    component="img"
+                                    loading="lazy"
+                                    src={getCountryFlagUrl(option.code)}
+                                    alt={option.name}
+                                    sx={{
+                                      width: 24,
+                                      height: 16,
+                                      objectFit: 'cover',
+                                      borderRadius: '2px',
+                                      boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                  <Typography sx={{ fontWeight: 600, fontSize: 13, color: '#0F172A' }}>
+                                    {option.name}
+                                  </Typography>
                                 </Box>
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
+                                <Chip
+                                  label={option.dialCode}
+                                  size="small"
+                                  sx={{
+                                    height: 22,
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    bgcolor: '#DCFCE7',
+                                    color: BRAND,
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              </Box>
+                            )
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Country / Region"
+                              placeholder="Search country..."
+                              required
+                              sx={fieldSx}
+                              InputProps={{
+                                ...params.InputProps,
+                                startAdornment: (
+                                  <>
+                                    <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                                      <Box
+                                        component="img"
+                                        loading="lazy"
+                                        src={getCountryFlagUrl(selectedCountry?.code || 'PK')}
+                                        alt={selectedCountry?.name || 'Country'}
+                                        sx={{
+                                          width: 24,
+                                          height: 16,
+                                          objectFit: 'cover',
+                                          borderRadius: '2px',
+                                          boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                          flexShrink: 0,
+                                        }}
+                                      />
+                                    </InputAdornment>
+                                    {params.InputProps.startAdornment}
+                                  </>
+                                ),
+                              }}
+                            />
+                          )}
+                        />
                       </Grid>
 
-                      <Grid item xs={12} sm={4}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         {/* Dynamic State / Province Selector */}
                         {isCustomState ? (
                           <TextField
@@ -922,7 +1130,7 @@ function BusinessRegisterInner() {
                         )}
                       </Grid>
 
-                      <Grid item xs={12} sm={4}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="City" name="city"
                           value={formData.city} onChange={onChange}
@@ -930,10 +1138,8 @@ function BusinessRegisterInner() {
                           InputProps={{ startAdornment: adornment(PublicOutlinedIcon) }}
                         />
                       </Grid>
-                    </Grid>
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                           fullWidth label="Postal Code" name="postalCode"
                           value={formData.postalCode} onChange={onChange}
@@ -1022,6 +1228,7 @@ function BusinessRegisterInner() {
               {/* ─── STEP 3 · Documents ─────────────────────────────────── */}
               {step === 3 && (
                 <motion.div key="s3"
+                  style={{ width: '100%' }}
                   initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
                 >
@@ -1032,9 +1239,9 @@ function BusinessRegisterInner() {
                     Provide your CNIC image URLs and optional tax info
                   </Typography>
 
-                  <Stack spacing={2.5}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                  <Stack spacing={2.5} sx={{ width: '100%' }}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ImageUploadField
                           label="CNIC Front Image"
                           required
@@ -1043,7 +1250,7 @@ function BusinessRegisterInner() {
                           helperText="JPG, PNG or WebP — front side of your CNIC"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ImageUploadField
                           label="CNIC Back Image"
                           required
@@ -1067,6 +1274,7 @@ function BusinessRegisterInner() {
               {/* ─── STEP 4 · Banking ───────────────────────────────────── */}
               {step === 4 && (
                 <motion.div key="s4"
+                  style={{ width: '100%' }}
                   initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
                 >
@@ -1077,26 +1285,31 @@ function BusinessRegisterInner() {
                     Where should we send your earnings?
                   </Typography>
 
-                  <Stack spacing={2.5}>
-                    <TextField
-                      fullWidth label="Bank Name" name="bankName"
-                      value={formData.bankName} onChange={onChange}
-                      placeholder="e.g. HBL, MCB, UBL, Meezan" required sx={fieldSx}
-                      InputProps={{ startAdornment: adornment(AccountBalanceOutlinedIcon) }}
-                    />
+                  <Stack spacing={2.5} sx={{ width: '100%' }}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth label="Bank Name" name="bankName"
+                          value={formData.bankName} onChange={onChange}
+                          placeholder="e.g. HBL, MCB, UBL, Meezan" required sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(AccountBalanceOutlinedIcon) }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth label="Account Title" name="bankAccountTitle"
+                          value={formData.bankAccountTitle} onChange={onChange}
+                          placeholder="Full name as on bank account" required sx={fieldSx}
+                          InputProps={{ startAdornment: adornment(PersonOutlinedIcon) }}
+                        />
+                      </Grid>
+                    </Grid>
 
                     <TextField
                       fullWidth label="IBAN Number" name="bankIbanNo"
                       value={formData.bankIbanNo} onChange={onChange}
                       placeholder="PK36SCBL0000001123456702" required sx={fieldSx}
                       InputProps={{ startAdornment: adornment(NumbersOutlinedIcon) }}
-                    />
-
-                    <TextField
-                      fullWidth label="Account Title" name="bankAccountTitle"
-                      value={formData.bankAccountTitle} onChange={onChange}
-                      placeholder="Full name as on bank account" required sx={fieldSx}
-                      InputProps={{ startAdornment: adornment(PersonOutlinedIcon) }}
                     />
 
                     <TextField
@@ -1113,6 +1326,7 @@ function BusinessRegisterInner() {
               {/* ─── STEP 5 · Branding ──────────────────────────────────── */}
               {step === 5 && (
                 <motion.div key="s5"
+                  style={{ width: '100%' }}
                   initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
                 >
@@ -1123,9 +1337,9 @@ function BusinessRegisterInner() {
                     Make your page stand out — all fields are optional
                   </Typography>
 
-                  <Stack spacing={2.5}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                  <Stack spacing={2.5} sx={{ width: '100%' }}>
+                    <Grid container spacing={2} sx={{ width: '100%' }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ImageUploadField
                           label="Business Logo (Optional)"
                           value={formData.urlLogo}
@@ -1133,7 +1347,7 @@ function BusinessRegisterInner() {
                           helperText="Square logo — PNG or WebP recommended"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ImageUploadField
                           label="Cover Photo (Optional)"
                           value={formData.urlCoverPhoto}
@@ -1161,14 +1375,26 @@ function BusinessRegisterInner() {
                           ['Owner',    `${formData.firstName} ${formData.lastName}`],
                           ['Email',    formData.email],
                           ['Phone',    formData.phoneNumber1],
-                          ['Country',  `${selectedCountry.flag} ${formData.country || selectedCountry.name}`],
+                          ['Country',  formData.country || selectedCountry.name],
                           ['Location', `${formData.city}, ${formData.state}`],
                         ].map(([key, val]) => (
-                          <Box key={key} sx={{ display: 'flex', gap: 1 }}>
+                          <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ minWidth: 76 }}>
                               {key}:
                             </Typography>
-                            <Typography variant="body2" fontWeight={500}>{val}</Typography>
+                            {key === 'Country' ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                <Box
+                                  component="img"
+                                  src={getCountryFlagUrl(selectedCountry.code)}
+                                  alt=""
+                                  sx={{ width: 18, height: 12, objectFit: 'cover', borderRadius: '1px' }}
+                                />
+                                <Typography variant="body2" fontWeight={500}>{val}</Typography>
+                              </Box>
+                            ) : (
+                              <Typography variant="body2" fontWeight={500}>{val}</Typography>
+                            )}
                           </Box>
                         ))}
                       </Stack>

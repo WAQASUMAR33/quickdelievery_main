@@ -22,7 +22,8 @@ import FormControl      from '@mui/material/FormControl'
 import InputLabel       from '@mui/material/InputLabel'
 import Select           from '@mui/material/Select'
 import MenuItem         from '@mui/material/MenuItem'
-import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber } from '@/lib/countryData'
+import Autocomplete     from '@mui/material/Autocomplete'
+import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber, getCountryFlagUrl } from '@/lib/countryData'
 
 // Icons
 import PersonOutlinedIcon         from '@mui/icons-material/PersonOutlined'
@@ -1020,33 +1021,143 @@ export default function RegisterPage() {
                         }}
                       />
 
-                      {/* Country Selector with Flags */}
-                      <FormControl fullWidth size="small" sx={fieldStyles}>
-                        <InputLabel id="reg-country-label">Country / Region</InputLabel>
-                        <Select
-                          labelId="reg-country-label"
-                          label="Country / Region"
-                          value={selectedCountry.code}
-                          onChange={handleCountryChange}
-                          startAdornment={
-                            <InputAdornment position="start">
-                              <Typography sx={{ fontSize: 18, mr: 0.5, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
-                            </InputAdornment>
+                      {/* Country Selector with Searchable Filter and Flags */}
+                      <Autocomplete
+                        fullWidth
+                        size="small"
+                        options={COUNTRIES}
+                        value={selectedCountry}
+                        disableClearable
+                        getOptionLabel={(option) => `${option.name} (${option.dialCode})`}
+                        isOptionEqualToValue={(option, val) => option.code === val?.code}
+                        onChange={(event, newValue) => {
+                          if (newValue) {
+                            setSelectedCountry(newValue)
+                            const formatted = formatNationalPhone(nationalPhone, newValue.code)
+                            setNationalPhone(formatted)
+                            setFormData((p) => ({
+                              ...p,
+                              phoneNumber: formatted ? buildFullPhoneNumber(formatted, newValue.code) : '',
+                            }))
                           }
-                        >
-                          {COUNTRIES.map(c => (
-                            <MenuItem key={c.code} value={c.code}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                  <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{c.flag}</Typography>
-                                  <Typography sx={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Typography>
+                        }}
+                        filterOptions={(options, { inputValue }) => {
+                          const q = (inputValue || '').toLowerCase().trim()
+                          if (!q) return options
+                          return options.filter((c) =>
+                            c.name.toLowerCase().includes(q) ||
+                            c.code.toLowerCase().includes(q) ||
+                            c.dialCode.toLowerCase().includes(q)
+                          )
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: {
+                              bgcolor: isDark ? '#0B1120' : '#FFFFFF',
+                              color: isDark ? '#F1F5F9' : '#0F172A',
+                              border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #E2E8F0',
+                              borderRadius: 0,
+                              boxShadow: isDark
+                                ? '0 10px 25px -5px rgba(0,0,0,0.6)'
+                                : '0 10px 25px -5px rgba(0,0,0,0.12)',
+                              maxHeight: 280,
+                            },
+                          },
+                        }}
+                        renderOption={(props, option) => {
+                          const { key, ...otherProps } = props
+                          return (
+                            <Box
+                              component="li"
+                              key={key || option.code}
+                              {...otherProps}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                py: 1,
+                                px: 1.5,
+                                gap: 1.5,
+                                cursor: 'pointer',
+                                borderBottom: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid #F1F5F9',
+                                '&:hover': {
+                                  bgcolor: isDark ? 'rgba(37,99,235,0.15) !important' : '#EFF6FF !important',
+                                },
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                                <Box
+                                  component="img"
+                                  loading="lazy"
+                                  src={getCountryFlagUrl(option.code)}
+                                  alt={option.name}
+                                  sx={{
+                                    width: 24,
+                                    height: 16,
+                                    objectFit: 'cover',
+                                    borderRadius: '2px',
+                                    boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Typography sx={{ fontWeight: 600, fontSize: 13, color: isDark ? '#F1F5F9' : '#0F172A', noWrap: true }}>
+                                    {option.name}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 10.5 }}>
+                                    ISO: {option.code}
+                                  </Typography>
                                 </Box>
-                                <Chip label={c.dialCode} size="small" variant="outlined" sx={{ height: 20, fontSize: 10.5, fontWeight: 700 }} />
                               </Box>
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                              <Chip
+                                label={option.dialCode}
+                                size="small"
+                                sx={{
+                                  height: 22,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  bgcolor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#DBEAFE',
+                                  color: SAPPHIRE,
+                                  borderRadius: 0,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            </Box>
+                          )
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Country / Region"
+                            placeholder="Type country name, ISO, or +code..."
+                            sx={fieldStyles}
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <>
+                                  <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                                    <Box
+                                      component="img"
+                                      loading="lazy"
+                                      src={getCountryFlagUrl(selectedCountry?.code || 'PK')}
+                                      alt={selectedCountry?.name || 'Country'}
+                                      sx={{
+                                        width: 24,
+                                        height: 16,
+                                        objectFit: 'cover',
+                                        borderRadius: '2px',
+                                        boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  </InputAdornment>
+                                  {params.InputProps.startAdornment}
+                                </>
+                              ),
+                            }}
+                          />
+                        )}
+                      />
 
                       {/* Phone Number */}
                       <TextField
@@ -1072,7 +1183,20 @@ export default function RegisterPage() {
                                 px: 1, py: 0.35,
                                 border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #CBD5E1',
                               }}>
-                                <Typography sx={{ fontSize: 16, lineHeight: 1 }}>{selectedCountry.flag}</Typography>
+                                <Box
+                                  component="img"
+                                  loading="lazy"
+                                  src={getCountryFlagUrl(selectedCountry.code)}
+                                  alt={selectedCountry.name}
+                                  sx={{
+                                    width: 20,
+                                    height: 14,
+                                    objectFit: 'cover',
+                                    borderRadius: '2px',
+                                    boxShadow: '0 0 2px rgba(0,0,0,0.3)',
+                                    flexShrink: 0,
+                                  }}
+                                />
                                 <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#F1F5F9' : '#0F172A' }}>
                                   {selectedCountry.dialCode}
                                 </Typography>

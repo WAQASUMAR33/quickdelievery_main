@@ -374,3 +374,12 @@ export function parsePhoneAndCountry(phoneString, defaultCountryCode = 'PK') {
     nationalNumber: formatNationalPhone(trimmed, defaultCountryCode)
   }
 }
+
+/**
+ * Returns high-resolution national flag image URL from FlagCDN
+ * Guarantees visual flag rendering on Windows, Mac, Linux, and all browsers
+ */
+export function getCountryFlagUrl(code) {
+  if (!code || typeof code !== 'string') return ''
+  return `https://flagcdn.com/w40/${code.trim().toLowerCase()}.png`
+}
