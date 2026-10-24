@@ -57,6 +57,7 @@ import CheckCircleOutlinedIcon    from '@mui/icons-material/CheckCircleOutlined'
 import StorefrontOutlinedIcon     from '@mui/icons-material/StorefrontOutlined'
 import MyLocationIcon             from '@mui/icons-material/MyLocation'
 import PinDropOutlinedIcon        from '@mui/icons-material/PinDropOutlined'
+import SearchIcon                 from '@mui/icons-material/Search'
 import ChevronRightIcon           from '@mui/icons-material/ChevronRight'
 import ChevronLeftIcon            from '@mui/icons-material/ChevronLeft'
 // Filled — used inside Stepper icon
@@ -177,10 +178,14 @@ function BusinessRegisterInner() {
   const [isCustomState,   setIsCustomState]   = useState(false)
 
   // ── Google Maps state ────────────────────────────────────────────────────────
-  const mapRef       = useRef(null)
-  const searchBoxRef = useRef(null)
-  const [markerPos,  setMarkerPos]  = useState(null)
-  const [mapCenter,  setMapCenter]  = useState(DEFAULT_CENTER)
+  // ── Google Maps & Location state ───────────────────────────────────────────
+  const mapRef            = useRef(null)
+  const searchBoxRef      = useRef(null)
+  const [markerPos,       setMarkerPos]       = useState(null)
+  const [mapCenter,       setMapCenter]       = useState(DEFAULT_CENTER)
+  const [searchAddressText, setSearchAddressText] = useState('')
+  const [isLocating,      setIsLocating]      = useState(false)
+  const [mapProvider,     setMapProvider]     = useState('google')
 
   const { isLoaded: mapsLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -203,13 +208,114 @@ function BusinessRegisterInner() {
     const loc = places[0].geometry?.location
     if (!loc) return
     pinLocation(loc.lat(), loc.lng())
+    if (places[0].formatted_address) {
+      setSearchAddressText(places[0].formatted_address)
+    }
   }, [pinLocation])
 
+  // ── Geocode any typed address using Google & Nominatim API ──────────────────
+  const handleLocateAddress = async (queryToSearch) => {
+    const q = (queryToSearch || searchAddressText || formData.streetAddress || `${formData.city || ''} ${formData.state || ''}`).trim()
+    if (!q) {
+      toast.error('Please type an address or landmark to locate')
+      return
+    }
+    setIsLocating(true)
+    const toastId = toast.loading(`Locating "${q}"...`)
+    try {
+      const res = await fetch(`/api/geocode?address=${encodeURIComponent(q)}`)
+      const data = await res.json()
+      if (data.success && data.latitude && data.longitude) {
+        pinLocation(data.latitude, data.longitude)
+        if (mapRef.current) {
+          mapRef.current.panTo({ lat: data.latitude, lng: data.longitude })
+          mapRef.current.setZoom(16)
+        }
+        setIsLocating(false)
+        toast.success(`Location pinned: ${data.displayName || q}`, { id: toastId })
+        return
+      }
+      setIsLocating(false)
+      toast.error(`Could not locate "${q}". Try adding city or landmark.`, { id: toastId })
+    } catch (err) {
+      setIsLocating(false)
+      toast.error('Address search error. Please try again.', { id: toastId })
+    }
+  }
+
+  // ── Multi-Tier Current Location Handler (GPS -> IP -> Address Fallback) ──────
   const handleGetLiveLocation = () => {
-    if (!navigator.geolocation) return toast.error('Geolocation not supported')
+    setIsLocating(true)
+    const toastId = toast.loading('Detecting your location...')
+
+    const fallbackToNetworkOrAddress = async (reason) => {
+      // Step 1: IP Geolocation
+      try {
+        const ipRes = await fetch('/api/geocode?type=ip')
+        const ipData = await ipRes.json()
+        if (ipData.success && ipData.latitude && ipData.longitude) {
+          pinLocation(ipData.latitude, ipData.longitude)
+          if (mapRef.current) {
+            mapRef.current.panTo({ lat: ipData.latitude, lng: ipData.longitude })
+            mapRef.current.setZoom(14)
+          }
+          setIsLocating(false)
+          toast.success(`Location pinned from your network (${ipData.city || 'Network'}, ${ipData.country || ''})!`, { id: toastId })
+          return
+        }
+      } catch (e) {
+        console.warn('IP fallback failed:', e)
+      }
+
+      // Step 2: Try Geocoding user-entered address / city
+      const candidate = (searchAddressText || formData.streetAddress || formData.city || `${formData.city || ''} ${formData.state || ''}`).trim()
+      if (candidate) {
+        try {
+          const gRes = await fetch(`/api/geocode?address=${encodeURIComponent(candidate)}`)
+          const gData = await gRes.json()
+          if (gData.success && gData.latitude && gData.longitude) {
+            pinLocation(gData.latitude, gData.longitude)
+            if (mapRef.current) {
+              mapRef.current.panTo({ lat: gData.latitude, lng: gData.longitude })
+              mapRef.current.setZoom(16)
+            }
+            setIsLocating(false)
+            toast.success(`Location pinned to "${candidate}"!`, { id: toastId })
+            return
+          }
+        } catch (e) {}
+      }
+
+      setIsLocating(false)
+      toast.error(
+        reason === 'denied'
+          ? 'Browser location permission denied. Type your address in the search box to locate.'
+          : 'GPS location unavailable. Please type your business address in the search box.',
+        { id: toastId, duration: 5000 }
+      )
+    }
+
+    if (!navigator.geolocation) {
+      fallbackToNetworkOrAddress('unsupported')
+      return
+    }
+
     navigator.geolocation.getCurrentPosition(
-      pos => pinLocation(pos.coords.latitude, pos.coords.longitude),
-      ()  => toast.error('Unable to get your location'),
+      pos => {
+        pinLocation(pos.coords.latitude, pos.coords.longitude)
+        if (mapRef.current) {
+          mapRef.current.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+          mapRef.current.setZoom(16)
+        }
+        setIsLocating(false)
+        toast.success('Live GPS coordinates pinned!', { id: toastId })
+      },
+      err => {
+        console.warn('Geolocation error:', err.code, err.message)
+        const reason = err.code === 1 ? 'denied' : 'unavailable'
+        fallbackToNetworkOrAddress(reason)
+      },
+      { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
     )
   }
 
@@ -1164,26 +1270,56 @@ function BusinessRegisterInner() {
                       Search your address or click/drag the pin to set your exact business location (optional but recommended).
                     </Typography>
 
-                    {mapsLoaded ? (
-                      <Box>
-                        <StandaloneSearchBox
-                          onLoad={ref => (searchBoxRef.current = ref)}
-                          onPlacesChanged={handleSearchChanged}
-                        >
-                          <TextField
-                            fullWidth
-                            label="Search address"
-                            placeholder="Search for your business address…"
-                            sx={{ ...fieldSx, mb: 1.5 }}
-                            InputProps={{ startAdornment: adornment(LocationOnOutlinedIcon) }}
-                          />
-                        </StandaloneSearchBox>
+                    <Box>
+                      {/* Search address with instant Locate button & Enter key support */}
+                      <Box sx={{ mb: 1.5 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Search address or landmark"
+                          value={searchAddressText}
+                          onChange={e => setSearchAddressText(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleLocateAddress(searchAddressText)
+                            }
+                          }}
+                          placeholder="e.g. Akbar Plaza Mall, Mandi Bahauddin (press Enter or click Locate)"
+                          sx={fieldSx}
+                          InputProps={{
+                            startAdornment: adornment(LocationOnOutlinedIcon),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  disabled={isLocating || !searchAddressText.trim()}
+                                  onClick={() => handleLocateAddress(searchAddressText)}
+                                  startIcon={isLocating ? <CircularProgress size={14} color="inherit" /> : <SearchIcon />}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    bgcolor: BRAND,
+                                    '&:hover': { bgcolor: '#2E5F22' },
+                                  }}
+                                >
+                                  Locate
+                                </Button>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      </Box>
 
-                        <Box sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                      {/* Map Container: Interactive Google Maps or Instant OpenStreetMap preview */}
+                      <Box sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider', position: 'relative' }}>
+                        {mapProvider === 'google' && mapsLoaded ? (
                           <GoogleMap
                             mapContainerStyle={MAP_CONTAINER}
                             center={mapCenter}
-                            zoom={13}
+                            zoom={14}
                             onClick={handleMapClick}
                             onLoad={map => (mapRef.current = map)}
                             options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
@@ -1196,31 +1332,65 @@ function BusinessRegisterInner() {
                               />
                             )}
                           </GoogleMap>
-                        </Box>
+                        ) : (
+                          <Box sx={{ width: '100%', height: '300px', bgcolor: '#f8fafc', position: 'relative' }}>
+                            <iframe
+                              title="Location Map"
+                              width="100%"
+                              height="300"
+                              style={{ border: 0 }}
+                              loading="lazy"
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${(markerPos?.lng || mapCenter.lng) - 0.015}%2C${(markerPos?.lat || mapCenter.lat) - 0.012}%2C${(markerPos?.lng || mapCenter.lng) + 0.015}%2C${(markerPos?.lat || mapCenter.lat) + 0.012}&layer=mapnik&marker=${markerPos?.lat || mapCenter.lat}%2C${markerPos?.lng || mapCenter.lng}`}
+                            />
+                          </Box>
+                        )}
+                      </Box>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1, flexWrap: 'wrap', gap: 1 }}>
+                      {/* Action Bar & Coordinate Display */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
                           <Button
                             variant="outlined" size="small"
-                            startIcon={<MyLocationIcon />}
+                            startIcon={isLocating ? <CircularProgress size={14} color="inherit" /> : <MyLocationIcon />}
+                            disabled={isLocating}
                             onClick={handleGetLiveLocation}
-                            sx={{ textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { bgcolor: `${BRAND}08`, borderColor: BRAND } }}
+                            sx={{ textTransform: 'none', borderColor: BRAND, color: BRAND, fontWeight: 700, '&:hover': { bgcolor: `${BRAND}08`, borderColor: BRAND } }}
                           >
                             Use My Current Location
                           </Button>
 
-                          {markerPos && (
-                            <Alert severity="success" icon={<LocationOnOutlinedIcon fontSize="small" />} sx={{ py: 0, flex: 1, minWidth: 200 }}>
-                              {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
-                            </Alert>
-                          )}
-                        </Box>
+                          <Button
+                            variant="text" size="small"
+                            onClick={() => setMapProvider(p => p === 'google' ? 'osm' : 'google')}
+                            sx={{ textTransform: 'none', fontSize: 11, color: 'text.secondary', textDecoration: 'underline' }}
+                          >
+                            {mapProvider === 'google' ? 'Switch to OpenStreetMap' : 'Switch to Google Maps'}
+                          </Button>
+                        </Stack>
+
+                        {markerPos && (
+                          <Alert
+                            severity="success"
+                            icon={<LocationOnOutlinedIcon fontSize="small" />}
+                            sx={{ py: 0, px: 1.5, alignItems: 'center' }}
+                            action={
+                              <Button
+                                size="small"
+                                component="a"
+                                href={`https://www.google.com/maps?q=${markerPos.lat},${markerPos.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ textTransform: 'none', fontSize: 11, fontWeight: 700, color: BRAND, p: 0 }}
+                              >
+                                Google Maps ↗
+                              </Button>
+                            }
+                          >
+                            Pinned: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
+                          </Alert>
+                        )}
                       </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
-                        <CircularProgress size={18} sx={{ color: BRAND }} />
-                        <Typography variant="body2" color="text.secondary">Loading map…</Typography>
-                      </Box>
-                    )}
+                    </Box>
                   </Stack>
                 </motion.div>
               )}
