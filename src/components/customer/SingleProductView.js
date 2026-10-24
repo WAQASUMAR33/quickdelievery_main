@@ -192,11 +192,16 @@ export default function SingleProductView({ productIdentifier, productId, initia
 
   const images = useMemo(() => {
     if (!product?.proImages) return []
-    if (Array.isArray(product.proImages)) return product.proImages
-    if (typeof product.proImages === 'string') {
-      try { return JSON.parse(product.proImages) } catch { return [product.proImages] }
+    let list = []
+    if (Array.isArray(product.proImages)) list = product.proImages
+    else if (typeof product.proImages === 'string') {
+      try { list = JSON.parse(product.proImages) } catch { list = [product.proImages] }
     }
-    return []
+    return (Array.isArray(list) ? list : [list]).filter(Boolean).map(url => {
+      if (typeof url !== 'string') return url
+      return url.replace(/https:\/\/[^/]*s3[^/]*\/rapidtechpro\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                .replace(/https:\/\/rapidtechpro\.s3[^/]*\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+    })
   }, [product?.proImages])
 
   const variations = useMemo(() => {

@@ -34,15 +34,36 @@ export function getS3Client() {
 
 export function formatS3Url(key) {
   if (!key) return ''
-  if (/^https?:\/\//i.test(key)) return key
 
-  const cleanKey = key.replace(/^\/+/, '')
-  if (customDomain) {
-    const domain = customDomain.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
-    return `https://${domain}/${cleanKey}`
+  const cdnDomain = (
+    cleanEnv(process.env.S3_CUSTOM_DOMAIN || process.env.AWS_S3_CUSTOM_DOMAIN) ||
+    customDomain ||
+    'd1nvnelpyr43e7.cloudfront.net'
+  )
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '')
+
+  // If already an absolute URL, check if it points to our S3 bucket directly and convert to CloudFront
+  if (/^https?:\/\//i.test(key)) {
+    if (key.includes('amazonaws.com') && (key.includes('rapidtechpro') || (bucketName && key.includes(bucketName)))) {
+      try {
+        const urlObj = new URL(key)
+        let pathname = urlObj.pathname.replace(/^\/+/, '')
+        if (bucketName && pathname.startsWith(`${bucketName}/`)) {
+          pathname = pathname.substring(bucketName.length + 1)
+        }
+        return `https://${cdnDomain}/${pathname}`
+      } catch {}
+    }
+    return key
   }
 
-  // Standard S3 URL format
+  const cleanKey = key.replace(/^\/+/, '')
+  if (cdnDomain) {
+    return `https://${cdnDomain}/${cleanKey}`
+  }
+
+  // Standard S3 URL format fallback
   if (region === 'us-east-1') {
     return `https://${bucketName}.s3.amazonaws.com/${cleanKey}`
   }

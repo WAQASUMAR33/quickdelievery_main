@@ -7,8 +7,13 @@ export async function GET(request) {
     const userId = searchParams.get('userId')
     if (!userId) return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 })
 
+    const numericUserId = parseInt(userId)
+    if (Number.isNaN(numericUserId)) {
+      return NextResponse.json({ success: true, data: [] })
+    }
+
     const favorites = await prisma.favorite.findMany({
-      where: { userId: parseInt(userId) }
+      where: { userId: numericUserId }
     })
 
     if (favorites.length === 0) {

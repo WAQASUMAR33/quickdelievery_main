@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getProductUrl } from '@/lib/productSlug'
+import { normalizeImageUrl } from '@/lib/imageUtils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
@@ -814,6 +815,7 @@ const ProductCatalog = ({
         coverImg = product.proImages
       }
     }
+    coverImg = normalizeImageUrl(coverImg)
 
     // Food vs Retail vertical detection
     const isFoodItem = (() => {
@@ -851,6 +853,12 @@ const ProductCatalog = ({
               alt={product.proName || 'Product'}
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              onError={(e) => {
+                const s = e.currentTarget.src
+                if (s && s.includes('rapidtechpro.s3')) {
+                  e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                }
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-400">
@@ -1019,6 +1027,7 @@ const ProductCatalog = ({
         coverImg = product.proImages
       }
     }
+    coverImg = normalizeImageUrl(coverImg)
 
     const isFoodItem = (() => {
       const v = String(product.vertical || '').toUpperCase()
@@ -1048,6 +1057,12 @@ const ProductCatalog = ({
               alt={product.proName}
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              onError={(e) => {
+                const s = e.currentTarget.src
+                if (s && s.includes('rapidtechpro.s3')) {
+                  e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                }
+              }}
             />
           ) : (
             <Package className="w-12 h-12 text-slate-400 stroke-[1.25]" />
@@ -2374,9 +2389,15 @@ const ProductCatalog = ({
                   <div className="relative aspect-square w-full rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-4">
                     {detailProduct.proImages?.[activeModalImage] || detailProduct.proImages?.[0] ? (
                       <img
-                        src={detailProduct.proImages[activeModalImage] || detailProduct.proImages[0]}
+                        src={normalizeImageUrl(detailProduct.proImages[activeModalImage] || detailProduct.proImages[0])}
                         alt={detailProduct.proName || 'Product'}
                         className="w-full h-full object-contain"
+                        onError={(e) => {
+                          const s = e.currentTarget.src
+                          if (s && s.includes('rapidtechpro.s3')) {
+                            e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                          }
+                        }}
                       />
                     ) : (
                       <Package className="w-16 h-16 text-slate-300 dark:text-slate-700" />
@@ -2395,7 +2416,17 @@ const ProductCatalog = ({
                             activeModalImage === i ? 'border-blue-600 dark:border-blue-500 scale-105' : 'border-slate-200 dark:border-slate-800 hover:border-slate-400'
                           }`}
                         >
-                          <img src={img} alt={`Thumb ${i}`} className="w-full h-full object-contain" />
+                          <img
+                            src={normalizeImageUrl(img)}
+                            alt={`Thumb ${i}`}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const s = e.currentTarget.src
+                              if (s && s.includes('rapidtechpro.s3')) {
+                                e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                              }
+                            }}
+                          />
                         </button>
                       ))}
                     </div>

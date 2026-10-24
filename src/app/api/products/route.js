@@ -197,9 +197,25 @@ export async function GET(request) {
         return [val]
       }
 
+      const normalizeUrl = (url) => {
+        if (!url || typeof url !== 'string') return ''
+        if (url.includes('rapidtechpro.s3') || (url.includes('s3.') && url.includes('rapidtechpro'))) {
+          try {
+            const u = new URL(url)
+            let p = u.pathname.replace(/^\/+/, '')
+            if (p.startsWith('rapidtechpro/')) p = p.substring('rapidtechpro/'.length)
+            return `https://d1nvnelpyr43e7.cloudfront.net/${p}`
+          } catch {
+            return url.replace(/https:\/\/[^/]*s3[^/]*\/rapidtechpro\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                      .replace(/https:\/\/rapidtechpro\.s3[^/]*\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+          }
+        }
+        return url
+      }
+
       const processedProducts = matchedProducts.map(p => ({
         ...p,
-        proImages: safeJson(p.proImages, [])
+        proImages: safeJson(p.proImages, []).map(normalizeUrl)
       }))
 
       return Response.json({
@@ -327,7 +343,7 @@ export async function GET(request) {
 
       const processedProducts = filtered.map(p => ({
         ...p,
-        proImages: safeJson(p.proImages, [])
+        proImages: safeJson(p.proImages, []).map(normalizeUrl)
       }))
 
       return Response.json({
@@ -412,6 +428,22 @@ export async function GET(request) {
         }
       }
 
+      const normalizeUrl = (url) => {
+        if (!url || typeof url !== 'string') return ''
+        if (url.includes('rapidtechpro.s3') || (url.includes('s3.') && url.includes('rapidtechpro'))) {
+          try {
+            const u = new URL(url)
+            let p = u.pathname.replace(/^\/+/, '')
+            if (p.startsWith('rapidtechpro/')) p = p.substring('rapidtechpro/'.length)
+            return `https://d1nvnelpyr43e7.cloudfront.net/${p}`
+          } catch {
+            return url.replace(/https:\/\/[^/]*s3[^/]*\/rapidtechpro\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+                      .replace(/https:\/\/rapidtechpro\.s3[^/]*\//, 'https://d1nvnelpyr43e7.cloudfront.net/')
+          }
+        }
+        return url
+      }
+
       const processedProducts = products.map(product => {
         const vendorEmail = product.vendor?.email
         const biz = vendorEmail ? businessMap[vendorEmail.toLowerCase()] : null
@@ -422,7 +454,7 @@ export async function GET(request) {
             businessName: biz?.businessName || product.vendor.username,
             urlLogo: biz?.urlLogo || null
           } : null,
-          proImages: safeJson(product.proImages, []),
+          proImages: safeJson(product.proImages, []).map(normalizeUrl),
           keyFeatures: safeJson(product.keyFeatures, typeof product.keyFeatures === 'string' ? product.keyFeatures.split(',').map(s => s.trim()) : []),
           variations: safeJson(product.variations, []),
           reviews: safeJson(product.reviews, [])
