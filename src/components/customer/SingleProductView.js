@@ -1691,7 +1691,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                             </span>
                           </div>
                           <p className="text-xs text-slate-300 font-medium">
-                            Official Boutique Storefront on QuickDelivery
+                            Official Boutique Storefront on MARTZONA
                           </p>
                         </div>
                       </div>
@@ -1746,7 +1746,7 @@ export default function SingleProductView({ productIdentifier, productId, initia
                     <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-none text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2">
                       <BadgeCheck className="w-5 h-5 text-blue-600 flex-shrink-0" />
                       <span>
-                        This supplier has been legally verified with QuickDelivery and maintains 100% compliance with quality and sanitation standards.
+                        This supplier has been legally verified with MARTZONA and maintains 100% compliance with quality and sanitation standards.
                       </span>
                     </div>
                   </div>
@@ -1763,13 +1763,13 @@ export default function SingleProductView({ productIdentifier, productId, initia
                 </h3>
                 <div className="border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 rounded-none">
                   {[
-                    { label: 'SKU / Product Code', val: product.sku || product.item_sku || `QD-${product.proId}` },
+                    { label: 'SKU / Product Code', val: product.sku || product.item_sku || `MZ-${product.proId}` },
                     { label: 'Product Barcode (UPC/EAN)', val: product.barcode || product.product_id || (isFoodItem ? 'Culinary Custom Dish (None)' : 'N/A') },
                     { label: 'Brand / Kitchen', val: product.brandName || product.brand_name || supplierName },
                     { label: 'Manufacturer / Producer', val: product.manufacturer || (isFoodItem ? `${supplierName} Artisanal Kitchen` : 'Authorized Producer') },
                     { label: 'Taxonomy / Classification', val: product.productType || (isFoodItem ? 'Restaurant Culinary Dishes' : 'Standard Retail Catalog') },
                     { label: 'Condition State', val: product.conditionType || (isFoodItem ? 'Prepared Fresh On Order' : 'Brand New Sealed') },
-                    { label: 'Fulfillment Channel', val: product.fulfillmentChannel === 'DEFAULT' ? 'DEFAULT (Merchant Express)' : (product.fulfillmentChannel || 'QuickDelivery Rapid Fleet') },
+                    { label: 'Fulfillment Channel', val: product.fulfillmentChannel === 'DEFAULT' ? 'DEFAULT (Merchant Express)' : (product.fulfillmentChannel || 'MARTZONA Rapid Fleet') },
                     { label: 'Dimensions (LxWxH)', val: product.productDimensions || 'Standard Form Factor' },
                     { label: 'Net & Shipping Weight', val: product.packageWeight ? `${product.packageWeight} (Dispatch Ready)` : (isFoodItem ? '450g Net / 550g Packaged' : 'Standard Shipping Parcel') },
                     { label: 'Warranty & Protection', val: product.warranty || (isFoodItem ? 'Freshness & Hygiene Guarantee' : '1 Year Official Brand Warranty') },

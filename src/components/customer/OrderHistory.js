@@ -71,7 +71,7 @@ function printOrderReceipt(order) {
   body{font-family:system-ui,-apple-system,sans-serif;padding:28px;color:#0f172a;max-width:560px;margin:0 auto;font-size:14px;}
   h1{font-size:20px;margin:0 0 8px;font-weight:800;} .muted{color:#64748b;font-size:12px;line-height:1.6;} table{width:100%;border-collapse:collapse;margin:18px 0;} th,td{border-bottom:1px solid #e2e8f0;padding:10px 4px;text-align:left;} th{font-size:11px;text-transform:uppercase;color:#64748b;letter-spacing:0.5px;} .sum{margin-top:14px;background:#f8fafc;padding:14px;border-radius:12px;} .sum div{display:flex;justify-content:space-between;padding:4px 0;} .grand{font-size:16px;font-weight:800;margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;color:#0f172a;} .brand{color:#D70F64;font-weight:900;font-size:18px;margin-bottom:4px;} footer{margin-top:30px;font-size:11px;color:#94a3b8;text-align:center;}
 </style></head><body>
-  <p class="brand">QuickDelivery</p>
+  <p class="brand">MARTZONA</p>
   <h1>Order Receipt</h1>
   <p class="muted">Order #${oid}<br/>Date: ${escapeReceiptHtml(new Date(order.date).toLocaleString())}<br/>
   Status: ${escapeReceiptHtml(order.status).toUpperCase()}<br/>Payment: ${escapeReceiptHtml(order.paymentMethod)}</p>
@@ -86,7 +86,7 @@ function printOrderReceipt(order) {
     <div class="grand"><span>Total payable</span><span>$${Number(total).toFixed(2)}</span></div>
   </div>
   <p style="margin-top:20px;font-size:12px;color:#475569;"><strong>Deliver to</strong><br/>${escapeReceiptHtml(order.shippingAddress)}</p>
-  <footer>Thank you for ordering with QuickDelivery!</footer>
+  <footer>Thank you for ordering with MARTZONA!</footer>
 </body></html>`
 
   const w = window.open('', '_blank')

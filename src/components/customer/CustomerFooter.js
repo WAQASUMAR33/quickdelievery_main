@@ -94,12 +94,14 @@ const CustomerFooter = () => {
                     {/* Marketplace Brand Info */}
                     <div>
                         <div className="flex items-center gap-2.5 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-blue-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md">
-                                QD
-                            </div>
+                            <img
+                                src="/images/martzona_logo_transparent.png"
+                                alt="MARTZONA"
+                                className="h-10 w-auto object-contain"
+                            />
                             <div>
                                 <span className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Quick<span className="text-blue-500">Delivery</span>
+                                    MART<span className="text-blue-500">ZONA</span>
                                 </span>
                                 <span className={`block text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                                     Multi-Vendor Marketplace
@@ -235,7 +237,7 @@ const CustomerFooter = () => {
                         <ul className="space-y-3 text-xs sm:text-sm">
                             <li className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 <Mail className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-indigo-400' : 'text-blue-600'}`} />
-                                <span>support@quickdelivery.com</span>
+                                <span>support@martzona.com</span>
                             </li>
                             <li className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                                 <Clock className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-indigo-400' : 'text-blue-600'}`} />

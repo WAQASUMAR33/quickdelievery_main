@@ -20,7 +20,7 @@ export default function WhatsAppWidget() {
   ]
 
   const handleSend = (textToSend) => {
-    const msg = textToSend || message || 'Hello QuickDelivery, I need assistance with shopping.'
+    const msg = textToSend || message || 'Hello MARTZONA, I need assistance with shopping.'
     const url = `https://wa.me/${SUPPORT_PHONE}?text=${encodeURIComponent(msg)}`
     window.open(url, '_blank', 'noopener,noreferrer')
     setMessage('')
@@ -60,7 +60,7 @@ export default function WhatsAppWidget() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-black text-sm text-white tracking-tight">
-                      QuickDelivery Support
+                      MARTZONA Support
                     </h3>
                     <ShieldCheck className="w-4 h-4 text-emerald-200 fill-emerald-100" />
                   </div>
@@ -75,12 +75,12 @@ export default function WhatsAppWidget() {
             <div className="p-4 bg-slate-50/70 dark:bg-slate-950/60 max-h-[300px] overflow-y-auto space-y-3 text-xs">
               {/* Automated Greeting Bubble */}
               <div className="flex items-start gap-2">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white font-black text-xs flex-shrink-0">
-                  QD
+                <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white font-black text-[10px] flex-shrink-0">
+                  MZ
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-200/80 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-100 leading-relaxed">
                   <p className="font-semibold mb-1">
-                    👋 Welcome to QuickDelivery Live Concierge!
+                    👋 Welcome to MARTZONA Live Concierge!
                   </p>
                   <p className="text-slate-600 dark:text-slate-300 text-[11.5px]">
                     How can our dispatch & shopping team help you today? Pick a quick option below or send your query directly to WhatsApp:

@@ -14,8 +14,15 @@ import AIAssistantWidget from "@/components/customer/AIAssistantWidget";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
 export const metadata = {
-  title: "QuickDelivery — Bespoke Multi-Vendor Marketplace & AI Concierge",
-  description: "Explore electronics, laptops, supermarket groceries, and gourmet dining delivered fast.",
+  title: "MARTZONA — Bespoke Multi-Vendor Marketplace & AI Concierge",
+  description: "Explore electronics, laptops, supermarket groceries, and gourmet dining delivered fast on MARTZONA.",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    apple: '/icon-192.png',
+  },
 };
 
 export default function RootLayout({ children }) {

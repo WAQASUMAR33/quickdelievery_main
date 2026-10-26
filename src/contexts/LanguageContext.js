@@ -133,10 +133,10 @@ const translations = {
     footerAbout: 'Your bespoke e-commerce hub for high-performance computing, mobile tech, organic supermarket groceries, and chef-curated dining.',
     quickNav: 'Quick Navigation',
     becomePartner: 'Become a Partner',
-    sellZeroComm: 'Sell on QuickDelivery (0% Comm)',
+    sellZeroComm: 'Sell on MARTZONA (0% Comm)',
     registerDriver: 'Register as Delivery Partner',
     customerCare: 'Customer Care',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. High-Speed Cloud Storefront.',
+    copyright: 'MARTZONA Multi-Vendor Marketplace. High-Speed Cloud Storefront.',
 
     // MegaMenu & Categories
     allDepartmentsCollections: 'All Departments & Collections',
@@ -411,10 +411,10 @@ const translations = {
     footerAbout: 'منصتك المتميزة للأجهزة والحواسيب ومستلزمات البقالة الطازجة وأرقى مأكولات الشيف العالمية.',
     quickNav: 'روابط سريعة',
     becomePartner: 'انضم كشريك معنا',
-    sellZeroComm: 'بع منتجاتك مع QuickDelivery (0% عمولة)',
+    sellZeroComm: 'بع منتجاتك مع MARTZONA (0% عمولة)',
     registerDriver: 'سجل كسائق توصيل معتمد',
     customerCare: 'خدمة ودعم العملاء',
-    copyright: 'سوق QuickDelivery متعدد المتاجر. منصة سحابية فائقة السرعة.',
+    copyright: 'سوق MARTZONA متعدد المتاجر. منصة سحابية فائقة السرعة.',
 
     // Cart & Checkout
     orderSummary: 'ملخص الطلب',
@@ -799,10 +799,10 @@ const translations = {
     footerAbout: 'Votre place de marché sur-mesure pour ordinateurs, accessoires mobiles, produits frais et délices de chefs.',
     quickNav: 'Navigation Rapide',
     becomePartner: 'Rejoignez-nous',
-    sellZeroComm: 'Vendez sur QuickDelivery (0% Comm)',
+    sellZeroComm: 'Vendez sur MARTZONA (0% Comm)',
     registerDriver: 'Devenir Livreur Partenaire',
     customerCare: 'Service Client',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. Plateforme Cloud Haute Vitesse.',
+    copyright: 'MARTZONA Multi-Vendor Marketplace. Plateforme Cloud Haute Vitesse.',
   },
 
   it: {
@@ -935,10 +935,10 @@ const translations = {
     footerAbout: 'Il tuo marketplace esclusivo per computer, accessori mobile, spesa biologica e cucina raffinata.',
     quickNav: 'Navigazione Rapida',
     becomePartner: 'Diventa Partner',
-    sellZeroComm: 'Vendi su QuickDelivery (0% Comm)',
+    sellZeroComm: 'Vendi su MARTZONA (0% Comm)',
     registerDriver: 'Diventa Corriere Partner',
     customerCare: 'Servizio Clienti',
-    copyright: 'QuickDelivery Multi-Vendor Marketplace. Piattaforma Cloud ad Alta Velocità.',
+    copyright: 'MARTZONA Multi-Vendor Marketplace. Piattaforma Cloud ad Alta Velocità.',
   },
 }
 

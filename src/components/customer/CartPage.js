@@ -150,7 +150,7 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
   const effectiveTotal = Math.max(0, computeOrderTotalWithService(subtotalCart) - voucherDiscount)
 
   // Group items by vendor/store if applicable
-  const storeName = items[0]?.vendor?.businessName || items[0]?.vendor?.username || 'QuickDelivery Store'
+  const storeName = items[0]?.vendor?.businessName || items[0]?.vendor?.username || 'MARTZONA Store'
 
   const handlePlaceOrder = async () => {
     setError(null)

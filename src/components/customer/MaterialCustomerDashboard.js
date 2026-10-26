@@ -241,9 +241,14 @@ const MaterialCustomerDashboard = () => {
         <Toolbar>
           {/* Logo */}
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
-            <Store sx={{ mr: 1 }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-              QuickDelivery
+            <Box
+              component="img"
+              src="/images/martzona_logo_transparent.png"
+              alt="MARTZONA"
+              sx={{ height: 32, width: 'auto', mr: 1, objectFit: 'contain' }}
+            />
+            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', letterSpacing: 0.5 }}>
+              MARTZONA
             </Typography>
           </Box>
 

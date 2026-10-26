@@ -359,15 +359,15 @@ const SidebarContent = () => {
             onClick={() => go('/admin/dashboard')}
             sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', flex: 1, '&:hover': { opacity: 0.85 }, transition: 'opacity 0.2s' }}
           >
-            <Box sx={{
-              width: 34, height: 34, bgcolor: BRAND, borderRadius: '8px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>QD</Typography>
-            </Box>
+            <Box
+              component="img"
+              src="/images/martzona_logo_transparent.png"
+              alt="MARTZONA"
+              sx={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }}
+            />
             <Box>
-              <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>
-                Quick Delivery
+              <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 14, lineHeight: 1.2, letterSpacing: 0.5 }}>
+                MARTZONA
               </Typography>
               <Typography sx={{ color: TEXT_DIM, fontSize: 10, letterSpacing: 0.3 }}>
                 Admin Panel

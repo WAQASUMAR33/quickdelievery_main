@@ -21,7 +21,7 @@ export async function generateMetadata({ params }) {
     }
 
     if (!product) {
-      return { title: 'Product Not Found | QuickDelivery' }
+      return { title: 'Product Not Found | MARTZONA' }
     }
 
     let images = []
@@ -34,8 +34,8 @@ export async function generateMetadata({ params }) {
     }
 
     return {
-      title: `${product.proName} — QuickDelivery Boutique`,
-      description: product.description?.slice(0, 160) || `Buy ${product.proName} at the best price on QuickDelivery. Fast delivery across Pakistan.`,
+      title: `${product.proName} — MARTZONA Boutique`,
+      description: product.description?.slice(0, 160) || `Buy ${product.proName} at the best price on MARTZONA. Fast delivery across Pakistan.`,
       openGraph: {
         title: product.proName,
         description: product.description?.slice(0, 160),
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }) {
     }
   } catch (err) {
     return {
-      title: 'QuickDelivery — Product Catalog',
+      title: 'MARTZONA — Product Catalog',
     }
   }
 }

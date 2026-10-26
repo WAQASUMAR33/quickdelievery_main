@@ -259,7 +259,7 @@ export default function VendorOrderDetailsPage() {
           <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">Thank you for your business!</Typography>
             <Typography variant="caption" color="text.disabled">
-              Quick Delivery Platform &bull; Customer Support &bull; orders@quickdelivery.com
+              MARTZONA Platform &bull; Customer Support &bull; orders@martzona.com
             </Typography>
           </Box>
 

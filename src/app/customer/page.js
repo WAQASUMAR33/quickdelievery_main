@@ -716,20 +716,22 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               >
                 <Box
                   sx={{
-                    width: { xs: 36, sm: 38, md: 40 },
                     height: { xs: 36, sm: 38, md: 40 },
-                    borderRadius: 0,
-                    background: THEME.gradient,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    boxShadow: '0 8px 24px rgba(79, 70, 229, 0.35)',
-                    border: '1px solid rgba(255,255,255,0.2)',
                     flexShrink: 0,
                   }}
                 >
-                  <DeliveryDiningIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 } }} />
+                  <Box
+                    component="img"
+                    src="/images/martzona_logo_transparent.png"
+                    alt="MARTZONA"
+                    sx={{
+                      height: { xs: 34, sm: 36, md: 38 },
+                      width: 'auto',
+                      objectFit: 'contain',
+                    }}
+                  />
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -745,7 +747,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         fontFamily: 'var(--font-jakarta)',
                       }}
                     >
-                      Quick<Box component="span" sx={{ color: isDark ? THEME.primaryLight : THEME.primary }}>Delivery</Box>
+                      MART<Box component="span" sx={{ color: isDark ? THEME.primaryLight : THEME.primary }}>ZONA</Box>
                     </Typography>
                     <Chip
                       label={t('boutiqueMall') || 'BOUTIQUE MALL'}
