@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -46,6 +46,7 @@ import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import CloseIcon from '@mui/icons-material/Close'
 
 const BRAND = '#39772A'
 const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 } // Lahore Default Center
@@ -125,6 +126,7 @@ export default function TaxiRideBooking({ onBack }) {
 
   // Google Maps JS API Loader & Auth Failure Handling
   const [mapAuthError, setMapAuthError] = useState(false)
+  const [hideNotice, setHideNotice] = useState(false)
   const { isLoaded: mapsLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAPS_SCRIPT_ID,
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -143,6 +145,25 @@ export default function TaxiRideBooking({ onBack }) {
       window.gm_authFailure = prevAuth
     }
   }, [])
+
+  // Dynamic OpenStreetMap bounding box framing pickup, dropoff, or default center
+  const osmEmbedUrl = useMemo(() => {
+    let minLat, maxLat, minLng, maxLng
+    if (pickupCoord && dropoffCoord) {
+      minLat = Math.min(pickupCoord.lat, dropoffCoord.lat) - 0.025
+      maxLat = Math.max(pickupCoord.lat, dropoffCoord.lat) + 0.025
+      minLng = Math.min(pickupCoord.lng, dropoffCoord.lng) - 0.025
+      maxLng = Math.max(pickupCoord.lng, dropoffCoord.lng) + 0.025
+    } else {
+      const center = pickupCoord || dropoffCoord || DEFAULT_CENTER
+      minLat = center.lat - 0.035
+      maxLat = center.lat + 0.035
+      minLng = center.lng - 0.035
+      maxLng = center.lng + 0.035
+    }
+    const marker = pickupCoord || dropoffCoord || DEFAULT_CENTER
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng}%2C${minLat}%2C${maxLng}%2C${maxLat}&layer=mapnik&marker=${marker.lat}%2C${marker.lng}`
+  }, [pickupCoord, dropoffCoord])
 
   // Simulated nearby driver cars on map for rich visual experience
   const nearbyDrivers = useCallback(() => {
@@ -472,13 +493,26 @@ export default function TaxiRideBooking({ onBack }) {
   }
 
   return (
-    <Box sx={{ maxWidth: 1380, mx: 'auto', p: { xs: 1.5, sm: 2.5, md: 3 } }}>
-      {/* ─── MAIN DUAL-PANEL GRID (BOOKING ENGINE + LIVE GOOGLE MAP) ─── */}
-      <Grid container spacing={3}>
+    <Box sx={{ width: '100%', maxWidth: '100%', px: { xs: 1.5, sm: 2.5, md: 3, xl: 4 }, py: 1 }}>
+      {/* ─── FULL-WIDTH DUAL-PANEL LAYOUT (LEFT CONTROLS + 100% EXPANDED MAP) ─── */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: { xs: 2.5, md: 3 },
+          alignItems: 'stretch',
+          width: '100%',
+        }}
+      >
         {/* ═════════════════════════════════════════════════════════════════
             LEFT PANEL: INTERACTIVE BOOKING & INCOMING BIDS ENGINE
         ═════════════════════════════════════════════════════════════════ */}
-        <Grid item xs={12} lg={5} xl={4.8}>
+        <Box
+          sx={{
+            width: { xs: '100%', lg: 470, xl: 510 },
+            flexShrink: 0,
+          }}
+        >
           {activeRide ? (
             /* ─── ACTIVE RIDE & INCOMING BIDS LOBBY ─── */
             <Card
@@ -1093,20 +1127,31 @@ export default function TaxiRideBooking({ onBack }) {
               </CardContent>
             </Card>
           )}
-        </Grid>
+        </Box>
 
         {/* ═════════════════════════════════════════════════════════════════
-            RIGHT PANEL: LIVE INTERACTIVE GOOGLE MAP & ROUTE POLYLINE
+            RIGHT PANEL: FULL-WIDTH EXPANDED LIVE INTERACTIVE MAP
         ═════════════════════════════════════════════════════════════════ */}
-        <Grid item xs={12} lg={7} xl={7.2}>
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: '100%',
+            display: 'flex',
+          }}
+        >
           <Card
             sx={{
-              height: { xs: 360, sm: 460, md: 560, lg: 650 },
+              width: '100%',
+              height: { xs: 460, sm: 540, md: 620, lg: 'calc(100vh - 160px)' },
+              minHeight: { xs: 460, lg: 680 },
               borderRadius: 3.5,
               overflow: 'hidden',
               border: '1px solid #CBD5E1',
               boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
               position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {mapsLoaded && !mapAuthError && !loadError ? (
@@ -1181,37 +1226,48 @@ export default function TaxiRideBooking({ onBack }) {
                   height="100%"
                   frameBorder="0"
                   scrolling="no"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(pickupCoord?.lng || DEFAULT_CENTER.lng) - 0.045}%2C${(pickupCoord?.lat || DEFAULT_CENTER.lat) - 0.045}%2C${(pickupCoord?.lng || DEFAULT_CENTER.lng) + 0.045}%2C${(pickupCoord?.lat || DEFAULT_CENTER.lat) + 0.045}&layer=mapnik&marker=${pickupCoord?.lat || DEFAULT_CENTER.lat}%2C${pickupCoord?.lng || DEFAULT_CENTER.lng}`}
+                  src={osmEmbedUrl}
                   style={{ border: 0, width: '100%', height: '100%' }}
                 />
 
-                {mapAuthError && (
+                {mapAuthError && !hideNotice && (
                   <Box
                     sx={{
                       position: 'absolute',
                       bottom: 16,
                       left: 16,
-                      right: 16,
+                      right: { xs: 16, sm: 'auto' },
+                      maxWidth: { xs: 'calc(100% - 32px)', sm: 540 },
                       zIndex: 10,
-                      p: 1.5,
-                      borderRadius: 2,
-                      bgcolor: 'rgba(15, 23, 42, 0.94)',
+                      p: 1.8,
+                      borderRadius: 2.5,
+                      bgcolor: 'rgba(15, 23, 42, 0.95)',
                       backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(245, 158, 11, 0.5)',
+                      border: '1.5px solid rgba(245, 158, 11, 0.6)',
                       color: '#fff',
                       display: 'flex',
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
                       gap: 1.5,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
                     }}
                   >
-                    <WarningAmberIcon sx={{ color: '#F59E0B', fontSize: 24, flexShrink: 0 }} />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#F59E0B', display: 'block' }}>
-                        Google Maps API Notice: Key Restricted / APIs Not Enabled
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', display: 'block' }}>
-                        Google Places & Directions APIs are restricted in Google Cloud Console. Active fallback: <strong>OpenStreetMap Live Engine</strong> is keeping all taxi bookings and routes operational.
+                    <WarningAmberIcon sx={{ color: '#F59E0B', fontSize: 26, mt: 0.2, flexShrink: 0 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#F59E0B' }}>
+                          Google Cloud Notice: Key Restricted / APIs Not Enabled
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => setHideNotice(true)}
+                          sx={{ color: '#94A3B8', p: 0.2, ml: 1, '&:hover': { color: '#fff' } }}
+                          title="Dismiss notice"
+                        >
+                          <CloseIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Box>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.88)', fontSize: '0.74rem', display: 'block', mt: 0.5, lineHeight: 1.45 }}>
+                        Google Places & Directions are disabled or restricted in Google Cloud Console. <strong>OpenStreetMap Live Engine</strong> is active and keeping full-width map navigation, address geocoding, and fare estimation fully operational.
                       </Typography>
                     </Box>
                   </Box>
@@ -1244,8 +1300,8 @@ export default function TaxiRideBooking({ onBack }) {
               </Typography>
             </Box>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   )
 }
