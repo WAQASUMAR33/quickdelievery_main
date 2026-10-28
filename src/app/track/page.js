@@ -2,7 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import CustomerLiveTracking from '@/components/tracking/CustomerLiveTracking'
+import dynamic from 'next/dynamic'
+const CustomerLiveTracking = dynamic(() => import('@/components/tracking/CustomerLiveTracking'), { ssr: false })
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { Package, Search, ArrowLeft, Truck, Clock } from 'lucide-react'

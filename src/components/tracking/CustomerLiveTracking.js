@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 import Box from '@mui/material/Box'
 import Dialog from '@mui/material/Dialog'
 import Typography from '@mui/material/Typography'
@@ -75,10 +76,10 @@ export default function CustomerLiveTracking({
     }
   })
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY || ''
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   })
 
   // Detect Google Maps authentication failures to automatically display high-res live map

@@ -7,18 +7,20 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
+import dynamic from 'next/dynamic'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
 import OrderHistory from '@/components/customer/OrderHistory'
 import CustomerProfile from '@/components/customer/CustomerProfile'
-import CartPage from '@/components/customer/CartPage'
 import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
 import StorefrontHeaderSearch from '@/components/customer/StorefrontHeaderSearch'
 import VisualSearchModal from '@/components/customer/VisualSearchModal'
-import TaxiRideBooking from '@/components/customer/TaxiRideBooking'
-import SecondHandMarketplace from '@/components/customer/SecondHandMarketplace'
 import toast from 'react-hot-toast'
+
+const CartPage = dynamic(() => import('@/components/customer/CartPage'), { ssr: false })
+const TaxiRideBooking = dynamic(() => import('@/components/customer/TaxiRideBooking'), { ssr: false })
+const SecondHandMarketplace = dynamic(() => import('@/components/customer/SecondHandMarketplace'), { ssr: false })
 
 import AppBar              from '@mui/material/AppBar'
 import Avatar              from '@mui/material/Avatar'

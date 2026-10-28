@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 import toast from 'react-hot-toast'
 import { getCountry } from '@/lib/countryData'
 
@@ -45,7 +46,6 @@ import VisibilityOutlinedIcon     from '@mui/icons-material/VisibilityOutlined'
 
 const BRAND         = '#39772A'
 const BRAND_DARK    = '#2E5F22'
-const MAP_LIBRARIES = ['places']
 const MAP_CONTAINER = { width: '100%', height: '380px' }
 const DEFAULT_CENTER = { lat: 33.6844, lng: 73.0479 } // Islamabad
 
@@ -181,8 +181,9 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
 
   // Load Google Maps JS SDK
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries: MAP_LIBRARIES,
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   })
 
   // Fetch business profile

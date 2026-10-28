@@ -6,6 +6,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { computeServiceCharge, computeOrderTotalWithService } from '@/lib/serviceCharge'
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 import toast from 'react-hot-toast'
 import NextLink from 'next/link'
 import { getProductUrl } from '@/lib/productSlug'
@@ -77,8 +78,9 @@ const CartPage = ({ onNavigateExplore, onNavigateOrders }) => {
   const [error, setError] = useState(null)
 
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   })
 
   // Autofill user details

@@ -25,6 +25,7 @@ import {
   Autocomplete,
   DirectionsRenderer,
 } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 
 import LocalTaxiIcon from '@mui/icons-material/LocalTaxi'
 import LuggageIcon from '@mui/icons-material/Luggage'
@@ -47,7 +48,6 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 
 const BRAND = '#39772A'
 const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 } // Lahore Default Center
-const GOOGLE_MAPS_LIBRARIES = ['places']
 
 const VEHICLE_CATEGORIES = [
   {
@@ -124,8 +124,8 @@ export default function TaxiRideBooking({ onBack }) {
 
   // Google Maps JS API Loader
   const { isLoaded: mapsLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAPS_LIBRARIES,
   })
 

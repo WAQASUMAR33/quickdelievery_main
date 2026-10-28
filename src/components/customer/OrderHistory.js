@@ -28,7 +28,8 @@ import {
   Receipt,
   Search,
 } from 'lucide-react'
-import CustomerLiveTracking from '@/components/tracking/CustomerLiveTracking'
+import dynamic from 'next/dynamic'
+const CustomerLiveTracking = dynamic(() => import('@/components/tracking/CustomerLiveTracking'), { ssr: false })
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
 import { computeServiceCharge, getServiceChargePercent } from '@/lib/serviceCharge'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'

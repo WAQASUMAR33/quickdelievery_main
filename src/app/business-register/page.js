@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles'
 import ImageUploadField from '@/components/ui/ImageUploadField'
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 import { COUNTRIES, getCountry, formatNationalPhone, buildFullPhoneNumber, parsePhoneAndCountry, getCountryFlagUrl } from '@/lib/countryData'
 
 import AppBar            from '@mui/material/AppBar'
@@ -68,7 +69,6 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import CameraAltIcon      from '@mui/icons-material/CameraAlt'
 
 // ─── Google Maps constants ─────────────────────────────────────────────────────
-const MAP_LIBRARIES = ['places']
 const MAP_CONTAINER = { width: '100%', height: '300px' }
 const DEFAULT_CENTER = { lat: 33.6844, lng: 73.0479 } // Islamabad
 
@@ -188,8 +188,9 @@ function BusinessRegisterInner() {
   const [mapProvider,     setMapProvider]     = useState('google')
 
   const { isLoaded: mapsLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries: MAP_LIBRARIES,
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   })
 
   const pinLocation = useCallback((lat, lng) => {

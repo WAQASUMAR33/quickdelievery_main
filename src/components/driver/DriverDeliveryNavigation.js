@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api'
+import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 import Box from '@mui/material/Box'
 import Dialog from '@mui/material/Dialog'
 import Typography from '@mui/material/Typography'
@@ -43,10 +44,10 @@ export default function DriverDeliveryNavigation({
   const [updating, setUpdating] = useState(false)
   const [driverCoord, setDriverCoord] = useState({ lat: 31.5204, lng: 74.3587 })
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
+    id: GOOGLE_MAPS_SCRIPT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   })
 
   const isPickedUp = order?.status === 'SHIPPED' || order?.status === 'DELIVERED'
