@@ -148,6 +148,7 @@ const ProductCatalog = ({
   const [brandSearch, setBrandSearch] = useState('')
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+  const [dynamicSlides, setDynamicSlides] = useState([])
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
 
   // Listen for AI Search and Faceted Filter Events from Global Header
@@ -230,8 +231,24 @@ const ProductCatalog = ({
     return () => clearInterval(timer)
   }, [])
 
-  // Dynamic Hero Slides derived from real database categories and live product inventory
+  // Dynamic Hero Slides derived from database hero_slides or fallback to categories
   const heroSlides = useMemo(() => {
+    if (dynamicSlides && dynamicSlides.length > 0) {
+      return dynamicSlides.map(s => ({
+        id: s.id,
+        badge: s.badge || '',
+        title: s.title,
+        subtitle: s.subtitle || '',
+        ctaText: s.ctaText || 'Explore Now',
+        ctaLink: s.ctaLink || null,
+        discount: s.discount || '',
+        deptId: s.deptId || null,
+        bgGradient: s.bgGradient || 'from-[#0B0F19] via-[#1E1B4B] to-[#312E81]',
+        accentColor: s.accentColor || '#818CF8',
+        image: s.image,
+      }))
+    }
+
     const categoryVisuals = {
       restaurant: {
         badge: t('slide4Badge') || 'GOURMET DINING & RESTAURANTS',
@@ -327,7 +344,7 @@ const ProductCatalog = ({
         image: cat.image || visual.defaultImage,
       }
     })
-  }, [categories, products, t, isRTL])
+  }, [dynamicSlides, categories, products, t, isRTL])
 
   // Auto-advance hero slides every 5 seconds
   useEffect(() => {
@@ -344,10 +361,11 @@ const ProductCatalog = ({
     const boot = async () => {
       setLoading(true)
       try {
-        const [prodRes, catRes, shopRes] = await Promise.all([
+        const [prodRes, catRes, shopRes, sliderRes] = await Promise.all([
           fetch('/api/products?type=products').then(r => r.json()).catch(() => ({ success: false })),
           fetch('/api/products?type=categories').then(r => r.json()).catch(() => ({ success: false })),
           fetch('/api/products?type=vendors').then(r => r.json()).catch(() => ({ success: false })),
+          fetch('/api/sliders').then(r => r.json()).catch(() => ({ success: false })),
         ])
         if (!active) return
         if (prodRes.success && Array.isArray(prodRes.data)) {
@@ -358,6 +376,9 @@ const ProductCatalog = ({
         }
         if (shopRes.success && Array.isArray(shopRes.data)) {
           setTopShops(shopRes.data)
+        }
+        if (sliderRes.success && Array.isArray(sliderRes.data) && sliderRes.data.length > 0) {
+          setDynamicSlides(sliderRes.data)
         }
       } catch (e) {
         console.error('Storefront boot error:', e)
@@ -1714,24 +1735,34 @@ const ProductCatalog = ({
             if (!currentSlide) return null
             return (
               <div className="relative z-10 max-w-xl">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-black tracking-wider uppercase mb-3">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{currentSlide.badge}</span>
-                </div>
+                {currentSlide.badge && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-black tracking-wider uppercase mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{currentSlide.badge}</span>
+                  </div>
+                )}
 
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-2 drop-shadow-sm">
                   {currentSlide.title}
                 </h1>
 
-                <p className="text-slate-200 text-xs sm:text-sm font-medium mb-6 line-clamp-2 max-w-lg leading-relaxed">
-                  {currentSlide.subtitle}
-                </p>
+                {currentSlide.subtitle && (
+                  <p className="text-slate-200 text-xs sm:text-sm font-medium mb-6 line-clamp-2 max-w-lg leading-relaxed">
+                    {currentSlide.subtitle}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={() => {
-                      if (currentSlide.deptId && onSelectDepartment) {
+                      if (currentSlide.ctaLink) {
+                        if (currentSlide.ctaLink.startsWith('http')) {
+                          window.open(currentSlide.ctaLink, '_blank')
+                        } else {
+                          router.push(currentSlide.ctaLink)
+                        }
+                      } else if (currentSlide.deptId && onSelectDepartment) {
                         onSelectDepartment(currentSlide.deptId)
                       } else if (onSelectDepartment) {
                         onSelectDepartment(null)
@@ -1739,13 +1770,15 @@ const ProductCatalog = ({
                     }}
                     className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
                   >
-                    <span>{currentSlide.ctaText}</span>
+                    <span>{currentSlide.ctaText || 'Shop Now'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
-                  <span className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md text-white font-extrabold text-xs border border-white/20">
-                    {currentSlide.discount}
-                  </span>
+                  {currentSlide.discount && (
+                    <span className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md text-white font-extrabold text-xs border border-white/20">
+                      {currentSlide.discount}
+                    </span>
+                  )}
                 </div>
               </div>
             )

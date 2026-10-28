@@ -821,6 +821,22 @@ model PantrySubscription {
   @@map("pantry_subscriptions")
 }
 
+model HeroSlide {
+  id          Int      @id @default(autoincrement())
+  badge       String?  @db.VarChar(120)
+  title       String   @db.VarChar(255)
+  subtitle    String?  @db.Text
+  ctaText     String?  @default("Shop Now") @map("cta_text") @db.VarChar(100)
+  ctaLink     String?  @map("cta_link") @db.VarChar(500)
+  discount    String?  @db.VarChar(100)
+  bgGradient  String?  @default("from-[#0B0F19] via-[#1E1B4B] to-[#312E81]") @map("bg_gradient") @db.VarChar(255)
+  accentColor String?  @default("#818CF8") @map("accent_color") @db.VarChar(50)
+  image       String   @db.VarChar(500)
+  deptId      Int?     @map("dept_id")
+  order       Int      @default(0)
+  status      String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, INACTIVE
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-
-
+  @@map("hero_slides")
+}

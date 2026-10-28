@@ -40,6 +40,7 @@ import ExpandMoreIcon            from '@mui/icons-material/ExpandMore'
 import HistoryOutlinedIcon       from '@mui/icons-material/HistoryOutlined'
 import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
 import RestaurantMenuOutlinedIcon from '@mui/icons-material/RestaurantMenuOutlined'
+import ViewCarouselOutlinedIcon   from '@mui/icons-material/ViewCarouselOutlined'
 import { isRestaurantVendor }    from '@/lib/restaurant/categoryHelper'
 
 const BRAND      = '#D70F64'
@@ -70,6 +71,7 @@ const ADMIN_ITEMS = [
   { id: 'productcategories', label: 'Product Categories', icon: FolderOutlinedIcon, path: '/admin/dashboard/productcategories' },
   { id: 'subcategories', label: 'Subcategories',    icon: AccountTreeOutlinedIcon, path: '/admin/dashboard/subcategories' },
   { id: 'deals',         label: 'Food Deals',       icon: LocalOfferOutlinedIcon, path: '/admin/dashboard/deals' },
+  { id: 'sliders',       label: 'Hero Sliders',     icon: ViewCarouselOutlinedIcon, path: '/admin/dashboard/sliders' },
 
   { id: 'employees', label: 'Employees', icon: HowToRegOutlinedIcon,    path: '/admin/dashboard/employees' },
   { id: 'disputes',  label: 'Disputes',  icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
