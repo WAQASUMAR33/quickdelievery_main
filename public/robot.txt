@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /driver/
+Disallow: /vendor/
+
+Sitemap: https://martzona.com/sitemap.xml
