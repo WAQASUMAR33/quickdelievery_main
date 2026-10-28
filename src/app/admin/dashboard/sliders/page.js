@@ -21,6 +21,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
@@ -31,12 +32,20 @@ import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Stack from '@mui/material/Stack'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
 
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ViewCarouselOutlinedIcon from '@mui/icons-material/ViewCarouselOutlined'
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
@@ -76,6 +85,35 @@ export default function SlidersManagementPage() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [previewSlideIndex, setPreviewSlideIndex] = useState(0)
 
+  // Side Promo Bento Widgets State
+  const [activeTab, setActiveTab] = useState(0)
+  const [widgets, setWidgets] = useState({
+    widget_1: {
+      key: 'widget_1',
+      badge: 'LIMITED DROPS',
+      title: 'Curated Drop Discounts',
+      subtitle: 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.',
+      buttonText: 'Explore Drops',
+      buttonLink: '/deals',
+      showTimer: true,
+      status: 'ACTIVE',
+    },
+    widget_2: {
+      key: 'widget_2',
+      badge: 'FEATURED STORES & RESTAURANTS',
+      title: '100% Authentic Brand Guarantees',
+      subtitle: 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.',
+      buttonText: 'View Boutiques',
+      buttonLink: '/customer',
+      footerTag: '7-Day Easy Returns',
+      footerLinkText: 'View Boutiques →',
+      footerLink: '/customer',
+      status: 'ACTIVE',
+    },
+  })
+  const [widgetsLoading, setWidgetsLoading] = useState(false)
+  const [savingWidgetKey, setSavingWidgetKey] = useState(null)
+
   useEffect(() => {
     if (!authLoading) {
       const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN'])
@@ -85,8 +123,60 @@ export default function SlidersManagementPage() {
       }
       fetchSlides()
       fetchCategories()
+      fetchWidgets()
     }
   }, [authLoading, user, userData])
+
+  const fetchWidgets = async () => {
+    try {
+      setWidgetsLoading(true)
+      const res = await fetch('/api/promo-widgets?admin=true')
+      const data = await res.json()
+      if (data.success && data.data) {
+        setWidgets(prev => ({
+          widget_1: { ...prev.widget_1, ...(data.data.widget_1 || {}) },
+          widget_2: { ...prev.widget_2, ...(data.data.widget_2 || {}) },
+        }))
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setWidgetsLoading(false)
+    }
+  }
+
+  const handleWidgetChange = (key, field, value) => {
+    setWidgets(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleSaveWidget = async (key) => {
+    setSavingWidgetKey(key)
+    try {
+      const payload = widgets[key]
+      const res = await authFetch('/api/promo-widgets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(key === 'widget_1' ? 'Limited Drops card updated successfully!' : 'Brand Guarantee card updated successfully!')
+        fetchWidgets()
+      } else {
+        toast.error(data.error || 'Failed to update widget')
+      }
+    } catch (err) {
+      toast.error('Error saving widget: ' + err.message)
+    } finally {
+      setSavingWidgetKey(null)
+    }
+  }
 
   const fetchSlides = async () => {
     try {
@@ -290,8 +380,40 @@ export default function SlidersManagementPage() {
 
   return (
     <DashboardLayout>
-      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
-        {/* Header */}
+        {/* Navigation Tabs */}
+        <Box sx={{ borderBottom: '2px solid #E2E8F0', mb: 3.5 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, val) => setActiveTab(val)}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                minHeight: 52,
+                color: '#64748B',
+                '&.Mui-selected': {
+                  color: BRAND,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: BRAND,
+                height: 3,
+                borderRadius: '3px 3px 0 0',
+              },
+            }}
+          >
+            <Tab icon={<ViewCarouselOutlinedIcon />} iconPosition="start" label="Hero Banner Slider" />
+            <Tab icon={<WidgetsOutlinedIcon />} iconPosition="start" label="Side Promo Cards (2 Dynamic Bento Widgets)" />
+          </Tabs>
+        </Box>
+
+        {/* ═══════════════════════════════════════════════════════════════════════════
+            TAB 0: HERO BANNER SLIDER
+        ═══════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 0 && (
+          <>
+            {/* Header */}
         <Box
           sx={{
             display: 'flex',
@@ -582,6 +704,530 @@ export default function SlidersManagementPage() {
               </Grid>
             ))}
           </Grid>
+        )}
+          </>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════════
+            TAB 1: SIDE PROMO BENTO CARDS (2 DYNAMIC WIDGETS)
+        ═══════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 1 && (
+          <Box>
+            {/* Header */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                <WidgetsOutlinedIcon sx={{ color: BRAND, fontSize: 32 }} />
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                  Storefront Side Promo Bento Cards
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: '#64748B' }}>
+                Customize the 2 cards shown adjacent to the hero slider on the homepage. Edit titles, badges, countdown, and destination links with real-time live preview.
+              </Typography>
+            </Box>
+
+            {widgetsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress sx={{ color: BRAND }} />
+              </Box>
+            ) : (
+              <Grid container spacing={3.5}>
+                {/* ─── CARD 1: FLASH DROPS & COUNTDOWN ─── */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    sx={{
+                      p: { xs: 2.5, sm: 3 },
+                      borderRadius: 3,
+                      border: '1px solid #E2E8F0',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Box>
+                      {/* Widget 1 Top Label & Status */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Chip
+                          icon={<LocalFireDepartmentIcon sx={{ color: '#F43F5E !important', fontSize: 18 }} />}
+                          label="BENTO CARD 1: FLASH DROPS"
+                          sx={{
+                            bgcolor: '#FFE4E6',
+                            color: '#9F1239',
+                            fontWeight: 800,
+                            fontSize: '0.75rem',
+                            letterSpacing: 0.5,
+                          }}
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={widgets.widget_1?.status === 'ACTIVE'}
+                              onChange={e =>
+                                handleWidgetChange('widget_1', 'status', e.target.checked ? 'ACTIVE' : 'INACTIVE')
+                              }
+                              color="success"
+                            />
+                          }
+                          label={<Typography variant="caption" sx={{ fontWeight: 700 }}>{widgets.widget_1?.status || 'ACTIVE'}</Typography>}
+                        />
+                      </Box>
+
+                      {/* Live Storefront Preview Box */}
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748B', display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                        STOREFRONT PREVIEW (HOW CUSTOMERS SEE IT)
+                      </Typography>
+                      <Box
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          background: 'linear-gradient(135deg, #0c0f1d 0%, #1a1438 50%, #2d124d 100%)',
+                          border: '1px solid rgba(139, 92, 246, 0.35)',
+                          color: '#fff',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          mb: 3,
+                          boxShadow: '0 10px 25px -5px rgba(45, 18, 77, 0.5)',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                          <Box
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.8,
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 999,
+                              bgcolor: 'rgba(244, 63, 94, 0.2)',
+                              border: '1px solid rgba(244, 63, 94, 0.4)',
+                              color: '#FDA4AF',
+                              fontSize: '0.7rem',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            <LocalFireDepartmentIcon sx={{ fontSize: 14, color: '#FB7185' }} />
+                            <span>{widgets.widget_1?.badge || 'LIMITED DROPS'}</span>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#34D399' }} />
+                            <Typography sx={{ fontSize: '0.7rem', fontWeight: 800, color: '#C4B5FD', letterSpacing: 0.5 }}>
+                              CLOSING IN
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {widgets.widget_1?.showTimer !== false && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 1.5 }}>
+                            {['04', '59', '36'].map((val, idx) => (
+                              <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ textAlign: 'center' }}>
+                                  <Box
+                                    sx={{
+                                      px: 1.2,
+                                      py: 0.5,
+                                      borderRadius: 1.5,
+                                      bgcolor: 'rgba(0,0,0,0.6)',
+                                      border: '1px solid rgba(255,255,255,0.15)',
+                                      minWidth: 38,
+                                      color: '#67E8F9',
+                                      fontFamily: 'monospace',
+                                      fontWeight: 900,
+                                      fontSize: '0.85rem',
+                                    }}
+                                  >
+                                    {val}
+                                  </Box>
+                                  <Typography sx={{ fontSize: '0.55rem', fontWeight: 900, color: '#94A3B8', mt: 0.2 }}>
+                                    {idx === 0 ? 'HRS' : idx === 1 ? 'MIN' : 'SEC'}
+                                  </Typography>
+                                </Box>
+                                {idx < 2 && (
+                                  <Typography sx={{ fontWeight: 900, color: '#A78BFA', fontSize: '0.9rem', mb: 1.5 }}>
+                                    :
+                                  </Typography>
+                                )}
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+
+                        <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff', mb: 0.5 }}>
+                          {widgets.widget_1?.title || 'Curated Drop Discounts'}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: 'rgba(203, 213, 225, 0.9)', mb: 2 }}>
+                          {widgets.widget_1?.subtitle || 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.'}
+                        </Typography>
+
+                        <Box
+                          sx={{
+                            py: 1,
+                            px: 2,
+                            borderRadius: 2,
+                            background: 'linear-gradient(90deg, #4F46E5 0%, #9333EA 50%, #4F46E5 100%)',
+                            color: '#fff',
+                            fontWeight: 800,
+                            fontSize: '0.75rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 1,
+                            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+                          }}
+                        >
+                          <span>{widgets.widget_1?.buttonText || 'Explore Drops'}</span>
+                          <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                        </Box>
+                      </Box>
+
+                      {/* Form Inputs */}
+                      <Stack spacing={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Badge Pill Text"
+                          placeholder="e.g. LIMITED DROPS or FLASH SALE"
+                          value={widgets.widget_1?.badge || ''}
+                          onChange={e => handleWidgetChange('widget_1', 'badge', e.target.value)}
+                          {...tf}
+                        />
+
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={widgets.widget_1?.showTimer !== false}
+                              onChange={e => handleWidgetChange('widget_1', 'showTimer', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Display Digital Countdown Timer</Typography>}
+                        />
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Headline Title"
+                          placeholder="e.g. Curated Drop Discounts"
+                          value={widgets.widget_1?.title || ''}
+                          onChange={e => handleWidgetChange('widget_1', 'title', e.target.value)}
+                          {...tf}
+                        />
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          multiline
+                          rows={2}
+                          label="Subtitle / Description"
+                          placeholder="e.g. upToOff 29% (Electronics & Tech, Bakery & Desserts, Fresh Groceries)!"
+                          value={widgets.widget_1?.subtitle || ''}
+                          onChange={e => handleWidgetChange('widget_1', 'subtitle', e.target.value)}
+                          {...tf}
+                        />
+
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Button Text"
+                              placeholder="e.g. Explore Drops"
+                              value={widgets.widget_1?.buttonText || ''}
+                              onChange={e => handleWidgetChange('widget_1', 'buttonText', e.target.value)}
+                              {...tf}
+                            />
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Button Target Link"
+                              placeholder="e.g. /deals or /customer"
+                              value={widgets.widget_1?.buttonLink || ''}
+                              onChange={e => handleWidgetChange('widget_1', 'buttonLink', e.target.value)}
+                              {...tf}
+                            />
+                          </Grid>
+                        </Grid>
+                      </Stack>
+                    </Box>
+
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={savingWidgetKey === 'widget_1' ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : <SaveOutlinedIcon />}
+                      onClick={() => handleSaveWidget('widget_1')}
+                      disabled={savingWidgetKey === 'widget_1'}
+                      sx={{
+                        mt: 3,
+                        bgcolor: BRAND,
+                        color: '#fff',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        py: 1.2,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 14px 0 rgba(57,119,42,0.25)',
+                        '&:hover': { bgcolor: '#2d5e21' },
+                      }}
+                    >
+                      {savingWidgetKey === 'widget_1' ? 'Saving Card 1...' : 'Save Drops Card'}
+                    </Button>
+                  </Card>
+                </Grid>
+
+                {/* ─── CARD 2: BRAND GUARANTEES & VERIFIED STORES ─── */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    sx={{
+                      p: { xs: 2.5, sm: 3 },
+                      borderRadius: 3,
+                      border: '1px solid #E2E8F0',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Box>
+                      {/* Widget 2 Top Label & Status */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Chip
+                          icon={<ShieldOutlinedIcon sx={{ color: '#059669 !important', fontSize: 18 }} />}
+                          label="BENTO CARD 2: BRAND GUARANTEE"
+                          sx={{
+                            bgcolor: '#D1FAE5',
+                            color: '#065F46',
+                            fontWeight: 800,
+                            fontSize: '0.75rem',
+                            letterSpacing: 0.5,
+                          }}
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={widgets.widget_2?.status === 'ACTIVE'}
+                              onChange={e =>
+                                handleWidgetChange('widget_2', 'status', e.target.checked ? 'ACTIVE' : 'INACTIVE')
+                              }
+                              color="success"
+                            />
+                          }
+                          label={<Typography variant="caption" sx={{ fontWeight: 700 }}>{widgets.widget_2?.status || 'ACTIVE'}</Typography>}
+                        />
+                      </Box>
+
+                      {/* Live Storefront Preview Box */}
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748B', display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                        STOREFRONT PREVIEW (HOW CUSTOMERS SEE IT)
+                      </Typography>
+                      <Box
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          background: 'linear-gradient(135deg, #061412 0%, #09221d 50%, #043329 100%)',
+                          border: '1px solid rgba(16, 185, 129, 0.35)',
+                          color: '#fff',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          mb: 3,
+                          boxShadow: '0 10px 25px -5px rgba(4, 51, 41, 0.5)',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.8,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 999,
+                            bgcolor: 'rgba(16, 185, 129, 0.2)',
+                            border: '1px solid rgba(16, 185, 129, 0.4)',
+                            color: '#6EE7B7',
+                            fontSize: '0.7rem',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            mb: 1.5,
+                          }}
+                        >
+                          <ShieldOutlinedIcon sx={{ fontSize: 14, color: '#34D399' }} />
+                          <span>{widgets.widget_2?.badge || 'FEATURED STORES & RESTAURANTS'}</span>
+                        </Box>
+
+                        <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#F1F5F9', mb: 0.5 }}>
+                          {widgets.widget_2?.title || '100% Authentic Brand Guarantees'}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: 'rgba(203, 213, 225, 0.8)', mb: 2 }}>
+                          {widgets.widget_2?.subtitle || 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.'}
+                        </Typography>
+
+                        {/* Partner badge mockup */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <Box sx={{ display: 'flex', ml: 0.5 }}>
+                            {['M', 'E', 'A', 'K'].map((init, i) => (
+                              <Box
+                                key={i}
+                                sx={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  bgcolor: '#064E3B',
+                                  border: '2px solid #061412',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 800,
+                                  color: '#6EE7B7',
+                                  ml: i > 0 ? -0.8 : 0,
+                                }}
+                              >
+                                {init}
+                              </Box>
+                            ))}
+                          </Box>
+                          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#6EE7B7' }}>
+                            Verified Partner Merchants
+                          </Typography>
+                        </Box>
+
+                        <Box
+                          sx={{
+                            pt: 1.5,
+                            borderTop: '1px solid rgba(16, 185, 129, 0.2)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              px: 1.2,
+                              py: 0.3,
+                              borderRadius: 1,
+                              bgcolor: 'rgba(6, 78, 59, 0.6)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              color: '#6EE7B7',
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                            }}
+                          >
+                            {widgets.widget_2?.footerTag || '7-Day Easy Returns'}
+                          </Box>
+                          <Typography
+                            sx={{
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              color: '#34D399',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
+                            <span>{widgets.widget_2?.footerLinkText || 'View Boutiques →'}</span>
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Form Inputs */}
+                      <Stack spacing={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Badge Pill Text"
+                          placeholder="e.g. FEATURED STORES & RESTAURANTS"
+                          value={widgets.widget_2?.badge || ''}
+                          onChange={e => handleWidgetChange('widget_2', 'badge', e.target.value)}
+                          {...tf}
+                        />
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Headline Title"
+                          placeholder="e.g. 100% Authentic Brand Guarantees"
+                          value={widgets.widget_2?.title || ''}
+                          onChange={e => handleWidgetChange('widget_2', 'title', e.target.value)}
+                          {...tf}
+                        />
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          multiline
+                          rows={2}
+                          label="Subtitle / Description"
+                          placeholder="e.g. Verified boutiques: ElectroZone, Apex Computers, Metro Fresh, and gourmet kitchens."
+                          value={widgets.widget_2?.subtitle || ''}
+                          onChange={e => handleWidgetChange('widget_2', 'subtitle', e.target.value)}
+                          {...tf}
+                        />
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Footer Tag / Trust Badge"
+                          placeholder="e.g. 7-Day Easy Returns or Official Warranties"
+                          value={widgets.widget_2?.footerTag || ''}
+                          onChange={e => handleWidgetChange('widget_2', 'footerTag', e.target.value)}
+                          {...tf}
+                        />
+
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Footer Link Text"
+                              placeholder="e.g. View Boutiques →"
+                              value={widgets.widget_2?.footerLinkText || ''}
+                              onChange={e => handleWidgetChange('widget_2', 'footerLinkText', e.target.value)}
+                              {...tf}
+                            />
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Footer Target Link"
+                              placeholder="e.g. /customer or /vendors"
+                              value={widgets.widget_2?.footerLink || ''}
+                              onChange={e => handleWidgetChange('widget_2', 'footerLink', e.target.value)}
+                              {...tf}
+                            />
+                          </Grid>
+                        </Grid>
+                      </Stack>
+                    </Box>
+
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={savingWidgetKey === 'widget_2' ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : <SaveOutlinedIcon />}
+                      onClick={() => handleSaveWidget('widget_2')}
+                      disabled={savingWidgetKey === 'widget_2'}
+                      sx={{
+                        mt: 3,
+                        bgcolor: BRAND,
+                        color: '#fff',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        py: 1.2,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 14px 0 rgba(57,119,42,0.25)',
+                        '&:hover': { bgcolor: '#2d5e21' },
+                      }}
+                    >
+                      {savingWidgetKey === 'widget_2' ? 'Saving Card 2...' : 'Save Brand Guarantee Card'}
+                    </Button>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+          </Box>
         )}
 
         {/* ─── Ultra Simple Add/Edit Banner Dialog ─── */}

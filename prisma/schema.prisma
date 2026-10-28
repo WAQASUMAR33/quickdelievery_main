@@ -840,3 +840,25 @@ model HeroSlide {
 
   @@map("hero_slides")
 }
+
+model PromoWidget {
+  id             Int      @id @default(autoincrement())
+  key            String   @unique @db.VarChar(50) // 'widget_1', 'widget_2'
+  badge          String?  @db.VarChar(120)
+  title          String   @db.VarChar(255)
+  subtitle       String?  @db.Text
+  buttonText     String?  @default("Explore Now") @map("button_text") @db.VarChar(100)
+  buttonLink     String?  @default("/customer") @map("button_link") @db.VarChar(500)
+  footerTag      String?  @map("footer_tag") @db.VarChar(120)
+  footerLinkText String?  @map("footer_link_text") @db.VarChar(120)
+  footerLink     String?  @map("footer_link") @db.VarChar(500)
+  bgGradient     String?  @default("from-[#0F172A] via-[#1E1B4B] to-[#312E81]") @map("bg_gradient") @db.VarChar(255)
+  accentColor    String?  @default("#818CF8") @map("accent_color") @db.VarChar(50)
+  image          String?  @db.VarChar(500)
+  showTimer      Boolean  @default(true) @map("show_timer")
+  status         String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, INACTIVE
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("promo_widgets")
+}

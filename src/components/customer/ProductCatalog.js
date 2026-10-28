@@ -149,6 +149,7 @@ const ProductCatalog = ({
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
   const [dynamicSlides, setDynamicSlides] = useState([])
+  const [promoWidgets, setPromoWidgets] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
 
   // Listen for AI Search and Faceted Filter Events from Global Header
@@ -365,6 +366,7 @@ const ProductCatalog = ({
       const cachedCats = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_cats') : null
       const cachedShops = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_shops') : null
       const cachedSliders = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_sliders') : null
+      const cachedWidgets = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_widgets') : null
 
       if (cachedProds) {
         const parsed = JSON.parse(cachedProds)
@@ -385,6 +387,10 @@ const ProductCatalog = ({
         const parsed = JSON.parse(cachedSliders)
         if (Array.isArray(parsed) && parsed.length > 0) setDynamicSlides(parsed)
       }
+      if (cachedWidgets) {
+        const parsed = JSON.parse(cachedWidgets)
+        if (parsed) setPromoWidgets(parsed)
+      }
     } catch {}
 
     const boot = async () => {
@@ -395,6 +401,16 @@ const ProductCatalog = ({
           if (active && d.success && Array.isArray(d.data) && d.data.length > 0) {
             setDynamicSlides(d.data)
             try { sessionStorage.setItem('martzona_cache_sliders', JSON.stringify(d.data)) } catch {}
+          }
+        })
+        .catch(() => {})
+
+      fetch('/api/promo-widgets')
+        .then(r => r.json())
+        .then(d => {
+          if (active && d.success && d.data) {
+            setPromoWidgets(d.data)
+            try { sessionStorage.setItem('martzona_cache_widgets', JSON.stringify(d.data)) } catch {}
           }
         })
         .catch(() => {})
@@ -1838,89 +1854,178 @@ const ProductCatalog = ({
           </div>
         </div>
 
-        {/* Right Bento Promo Cards (4 Cols on Desktop) */}
-        <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4">
-          {/* Bento Card 1: Live Flash Drops Countdown (Neo Obsidian & Electric Violet) */}
-          <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#312E81] border border-indigo-500/30 p-5 text-white shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 text-cyan-400">
-              <Flame className="w-32 h-32" />
-            </div>
+        {/* Right Bento Promo Cards (4 Cols on Desktop - Dynamic & Premium Redesign) */}
+        {(() => {
+          const w1 = promoWidgets?.widget_1 || {
+            badge: 'LIMITED DROPS',
+            title: 'Curated Drop Discounts',
+            subtitle: 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.',
+            buttonText: 'Explore Drops',
+            buttonLink: '/deals',
+            showTimer: true,
+          }
+          const w2 = promoWidgets?.widget_2 || {
+            badge: 'FEATURED STORES & RESTAURANTS',
+            title: '100% Authentic Brand Guarantees',
+            subtitle: 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.',
+            footerTag: '7-Day Easy Returns',
+            footerLinkText: 'View Boutiques →',
+            footerLink: '/customer',
+          }
 
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/25 border border-indigo-400/30 text-[11px] font-black tracking-wider uppercase text-cyan-300">
-                  <Flame className="w-3.5 h-3.5 text-rose-400 fill-current" /> {t('limitedDrops') || 'Limited Drops'}
-                </span>
-                <span className="text-[11px] font-black text-indigo-200">{t('closingIn') || 'CLOSING IN'}</span>
+          return (
+            <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4">
+              {/* Bento Card 1: Live Flash Drops Countdown (Electric Violet & Obsidian Glow) */}
+              <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#0c0f1d] via-[#1a1438] to-[#2d124d] border border-violet-500/30 p-5 text-white shadow-xl shadow-purple-950/20 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 hover:border-violet-400/60 hover:-translate-y-0.5">
+                {/* Ambient Glow & Watermark Flame */}
+                <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-violet-600/20 blur-2xl pointer-events-none" />
+                <div className="absolute right-1 bottom-1 opacity-10 text-violet-400 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+                  <Flame className="w-28 h-28" />
+                </div>
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-[11px] font-black tracking-wider uppercase text-rose-300 shadow-sm shadow-rose-950/30">
+                      <Flame className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
+                      <span>{w1.badge || 'LIMITED DROPS'}</span>
+                    </span>
+                    <span className="text-[11px] font-black text-violet-300/80 tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      CLOSING IN
+                    </span>
+                  </div>
+
+                  {/* Digital Countdown Timer Blocks with Micro Labels */}
+                  {w1.showTimer !== false && (
+                    <div className="flex items-center gap-2 my-2.5">
+                      <div className="flex flex-col items-center">
+                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
+                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
+                            {String(timeLeft.hours).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">HRS</span>
+                      </div>
+                      <span className="font-black text-violet-400 text-sm mb-2.5">:</span>
+                      <div className="flex flex-col items-center">
+                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
+                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
+                            {String(timeLeft.minutes).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">MIN</span>
+                      </div>
+                      <span className="font-black text-violet-400 text-sm mb-2.5">:</span>
+                      <div className="flex flex-col items-center">
+                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
+                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
+                            {String(timeLeft.seconds).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">SEC</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <h4 className="font-black text-base text-white leading-tight mb-1">
+                    {w1.title || 'Curated Drop Discounts'}
+                  </h4>
+                  <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">
+                    {w1.subtitle || 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.'}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (w1.buttonLink) {
+                      if (w1.buttonLink.startsWith('http')) window.open(w1.buttonLink, '_blank')
+                      else router.push(w1.buttonLink)
+                    } else {
+                      setOnlyDeals(true)
+                    }
+                  }}
+                  className="relative z-10 mt-3.5 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
+                >
+                  <span>{w1.buttonText || 'Explore Drops'}</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
               </div>
 
-              {/* Live Ticking Countdown Box */}
-              <div className="flex items-center gap-1.5 my-2">
-                <div className="px-2 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-center min-w-[34px]">
-                  <span className="text-sm font-black font-mono text-cyan-300">{String(timeLeft.hours).padStart(2, '0')}</span>
+              {/* Bento Card 2: 100% Genuine Multi-Vendor Guarantee (Emerald Shield) */}
+              <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#061412] via-[#09221d] to-[#043329] border border-emerald-500/30 p-5 text-white shadow-xl shadow-emerald-950/20 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 hover:border-emerald-400/60 hover:-translate-y-0.5">
+                {/* Ambient Glow */}
+                <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none" />
+                <div className="absolute right-2 top-2 opacity-10 text-emerald-400 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+                  <ShieldCheck className="w-24 h-24" />
                 </div>
-                <span className="font-bold text-indigo-300">:</span>
-                <div className="px-2 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-center min-w-[34px]">
-                  <span className="text-sm font-black font-mono text-cyan-300">{String(timeLeft.minutes).padStart(2, '0')}</span>
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[11px] font-black tracking-wider uppercase text-emerald-300 shadow-sm shadow-emerald-950/30">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{w2.badge || 'FEATURED STORES & RESTAURANTS'}</span>
+                    </span>
+                  </div>
+
+                  <h4 className="font-extrabold text-sm sm:text-base text-slate-100 leading-tight mb-1">
+                    {w2.title || '100% Authentic Brand Guarantees'}
+                  </h4>
+                  <p className="text-xs text-slate-300/80 leading-relaxed line-clamp-2 mb-2.5">
+                    {w2.subtitle || 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.'}
+                  </p>
+
+                  {/* Social Proof: Verified Store Avatars Strip */}
+                  {topShops && topShops.length > 0 && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {topShops.slice(0, 4).map((shop, i) => (
+                          <div
+                            key={shop.id || i}
+                            className="inline-block h-6 w-6 rounded-full ring-2 ring-emerald-950 overflow-hidden bg-slate-800"
+                            title={shop.businessName}
+                          >
+                            {shop.urlLogo ? (
+                              <img src={shop.urlLogo} alt={shop.businessName} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-emerald-300">
+                                {(shop.businessName || 'S').charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-semibold text-emerald-300/90 ml-1">
+                        {topShops.length}+ Verified Partners
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <span className="font-bold text-indigo-300">:</span>
-                <div className="px-2 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-md text-center min-w-[34px]">
-                  <span className="text-sm font-black font-mono text-cyan-300">{String(timeLeft.seconds).padStart(2, '0')}</span>
+
+                <div className="relative z-10 flex items-center justify-between pt-2.5 border-t border-emerald-500/20 text-xs">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-extrabold text-[11px]">
+                    {w2.footerTag || '7-Day Easy Returns'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (w2.footerLink) {
+                        if (w2.footerLink.startsWith('http')) window.open(w2.footerLink, '_blank')
+                        else router.push(w2.footerLink)
+                      } else {
+                        topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+                      }
+                    }}
+                    className="font-extrabold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group/btn cursor-pointer transition-colors"
+                  >
+                    <span>{w2.footerLinkText || 'View Boutiques →'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
+                  </button>
                 </div>
               </div>
-
-              <h4 className="font-black text-base text-white leading-tight mb-1">
-                {t('curatedDropDiscounts') || 'Curated Drop Discounts'}
-              </h4>
-              <p className="text-xs text-slate-300 line-clamp-1">
-                {(() => {
-                  const maxDisc = Math.max(0, ...products.map(p => Number(p.discount || 0)))
-                  const catNames = categories.map(c => t(c.name) || c.name).slice(0, 3).join(', ')
-                  return maxDisc > 0
-                    ? `${t('upToOff') || 'Save up to'} ${maxDisc}% (${catNames || 'our departments'})!`
-                    : `Exclusive marketplace deals across ${catNames || 'all categories'}!`
-                })()}
-              </p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setOnlyDeals(true)}
-              className="relative z-10 mt-3 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-colors text-center cursor-pointer"
-            >
-              {t('exploreDrops') || 'Explore Drops'}
-            </button>
-          </div>
-
-          {/* Bento Card 2: 100% Genuine Multi-Vendor Guarantee */}
-          <div className="flex-1 rounded-2xl bg-[#090D16] border border-slate-800 p-5 text-white shadow-md flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2 text-cyan-400">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300">{t('verifiedBoutiques') || 'Verified Stores & Restaurants'}</span>
-              </div>
-              <h4 className="font-extrabold text-sm text-slate-100 mb-1">
-                {t('authenticGuarantee') || '100% Authentic Brand Guarantees'}
-              </h4>
-              <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                {t('authenticSubtitle') || 'Verified merchants: ElectroZone, Apex Computers, Metro Fresh and official partners.'}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-              <span className="text-slate-400 font-medium">{t('easyReturns') || '7-Day Easy Returns'}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="font-extrabold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer"
-              >
-                {t('viewBoutiques') || 'View Stores & Restaurants →'}
-              </button>
-            </div>
-          </div>
-        </div>
+          )
+        })()}
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
