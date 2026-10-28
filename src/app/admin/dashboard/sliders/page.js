@@ -380,6 +380,7 @@ export default function SlidersManagementPage() {
 
   return (
     <DashboardLayout>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
         {/* Navigation Tabs */}
         <Box sx={{ borderBottom: '2px solid #E2E8F0', mb: 3.5 }}>
           <Tabs
