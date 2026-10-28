@@ -45,6 +45,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 
 const BRAND = '#39772A'
 const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 } // Lahore Default Center
@@ -122,12 +123,26 @@ export default function TaxiRideBooking({ onBack }) {
   const pickupAutoRef = useRef(null)
   const dropoffAutoRef = useRef(null)
 
-  // Google Maps JS API Loader
-  const { isLoaded: mapsLoaded } = useJsApiLoader({
+  // Google Maps JS API Loader & Auth Failure Handling
+  const [mapAuthError, setMapAuthError] = useState(false)
+  const { isLoaded: mapsLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAPS_SCRIPT_ID,
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAPS_LIBRARIES,
   })
+
+  // Detect Google Maps authentication failures to automatically fall back to OpenStreetMap
+  useEffect(() => {
+    const handleAuthFailure = () => {
+      console.warn('Google Maps authentication failure detected. Falling back to OpenStreetMap.')
+      setMapAuthError(true)
+    }
+    const prevAuth = window.gm_authFailure
+    window.gm_authFailure = handleAuthFailure
+    return () => {
+      window.gm_authFailure = prevAuth
+    }
+  }, [])
 
   // Simulated nearby driver cars on map for rich visual experience
   const nearbyDrivers = useCallback(() => {
@@ -157,32 +172,84 @@ export default function TaxiRideBooking({ onBack }) {
     setCustomerFare(String(calculated))
   }, [])
 
+  // Fallback Haversine road-distance calculation when Google Directions API is blocked or restricted
+  const fallbackRouteCalc = useCallback((c1, c2) => {
+    if (!c1 || !c2) return
+    const R = 6371 // Earth radius in km
+    const dLat = ((c2.lat - c1.lat) * Math.PI) / 180
+    const dLon = ((c2.lng - c1.lng) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((c1.lat * Math.PI) / 180) *
+        Math.cos((c2.lat * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    const drivingDist = parseFloat((R * c * 1.3).toFixed(1)) // 1.3x typical urban road winding factor
+    const dur = Math.max(5, Math.round(drivingDist * 2.5))
+    setRouteDistanceKm(drivingDist)
+    setRouteDurationMin(dur)
+    updateFareEstimate(drivingDist, selectedVehicle, serviceType)
+  }, [selectedVehicle, serviceType, updateFareEstimate])
+
   // Google Maps Directions calculation
   const calculateRoute = useCallback((origin, destination) => {
-    if (!origin || !destination || !window.google?.maps) return
+    if (!origin || !destination) return
 
-    const directionsService = new window.google.maps.DirectionsService()
-    directionsService.route(
-      {
-        origin,
-        destination,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK && result) {
-          setDirections(result)
-          const leg = result.routes[0]?.legs[0]
-          if (leg) {
-            const dist = parseFloat((leg.distance.value / 1000).toFixed(1))
-            const dur = Math.round(leg.duration.value / 60)
-            setRouteDistanceKm(dist)
-            setRouteDurationMin(dur)
-            updateFareEstimate(dist, selectedVehicle, serviceType)
+    if (!window.google?.maps || mapAuthError) {
+      fallbackRouteCalc(origin, destination)
+      return
+    }
+
+    try {
+      const directionsService = new window.google.maps.DirectionsService()
+      directionsService.route(
+        {
+          origin,
+          destination,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK && result) {
+            setDirections(result)
+            const leg = result.routes[0]?.legs[0]
+            if (leg) {
+              const dist = parseFloat((leg.distance.value / 1000).toFixed(1))
+              const dur = Math.round(leg.duration.value / 60)
+              setRouteDistanceKm(dist)
+              setRouteDurationMin(dur)
+              updateFareEstimate(dist, selectedVehicle, serviceType)
+            }
+          } else {
+            fallbackRouteCalc(origin, destination)
           }
         }
+      )
+    } catch {
+      fallbackRouteCalc(origin, destination)
+    }
+  }, [mapAuthError, fallbackRouteCalc, selectedVehicle, serviceType, updateFareEstimate])
+
+  // Backend /api/geocode search for addresses when Google Places is restricted or in fallback mode
+  const geocodeAddress = useCallback(async (addr, isPickup = true) => {
+    if (!addr || !addr.trim()) return
+    try {
+      const res = await fetch(`/api/geocode?address=${encodeURIComponent(addr.trim())}`)
+      const data = await res.json()
+      if (data.success && data.latitude && data.longitude) {
+        const coord = { lat: Number(data.latitude), lng: Number(data.longitude) }
+        if (isPickup) {
+          setPickupCoord(coord)
+          if (dropoffCoord) calculateRoute(coord, dropoffCoord)
+        } else {
+          setDropoffCoord(coord)
+          if (pickupCoord) calculateRoute(pickupCoord, coord)
+        }
       }
-    )
-  }, [selectedVehicle, serviceType, updateFareEstimate])
+    } catch (e) {
+      console.warn('Geocoding fallback error:', e)
+    }
+  }, [dropoffCoord, pickupCoord, calculateRoute])
 
   // Handle Autocomplete place selection for Pickup
   const onPickupPlaceChanged = () => {
@@ -655,11 +722,11 @@ export default function TaxiRideBooking({ onBack }) {
 
               <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
                 <Stack spacing={2.5}>
-                  {/* ── GOOGLE PLACES ROUTE SEARCH ── */}
+                  {/* ── ROUTE SEARCH ── */}
                   <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="caption" fontWeight={800} color="#64748B" letterSpacing={0.5}>
-                        ROUTE LOCATIONS (GOOGLE PLACES)
+                      <Typography variant="caption" fontWeight={800} color={mapAuthError ? '#F59E0B' : '#64748B'} letterSpacing={0.5}>
+                        {mapAuthError ? 'ROUTE LOCATIONS (SMART ADDRESS SEARCH)' : 'ROUTE LOCATIONS (GOOGLE PLACES)'}
                       </Typography>
                       {pickupCoord && dropoffCoord && (
                         <IconButton size="small" onClick={handleSwapLocations} title="Swap pickup & dropoff">
@@ -669,9 +736,9 @@ export default function TaxiRideBooking({ onBack }) {
                     </Box>
 
                     <Stack spacing={1.5}>
-                      {/* Pickup Input with Autocomplete */}
+                      {/* Pickup Input with Autocomplete & Geocoding Fallback */}
                       <Box sx={{ position: 'relative' }}>
-                        {mapsLoaded ? (
+                        {mapsLoaded && !mapAuthError && !loadError ? (
                           <Autocomplete
                             onLoad={ref => (pickupAutoRef.current = ref)}
                             onPlaceChanged={onPickupPlaceChanged}
@@ -682,6 +749,8 @@ export default function TaxiRideBooking({ onBack }) {
                               placeholder="Search Pickup Address or Landmark..."
                               value={pickupAddress}
                               onChange={e => setPickupAddress(e.target.value)}
+                              onBlur={() => geocodeAddress(pickupAddress, true)}
+                              onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(pickupAddress, true) }}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -709,16 +778,39 @@ export default function TaxiRideBooking({ onBack }) {
                           <TextField
                             fullWidth
                             size="small"
-                            placeholder="Pickup address..."
+                            placeholder="Enter Pickup Address or Landmark..."
                             value={pickupAddress}
                             onChange={e => setPickupAddress(e.target.value)}
+                            onBlur={() => geocodeAddress(pickupAddress, true)}
+                            onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(pickupAddress, true) }}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <LocationOnIcon sx={{ color: '#22C55E' }} />
+                                </InputAdornment>
+                              ),
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Tooltip title="Use my current GPS location">
+                                    <IconButton
+                                      size="small"
+                                      onClick={handleLocateMe}
+                                      disabled={locatingUser}
+                                      sx={{ color: BRAND }}
+                                    >
+                                      {locatingUser ? <CircularProgress size={16} /> : <MyLocationIcon fontSize="small" />}
+                                    </IconButton>
+                                  </Tooltip>
+                                </InputAdornment>
+                              ),
+                            }}
                           />
                         )}
                       </Box>
 
-                      {/* Dropoff Input with Autocomplete */}
+                      {/* Dropoff Input with Autocomplete & Geocoding Fallback */}
                       <Box sx={{ position: 'relative' }}>
-                        {mapsLoaded ? (
+                        {mapsLoaded && !mapAuthError && !loadError ? (
                           <Autocomplete
                             onLoad={ref => (dropoffAutoRef.current = ref)}
                             onPlaceChanged={onDropoffPlaceChanged}
@@ -729,6 +821,8 @@ export default function TaxiRideBooking({ onBack }) {
                               placeholder="Where to? (Enter Dropoff Destination)..."
                               value={dropoffAddress}
                               onChange={e => setDropoffAddress(e.target.value)}
+                              onBlur={() => geocodeAddress(dropoffAddress, false)}
+                              onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(dropoffAddress, false) }}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -742,9 +836,18 @@ export default function TaxiRideBooking({ onBack }) {
                           <TextField
                             fullWidth
                             size="small"
-                            placeholder="Dropoff address..."
+                            placeholder="Where to? (Enter Dropoff Destination)..."
                             value={dropoffAddress}
                             onChange={e => setDropoffAddress(e.target.value)}
+                            onBlur={() => geocodeAddress(dropoffAddress, false)}
+                            onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(dropoffAddress, false) }}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <NavigationIcon sx={{ color: '#EF4444' }} />
+                                </InputAdornment>
+                              ),
+                            }}
                           />
                         )}
                       </Box>
@@ -1006,7 +1109,7 @@ export default function TaxiRideBooking({ onBack }) {
               position: 'relative',
             }}
           >
-            {mapsLoaded ? (
+            {mapsLoaded && !mapAuthError && !loadError ? (
               <GoogleMap
                 onLoad={map => (mapRef.current = map)}
                 center={pickupCoord || DEFAULT_CENTER}
@@ -1071,11 +1174,48 @@ export default function TaxiRideBooking({ onBack }) {
                 ))}
               </GoogleMap>
             ) : (
-              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2, bgcolor: '#F8FAFC' }}>
-                <CircularProgress sx={{ color: BRAND }} />
-                <Typography variant="body2" color="text.secondary">
-                  Loading Interactive Google Map & Places...
-                </Typography>
+              <Box sx={{ width: '100%', height: '100%', position: 'relative', bgcolor: '#F1F5F9' }}>
+                <iframe
+                  title="Interactive Route Map"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  scrolling="no"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(pickupCoord?.lng || DEFAULT_CENTER.lng) - 0.045}%2C${(pickupCoord?.lat || DEFAULT_CENTER.lat) - 0.045}%2C${(pickupCoord?.lng || DEFAULT_CENTER.lng) + 0.045}%2C${(pickupCoord?.lat || DEFAULT_CENTER.lat) + 0.045}&layer=mapnik&marker=${pickupCoord?.lat || DEFAULT_CENTER.lat}%2C${pickupCoord?.lng || DEFAULT_CENTER.lng}`}
+                  style={{ border: 0, width: '100%', height: '100%' }}
+                />
+
+                {mapAuthError && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      zIndex: 10,
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(15, 23, 42, 0.94)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(245, 158, 11, 0.5)',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <WarningAmberIcon sx={{ color: '#F59E0B', fontSize: 24, flexShrink: 0 }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#F59E0B', display: 'block' }}>
+                        Google Maps API Notice: Key Restricted / APIs Not Enabled
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', display: 'block' }}>
+                        Google Places & Directions APIs are restricted in Google Cloud Console. Active fallback: <strong>OpenStreetMap Live Engine</strong> is keeping all taxi bookings and routes operational.
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             )}
 
@@ -1100,7 +1240,7 @@ export default function TaxiRideBooking({ onBack }) {
             >
               <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22C55E', boxShadow: '0 0 8px #22C55E' }} />
               <Typography variant="caption" fontWeight={800} letterSpacing={0.5}>
-                LIVE GPS ROUTE & NEARBY DRIVERS
+                {mapAuthError ? 'LIVE ROUTE • OPENSTREETMAP ENGINE' : 'LIVE GPS ROUTE & NEARBY DRIVERS'}
               </Typography>
             </Box>
           </Card>
