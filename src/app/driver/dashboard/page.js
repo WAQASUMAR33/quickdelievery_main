@@ -7,6 +7,7 @@ import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import DriverOrders from '@/components/driver/DriverOrders'
 import DriverBatchDispatches from '@/components/driver/DriverBatchDispatches'
+import DriverTaxiBids from '@/components/driver/DriverTaxiBids'
 
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -170,12 +171,14 @@ export default function DriverDashboardPage() {
             <Tab label="Available Orders (Pool)" />
             <Tab label="My Active Trips" />
             <Tab label="⚡ Smart Batched Trips" />
+            <Tab label="🚖 InDrive Taxi & Luggage" />
           </Tabs>
         </Box>
 
         {tabValue === 0 && <DriverOrders poolMode={true} />}
         {tabValue === 1 && <DriverOrders />}
         {tabValue === 2 && <DriverBatchDispatches driverId={userData?.id} />}
+        {tabValue === 3 && <DriverTaxiBids driverId={userData?.id} isOnDuty={isOnDuty} />}
       </Box>
     </DashboardLayout>
   )

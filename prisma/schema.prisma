@@ -42,6 +42,11 @@ model Users {
   orderDisputes      OrderDispute[]
   priceOffers        PriceOffer[]
   pantrySubscriptions PantrySubscription[]
+  secondHandItems    SecondHandItem[]      @relation("SellerItems")
+  secondHandOffers   SecondHandOffer[]     @relation("BuyerOffers")
+  customerRides      RideRequest[]         @relation("CustomerRideRequests")
+  driverRides        RideRequest[]         @relation("DriverRideRequests")
+  driverRideBids     RideBid[]             @relation("DriverBids")
 
   @@map("users")
 }
@@ -861,4 +866,112 @@ model PromoWidget {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("promo_widgets")
+}
+
+model SecondHandItem {
+  id                  Int               @id @default(autoincrement())
+  sellerId            Int               @map("seller_id")
+  seller              Users             @relation("SellerItems", fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerType          String            @default("CUSTOMER") @map("seller_type") @db.VarChar(30) // CUSTOMER, VENDOR, MERCHANT
+  title               String            @db.VarChar(255)
+  description         String            @db.Text
+  category            String            @db.VarChar(100)
+  condition           String            @db.VarChar(50) // BRAND_NEW, LIKE_NEW, EXCELLENT, GOOD, FAIR
+  price               Decimal           @db.Decimal(10, 2)
+  originalPrice       Decimal?          @map("original_price") @db.Decimal(10, 2)
+  minOfferPrice       Decimal?          @map("min_offer_price") @db.Decimal(10, 2)
+  images              String            @db.Text // JSON string array of URLs
+  city                String?           @db.VarChar(100)
+  location            String?           @db.VarChar(255)
+  contactPhone        String?           @map("contact_phone") @db.VarChar(50)
+  allowOffers         Boolean           @default(true) @map("allow_offers")
+  status              String            @default("AVAILABLE") @db.VarChar(30) // AVAILABLE, RESERVED, SOLD, INACTIVE
+  viewsCount          Int               @default(0) @map("views_count")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  offers              SecondHandOffer[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([status])
+  @@index([city])
+  @@map("second_hand_items")
+}
+
+model SecondHandOffer {
+  id                  Int               @id @default(autoincrement())
+  itemId              Int               @map("item_id")
+  item                SecondHandItem    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  buyerId             Int               @map("buyer_id")
+  buyer               Users             @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  offerPrice          Decimal           @map("offer_price") @db.Decimal(10, 2)
+  counterPrice        Decimal?          @map("counter_price") @db.Decimal(10, 2)
+  message             String?           @db.Text
+  sellerNote          String?           @map("seller_note") @db.Text
+  status              String            @default("PENDING") @db.VarChar(30) // PENDING, ACCEPTED, COUNTERED, REJECTED, CANCELLED
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  @@index([itemId])
+  @@index([buyerId])
+  @@index([status])
+  @@map("second_hand_offers")
+}
+
+model RideRequest {
+  id                  Int               @id @default(autoincrement())
+  customerId          Int               @map("customer_id")
+  customer            Users             @relation("CustomerRideRequests", fields: [customerId], references: [id], onDelete: Cascade)
+  driverId            Int?              @map("driver_id")
+  driver              Users?            @relation("DriverRideRequests", fields: [driverId], references: [id], onDelete: SetNull)
+  serviceType         String            @default("TAXI") @map("service_type") @db.VarChar(30) // TAXI, LUGGAGE
+  rideCategory        String            @default("CAR_AC") @map("ride_category") @db.VarChar(50) // MOTO, AUTO, CAR_MINI, CAR_AC, LUGGAGE_VAN
+  pickupAddress       String            @map("pickup_address") @db.VarChar(500)
+  pickupLat           Float?            @map("pickup_lat")
+  pickupLng           Float?            @map("pickup_lng")
+  dropoffAddress      String            @map("dropoff_address") @db.VarChar(500)
+  dropoffLat          Float?            @map("dropoff_lat")
+  dropoffLng          Float?            @map("dropoff_lng")
+  estimatedDistanceKm Float?            @map("estimated_distance_km")
+  customerFare        Decimal           @map("customer_fare") @db.Decimal(10, 2)
+  finalFare           Decimal?          @map("final_fare") @db.Decimal(10, 2)
+  paymentMethod       String            @default("CASH") @map("payment_method") @db.VarChar(30) // CASH, WALLET
+  status              String            @default("SEARCHING") @db.VarChar(30) // SEARCHING, ACCEPTED, DRIVER_ARRIVED, IN_PROGRESS, COMPLETED, CANCELLED
+  customerNotes       String?           @map("customer_notes") @db.Text
+  rideOtp             String?           @map("ride_otp") @db.VarChar(6)
+  
+  // Luggage specific fields
+  recipientName       String?           @map("recipient_name") @db.VarChar(150)
+  recipientPhone      String?           @map("recipient_phone") @db.VarChar(50)
+  packageDescription  String?           @map("package_description") @db.VarChar(255)
+  packageWeight       String?           @map("package_weight") @db.VarChar(50)
+  isFragile           Boolean           @default(false) @map("is_fragile")
+  proofPhotoUrl       String?           @map("proof_photo_url") @db.VarChar(500)
+
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  driverBids          RideBid[]
+
+  @@index([customerId])
+  @@index([driverId])
+  @@index([serviceType])
+  @@index([status])
+  @@map("ride_requests")
+}
+
+model RideBid {
+  id                  Int               @id @default(autoincrement())
+  rideId              Int               @map("ride_id")
+  ride                RideRequest       @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  driverId            Int               @map("driver_id")
+  driver              Users             @relation("DriverBids", fields: [driverId], references: [id], onDelete: Cascade)
+  bidAmount           Decimal           @map("bid_amount") @db.Decimal(10, 2)
+  etaMinutes          Int?              @map("eta_minutes")
+  status              String            @default("PENDING") @db.VarChar(30) // PENDING, ACCEPTED, REJECTED, WITHDRAWN
+  createdAt           DateTime          @default(now()) @map("created_at")
+
+  @@index([rideId])
+  @@index([driverId])
+  @@index([status])
+  @@map("ride_bids")
 }

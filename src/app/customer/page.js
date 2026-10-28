@@ -16,6 +16,8 @@ import WishlistPage from '@/components/customer/WishlistPage'
 import CustomerFooter from '@/components/customer/CustomerFooter'
 import StorefrontHeaderSearch from '@/components/customer/StorefrontHeaderSearch'
 import VisualSearchModal from '@/components/customer/VisualSearchModal'
+import TaxiRideBooking from '@/components/customer/TaxiRideBooking'
+import SecondHandMarketplace from '@/components/customer/SecondHandMarketplace'
 import toast from 'react-hot-toast'
 
 import AppBar              from '@mui/material/AppBar'
@@ -58,6 +60,8 @@ import LocationOnIcon          from '@mui/icons-material/LocationOn'
 import LogoutOutlinedIcon      from '@mui/icons-material/LogoutOutlined'
 import MenuIcon                from '@mui/icons-material/Menu'
 import PersonIcon              from '@mui/icons-material/Person'
+import LocalTaxiIcon           from '@mui/icons-material/LocalTaxi'
+import AutorenewIcon           from '@mui/icons-material/Autorenew'
 import PersonOutlineIcon       from '@mui/icons-material/PersonOutline'
 import SearchIcon              from '@mui/icons-material/Search'
 import SecurityIcon            from '@mui/icons-material/Security'
@@ -151,7 +155,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     if (typeof window !== 'undefined') {
       const sp = new URLSearchParams(window.location.search)
       const tab = sp.get('tab')
-      if (tab && ['products', 'orders', 'favorites', 'wishlist', 'profile', 'cart'].includes(tab)) {
+      if (tab && ['products', 'orders', 'favorites', 'wishlist', 'profile', 'cart', 'taxi', 'secondhand'].includes(tab)) {
         setActiveTab(tab)
       }
     }
@@ -168,16 +172,20 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
   const { isGuest, navTabs, effectiveTab } = useMemo(() => {
     const guest = userData?.role === 'GUEST' || !userData
     const tabDefs = [
-      { id: 'products',  label: t('exploreHome') || 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
-      { id: 'orders',    label: t('myOrders') || 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
-      { id: 'favorites', label: t('favourites') || 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
-      { id: 'wishlist',  label: t('wishlist') || 'Wishlist',       icon: <FavoriteBorderIcon />, activeIcon: <FavoriteIcon />, protected: true },
-      { id: 'profile',   label: t('profileSettings') || 'Profile Settings', icon: <PersonOutlineIcon />, activeIcon: <PersonIcon />, protected: true },
+      { id: 'products',   label: t('exploreHome') || 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
+      { id: 'taxi',       label: '🚖 Taxi & Luggage', icon: <LocalTaxiIcon />, activeIcon: <LocalTaxiIcon />, protected: false },
+      { id: 'secondhand', label: '♻️ 2nd Hand Deals', icon: <AutorenewIcon />, activeIcon: <AutorenewIcon />, protected: false },
+      { id: 'orders',     label: t('myOrders') || 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
+      { id: 'favorites',  label: t('favourites') || 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
+      { id: 'wishlist',   label: t('wishlist') || 'Wishlist',       icon: <FavoriteBorderIcon />, activeIcon: <FavoriteIcon />, protected: true },
+      { id: 'profile',    label: t('profileSettings') || 'Profile Settings', icon: <PersonOutlineIcon />, activeIcon: <PersonIcon />, protected: true },
     ]
     const allowed = tabDefs.filter(tab => !guest || !tab.protected)
     const allowedIds = new Set(allowed.map(t => t.id))
     allowedIds.add('products')
     allowedIds.add('cart')
+    allowedIds.add('taxi')
+    allowedIds.add('secondhand')
     return {
       isGuest: guest,
       navTabs: tabDefs,
@@ -452,6 +460,18 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               externalSubcategory={selectedSubcategory}
               externalFilter={activeFilter}
             />
+          </Box>
+        )
+      case 'taxi':
+        return (
+          <Box sx={{ width: '100%', py: { xs: 2, sm: 3 } }}>
+            <TaxiRideBooking onBack={() => setActiveTab('products')} />
+          </Box>
+        )
+      case 'secondhand':
+        return (
+          <Box sx={{ width: '100%', py: { xs: 2, sm: 3 } }}>
+            <SecondHandMarketplace user={userData || user} />
           </Box>
         )
       case 'orders':
