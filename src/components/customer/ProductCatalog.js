@@ -1770,6 +1770,55 @@ const ProductCatalog = ({
     <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3 space-y-6">
 
       {/* ══════════════════════════════════════════════════════════════════
+          0. SUPER-APP QUICK SERVICES BAR (InDrive Taxi, Luggage, 2nd Hand, Deals)
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          type="button"
+          onClick={() => router.push('/customer?tab=taxi')}
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-700/25 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0 border border-emerald-400/30"
+        >
+          <span className="text-base">🚖</span>
+          <span>InDrive City Taxi</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-wider">Offer Fare</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => router.push('/customer?tab=taxi')}
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white font-black text-xs shadow-md shadow-purple-700/25 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0 border border-purple-400/30"
+        >
+          <span className="text-base">📦</span>
+          <span>Luggage & Parcel Drop</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-wider">Courier</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => router.push('/customer?tab=secondhand')}
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black text-xs shadow-md shadow-amber-600/25 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0 border border-amber-300/30"
+        >
+          <span className="text-base">♻️</span>
+          <span>2nd Hand Marketplace</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-wider">Make Offers</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setOnlyDeals(prev => !prev)}
+          className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-black text-xs border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            onlyDeals
+              ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/30'
+              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 hover:border-rose-400'
+          }`}
+        >
+          <span className="text-base">⚡</span>
+          <span>Flash Drops</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase">Up to 50%</span>
+        </button>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
           1. FULL-WIDTH HERO SHOWCASE & BENTO PROMO HUB (Amazon / Daraz Hub)
       ══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">

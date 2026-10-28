@@ -688,6 +688,68 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 />
               </NextLink>
 
+              {/* InDrive Taxi & Luggage Quick Link */}
+              <Box
+                onClick={() => handleTabSwitch('taxi')}
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                  color: isDark ? '#34D399' : '#059669',
+                  '&:hover': { opacity: 0.8 },
+                }}
+              >
+                <LocalTaxiIcon sx={{ fontSize: 14 }} />
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 800 }}>
+                  InDrive Taxi & Luggage
+                </Typography>
+                <Chip
+                  label="OFFER FARE"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    bgcolor: '#10B981',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    px: 0.25,
+                  }}
+                />
+              </Box>
+
+              {/* 2nd Hand Market Quick Link */}
+              <Box
+                onClick={() => handleTabSwitch('secondhand')}
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                  color: isDark ? '#FBBF24' : '#D97706',
+                  '&:hover': { opacity: 0.8 },
+                }}
+              >
+                <AutorenewIcon sx={{ fontSize: 14 }} />
+                <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 800 }}>
+                  2nd Hand Market
+                </Typography>
+                <Chip
+                  label="MAKE OFFERS"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    bgcolor: '#F59E0B',
+                    color: '#000',
+                    borderRadius: '4px',
+                    px: 0.25,
+                  }}
+                />
+              </Box>
+
               <Box
                 onClick={() => handleTabSwitch('orders')}
                 sx={{ cursor: 'pointer', color: isDark ? '#94A3B8' : '#64748B', '&:hover': { color: isDark ? '#ffffff' : '#0F172A' } }}
@@ -1321,17 +1383,51 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           onClick={() => handleTabSwitch('orders')}
           sx={{
             flexDirection: 'column',
-            minWidth: 56,
+            minWidth: 50,
             p: 0.5,
             color: effectiveTab === 'orders' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
             textTransform: 'none',
-            fontSize: 10.5,
+            fontSize: 10,
             fontWeight: effectiveTab === 'orders' ? 800 : 600,
             borderRadius: 0,
           }}
         >
-          {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 22 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 22 }} />}
+          {effectiveTab === 'orders' ? <ShoppingBagIcon sx={{ fontSize: 20 }} /> : <ShoppingBagOutlinedIcon sx={{ fontSize: 20 }} />}
           {t('myOrders') || 'Orders'}
+        </Button>
+
+        <Button
+          onClick={() => handleTabSwitch('taxi')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 50,
+            p: 0.5,
+            color: effectiveTab === 'taxi' ? '#10B981' : (isDark ? '#94A3B8' : 'text.secondary'),
+            textTransform: 'none',
+            fontSize: 10,
+            fontWeight: effectiveTab === 'taxi' ? 800 : 600,
+            borderRadius: 0,
+          }}
+        >
+          <LocalTaxiIcon sx={{ fontSize: 20 }} />
+          Taxi
+        </Button>
+
+        <Button
+          onClick={() => handleTabSwitch('secondhand')}
+          sx={{
+            flexDirection: 'column',
+            minWidth: 50,
+            p: 0.5,
+            color: effectiveTab === 'secondhand' ? '#F59E0B' : (isDark ? '#94A3B8' : 'text.secondary'),
+            textTransform: 'none',
+            fontSize: 10,
+            fontWeight: effectiveTab === 'secondhand' ? 800 : 600,
+            borderRadius: 0,
+          }}
+        >
+          <AutorenewIcon sx={{ fontSize: 20 }} />
+          Used
         </Button>
 
         {/* Center Prominent Cart Button */}
