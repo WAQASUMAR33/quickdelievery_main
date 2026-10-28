@@ -1757,108 +1757,79 @@ const ProductCatalog = ({
           1. FULL-WIDTH HERO SHOWCASE & BENTO PROMO HUB (Amazon / Daraz Hub)
       ══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Main Banner Slider (8 Cols on Desktop) */}
-        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg min-h-[300px] sm:min-h-[340px] flex flex-col justify-between p-6 sm:p-8 text-white bg-slate-900">
-          {/* Active Slide Background */}
+        {/* Main Banner Slider (8 Cols on Desktop - Pure Banner Image Style) */}
+        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg min-h-[240px] sm:min-h-[290px] md:min-h-[330px] lg:min-h-[350px] flex flex-col justify-end text-white bg-slate-900 group">
+          {/* Active Banner Slide (Image Fills the Container) */}
           {heroSlides.map((slide, idx) => {
             const isActive = (activeSlideIndex % heroSlides.length) === idx
             return (
               <div
                 key={slide.id || idx}
-                className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient} transition-opacity duration-700 ${
-                  isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                onClick={() => {
+                  if (slide.ctaLink) {
+                    if (slide.ctaLink.startsWith('http')) {
+                      window.open(slide.ctaLink, '_blank')
+                    } else {
+                      router.push(slide.ctaLink)
+                    }
+                  } else if (slide.deptId && onSelectDepartment) {
+                    onSelectDepartment(slide.deptId)
+                  }
+                }}
+                className={`absolute inset-0 transition-opacity duration-700 cursor-pointer overflow-hidden ${
+                  isActive ? 'opacity-100 pointer-events-auto z-0' : 'opacity-0 pointer-events-none -z-10'
                 }`}
               >
-                {/* Visual Ambient Lighting & Image */}
-                <div className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-25 sm:opacity-40 mix-blend-overlay overflow-hidden">
-                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover scale-110" />
-                </div>
-                <div className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+                <img
+                  src={slide.image}
+                  alt={slide.title || 'Promotional Banner'}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+
+                {/* Subtle soft gradient at the bottom so controls always stay readable */}
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
               </div>
             )
           })}
 
-          {/* Slide Content */}
-          {(() => {
-            const currentSlide = heroSlides[activeSlideIndex % heroSlides.length] || heroSlides[0]
-            if (!currentSlide) return null
-            return (
-              <div className="relative z-10 max-w-xl">
-                {currentSlide.badge && (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-black tracking-wider uppercase mb-3">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>{currentSlide.badge}</span>
-                  </div>
-                )}
-
-                <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-2 drop-shadow-sm">
-                  {currentSlide.title}
-                </h1>
-
-                {currentSlide.subtitle && (
-                  <p className="text-slate-200 text-xs sm:text-sm font-medium mb-6 line-clamp-2 max-w-lg leading-relaxed">
-                    {currentSlide.subtitle}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (currentSlide.ctaLink) {
-                        if (currentSlide.ctaLink.startsWith('http')) {
-                          window.open(currentSlide.ctaLink, '_blank')
-                        } else {
-                          router.push(currentSlide.ctaLink)
-                        }
-                      } else if (currentSlide.deptId && onSelectDepartment) {
-                        onSelectDepartment(currentSlide.deptId)
-                      } else if (onSelectDepartment) {
-                        onSelectDepartment(null)
-                      }
-                    }}
-                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
-                  >
-                    <span>{currentSlide.ctaText || 'Shop Now'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  {currentSlide.discount && (
-                    <span className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md text-white font-extrabold text-xs border border-white/20">
-                      {currentSlide.discount}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* Slider Pagination Controls */}
-          <div className="relative z-10 flex items-center justify-between pt-4 mt-auto border-t border-white/10">
-            <div className="flex gap-1.5">
+          {/* Slider Pagination Controls & Prev/Next Arrows */}
+          <div className="relative z-10 flex items-center justify-between p-4 sm:p-6 mt-auto pointer-events-auto">
+            <div className="flex gap-1.5" onClick={e => e.stopPropagation()}>
               {heroSlides.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveSlideIndex(i)}
-                  className={`h-2 rounded-full transition-all ${
-                    (activeSlideIndex % heroSlides.length) === i ? 'w-8 bg-indigo-400' : 'w-2 bg-white/40 hover:bg-white/70'
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveSlideIndex(i)
+                  }}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    (activeSlideIndex % heroSlides.length) === i ? 'w-8 bg-white shadow' : 'w-2 bg-white/40 hover:bg-white/70'
                   }`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
               ))}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={e => e.stopPropagation()}>
               <button
-                onClick={() => setActiveSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))}
-                className="p-1.5 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md text-white transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveSlideIndex(prev => (prev === 0 ? heroSlides.length - 1 : prev - 1))
+                }}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white transition-all cursor-pointer hover:scale-110"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setActiveSlideIndex(prev => (prev + 1) % heroSlides.length)}
-                className="p-1.5 rounded-full bg-white/15 hover:bg-white/30 backdrop-blur-md text-white transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveSlideIndex(prev => (prev + 1) % heroSlides.length)
+                }}
+                className="p-2 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white transition-all cursor-pointer hover:scale-110"
                 aria-label="Next slide"
               >
                 <ChevronRight className="w-4 h-4" />

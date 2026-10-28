@@ -149,16 +149,15 @@ export async function POST(request) {
       status,
     } = body
 
-    if (!title || !title.trim()) {
-      return NextResponse.json({ success: false, error: 'Slide title is required' }, { status: 400 })
-    }
     if (!image || !image.trim()) {
-      return NextResponse.json({ success: false, error: 'Slide image is required' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Banner image is required' }, { status: 400 })
     }
+
+    const slideTitle = (title && title.trim()) ? title.trim() : 'Banner Slide'
 
     const newSlide = await prisma.heroSlide.create({
       data: {
-        title: title.trim(),
+        title: slideTitle,
         badge: badge ? badge.trim() : null,
         subtitle: subtitle ? subtitle.trim() : null,
         ctaText: ctaText ? ctaText.trim() : 'Shop Now',
