@@ -7,6 +7,26 @@ const ADMIN_ONLY_TYPES = ['category', 'subcategory', 'productcategory']
 
 let productsCache = null
 let productsCacheTime = 0
+let categoriesCache = null
+let categoriesCacheTime = 0
+let vendorsCache = null
+let vendorsCacheTime = 0
+
+const CACHE_TTL_PRODUCTS = 120 * 1000 // 2 minutes
+const CACHE_TTL_TAXONOMY = 300 * 1000 // 5 minutes
+
+export function invalidateCatalogCache() {
+  productsCache = null
+  productsCacheTime = 0
+  categoriesCache = null
+  categoriesCacheTime = 0
+  vendorsCache = null
+  vendorsCacheTime = 0
+}
+
+const EDGE_CACHE_HEADER = {
+  'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
+}
 
 export async function GET(request) {
   try {
@@ -22,6 +42,10 @@ export async function GET(request) {
     }
 
     if (type === 'vendors') {
+      if (!vertical && vendorsCache && (Date.now() - vendorsCacheTime < CACHE_TTL_TAXONOMY)) {
+        return Response.json({ success: true, data: vendorsCache }, { headers: EDGE_CACHE_HEADER })
+      }
+
       const vendorWhere = {
         verificationStatus: 'APPROVED'
       }
@@ -64,13 +88,24 @@ export async function GET(request) {
         }
       })
 
+      if (!vertical) {
+        vendorsCache = data
+        vendorsCacheTime = Date.now()
+      }
+
       return Response.json({
         success: true,
         data
+      }, {
+        headers: !vertical ? EDGE_CACHE_HEADER : undefined
       })
     }
 
     if (type === 'categories') {
+      if (!vertical && categoriesCache && (Date.now() - categoriesCacheTime < CACHE_TTL_TAXONOMY)) {
+        return Response.json({ success: true, data: categoriesCache }, { headers: EDGE_CACHE_HEADER })
+      }
+
       const catWhere = {}
       if (vertical) {
         catWhere.vertical = vertical
@@ -87,9 +122,16 @@ export async function GET(request) {
         orderBy: { createdAt: 'desc' }
       })
 
+      if (!vertical) {
+        categoriesCache = categories
+        categoriesCacheTime = Date.now()
+      }
+
       return Response.json({
         success: true,
         data: categories
+      }, {
+        headers: !vertical ? EDGE_CACHE_HEADER : undefined
       })
     }
 
@@ -367,10 +409,12 @@ export async function GET(request) {
 
     if (type === 'products') {
       const isPublicUnfiltered = !categoryId && !vendorId && !vertical && !searchParams.get('productCategoryId')
-      if (isPublicUnfiltered && productsCache && (Date.now() - productsCacheTime < 60000)) {
+      if (isPublicUnfiltered && productsCache && (Date.now() - productsCacheTime < CACHE_TTL_PRODUCTS)) {
         return Response.json({
           success: true,
           data: productsCache
+        }, {
+          headers: EDGE_CACHE_HEADER
         })
       }
 
@@ -398,7 +442,13 @@ export async function GET(request) {
             category: true,
             subCategory: true,
             productCategory: true,
-            vendor: true,
+            vendor: {
+              select: {
+                uid: true,
+                username: true,
+                email: true,
+              }
+            },
           },
           orderBy: { createdAt: 'desc' }
         }),
@@ -469,6 +519,8 @@ export async function GET(request) {
       return Response.json({
         success: true,
         data: processedProducts
+      }, {
+        headers: isPublicUnfiltered ? EDGE_CACHE_HEADER : undefined
       })
     }
 
@@ -490,6 +542,7 @@ export async function POST(request) {
   try {
     const body = await request.json()
     const { type, ...data } = body
+    invalidateCatalogCache()
 
     if (ADMIN_ONLY_TYPES.includes(type)) {
       const auth = await requireRole(request, ADMIN_ROLES)
@@ -706,6 +759,7 @@ export async function PUT(request) {
   try {
     const body = await request.json()
     const { type, id, ...data } = body
+    invalidateCatalogCache()
 
     if (ADMIN_ONLY_TYPES.includes(type)) {
       const auth = await requireRole(request, ADMIN_ROLES)
@@ -921,6 +975,7 @@ export async function DELETE(request) {
         error: 'ID is required'
       }, { status: 400 })
     }
+    invalidateCatalogCache()
 
     if (type === 'category') {
       await prisma.category.delete({

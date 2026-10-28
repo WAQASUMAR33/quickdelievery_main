@@ -57,10 +57,32 @@ const DEFAULT_SLIDES = [
   },
 ]
 
+let slidersCache = null
+let slidersCacheTime = 0
+const SLIDERS_TTL = 300 * 1000 // 5 minutes
+
+export function invalidateSlidersCache() {
+  slidersCache = null
+  slidersCacheTime = 0
+}
+
+const EDGE_CACHE_HEADER = {
+  'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const isAdminView = searchParams.get('admin') === 'true' || searchParams.get('all') === 'true'
+
+    if (!isAdminView && slidersCache && (Date.now() - slidersCacheTime < SLIDERS_TTL)) {
+      return NextResponse.json({
+        success: true,
+        data: slidersCache,
+      }, {
+        headers: EDGE_CACHE_HEADER
+      })
+    }
 
     const where = isAdminView ? {} : { status: 'ACTIVE' }
 
@@ -83,9 +105,16 @@ export async function GET(request) {
       }
     }
 
+    if (!isAdminView) {
+      slidersCache = slides
+      slidersCacheTime = Date.now()
+    }
+
     return NextResponse.json({
       success: true,
       data: slides,
+    }, {
+      headers: !isAdminView ? EDGE_CACHE_HEADER : undefined
     })
   } catch (error) {
     console.error('Failed to fetch hero slides:', error)
@@ -104,6 +133,7 @@ export async function POST(request) {
     }
 
     const body = await request.json()
+    invalidateSlidersCache()
     const {
       title,
       badge,
@@ -161,6 +191,7 @@ export async function PUT(request) {
     }
 
     const body = await request.json()
+    invalidateSlidersCache()
     const {
       id,
       title,
@@ -231,6 +262,7 @@ export async function DELETE(request) {
     await prisma.heroSlide.delete({
       where: { id: parseInt(id, 10) },
     })
+    invalidateSlidersCache()
 
     return NextResponse.json({ success: true, message: 'Slide deleted successfully' })
   } catch (error) {

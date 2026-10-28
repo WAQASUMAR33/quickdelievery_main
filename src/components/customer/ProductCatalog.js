@@ -355,30 +355,78 @@ const ProductCatalog = ({
     return () => clearInterval(slideTimer)
   }, [heroSlides.length])
 
-  // Initial Data Fetching from RDS APIs
+  // Initial Data Fetching with Progressive Hydration & Session Cache
   useEffect(() => {
     let active = true
+
+    // Fast-path: Hydrate instantly from session cache if available (0ms paint)
+    try {
+      const cachedProds = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_prods') : null
+      const cachedCats = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_cats') : null
+      const cachedShops = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_shops') : null
+      const cachedSliders = typeof window !== 'undefined' ? sessionStorage.getItem('martzona_cache_sliders') : null
+
+      if (cachedProds) {
+        const parsed = JSON.parse(cachedProds)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed)
+          setLoading(false)
+        }
+      }
+      if (cachedCats) {
+        const parsed = JSON.parse(cachedCats)
+        if (Array.isArray(parsed) && parsed.length > 0) setCategories(parsed)
+      }
+      if (cachedShops) {
+        const parsed = JSON.parse(cachedShops)
+        if (Array.isArray(parsed) && parsed.length > 0) setTopShops(parsed)
+      }
+      if (cachedSliders) {
+        const parsed = JSON.parse(cachedSliders)
+        if (Array.isArray(parsed) && parsed.length > 0) setDynamicSlides(parsed)
+      }
+    } catch {}
+
     const boot = async () => {
-      setLoading(true)
+      // 1. Fetch sliders, categories, vendors in parallel (lightweight & progressive)
+      fetch('/api/sliders')
+        .then(r => r.json())
+        .then(d => {
+          if (active && d.success && Array.isArray(d.data) && d.data.length > 0) {
+            setDynamicSlides(d.data)
+            try { sessionStorage.setItem('martzona_cache_sliders', JSON.stringify(d.data)) } catch {}
+          }
+        })
+        .catch(() => {})
+
+      fetch('/api/products?type=categories')
+        .then(r => r.json())
+        .then(d => {
+          if (active && d.success && Array.isArray(d.data)) {
+            setCategories(d.data)
+            try { sessionStorage.setItem('martzona_cache_cats', JSON.stringify(d.data)) } catch {}
+          }
+        })
+        .catch(() => {})
+
+      fetch('/api/products?type=vendors')
+        .then(r => r.json())
+        .then(d => {
+          if (active && d.success && Array.isArray(d.data)) {
+            setTopShops(d.data)
+            try { sessionStorage.setItem('martzona_cache_shops', JSON.stringify(d.data)) } catch {}
+          }
+        })
+        .catch(() => {})
+
+      // 2. Fetch full product catalog
       try {
-        const [prodRes, catRes, shopRes, sliderRes] = await Promise.all([
-          fetch('/api/products?type=products').then(r => r.json()).catch(() => ({ success: false })),
-          fetch('/api/products?type=categories').then(r => r.json()).catch(() => ({ success: false })),
-          fetch('/api/products?type=vendors').then(r => r.json()).catch(() => ({ success: false })),
-          fetch('/api/sliders').then(r => r.json()).catch(() => ({ success: false })),
-        ])
+        const prodRes = await fetch('/api/products?type=products').then(r => r.json()).catch(() => ({ success: false }))
         if (!active) return
         if (prodRes.success && Array.isArray(prodRes.data)) {
-          setProducts(prodRes.data.map(mergeProductRelationIds))
-        }
-        if (catRes.success && Array.isArray(catRes.data)) {
-          setCategories(catRes.data)
-        }
-        if (shopRes.success && Array.isArray(shopRes.data)) {
-          setTopShops(shopRes.data)
-        }
-        if (sliderRes.success && Array.isArray(sliderRes.data) && sliderRes.data.length > 0) {
-          setDynamicSlides(sliderRes.data)
+          const mapped = prodRes.data.map(mergeProductRelationIds)
+          setProducts(mapped)
+          try { sessionStorage.setItem('martzona_cache_prods', JSON.stringify(mapped)) } catch {}
         }
       } catch (e) {
         console.error('Storefront boot error:', e)
@@ -386,6 +434,7 @@ const ProductCatalog = ({
         if (active) setLoading(false)
       }
     }
+
     boot()
     return () => { active = false }
   }, [])
