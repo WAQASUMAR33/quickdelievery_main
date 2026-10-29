@@ -92,6 +92,10 @@ const RAPIDRIDE_DROPOFF_ICON = {
 }
 
 const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 } // Lahore Default Center
+const AUTOCOMPLETE_OPTIONS = {
+  componentRestrictions: { country: 'pk' },
+  fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+}
 
 const VEHICLE_CATEGORIES = [
   {
@@ -167,10 +171,21 @@ export default function TaxiRideBooking({ onBack }) {
   const [activeRide, setActiveRide] = useState(null)
   const [acceptingBidId, setAcceptingBidId] = useState(null)
 
-  // Map & Autocomplete refs
+  // Map, Autocomplete & Synchronization refs (prevent stale closures & blur/autocomplete race conditions)
   const mapRef = useRef(null)
   const pickupAutoRef = useRef(null)
   const dropoffAutoRef = useRef(null)
+  const pickupCoordRef = useRef(null)
+  const dropoffCoordRef = useRef(null)
+  const pickupTextRef = useRef('')
+  const dropoffTextRef = useRef('')
+  const pickupResolvedTextRef = useRef('')
+  const dropoffResolvedTextRef = useRef('')
+  const pickupGeocodeReqIdRef = useRef(0)
+  const dropoffGeocodeReqIdRef = useRef(0)
+  const pickupBlurTimerRef = useRef(null)
+  const dropoffBlurTimerRef = useRef(null)
+  const routeReqIdRef = useRef(0)
 
   // Google Maps JS API Loader & Auth Failure Handling
   const [mapAuthError, setMapAuthError] = useState(false)
@@ -318,6 +333,7 @@ export default function TaxiRideBooking({ onBack }) {
   // RapidRide High-Precision Turn-by-Turn Route Calculation
   const calculateRoute = useCallback(async (origin, destination) => {
     if (!origin || !destination) return
+    const reqId = ++routeReqIdRef.current
 
     // Helper: Fetch real road-following polyline from OSRM driving engine
     const fetchOsrmDrivingRoute = async () => {
@@ -325,6 +341,7 @@ export default function TaxiRideBooking({ onBack }) {
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`
         const res = await fetch(osrmUrl)
         const data = await res.json()
+        if (reqId !== routeReqIdRef.current) return true
         if (data.code === 'Ok' && data.routes?.[0]) {
           const route = data.routes[0]
           const roadCoords = route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
@@ -356,8 +373,10 @@ export default function TaxiRideBooking({ onBack }) {
             origin,
             destination,
             travelMode: window.google.maps.TravelMode.DRIVING,
+            region: 'pk',
           },
           async (result, status) => {
+            if (reqId !== routeReqIdRef.current) return
             if (status === window.google.maps.DirectionsStatus.OK && result) {
               setDirections(result)
               setRoutePolyline([]) // Handled by DirectionsRenderer
@@ -369,11 +388,15 @@ export default function TaxiRideBooking({ onBack }) {
                 setRouteDurationMin(dur)
                 updateFareEstimate(dist, selectedVehicle, serviceType)
               }
-              fitMapToBounds([origin, destination])
+              const overviewCoords = result.routes[0]?.overview_path?.map(pt => ({
+                lat: pt.lat(),
+                lng: pt.lng(),
+              }))
+              fitMapToBounds(overviewCoords?.length ? overviewCoords : [origin, destination])
             } else {
               // Google Directions API blocked / denied -> Use real OSRM road polyline
               const success = await fetchOsrmDrivingRoute()
-              if (!success) {
+              if (!success && reqId === routeReqIdRef.current) {
                 fallbackRouteCalc(origin, destination)
                 fitMapToBounds([origin, destination])
               }
@@ -387,93 +410,168 @@ export default function TaxiRideBooking({ onBack }) {
     }
 
     const success = await fetchOsrmDrivingRoute()
-    if (!success) {
+    if (!success && reqId === routeReqIdRef.current) {
       fallbackRouteCalc(origin, destination)
       fitMapToBounds([origin, destination])
     }
   }, [mapAuthError, fallbackRouteCalc, selectedVehicle, serviceType, updateFareEstimate, fitMapToBounds])
 
-  // Backend /api/geocode search for addresses when Google Places is restricted or in fallback mode
+  // Backend /api/geocode search for addresses (scoped to Pakistan, race-safe against Places Autocomplete)
   const geocodeAddress = useCallback(async (addr, isPickup = true) => {
-    if (!addr || !addr.trim()) return
+    const query = (addr || '').trim()
+    if (!query) return
+    const reqId = isPickup ? ++pickupGeocodeReqIdRef.current : ++dropoffGeocodeReqIdRef.current
     try {
-      const res = await fetch(`/api/geocode?address=${encodeURIComponent(addr.trim())}`)
+      const res = await fetch(`/api/geocode?address=${encodeURIComponent(query)}&country=PK`)
       const data = await res.json()
+      const latestReqId = isPickup ? pickupGeocodeReqIdRef.current : dropoffGeocodeReqIdRef.current
+      if (reqId !== latestReqId) return // Discards stale geocode if Autocomplete place_changed already won
+
       if (data.success && data.latitude && data.longitude) {
         const coord = { lat: Number(data.latitude), lng: Number(data.longitude) }
+        const formatted = data.displayName || query
         if (isPickup) {
+          pickupCoordRef.current = coord
+          pickupResolvedTextRef.current = formatted.trim()
+          if (pickupTextRef.current.trim() === query) {
+            pickupTextRef.current = formatted
+            setPickupAddress(formatted)
+          }
           setPickupCoord(coord)
-          if (dropoffCoord) {
-            calculateRoute(coord, dropoffCoord)
+          if (dropoffCoordRef.current) {
+            calculateRoute(coord, dropoffCoordRef.current)
           } else if (mapRef.current) {
             mapRef.current.panTo(coord)
-            mapRef.current.setZoom(15)
+            mapRef.current.setZoom(14)
           }
         } else {
+          dropoffCoordRef.current = coord
+          dropoffResolvedTextRef.current = formatted.trim()
+          if (dropoffTextRef.current.trim() === query) {
+            dropoffTextRef.current = formatted
+            setDropoffAddress(formatted)
+          }
           setDropoffCoord(coord)
-          if (pickupCoord) {
-            calculateRoute(pickupCoord, coord)
+          if (pickupCoordRef.current) {
+            calculateRoute(pickupCoordRef.current, coord)
           } else if (mapRef.current) {
             mapRef.current.panTo(coord)
-            mapRef.current.setZoom(15)
+            mapRef.current.setZoom(14)
           }
         }
       }
     } catch (e) {
       console.warn('Geocoding fallback error:', e)
     }
-  }, [dropoffCoord, pickupCoord, calculateRoute])
+  }, [calculateRoute])
+
+  // Deferred blur/enter handler so clicking a Google Places dropdown item never triggers a competing geocode of partial text
+  const scheduleManualGeocode = useCallback((isPickup) => {
+    const timerRef = isPickup ? pickupBlurTimerRef : dropoffBlurTimerRef
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      const currentText = (isPickup ? pickupTextRef.current : dropoffTextRef.current).trim()
+      const resolvedText = (isPickup ? pickupResolvedTextRef.current : dropoffResolvedTextRef.current).trim()
+      if (currentText && currentText !== resolvedText) {
+        geocodeAddress(currentText, isPickup)
+      }
+    }, 260)
+  }, [geocodeAddress])
+
+  const handlePickupInputChange = (val) => {
+    pickupTextRef.current = val
+    setPickupAddress(val)
+  }
+
+  const handleDropoffInputChange = (val) => {
+    dropoffTextRef.current = val
+    setDropoffAddress(val)
+  }
 
   // Handle Autocomplete place selection for Pickup
   const onPickupPlaceChanged = () => {
+    if (pickupBlurTimerRef.current) {
+      clearTimeout(pickupBlurTimerRef.current)
+      pickupBlurTimerRef.current = null
+    }
+    pickupGeocodeReqIdRef.current += 1 // Invalidate any in-flight manual geocode
+
     if (pickupAutoRef.current) {
       const place = pickupAutoRef.current.getPlace()
       if (place?.geometry?.location) {
         const lat = place.geometry.location.lat()
         const lng = place.geometry.location.lng()
         const coord = { lat, lng }
+        const formatted = (place.formatted_address || place.name || pickupTextRef.current || '').trim()
+        pickupCoordRef.current = coord
+        pickupTextRef.current = formatted
+        pickupResolvedTextRef.current = formatted
         setPickupCoord(coord)
-        setPickupAddress(place.formatted_address || place.name || '')
-        if (dropoffCoord) {
-          calculateRoute(coord, dropoffCoord)
+        setPickupAddress(formatted)
+        if (dropoffCoordRef.current) {
+          calculateRoute(coord, dropoffCoordRef.current)
         } else if (mapRef.current) {
           mapRef.current.panTo(coord)
-          mapRef.current.setZoom(15)
+          mapRef.current.setZoom(14)
         }
+      } else if (pickupTextRef.current.trim()) {
+        geocodeAddress(pickupTextRef.current, true)
       }
     }
   }
 
   // Handle Autocomplete place selection for Dropoff
   const onDropoffPlaceChanged = () => {
+    if (dropoffBlurTimerRef.current) {
+      clearTimeout(dropoffBlurTimerRef.current)
+      dropoffBlurTimerRef.current = null
+    }
+    dropoffGeocodeReqIdRef.current += 1 // Invalidate any in-flight manual geocode
+
     if (dropoffAutoRef.current) {
       const place = dropoffAutoRef.current.getPlace()
       if (place?.geometry?.location) {
         const lat = place.geometry.location.lat()
         const lng = place.geometry.location.lng()
         const coord = { lat, lng }
+        const formatted = (place.formatted_address || place.name || dropoffTextRef.current || '').trim()
+        dropoffCoordRef.current = coord
+        dropoffTextRef.current = formatted
+        dropoffResolvedTextRef.current = formatted
         setDropoffCoord(coord)
-        setDropoffAddress(place.formatted_address || place.name || '')
-        if (pickupCoord) {
-          calculateRoute(pickupCoord, coord)
+        setDropoffAddress(formatted)
+        if (pickupCoordRef.current) {
+          calculateRoute(pickupCoordRef.current, coord)
         } else if (mapRef.current) {
           mapRef.current.panTo(coord)
-          mapRef.current.setZoom(15)
+          mapRef.current.setZoom(14)
         }
+      } else if (dropoffTextRef.current.trim()) {
+        geocodeAddress(dropoffTextRef.current, false)
       }
     }
   }
 
   // Swap Pickup & Dropoff
   const handleSwapLocations = () => {
-    const tempAddr = pickupAddress
-    const tempCoord = pickupCoord
-    setPickupAddress(dropoffAddress)
-    setPickupCoord(dropoffCoord)
-    setDropoffAddress(tempAddr)
-    setDropoffCoord(tempCoord)
-    if (dropoffCoord && tempCoord) {
-      calculateRoute(dropoffCoord, tempCoord)
+    const pAddr = pickupTextRef.current || pickupAddress
+    const dAddr = dropoffTextRef.current || dropoffAddress
+    const pCoord = pickupCoordRef.current || pickupCoord
+    const dCoord = dropoffCoordRef.current || dropoffCoord
+
+    pickupTextRef.current = dAddr
+    pickupResolvedTextRef.current = dAddr.trim()
+    pickupCoordRef.current = dCoord
+    dropoffTextRef.current = pAddr
+    dropoffResolvedTextRef.current = pAddr.trim()
+    dropoffCoordRef.current = pCoord
+
+    setPickupAddress(dAddr)
+    setPickupCoord(dCoord)
+    setDropoffAddress(pAddr)
+    setDropoffCoord(pCoord)
+    if (dCoord && pCoord) {
+      calculateRoute(dCoord, pCoord)
     }
   }
 
@@ -489,20 +587,28 @@ export default function TaxiRideBooking({ onBack }) {
         const lat = pos.coords.latitude
         const lng = pos.coords.longitude
         const coord = { lat, lng }
+        pickupGeocodeReqIdRef.current += 1
+        pickupCoordRef.current = coord
         setPickupCoord(coord)
 
         if (window.google?.maps?.Geocoder) {
           const geocoder = new window.google.maps.Geocoder()
           geocoder.geocode({ location: coord }, (results, status) => {
-            if (status === 'OK' && results?.[0]) {
-              setPickupAddress(results[0].formatted_address)
-            } else {
-              setPickupAddress(`Current GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`)
-            }
+            const label =
+              status === 'OK' && results?.[0]
+                ? results[0].formatted_address
+                : `Current GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`
+            pickupTextRef.current = label
+            pickupResolvedTextRef.current = label.trim()
+            setPickupAddress(label)
           })
         }
-        if (dropoffCoord) calculateRoute(coord, dropoffCoord)
-        if (mapRef.current) mapRef.current.panTo(coord)
+        if (dropoffCoordRef.current) {
+          calculateRoute(coord, dropoffCoordRef.current)
+        } else if (mapRef.current) {
+          mapRef.current.panTo(coord)
+          mapRef.current.setZoom(15)
+        }
         setLocatingUser(false)
         toast.success('Pickup pinned to your current location!')
       },
@@ -1014,15 +1120,21 @@ export default function TaxiRideBooking({ onBack }) {
                           <Autocomplete
                             onLoad={ref => (pickupAutoRef.current = ref)}
                             onPlaceChanged={onPickupPlaceChanged}
+                            options={AUTOCOMPLETE_OPTIONS}
                           >
                             <TextField
                               fullWidth
                               size="small"
-                              placeholder="Search Pickup Address or Landmark..."
+                              placeholder="Search Pickup Address or Landmark (Pakistan)..."
                               value={pickupAddress}
-                              onChange={e => setPickupAddress(e.target.value)}
-                              onBlur={() => geocodeAddress(pickupAddress, true)}
-                              onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(pickupAddress, true) }}
+                              onChange={e => handlePickupInputChange(e.target.value)}
+                              onBlur={() => scheduleManualGeocode(true)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  scheduleManualGeocode(true)
+                                }
+                              }}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -1050,11 +1162,16 @@ export default function TaxiRideBooking({ onBack }) {
                           <TextField
                             fullWidth
                             size="small"
-                            placeholder="Enter Pickup Address or Landmark..."
+                            placeholder="Enter Pickup Address or Landmark (Pakistan)..."
                             value={pickupAddress}
-                            onChange={e => setPickupAddress(e.target.value)}
-                            onBlur={() => geocodeAddress(pickupAddress, true)}
-                            onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(pickupAddress, true) }}
+                            onChange={e => handlePickupInputChange(e.target.value)}
+                            onBlur={() => scheduleManualGeocode(true)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                geocodeAddress(pickupTextRef.current, true)
+                              }
+                            }}
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
@@ -1086,15 +1203,21 @@ export default function TaxiRideBooking({ onBack }) {
                           <Autocomplete
                             onLoad={ref => (dropoffAutoRef.current = ref)}
                             onPlaceChanged={onDropoffPlaceChanged}
+                            options={AUTOCOMPLETE_OPTIONS}
                           >
                             <TextField
                               fullWidth
                               size="small"
-                              placeholder="Where to? (Enter Dropoff Destination)..."
+                              placeholder="Where to? (Enter Dropoff Destination in Pakistan)..."
                               value={dropoffAddress}
-                              onChange={e => setDropoffAddress(e.target.value)}
-                              onBlur={() => geocodeAddress(dropoffAddress, false)}
-                              onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(dropoffAddress, false) }}
+                              onChange={e => handleDropoffInputChange(e.target.value)}
+                              onBlur={() => scheduleManualGeocode(false)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  scheduleManualGeocode(false)
+                                }
+                              }}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -1108,11 +1231,16 @@ export default function TaxiRideBooking({ onBack }) {
                           <TextField
                             fullWidth
                             size="small"
-                            placeholder="Where to? (Enter Dropoff Destination)..."
+                            placeholder="Where to? (Enter Dropoff Destination in Pakistan)..."
                             value={dropoffAddress}
-                            onChange={e => setDropoffAddress(e.target.value)}
-                            onBlur={() => geocodeAddress(dropoffAddress, false)}
-                            onKeyDown={e => { if (e.key === 'Enter') geocodeAddress(dropoffAddress, false) }}
+                            onChange={e => handleDropoffInputChange(e.target.value)}
+                            onBlur={() => scheduleManualGeocode(false)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                geocodeAddress(dropoffTextRef.current, false)
+                              }
+                            }}
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
@@ -1465,8 +1593,8 @@ export default function TaxiRideBooking({ onBack }) {
             {mapsLoaded && !mapAuthError && !loadError ? (
               <GoogleMap
                 onLoad={map => (mapRef.current = map)}
-                center={pickupCoord || DEFAULT_CENTER}
-                zoom={13}
+                center={DEFAULT_CENTER}
+                zoom={12}
                 mapContainerStyle={{ width: '100%', height: '100%' }}
                 options={{
                   disableDefaultUI: false,
@@ -1485,6 +1613,7 @@ export default function TaxiRideBooking({ onBack }) {
                   <DirectionsRenderer
                     directions={directions}
                     options={{
+                      preserveViewport: true,
                       polylineOptions: {
                         strokeColor: RAPIDRIDE_GREEN,
                         strokeWeight: 6,

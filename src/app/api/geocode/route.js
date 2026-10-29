@@ -37,14 +37,42 @@ export async function GET(request) {
       return NextResponse.json({ success: false, message: 'Address parameter is required' }, { status: 400 })
     }
 
-    const trimmed = address.trim()
+    const rawTrimmed = address.trim()
+    const country = (searchParams.get('country') || 'PK').trim().toUpperCase()
+    const region = country.toLowerCase()
 
-    // Try Google Geocoding API first
+    // Common Pakistani city shorthand / colloquial aliases so manual Enter/blur resolves to the major city
+    const PK_CITY_ALIASES = {
+      mandi: 'Mandi Bahauddin, Pakistan',
+      mbdin: 'Mandi Bahauddin, Pakistan',
+      mbd: 'Mandi Bahauddin, Pakistan',
+      gujrat: 'Gujrat, Punjab, Pakistan',
+      lhr: 'Lahore, Pakistan',
+      isb: 'Islamabad, Pakistan',
+      rwp: 'Rawalpindi, Pakistan',
+      fsd: 'Faisalabad, Pakistan',
+      grw: 'Gujranwala, Pakistan',
+      skt: 'Sialkot, Pakistan',
+      khi: 'Karachi, Pakistan',
+    }
+    const trimmed =
+      country === 'PK' && PK_CITY_ALIASES[rawTrimmed.toLowerCase()]
+        ? PK_CITY_ALIASES[rawTrimmed.toLowerCase()]
+        : rawTrimmed
+
+    // Try Google Geocoding API first (scoped to Pakistan by default so shared city names like Mandi Bahauddin / Gujrat / Hyderabad never resolve to India)
     if (googleKey) {
       try {
-        const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmed)}&key=${googleKey}`
-        const gRes = await fetch(gUrl)
-        const gData = await gRes.json()
+        const strictUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmed)}&region=${encodeURIComponent(region)}&components=country:${encodeURIComponent(country)}&key=${googleKey}`
+        let gRes = await fetch(strictUrl)
+        let gData = await gRes.json()
+
+        // If strict country filter returned ZERO_RESULTS (e.g. explicit international address), retry with region bias only
+        if (gData.status === 'ZERO_RESULTS') {
+          const biasedUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmed)}&region=${encodeURIComponent(region)}&key=${googleKey}`
+          gRes = await fetch(biasedUrl)
+          gData = await gRes.json()
+        }
 
         if (gData.status === 'OK' && gData.results?.length > 0) {
           const first = gData.results[0]
@@ -62,13 +90,21 @@ export async function GET(request) {
       }
     }
 
-    // Fallback: OpenStreetMap Nominatim
+    // Fallback: OpenStreetMap Nominatim (prioritizing Pakistan)
     try {
-      const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmed)}`
-      const osmRes = await fetch(osmUrl, {
+      const osmStrictUrl = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(region)}&limit=5&q=${encodeURIComponent(trimmed)}`
+      let osmRes = await fetch(osmStrictUrl, {
         headers: { 'User-Agent': 'QuickDelivery-Geocoding/1.0' },
       })
-      const osmData = await osmRes.json()
+      let osmData = await osmRes.json()
+
+      if (!Array.isArray(osmData) || osmData.length === 0) {
+        const osmFallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(trimmed)}`
+        osmRes = await fetch(osmFallbackUrl, {
+          headers: { 'User-Agent': 'QuickDelivery-Geocoding/1.0' },
+        })
+        osmData = await osmRes.json()
+      }
 
       if (Array.isArray(osmData) && osmData.length > 0) {
         const first = osmData[0]
