@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import Stack from '@mui/material/Stack'
 import Avatar from '@mui/material/Avatar'
 import Tooltip from '@mui/material/Tooltip'
+import GlobalStyles from '@mui/material/GlobalStyles'
 import toast from 'react-hot-toast'
 
 import {
@@ -24,6 +25,7 @@ import {
   Marker,
   Autocomplete,
   DirectionsRenderer,
+  Polyline,
 } from '@react-google-maps/api'
 import { GOOGLE_MAPS_SCRIPT_ID, GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/googleMaps'
 
@@ -49,6 +51,39 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import CloseIcon from '@mui/icons-material/Close'
 
 const BRAND = '#39772A'
+const INDRIVE_GREEN = '#00D26A'
+const INDRIVE_DARK = '#0F172A'
+
+const INDRIVE_PICKUP_ICON = {
+  url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 34 42">
+      <defs>
+        <filter id="p-shadow" x="-30%" y="-20%" width="160%" height="150%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.35"/>
+        </filter>
+      </defs>
+      <path d="M17 0 C7.6 0 0 7.6 0 17 C0 27 17 42 17 42 C17 42 34 27 34 17 C34 7.6 26.4 0 17 0 Z" fill="#00D26A" filter="url(#p-shadow)"/>
+      <circle cx="17" cy="16" r="8" fill="#FFFFFF"/>
+      <circle cx="17" cy="16" r="4" fill="#0F172A"/>
+    </svg>
+  `),
+}
+
+const INDRIVE_DROPOFF_ICON = {
+  url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 34 42">
+      <defs>
+        <filter id="d-shadow" x="-30%" y="-20%" width="160%" height="150%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.35"/>
+        </filter>
+      </defs>
+      <path d="M17 0 C7.6 0 0 7.6 0 17 C0 27 17 42 17 42 C17 42 34 27 34 17 C34 7.6 26.4 0 17 0 Z" fill="#EF4444" filter="url(#d-shadow)"/>
+      <circle cx="17" cy="16" r="8" fill="#FFFFFF"/>
+      <rect x="13.5" y="12.5" width="7" height="7" rx="1.5" fill="#EF4444"/>
+    </svg>
+  `),
+}
+
 const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 } // Lahore Default Center
 
 const VEHICLE_CATEGORIES = [
@@ -98,8 +133,9 @@ export default function TaxiRideBooking({ onBack }) {
   const [dropoffCoord, setDropoffCoord] = useState(null)
   const [locatingUser, setLocatingUser] = useState(false)
 
-  // Route stats from Google Directions
+  // Route stats from Google Directions & Real Road Polyline
   const [directions, setDirections] = useState(null)
+  const [routePolyline, setRoutePolyline] = useState([])
   const [routeDistanceKm, setRouteDistanceKm] = useState(null)
   const [routeDurationMin, setRouteDurationMin] = useState(null)
 
@@ -193,7 +229,29 @@ export default function TaxiRideBooking({ onBack }) {
     setCustomerFare(String(calculated))
   }, [])
 
-  // Fallback Haversine road-distance calculation when Google Directions API is blocked or restricted
+  // Auto-frame map camera to display the complete route between locations
+  const fitMapToBounds = useCallback((coords) => {
+    if (!mapRef.current || !coords || coords.length === 0) return
+    if (!window.google?.maps?.LatLngBounds) return
+    try {
+      const bounds = new window.google.maps.LatLngBounds()
+      coords.forEach(pt => {
+        if (pt && typeof pt.lat === 'number' && typeof pt.lng === 'number') {
+          bounds.extend(pt)
+        }
+      })
+      mapRef.current.fitBounds(bounds, {
+        top: 80,
+        bottom: 80,
+        left: 80,
+        right: 80,
+      })
+    } catch (e) {
+      console.warn('Map fitBounds error:', e)
+    }
+  }, [])
+
+  // Fallback Haversine road-distance calculation
   const fallbackRouteCalc = useCallback((c1, c2) => {
     if (!c1 || !c2) return
     const R = 6371 // Earth radius in km
@@ -213,43 +271,83 @@ export default function TaxiRideBooking({ onBack }) {
     updateFareEstimate(drivingDist, selectedVehicle, serviceType)
   }, [selectedVehicle, serviceType, updateFareEstimate])
 
-  // Google Maps Directions calculation
-  const calculateRoute = useCallback((origin, destination) => {
+  // InDrive-Style High-Precision Turn-by-Turn Route Calculation
+  const calculateRoute = useCallback(async (origin, destination) => {
     if (!origin || !destination) return
 
-    if (!window.google?.maps || mapAuthError) {
-      fallbackRouteCalc(origin, destination)
-      return
+    // Helper: Fetch real road-following polyline from OSRM driving engine
+    const fetchOsrmDrivingRoute = async () => {
+      try {
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`
+        const res = await fetch(osrmUrl)
+        const data = await res.json()
+        if (data.code === 'Ok' && data.routes?.[0]) {
+          const route = data.routes[0]
+          const roadCoords = route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
+          setRoutePolyline(roadCoords)
+          setDirections(null)
+
+          const distKm = parseFloat((route.distance / 1000).toFixed(1))
+          const durMin = Math.max(5, Math.round(route.duration / 60))
+          setRouteDistanceKm(distKm)
+          setRouteDurationMin(durMin)
+          updateFareEstimate(distKm, selectedVehicle, serviceType)
+
+          // Smoothly frame map to show the entire winding route
+          fitMapToBounds(roadCoords)
+          return true
+        }
+      } catch (err) {
+        console.warn('OSRM route fetch failed:', err)
+      }
+      return false
     }
 
-    try {
-      const directionsService = new window.google.maps.DirectionsService()
-      directionsService.route(
-        {
-          origin,
-          destination,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === window.google.maps.DirectionsStatus.OK && result) {
-            setDirections(result)
-            const leg = result.routes[0]?.legs[0]
-            if (leg) {
-              const dist = parseFloat((leg.distance.value / 1000).toFixed(1))
-              const dur = Math.round(leg.duration.value / 60)
-              setRouteDistanceKm(dist)
-              setRouteDurationMin(dur)
-              updateFareEstimate(dist, selectedVehicle, serviceType)
+    // Try Google Maps DirectionsService first
+    if (window.google?.maps && !mapAuthError) {
+      try {
+        const directionsService = new window.google.maps.DirectionsService()
+        directionsService.route(
+          {
+            origin,
+            destination,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          },
+          async (result, status) => {
+            if (status === window.google.maps.DirectionsStatus.OK && result) {
+              setDirections(result)
+              setRoutePolyline([]) // Handled by DirectionsRenderer
+              const leg = result.routes[0]?.legs[0]
+              if (leg) {
+                const dist = parseFloat((leg.distance.value / 1000).toFixed(1))
+                const dur = Math.round(leg.duration.value / 60)
+                setRouteDistanceKm(dist)
+                setRouteDurationMin(dur)
+                updateFareEstimate(dist, selectedVehicle, serviceType)
+              }
+              fitMapToBounds([origin, destination])
+            } else {
+              // Google Directions API blocked / denied -> Use real OSRM road polyline
+              const success = await fetchOsrmDrivingRoute()
+              if (!success) {
+                fallbackRouteCalc(origin, destination)
+                fitMapToBounds([origin, destination])
+              }
             }
-          } else {
-            fallbackRouteCalc(origin, destination)
           }
-        }
-      )
-    } catch {
-      fallbackRouteCalc(origin, destination)
+        )
+        return
+      } catch {
+        // Fall through to OSRM
+      }
     }
-  }, [mapAuthError, fallbackRouteCalc, selectedVehicle, serviceType, updateFareEstimate])
+
+    const success = await fetchOsrmDrivingRoute()
+    if (!success) {
+      fallbackRouteCalc(origin, destination)
+      fitMapToBounds([origin, destination])
+    }
+  }, [mapAuthError, fallbackRouteCalc, selectedVehicle, serviceType, updateFareEstimate, fitMapToBounds])
 
   // Backend /api/geocode search for addresses when Google Places is restricted or in fallback mode
   const geocodeAddress = useCallback(async (addr, isPickup = true) => {
@@ -261,10 +359,20 @@ export default function TaxiRideBooking({ onBack }) {
         const coord = { lat: Number(data.latitude), lng: Number(data.longitude) }
         if (isPickup) {
           setPickupCoord(coord)
-          if (dropoffCoord) calculateRoute(coord, dropoffCoord)
+          if (dropoffCoord) {
+            calculateRoute(coord, dropoffCoord)
+          } else if (mapRef.current) {
+            mapRef.current.panTo(coord)
+            mapRef.current.setZoom(15)
+          }
         } else {
           setDropoffCoord(coord)
-          if (pickupCoord) calculateRoute(pickupCoord, coord)
+          if (pickupCoord) {
+            calculateRoute(pickupCoord, coord)
+          } else if (mapRef.current) {
+            mapRef.current.panTo(coord)
+            mapRef.current.setZoom(15)
+          }
         }
       }
     } catch (e) {
@@ -282,8 +390,12 @@ export default function TaxiRideBooking({ onBack }) {
         const coord = { lat, lng }
         setPickupCoord(coord)
         setPickupAddress(place.formatted_address || place.name || '')
-        if (dropoffCoord) calculateRoute(coord, dropoffCoord)
-        if (mapRef.current) mapRef.current.panTo(coord)
+        if (dropoffCoord) {
+          calculateRoute(coord, dropoffCoord)
+        } else if (mapRef.current) {
+          mapRef.current.panTo(coord)
+          mapRef.current.setZoom(15)
+        }
       }
     }
   }
@@ -298,7 +410,12 @@ export default function TaxiRideBooking({ onBack }) {
         const coord = { lat, lng }
         setDropoffCoord(coord)
         setDropoffAddress(place.formatted_address || place.name || '')
-        if (pickupCoord) calculateRoute(pickupCoord, coord)
+        if (pickupCoord) {
+          calculateRoute(pickupCoord, coord)
+        } else if (mapRef.current) {
+          mapRef.current.panTo(coord)
+          mapRef.current.setZoom(15)
+        }
       }
     }
   }
@@ -494,6 +611,74 @@ export default function TaxiRideBooking({ onBack }) {
 
   return (
     <Box sx={{ width: '100%', maxWidth: '100%', px: { xs: 1.5, sm: 2.5, md: 3, xl: 4 }, py: 1 }}>
+      {/* ─── SCOPED INDRIVE PLACES AUTOCOMPLETE STYLES (NO IMPACT ON DASHBOARD) ─── */}
+      <GlobalStyles
+        styles={{
+          '.pac-container': {
+            backgroundColor: '#ffffff !important',
+            borderRadius: '16px !important',
+            border: '1px solid rgba(226, 232, 240, 0.95) !important',
+            boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.05) !important',
+            fontFamily: 'inherit !important',
+            padding: '8px !important',
+            marginTop: '6px !important',
+            zIndex: '999999 !important',
+            minWidth: '320px !important',
+            backdropFilter: 'blur(16px) !important',
+            animation: 'pacFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important',
+          },
+          '@keyframes pacFadeIn': {
+            from: {
+              opacity: 0,
+              transform: 'translateY(-6px) scale(0.98)',
+            },
+            to: {
+              opacity: 1,
+              transform: 'translateY(0) scale(1)',
+            },
+          },
+          '.pac-item': {
+            display: 'flex !important',
+            alignItems: 'center !important',
+            padding: '11px 14px !important',
+            margin: '3px 0 !important',
+            borderRadius: '10px !important',
+            borderTop: 'none !important',
+            cursor: 'pointer !important',
+            fontSize: '13.5px !important',
+            color: '#475569 !important',
+            transition: 'all 0.15s ease-in-out !important',
+          },
+          '.pac-item:hover, .pac-item-selected, .pac-item-selected:hover': {
+            backgroundColor: '#f0fdf4 !important',
+            color: '#0f172a !important',
+            transform: 'translateX(2px) !important',
+          },
+          '.pac-item-query': {
+            fontSize: '14px !important',
+            fontWeight: '700 !important',
+            color: '#0f172a !important',
+            marginRight: '6px !important',
+          },
+          '.pac-item:hover .pac-item-query, .pac-item-selected .pac-item-query': {
+            color: '#15803d !important',
+          },
+          '.pac-matched': {
+            fontWeight: '800 !important',
+            color: '#16a34a !important',
+          },
+          '.pac-icon': {
+            marginRight: '12px !important',
+            marginTop: '0 !important',
+            filter: 'hue-rotate(90deg) drop-shadow(0 1px 2px rgba(22, 163, 74, 0.25)) !important',
+          },
+          '.pac-logo::after': {
+            padding: '8px 12px 6px !important',
+            opacity: '0.7 !important',
+          },
+        }}
+      />
+
       {/* ─── FULL-WIDTH DUAL-PANEL LAYOUT (LEFT CONTROLS + 100% EXPANDED MAP) ─── */}
       <Box
         sx={{
@@ -1166,38 +1351,67 @@ export default function TaxiRideBooking({ onBack }) {
                   streetViewControl: false,
                   mapTypeControl: false,
                   fullscreenControl: true,
+                  styles: [
+                    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+                  ],
                 }}
               >
-                {/* Real Turn-by-Turn Driving Route Polyline */}
-                {directions && (
+                {/* InDrive Turn-by-Turn Driving Route Polyline */}
+                {directions ? (
                   <DirectionsRenderer
                     directions={directions}
                     options={{
                       polylineOptions: {
-                        strokeColor: '#059669',
+                        strokeColor: INDRIVE_GREEN,
                         strokeWeight: 6,
-                        strokeOpacity: 0.9,
+                        strokeOpacity: 0.95,
                       },
-                      suppressMarkers: false,
+                      suppressMarkers: true,
                     }}
                   />
+                ) : (
+                  routePolyline.length > 0 && (
+                    <>
+                      {/* InDrive Outer Casing / Glow */}
+                      <Polyline
+                        path={routePolyline}
+                        options={{
+                          strokeColor: INDRIVE_DARK,
+                          strokeWeight: 8,
+                          strokeOpacity: 0.45,
+                          zIndex: 1,
+                        }}
+                      />
+                      {/* InDrive Active Neon Green Road Path */}
+                      <Polyline
+                        path={routePolyline}
+                        options={{
+                          strokeColor: INDRIVE_GREEN,
+                          strokeWeight: 5,
+                          strokeOpacity: 1.0,
+                          zIndex: 2,
+                        }}
+                      />
+                    </>
+                  )
                 )}
 
-                {/* Pickup Marker if no directions rendered yet */}
-                {!directions && pickupCoord && (
+                {/* InDrive Custom Pickup Marker */}
+                {pickupCoord && (
                   <Marker
                     position={pickupCoord}
-                    label={{ text: 'A', color: '#fff', fontWeight: 'bold' }}
-                    title="Pickup Location"
+                    icon={INDRIVE_PICKUP_ICON}
+                    title={`Pickup: ${pickupAddress || 'Selected Location'}`}
                   />
                 )}
 
-                {/* Dropoff Marker if no directions rendered yet */}
-                {!directions && dropoffCoord && (
+                {/* InDrive Custom Dropoff Marker */}
+                {dropoffCoord && (
                   <Marker
                     position={dropoffCoord}
-                    label={{ text: 'B', color: '#fff', fontWeight: 'bold' }}
-                    title="Dropoff Destination"
+                    icon={INDRIVE_DROPOFF_ICON}
+                    title={`Dropoff: ${dropoffAddress || 'Selected Destination'}`}
                   />
                 )}
 
