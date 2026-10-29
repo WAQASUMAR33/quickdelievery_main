@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Chip             from '@mui/material/Chip'
@@ -30,18 +31,24 @@ import { formatPrice } from '@/lib/currency'
 
 const BRAND = '#39772A'
 
-const STATUS_STYLES = {
-  PENDING:    { bg: '#fff3cd', color: '#856404' },
-  PROCESSING: { bg: '#cce5ff', color: '#004085' },
-  SHIPPED:    { bg: '#e2d9f3', color: '#4a1a8d' },
-  DELIVERED:  { bg: '#d4edda', color: '#155724' },
-  CANCELLED:  { bg: '#f8d7da', color: '#721c24' },
+const getStatusStyle = (status, isDark) => {
+  const map = {
+    PENDING:    isDark ? { bg: 'rgba(245,158,11,0.18)', color: '#fbbf24' } : { bg: '#fff3cd', color: '#856404' },
+    PROCESSING: isDark ? { bg: 'rgba(59,130,246,0.18)', color: '#60a5fa' } : { bg: '#cce5ff', color: '#004085' },
+    SHIPPED:    isDark ? { bg: 'rgba(168,85,247,0.18)', color: '#c084fc' } : { bg: '#e2d9f3', color: '#4a1a8d' },
+    DELIVERED:  isDark ? { bg: 'rgba(34,197,94,0.18)', color: '#4ade80' } : { bg: '#d4edda', color: '#155724' },
+    CANCELLED:  isDark ? { bg: 'rgba(239,68,68,0.18)', color: '#f87171' } : { bg: '#f8d7da', color: '#721c24' },
+  }
+  return map[status] || (isDark ? { bg: 'rgba(148,163,184,0.16)', color: '#cbd5e1' } : { bg: '#f5f5f5', color: '#555' })
 }
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
 export default function OrderDetailsPage() {
+  const theme    = useTheme()
+  const isDark   = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { id }   = useParams()
   const router   = useRouter()
   const [order,   setOrder]   = useState(null)
@@ -67,7 +74,7 @@ export default function OrderDetailsPage() {
     return (
       <DashboardLayout>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 2 }}>
-          <CircularProgress size={32} sx={{ color: BRAND }} />
+          <CircularProgress size={32} sx={{ color: brandText }} />
           <Typography color="text.secondary">Loading order…</Typography>
         </Box>
       </DashboardLayout>
@@ -89,7 +96,7 @@ export default function OrderDetailsPage() {
     )
   }
 
-  const sc = STATUS_STYLES[order.status] || { bg: '#f5f5f5', color: '#555' }
+  const sc = getStatusStyle(order.status, isDark)
 
   return (
     <DashboardLayout>

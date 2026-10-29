@@ -17,6 +17,7 @@ import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Avatar from '@mui/material/Avatar'
+import { useTheme } from '@mui/material/styles'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -44,9 +45,17 @@ import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 
 const BRAND = '#39772A'
+const BRAND_DARK = '#4ade80'
 
 export default function AdminAnalyticsCharts() {
   const router = useRouter()
+  const muiTheme = useTheme()
+  const isDark = muiTheme.palette.mode === 'dark'
+  const brandAccent = isDark ? BRAND_DARK : BRAND
+  const surfaceBg = isDark ? '#0F172A' : '#ffffff'
+  const subtleBg = isDark ? '#131C31' : '#f8fafc'
+  const pillBg = isDark ? '#1E293B' : '#f1f5f9'
+  const borderCol = isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
   const [range, setRange] = useState('7d')
   const [metricMode, setMetricMode] = useState('revenue') // 'revenue' or 'orders'
   const [selectedEntityTab, setSelectedEntityTab] = useState('all') // 'all' | 'vendors' | 'drivers' | 'orders' | 'catalog'
@@ -171,26 +180,26 @@ export default function AdminAnalyticsCharts() {
           justifyContent: 'space-between',
           gap: 2,
           p: 2.5,
-          bgcolor: '#ffffff',
+          bgcolor: surfaceBg,
           borderRadius: '16px',
           boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${borderCol}`,
         }}
       >
         <Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Typography variant="h6" fontWeight={800} sx={{ color: '#0f172a', letterSpacing: '-0.3px' }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: 'text.primary', letterSpacing: '-0.3px' }}>
               Marketplace Operations & Multi-Entity Telemetry
             </Typography>
             <Chip
               label="Realtime Live Sync ⚡"
               size="small"
               sx={{
-                bgcolor: '#f0fdf4',
-                color: BRAND,
+                bgcolor: isDark ? 'rgba(34,197,94,0.16)' : '#f0fdf4',
+                color: brandAccent,
                 fontWeight: 800,
                 fontSize: 11,
-                border: '1px solid #bbf7d0',
+                border: `1px solid ${isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0'}`,
               }}
             />
           </Stack>
@@ -200,7 +209,7 @@ export default function AdminAnalyticsCharts() {
         </Box>
 
         <Stack direction="row" spacing={1.5} alignItems="center">
-          <ButtonGroup size="small" sx={{ bgcolor: '#f8fafc', borderRadius: '10px', p: 0.5, border: '1px solid #e2e8f0' }}>
+          <ButtonGroup size="small" sx={{ bgcolor: subtleBg, borderRadius: '10px', p: 0.5, border: `1px solid ${borderCol}` }}>
             {[
               { id: 'today', label: 'Today' },
               { id: '7d', label: '7 Days' },
@@ -213,13 +222,13 @@ export default function AdminAnalyticsCharts() {
                 variant={range === btn.id ? 'contained' : 'text'}
                 sx={{
                   bgcolor: range === btn.id ? BRAND : 'transparent',
-                  color: range === btn.id ? '#ffffff' : '#475569',
+                  color: range === btn.id ? '#ffffff' : 'text.secondary',
                   fontWeight: 700,
                   fontSize: 12,
                   px: 1.75,
                   borderRadius: '8px !important',
                   boxShadow: range === btn.id ? '0 2px 8px rgba(57,119,42,0.3)' : 'none',
-                  '&:hover': { bgcolor: range === btn.id ? BRAND : '#f1f5f9' },
+                  '&:hover': { bgcolor: range === btn.id ? BRAND : pillBg },
                 }}
               >
                 {btn.label}
@@ -232,9 +241,9 @@ export default function AdminAnalyticsCharts() {
               onClick={() => fetchAnalytics(true)}
               size="small"
               disabled={refreshing}
-              sx={{ border: '1px solid #e2e8f0', borderRadius: '10px', bgcolor: '#ffffff' }}
+              sx={{ border: `1px solid ${borderCol}`, borderRadius: '10px', bgcolor: surfaceBg }}
             >
-              <RefreshOutlinedIcon fontSize="small" sx={{ color: '#475569', animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+              <RefreshOutlinedIcon fontSize="small" sx={{ color: 'text.secondary', animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -255,8 +264,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 2.2,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             position: 'relative',
             cursor: 'pointer',
@@ -267,14 +276,14 @@ export default function AdminAnalyticsCharts() {
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: BRAND }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase" letterSpacing={0.5}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
                 Gross Revenue
               </Typography>
-              <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', mt: 0.5 }}>
                 ${(kpis.grossRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Typography>
             </Box>
-            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: '#f0fdf4', color: BRAND }}>
+            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: isDark ? 'rgba(34,197,94,0.16)' : '#f0fdf4', color: brandAccent }}>
               <AttachMoneyIcon fontSize="small" />
             </Box>
           </Stack>
@@ -290,8 +299,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 2.2,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             position: 'relative',
             cursor: 'pointer',
@@ -302,14 +311,14 @@ export default function AdminAnalyticsCharts() {
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: '#3b82f6' }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase" letterSpacing={0.5}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
                 Total Orders
               </Typography>
-              <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', mt: 0.5 }}>
                 {kpis.totalOrders || 0}
               </Typography>
             </Box>
-            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: '#eff6ff', color: '#3b82f6' }}>
+            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', color: '#60a5fa' }}>
               <ShoppingBagOutlinedIcon fontSize="small" />
             </Box>
           </Stack>
@@ -325,8 +334,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 2.2,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             position: 'relative',
             cursor: 'pointer',
@@ -337,14 +346,14 @@ export default function AdminAnalyticsCharts() {
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: '#f59e0b' }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase" letterSpacing={0.5}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
                 Vendors / Stores
               </Typography>
-              <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', mt: 0.5 }}>
                 {vendorStats.total || kpis.totalVendors || 7}
               </Typography>
             </Box>
-            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: '#fffbeb', color: '#f59e0b' }}>
+            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', color: '#fbbf24' }}>
               <StorefrontIcon fontSize="small" />
             </Box>
           </Stack>
@@ -360,8 +369,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 2.2,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             position: 'relative',
             cursor: 'pointer',
@@ -372,14 +381,14 @@ export default function AdminAnalyticsCharts() {
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: '#8b5cf6' }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase" letterSpacing={0.5}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
                 Drivers & Fleet
               </Typography>
-              <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', mt: 0.5 }}>
                 {driverStats.active || 4} / {driverStats.total || 6}
               </Typography>
             </Box>
-            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: '#f5f3ff', color: '#8b5cf6' }}>
+            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: isDark ? 'rgba(139,92,246,0.18)' : '#f5f3ff', color: '#a78bfa' }}>
               <TwoWheelerIcon fontSize="small" />
             </Box>
           </Stack>
@@ -395,8 +404,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 2.2,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
             position: 'relative',
             cursor: 'pointer',
@@ -407,14 +416,14 @@ export default function AdminAnalyticsCharts() {
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, bgcolor: '#10b981' }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase" letterSpacing={0.5}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
                 Catalog Products
               </Typography>
-              <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', mt: 0.5 }}>
                 {kpis.totalProducts || 39}
               </Typography>
             </Box>
-            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: '#ecfdf5', color: '#10b981' }}>
+            <Box sx={{ p: 1, borderRadius: '10px', bgcolor: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5', color: '#34d399' }}>
               <Inventory2OutlinedIcon fontSize="small" />
             </Box>
           </Stack>
@@ -427,10 +436,10 @@ export default function AdminAnalyticsCharts() {
       {/* ── Interactive Entity Statistics Switcher Tabs ── */}
       <Box
         sx={{
-          bgcolor: '#ffffff',
+          bgcolor: surfaceBg,
           p: 1,
           borderRadius: '16px',
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${borderCol}`,
           boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
           display: 'flex',
           gap: 1,
@@ -460,11 +469,11 @@ export default function AdminAnalyticsCharts() {
                 whiteSpace: 'nowrap',
                 transition: 'all 0.18s ease-in-out',
                 bgcolor: isSelected ? BRAND : 'transparent',
-                color: isSelected ? '#ffffff' : '#475569',
+                color: isSelected ? '#ffffff' : 'text.secondary',
                 boxShadow: isSelected ? '0 2px 8px rgba(57,119,42,0.25)' : 'none',
                 '&:hover': {
-                  bgcolor: isSelected ? '#2e6121' : '#f1f5f9',
-                  color: isSelected ? '#ffffff' : '#0f172a',
+                  bgcolor: isSelected ? '#2e6121' : pillBg,
+                  color: isSelected ? '#ffffff' : 'text.primary',
                 },
               }}
             >
@@ -479,8 +488,8 @@ export default function AdminAnalyticsCharts() {
                     borderRadius: '999px',
                     fontSize: '0.72rem',
                     fontWeight: 800,
-                    bgcolor: isSelected ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                    color: isSelected ? '#ffffff' : '#475569',
+                    bgcolor: isSelected ? 'rgba(255,255,255,0.25)' : pillBg,
+                    color: isSelected ? '#ffffff' : 'text.secondary',
                   }}
                 >
                   {tab.count}
@@ -506,8 +515,8 @@ export default function AdminAnalyticsCharts() {
             sx={{
               p: { xs: 2.5, sm: 3 },
               borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -516,8 +525,8 @@ export default function AdminAnalyticsCharts() {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', mb: 3, gap: 1.5 }}>
               <Box>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <ShowChartOutlinedIcon sx={{ color: BRAND, fontSize: 22 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#0f172a">
+                  <ShowChartOutlinedIcon sx={{ color: brandAccent, fontSize: 22 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     {metricMode === 'revenue' ? 'Sales Revenue Trajectory ($)' : 'Order Volume Velocity (#)'}
                   </Typography>
                 </Stack>
@@ -526,7 +535,7 @@ export default function AdminAnalyticsCharts() {
                 </Typography>
               </Box>
 
-              <ButtonGroup size="small" sx={{ bgcolor: '#f1f5f9', borderRadius: '8px', p: 0.35 }}>
+              <ButtonGroup size="small" sx={{ bgcolor: pillBg, borderRadius: '8px', p: 0.35 }}>
                 <Button
                   onClick={() => setMetricMode('revenue')}
                   variant={metricMode === 'revenue' ? 'contained' : 'text'}
@@ -538,7 +547,7 @@ export default function AdminAnalyticsCharts() {
                     textTransform: 'none',
                     borderRadius: '6px !important',
                     px: 1.5,
-                    '&:hover': { bgcolor: metricMode === 'revenue' ? BRAND : '#e2e8f0' },
+                    '&:hover': { bgcolor: metricMode === 'revenue' ? BRAND : borderCol },
                   }}
                 >
                   Revenue ($)
@@ -554,7 +563,7 @@ export default function AdminAnalyticsCharts() {
                     textTransform: 'none',
                     borderRadius: '6px !important',
                     px: 1.5,
-                    '&:hover': { bgcolor: metricMode === 'orders' ? '#3b82f6' : '#e2e8f0' },
+                    '&:hover': { bgcolor: metricMode === 'orders' ? '#3b82f6' : borderCol },
                   }}
                 >
                   Order Volume
@@ -584,7 +593,7 @@ export default function AdminAnalyticsCharts() {
                       y1={y}
                       x2={chartWidth - paddingX}
                       y2={y}
-                      stroke="#f1f5f9"
+                      stroke={isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9'}
                       strokeDasharray="4 4"
                       strokeWidth="1.2"
                     />
@@ -629,7 +638,7 @@ export default function AdminAnalyticsCharts() {
                         cx={pt.x}
                         cy={pt.y}
                         r={isHovered ? 6 : 4}
-                        fill="#ffffff"
+                        fill={surfaceBg}
                         stroke={metricMode === 'revenue' ? '#10B981' : '#3B82F6'}
                         strokeWidth={isHovered ? 3 : 2}
                         style={{ transition: 'all 0.15s ease' }}
@@ -656,7 +665,7 @@ export default function AdminAnalyticsCharts() {
                     top: 10,
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    bgcolor: '#0f172a',
+                    bgcolor: 'text.primary',
                     color: '#ffffff',
                     px: 2,
                     py: 1,
@@ -689,8 +698,8 @@ export default function AdminAnalyticsCharts() {
             sx={{
               p: 3,
               borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
               display: 'flex',
               flexDirection: 'column',
@@ -698,7 +707,7 @@ export default function AdminAnalyticsCharts() {
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
               <PieChartOutlinedIcon sx={{ color: '#8b5cf6', fontSize: 22 }} />
-              <Typography variant="subtitle1" fontWeight={800} color="#0f172a">
+              <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                 Order Fulfillment Donut
               </Typography>
             </Stack>
@@ -708,7 +717,7 @@ export default function AdminAnalyticsCharts() {
 
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', my: 'auto' }}>
               <svg width="180" height="180" viewBox="0 0 180 180" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="90" cy="90" r={donutRadius} fill="none" stroke="#f1f5f9" strokeWidth="20" />
+                <circle cx="90" cy="90" r={donutRadius} fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9'} strokeWidth="20" />
                 {orderBreakdown.map((item, idx) => {
                   const fraction = item.count / totalBreakdownCount
                   const strokeDasharray = `${fraction * donutCircumference} ${donutCircumference}`
@@ -734,10 +743,10 @@ export default function AdminAnalyticsCharts() {
               </svg>
 
               <Box sx={{ position: 'absolute', textAlign: 'center', pointerEvents: 'none' }}>
-                <Typography variant="h5" fontWeight={900} color="#0f172a">
+                <Typography variant="h5" fontWeight={900} color="text.primary">
                   {kpis.totalOrders || 28}
                 </Typography>
-                <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">
+                <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">
                   Orders
                 </Typography>
               </Box>
@@ -748,11 +757,11 @@ export default function AdminAnalyticsCharts() {
                 <Box key={idx} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Box sx={{ width: 10, height: 10, borderRadius: '3px', bgcolor: item.color }} />
-                    <Typography variant="body2" fontWeight={600} color="#334155" fontSize={12}>
+                    <Typography variant="body2" fontWeight={600} color="text.primary" fontSize={12}>
                       {item.label}
                     </Typography>
                   </Stack>
-                  <Typography variant="body2" fontWeight={700} color="#0f172a" fontSize={12}>
+                  <Typography variant="body2" fontWeight={700} color="text.primary" fontSize={12}>
                     {item.count}{' '}
                     <span style={{ color: '#94a3b8', fontWeight: 500 }}>
                       ({Math.round((item.count / totalBreakdownCount) * 100)}%)
@@ -772,8 +781,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 3,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
           }}
         >
@@ -782,7 +791,7 @@ export default function AdminAnalyticsCharts() {
             <Box>
               <Stack direction="row" spacing={1} alignItems="center">
                 <StorefrontIcon sx={{ color: '#f59e0b', fontSize: 24 }} />
-                <Typography variant="h6" fontWeight={800} color="#0f172a">
+                <Typography variant="h6" fontWeight={800} color="text.primary">
                   Vendors & Partner Stores Roster ({vendorStats.total || 7} Merchants)
                 </Typography>
               </Stack>
@@ -798,12 +807,12 @@ export default function AdminAnalyticsCharts() {
               endIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
               sx={{
                 borderRadius: '10px',
-                borderColor: '#e2e8f0',
-                color: '#334155',
+                borderColor: borderCol,
+                color: 'text.primary',
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '0.8rem',
-                '&:hover': { borderColor: BRAND, color: BRAND },
+                '&:hover': { borderColor: brandAccent, color: brandAccent },
               }}
             >
               Manage All Vendors
@@ -819,7 +828,7 @@ export default function AdminAnalyticsCharts() {
               { label: 'Grocery & Retail', val: (vendorStats.groceryVendors || 2) + (vendorStats.retailVendors || 1), color: '#3b82f6', note: 'Supermarkets' },
             ].map((v, i) => (
               <Box key={i} sx={{ p: 2, borderRadius: '12px', bgcolor: `${v.color}0a`, border: `1px solid ${v.color}25` }}>
-                <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">{v.label}</Typography>
+                <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">{v.label}</Typography>
                 <Typography variant="h5" fontWeight={900} sx={{ color: v.color, my: 0.5 }}>{v.val}</Typography>
                 <Typography variant="caption" color="text.secondary">{v.note}</Typography>
               </Box>
@@ -827,15 +836,15 @@ export default function AdminAnalyticsCharts() {
           </Box>
 
           {/* Stores Roster Table */}
-          <TableContainer sx={{ borderRadius: '12px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
+          <TableContainer sx={{ borderRadius: '12px', border: `1px solid ${borderCol}`, overflow: 'hidden' }}>
             <Table size="small">
-              <TableHead sx={{ bgcolor: '#f8fafc' }}>
+              <TableHead sx={{ bgcolor: subtleBg }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Store Name</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>City / Hub</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Vertical Type</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Catalog Capacity</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Store Name</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>City / Hub</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Vertical Type</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Catalog Capacity</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -843,17 +852,17 @@ export default function AdminAnalyticsCharts() {
                   <TableRow key={store.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                     <TableCell>
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#fef3c7', color: '#b45309', fontWeight: 800, fontSize: '0.8rem' }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 800, fontSize: '0.8rem' }}>
                           {store.name[0]}
                         </Avatar>
                         <Box>
-                          <Typography variant="body2" fontWeight={700} color="#0f172a">{store.name}</Typography>
+                          <Typography variant="body2" fontWeight={700} color="text.primary">{store.name}</Typography>
                           <Typography variant="caption" color="text.secondary">{store.email}</Typography>
                         </Box>
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      <Stack direction="row" spacing={0.5} alignItems="center" color="#64748b">
+                      <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
                         <LocationOnOutlinedIcon sx={{ fontSize: 14 }} />
                         <Typography variant="body2" fontSize="0.8rem">{store.city}</Typography>
                       </Stack>
@@ -865,19 +874,19 @@ export default function AdminAnalyticsCharts() {
                         sx={{
                           fontSize: '0.72rem',
                           fontWeight: 700,
-                          bgcolor: store.vertical === 'GROCERY' ? '#eff6ff' : store.vertical === 'SHOP' ? '#f5f3ff' : '#fef2f2',
-                          color: store.vertical === 'GROCERY' ? '#1d4ed8' : store.vertical === 'SHOP' ? '#6d28d9' : '#b91c1c',
+                          bgcolor: store.vertical === 'GROCERY' ? (isDark ? 'rgba(59,130,246,0.18)' : '#eff6ff') : store.vertical === 'SHOP' ? (isDark ? 'rgba(139,92,246,0.18)' : '#f5f3ff') : (isDark ? 'rgba(239,68,68,0.18)' : '#fef2f2'),
+                          color: store.vertical === 'GROCERY' ? (isDark ? '#60a5fa' : '#1d4ed8') : store.vertical === 'SHOP' ? (isDark ? '#c4b5fd' : '#6d28d9') : (isDark ? '#f87171' : '#b91c1c'),
                         }}
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px', bgcolor: '#ecfdf5', color: '#15803d', fontSize: '0.72rem', fontWeight: 700 }}>
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px', bgcolor: isDark ? 'rgba(34,197,94,0.18)' : '#ecfdf5', color: isDark ? '#4ade80' : '#15803d', fontSize: '0.72rem', fontWeight: 700 }}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22c55e' }} />
                         Approved Store
                       </Box>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="body2" fontWeight={800} color={BRAND}>
+                      <Typography variant="body2" fontWeight={800} color={brandAccent}>
                         {store.productCount} Items
                       </Typography>
                     </TableCell>
@@ -896,8 +905,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 3,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
           }}
         >
@@ -906,7 +915,7 @@ export default function AdminAnalyticsCharts() {
             <Box>
               <Stack direction="row" spacing={1} alignItems="center">
                 <TwoWheelerIcon sx={{ color: '#8b5cf6', fontSize: 24 }} />
-                <Typography variant="h6" fontWeight={800} color="#0f172a">
+                <Typography variant="h6" fontWeight={800} color="text.primary">
                   Drivers & Fleet Telemetry ({driverStats.total || 6} Fleet Partners)
                 </Typography>
               </Stack>
@@ -915,7 +924,7 @@ export default function AdminAnalyticsCharts() {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.4, borderRadius: '999px', bgcolor: '#f5f3ff', color: '#7c3aed', fontWeight: 800, fontSize: '0.75rem', border: '1px solid #ddd6fe' }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.4, borderRadius: '999px', bgcolor: isDark ? 'rgba(139,92,246,0.18)' : '#f5f3ff', color: isDark ? '#c4b5fd' : '#7c3aed', fontWeight: 800, fontSize: '0.75rem', border: `1px solid ${isDark ? 'rgba(196,181,253,0.35)' : '#ddd6fe'}` }}>
               <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#8b5cf6', animation: 'pulseDot 1.5s infinite' }} />
               Live Fleet GPS Broadcasting
             </Box>
@@ -927,10 +936,10 @@ export default function AdminAnalyticsCharts() {
               { label: 'Active On-Duty', val: `${driverStats.onDuty || 2} Riders`, color: '#10b981', note: 'Available for dispatch' },
               { label: 'On Delivery', val: `${driverStats.onDelivery || 2} In Transit`, color: '#8b5cf6', note: 'Carrying orders' },
               { label: 'Avg Dropoff Time', val: driverStats.avgDropoffTime || '22 mins', color: '#3b82f6', note: 'Fast express transit' },
-              { label: 'On-Time Rate', val: driverStats.fleetOnTimeRate || '98.4%', color: BRAND, note: 'Exceeding SLA target' },
+              { label: 'On-Time Rate', val: driverStats.fleetOnTimeRate || '98.4%', color: brandAccent, note: 'Exceeding SLA target' },
             ].map((d, i) => (
               <Box key={i} sx={{ p: 2, borderRadius: '12px', bgcolor: `${d.color}0a`, border: `1px solid ${d.color}25` }}>
-                <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">{d.label}</Typography>
+                <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">{d.label}</Typography>
                 <Typography variant="h5" fontWeight={900} sx={{ color: d.color, my: 0.5 }}>{d.val}</Typography>
                 <Typography variant="caption" color="text.secondary">{d.note}</Typography>
               </Box>
@@ -938,15 +947,15 @@ export default function AdminAnalyticsCharts() {
           </Box>
 
           {/* Driver Roster Table */}
-          <TableContainer sx={{ borderRadius: '12px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
+          <TableContainer sx={{ borderRadius: '12px', border: `1px solid ${borderCol}`, overflow: 'hidden' }}>
             <Table size="small">
-              <TableHead sx={{ bgcolor: '#f8fafc' }}>
+              <TableHead sx={{ bgcolor: subtleBg }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Driver Partner</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Vehicle & Model</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Assigned Zone</TableCell>
-                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Duty Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#475569' }}>Deliveries Today</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Driver Partner</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Vehicle & Model</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Assigned Zone</TableCell>
+                  <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Duty Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Deliveries Today</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -957,21 +966,21 @@ export default function AdminAnalyticsCharts() {
                     <TableRow key={driver.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                       <TableCell>
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Avatar sx={{ width: 32, height: 32, bgcolor: '#f5f3ff', color: '#6d28d9', fontWeight: 800, fontSize: '0.8rem' }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: isDark ? 'rgba(139,92,246,0.2)' : '#f5f3ff', color: isDark ? '#c4b5fd' : '#6d28d9', fontWeight: 800, fontSize: '0.8rem' }}>
                             {driver.name[0]}
                           </Avatar>
                           <Box>
-                            <Typography variant="body2" fontWeight={700} color="#0f172a">{driver.name}</Typography>
+                            <Typography variant="body2" fontWeight={700} color="text.primary">{driver.name}</Typography>
                             <Typography variant="caption" color="text.secondary">{driver.phone}</Typography>
                           </Box>
                         </Stack>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="#334155" fontWeight={600}>{driver.vehicle}</Typography>
+                        <Typography variant="body2" color="text.primary" fontWeight={600}>{driver.vehicle}</Typography>
                         <Typography variant="caption" color="text.secondary">{driver.shift}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="#475569">{driver.zone || 'Central Dispatch'}</Typography>
+                        <Typography variant="body2" color="text.secondary">{driver.zone || 'Central Dispatch'}</Typography>
                       </TableCell>
                       <TableCell>
                         <Box
@@ -984,9 +993,9 @@ export default function AdminAnalyticsCharts() {
                             borderRadius: '999px',
                             fontSize: '0.72rem',
                             fontWeight: 800,
-                            bgcolor: isOnDelivery ? '#f5f3ff' : isOnDuty ? '#ecfdf5' : '#f1f5f9',
-                            color: isOnDelivery ? '#6d28d9' : isOnDuty ? '#15803d' : '#64748b',
-                            border: `1px solid ${isOnDelivery ? '#ddd6fe' : isOnDuty ? '#bbf7d0' : '#e2e8f0'}`,
+                            bgcolor: isOnDelivery ? (isDark ? 'rgba(139,92,246,0.18)' : '#f5f3ff') : isOnDuty ? (isDark ? 'rgba(34,197,94,0.18)' : '#ecfdf5') : pillBg,
+                            color: isOnDelivery ? (isDark ? '#c4b5fd' : '#6d28d9') : isOnDuty ? (isDark ? '#4ade80' : '#15803d') : 'text.secondary',
+                            border: `1px solid ${isOnDelivery ? (isDark ? 'rgba(196,181,253,0.35)' : '#ddd6fe') : isOnDuty ? (isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0') : borderCol}`,
                           }}
                         >
                           <Box
@@ -1002,7 +1011,7 @@ export default function AdminAnalyticsCharts() {
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography variant="body2" fontWeight={800} color="#0f172a">
+                        <Typography variant="body2" fontWeight={800} color="text.primary">
                           {driver.deliveriesToday || 0} Drops
                         </Typography>
                       </TableCell>
@@ -1022,8 +1031,8 @@ export default function AdminAnalyticsCharts() {
           sx={{
             p: 3,
             borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            bgcolor: '#ffffff',
+            border: `1px solid ${borderCol}`,
+            bgcolor: surfaceBg,
             boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
           }}
         >
@@ -1031,7 +1040,7 @@ export default function AdminAnalyticsCharts() {
             <Box>
               <Stack direction="row" spacing={1} alignItems="center">
                 <ShoppingBagOutlinedIcon sx={{ color: '#3b82f6', fontSize: 24 }} />
-                <Typography variant="h6" fontWeight={800} color="#0f172a">
+                <Typography variant="h6" fontWeight={800} color="text.primary">
                   Order Channels & Payment Fulfillment Statistics
                 </Typography>
               </Stack>
@@ -1052,26 +1061,26 @@ export default function AdminAnalyticsCharts() {
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
-            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">Food Orders</Typography>
+            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: subtleBg, border: `1px solid ${borderCol}` }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">Food Orders</Typography>
               <Typography variant="h5" fontWeight={900} sx={{ color: '#b91c1c', my: 0.5 }}>{orderStats.foodOrders || 21}</Typography>
               <Typography variant="caption" color="text.secondary">🍽️ Restaurant Deliveries</Typography>
             </Box>
 
-            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">Grocery Orders</Typography>
+            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: subtleBg, border: `1px solid ${borderCol}` }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">Grocery Orders</Typography>
               <Typography variant="h5" fontWeight={900} sx={{ color: '#15803d', my: 0.5 }}>{orderStats.groceryOrders || 7}</Typography>
               <Typography variant="caption" color="text.secondary">🏬 Supermarket Marts</Typography>
             </Box>
 
-            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">Cash on Delivery</Typography>
+            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: subtleBg, border: `1px solid ${borderCol}` }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">Cash on Delivery</Typography>
               <Typography variant="h5" fontWeight={900} sx={{ color: '#d97706', my: 0.5 }}>{orderStats.codOrders || 22}</Typography>
               <Typography variant="caption" color="text.secondary">💵 Doorstep Cash Collect</Typography>
             </Box>
 
-            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <Typography variant="caption" fontWeight={700} color="#64748b" textTransform="uppercase">Card & Digital Paid</Typography>
+            <Box sx={{ p: 2, borderRadius: '12px', bgcolor: subtleBg, border: `1px solid ${borderCol}` }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase">Card & Digital Paid</Typography>
               <Typography variant="h5" fontWeight={900} sx={{ color: '#2563eb', my: 0.5 }}>{orderStats.cardOrders || 6}</Typography>
               <Typography variant="caption" color="text.secondary">💳 Prepaid Digital</Typography>
             </Box>
@@ -1094,14 +1103,14 @@ export default function AdminAnalyticsCharts() {
             sx={{
               p: 3,
               borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
               <BarChartOutlinedIcon sx={{ color: '#0ea5e9', fontSize: 22 }} />
-              <Typography variant="subtitle1" fontWeight={800} color="#0f172a">
+              <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                 Sales by Category & Department
               </Typography>
             </Stack>
@@ -1116,14 +1125,14 @@ export default function AdminAnalyticsCharts() {
                 return (
                   <Box key={cat.id || idx}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-                      <Typography variant="body2" fontWeight={700} color="#1e293b">
+                      <Typography variant="body2" fontWeight={700} color="text.primary">
                         {cat.name}
                       </Typography>
-                      <Typography variant="caption" fontWeight={700} color="#64748b">
+                      <Typography variant="caption" fontWeight={700} color="text.secondary">
                         {cat.productCount} items • {cat.percentage}%
                       </Typography>
                     </Box>
-                    <Box sx={{ width: '100%', height: 8, bgcolor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                    <Box sx={{ width: '100%', height: 8, bgcolor: pillBg, borderRadius: '4px', overflow: 'hidden' }}>
                       <Box
                         sx={{
                           width: `${Math.max(cat.percentage, 8)}%`,
@@ -1146,14 +1155,14 @@ export default function AdminAnalyticsCharts() {
             sx={{
               p: 3,
               borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <Inventory2OutlinedIcon sx={{ color: BRAND, fontSize: 22 }} />
-              <Typography variant="subtitle1" fontWeight={800} color="#0f172a">
+              <Inventory2OutlinedIcon sx={{ color: brandAccent, fontSize: 22 }} />
+              <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                 Top Selling Marketplace Products
               </Typography>
             </Stack>
@@ -1161,7 +1170,7 @@ export default function AdminAnalyticsCharts() {
               Highest velocity items ranked by unit volume and revenue
             </Typography>
 
-            <Stack spacing={1.5} divider={<Divider sx={{ borderColor: '#f1f5f9' }} />}>
+            <Stack spacing={1.5} divider={<Divider sx={{ borderColor: borderCol }} />}>
               {topProducts.map((prod, idx) => (
                 <Box
                   key={prod.id || idx}
@@ -1178,8 +1187,8 @@ export default function AdminAnalyticsCharts() {
                         width: 28,
                         height: 28,
                         borderRadius: '8px',
-                        bgcolor: idx === 0 ? '#fef3c7' : '#f1f5f9',
-                        color: idx === 0 ? '#b45309' : '#64748b',
+                        bgcolor: idx === 0 ? (isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7') : pillBg,
+                        color: idx === 0 ? (isDark ? '#fbbf24' : '#b45309') : 'text.secondary',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1190,7 +1199,7 @@ export default function AdminAnalyticsCharts() {
                       #{idx + 1}
                     </Box>
                     <Box>
-                      <Typography variant="body2" fontWeight={700} color="#0f172a">
+                      <Typography variant="body2" fontWeight={700} color="text.primary">
                         {prod.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -1200,7 +1209,7 @@ export default function AdminAnalyticsCharts() {
                   </Stack>
 
                   <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="body2" fontWeight={800} color="#15803d">
+                    <Typography variant="body2" fontWeight={800} color={isDark ? '#4ade80' : '#15803d'}>
                       ${prod.revenue.toLocaleString()}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">

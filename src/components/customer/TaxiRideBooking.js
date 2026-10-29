@@ -17,7 +17,14 @@ import Stack from '@mui/material/Stack'
 import Avatar from '@mui/material/Avatar'
 import Tooltip from '@mui/material/Tooltip'
 import GlobalStyles from '@mui/material/GlobalStyles'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 import toast from 'react-hot-toast'
+import {
+  DEFAULT_RAPIDRIDE_SETTINGS,
+  normalizeRapidRideSettings,
+  calculateRapidRideFare,
+} from '@/lib/rapidRideFormula'
 
 import {
   GoogleMap,
@@ -51,10 +58,10 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import CloseIcon from '@mui/icons-material/Close'
 
 const BRAND = '#39772A'
-const INDRIVE_GREEN = '#00D26A'
-const INDRIVE_DARK = '#0F172A'
+const RAPIDRIDE_GREEN = '#00D26A'
+const RAPIDRIDE_DARK = '#0F172A'
 
-const INDRIVE_PICKUP_ICON = {
+const RAPIDRIDE_PICKUP_ICON = {
   url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 34 42">
       <defs>
@@ -69,7 +76,7 @@ const INDRIVE_PICKUP_ICON = {
   `),
 }
 
-const INDRIVE_DROPOFF_ICON = {
+const RAPIDRIDE_DROPOFF_ICON = {
   url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 34 42">
       <defs>
@@ -139,16 +146,21 @@ export default function TaxiRideBooking({ onBack }) {
   const [routeDistanceKm, setRouteDistanceKm] = useState(null)
   const [routeDurationMin, setRouteDurationMin] = useState(null)
 
-  // Fare proposal (InDrive Bidding)
-  const [suggestedFare, setSuggestedFare] = useState(420)
-  const [customerFare, setCustomerFare] = useState('420')
-  const [customerNotes, setCustomerNotes] = useState('')
+  // Admin-configured RapidRide Fare & Baggage Formula settings
+  const [fareSettings, setFareSettings] = useState(() => normalizeRapidRideSettings(DEFAULT_RAPIDRIDE_SETTINGS))
 
-  // Luggage specifics
+  // Fare proposal (RapidRide Bidding)
+  const [suggestedFare, setSuggestedFare] = useState(445)
+  const [customerFare, setCustomerFare] = useState('445')
+  const [customerNotes, setCustomerNotes] = useState('')
+  const [bagCount, setBagCount] = useState(0)
+
+  // Baggage / Luggage specifics
   const [recipientName, setRecipientName] = useState('')
   const [recipientPhone, setRecipientPhone] = useState('')
   const [packageDescription, setPackageDescription] = useState('')
   const [packageWeight, setPackageWeight] = useState('')
+  const [isFragile, setIsFragile] = useState(false)
 
   // Ride lifecycle
   const [requestingRide, setRequestingRide] = useState(false)
@@ -212,22 +224,54 @@ export default function TaxiRideBooking({ onBack }) {
     ]
   }, [pickupCoord])
 
-  // Calculate realistic suggested fare based on distance and vehicle
-  const updateFareEstimate = useCallback((distanceKm, vehicleId, mode) => {
-    const km = distanceKm || 5.0
-    if (mode === 'LUGGAGE') {
-      const base = 350
-      const calculated = Math.round(base + km * 45)
-      setSuggestedFare(calculated)
-      setCustomerFare(String(calculated))
-      return
-    }
-
-    const veh = VEHICLE_CATEGORIES.find(v => v.id === vehicleId) || VEHICLE_CATEGORIES[3]
-    const calculated = Math.round(veh.basePrice + km * veh.perKm)
-    setSuggestedFare(calculated)
-    setCustomerFare(String(calculated))
+  // Fetch Admin RapidRide Fare & Baggage Formula settings
+  useEffect(() => {
+    let mounted = true
+    fetch('/api/admin/driver-settings')
+      .then(r => r.json())
+      .then(json => {
+        if (mounted && json?.success && json?.data) {
+          setFareSettings(normalizeRapidRideSettings(json.data))
+        }
+      })
+      .catch(() => {})
+    return () => { mounted = false }
   }, [])
+
+  // Live RapidRide Fare & Baggage Formula Breakdown
+  const fareBreakdown = useMemo(() => {
+    return calculateRapidRideFare({
+      serviceType,
+      vehicleId: selectedVehicle,
+      distanceKm: routeDistanceKm || 5.0,
+      durationMin: routeDurationMin,
+      weightKg: packageWeight,
+      isFragile,
+      bagCount,
+      settings: fareSettings,
+    })
+  }, [serviceType, selectedVehicle, routeDistanceKm, routeDurationMin, packageWeight, isFragile, bagCount, fareSettings])
+
+  useEffect(() => {
+    setSuggestedFare(fareBreakdown.suggestedFare)
+    setCustomerFare(String(fareBreakdown.suggestedFare))
+  }, [fareBreakdown.suggestedFare])
+
+  // Calculate realistic suggested fare based on distance, vehicle, platform fee & baggage formula
+  const updateFareEstimate = useCallback((distanceKm, vehicleId, mode) => {
+    const res = calculateRapidRideFare({
+      serviceType: mode,
+      vehicleId,
+      distanceKm: distanceKm || 5.0,
+      durationMin: routeDurationMin,
+      weightKg: packageWeight,
+      isFragile,
+      bagCount,
+      settings: fareSettings,
+    })
+    setSuggestedFare(res.suggestedFare)
+    setCustomerFare(String(res.suggestedFare))
+  }, [routeDurationMin, packageWeight, isFragile, bagCount, fareSettings])
 
   // Auto-frame map camera to display the complete route between locations
   const fitMapToBounds = useCallback((coords) => {
@@ -271,7 +315,7 @@ export default function TaxiRideBooking({ onBack }) {
     updateFareEstimate(drivingDist, selectedVehicle, serviceType)
   }, [selectedVehicle, serviceType, updateFareEstimate])
 
-  // InDrive-Style High-Precision Turn-by-Turn Route Calculation
+  // RapidRide High-Precision Turn-by-Turn Route Calculation
   const calculateRoute = useCallback(async (origin, destination) => {
     if (!origin || !destination) return
 
@@ -504,11 +548,12 @@ export default function TaxiRideBooking({ onBack }) {
     updateFareEstimate(routeDistanceKm || 5.0, selectedVehicle, mode)
   }
 
-  // Quick Fare Adjustment (+ / -)
+  // Quick Fare Adjustment (+ / -) respecting RapidRide min/max bidding guardrails
   const adjustFare = (amount) => {
     setCustomerFare(prev => {
-      const val = Math.max(100, (Number(prev) || suggestedFare) + amount)
-      return String(val)
+      const next = (Number(prev) || suggestedFare) + amount
+      const clamped = Math.min(fareBreakdown.maxAllowedFare, Math.max(fareBreakdown.minAllowedFare, next))
+      return String(clamped)
     })
   }
 
@@ -521,6 +566,11 @@ export default function TaxiRideBooking({ onBack }) {
 
     if (!customerFare || Number(customerFare) <= 0) {
       toast.error('Please propose your fare')
+      return
+    }
+
+    if (Number(customerFare) < fareBreakdown.minAllowedFare) {
+      toast.error(`Minimum RapidRide offer for this route is ${fareSettings.currency} ${fareBreakdown.minAllowedFare}`)
       return
     }
 
@@ -539,12 +589,15 @@ export default function TaxiRideBooking({ onBack }) {
           dropoffLat: dropoffCoord?.lat || null,
           dropoffLng: dropoffCoord?.lng || null,
           estimatedDistanceKm: routeDistanceKm || 5.0,
+          estimatedDurationMin: routeDurationMin || null,
+          bagCount,
           customerFare: Number(customerFare),
           customerNotes,
           recipientName,
           recipientPhone,
           packageDescription,
           packageWeight,
+          isFragile,
         }),
       })
 
@@ -611,7 +664,7 @@ export default function TaxiRideBooking({ onBack }) {
 
   return (
     <Box sx={{ width: '100%', maxWidth: '100%', px: { xs: 1.5, sm: 2.5, md: 3, xl: 4 }, py: 1 }}>
-      {/* ─── SCOPED INDRIVE PLACES AUTOCOMPLETE STYLES (NO IMPACT ON DASHBOARD) ─── */}
+      {/* ─── SCOPED RAPIDRIDE PLACES AUTOCOMPLETE STYLES (NO IMPACT ON DASHBOARD) ─── */}
       <GlobalStyles
         styles={{
           '.pac-container': {
@@ -716,7 +769,7 @@ export default function TaxiRideBooking({ onBack }) {
                   {activeRide.serviceType === 'LUGGAGE' ? <LuggageIcon sx={{ fontSize: 28 }} /> : <LocalTaxiIcon sx={{ fontSize: 28 }} />}
                   <div>
                     <Typography variant="subtitle1" fontWeight={900}>
-                      {activeRide.serviceType === 'LUGGAGE' ? 'Luggage Delivery' : 'InDrive City Taxi'}
+                      {activeRide.serviceType === 'LUGGAGE' ? 'RapidRide Baggage Delivery' : 'RapidRide City Taxi'}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#E0F2FE' }}>
                       {activeRide.status === 'SEARCHING' ? 'Searching Drivers...' : `Status: ${activeRide.status}`}
@@ -890,7 +943,7 @@ export default function TaxiRideBooking({ onBack }) {
               </CardContent>
             </Card>
           ) : (
-            /* ─── NEW RIDE BOOKING PANEL (HIGH-TECH INDRIVE STYLE) ─── */
+            /* ─── NEW RIDE BOOKING PANEL (HIGH-TECH RAPIDRIDE STYLE) ─── */
             <Card
               sx={{
                 borderRadius: 3.5,
@@ -903,7 +956,7 @@ export default function TaxiRideBooking({ onBack }) {
               <Box sx={{ p: 2.5, bgcolor: '#0F172A', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <Typography variant="h6" fontWeight={900}>
-                    InDrive Ride & Dispatch
+                    RapidRide & Dispatch
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#94A3B8' }}>
                     Set your pickup, dropoff, and propose your fare.
@@ -1111,8 +1164,16 @@ export default function TaxiRideBooking({ onBack }) {
                       <Grid container spacing={1.5}>
                         {VEHICLE_CATEGORIES.map(veh => {
                           const isSelected = selectedVehicle === veh.id
-                          const estKm = routeDistanceKm || 5.0
-                          const estPrice = Math.round(veh.basePrice + estKm * veh.perKm)
+                          const vehCalc = calculateRapidRideFare({
+                            serviceType: 'TAXI',
+                            vehicleId: veh.id,
+                            distanceKm: routeDistanceKm || 5.0,
+                            durationMin: routeDurationMin,
+                            bagCount,
+                            settings: fareSettings,
+                          })
+                          const estPrice = vehCalc.suggestedFare
+                          const cfgVeh = fareSettings.vehicles?.[veh.id]
 
                           return (
                             <Grid item xs={6} key={veh.id}>
@@ -1137,23 +1198,57 @@ export default function TaxiRideBooking({ onBack }) {
                                   </Typography>
                                 </Box>
                                 <Typography variant="subtitle2" fontWeight={800} color="#0F172A">
-                                  {veh.label}
+                                  {cfgVeh?.label || veh.label}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.68rem' }}>
-                                  {veh.desc}
+                                  {cfgVeh?.desc || veh.desc}
                                 </Typography>
                               </Card>
                             </Grid>
                           )
                         })}
                       </Grid>
+
+                      {/* Passenger Baggage / Suitcases Selector */}
+                      <Box sx={{ mt: 1.8, p: 1.5, borderRadius: 2, bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                        <Box>
+                          <Typography variant="caption" fontWeight={800} color="#0F172A" display="block">
+                            🧳 Travelling with Baggage?
+                          </Typography>
+                          <Typography variant="caption" color="#64748B" sx={{ fontSize: '0.68rem' }}>
+                            First {fareSettings.baggage.freeBagsIncluded} bag(s) free • +{fareSettings.currency} {fareSettings.baggage.extraBagFee}/extra bag
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={0.6} alignItems="center">
+                          {[0, 1, 2, 3, 4].map(cnt => (
+                            <Chip
+                              key={cnt}
+                              label={cnt === 0 ? 'None' : `${cnt}`}
+                              size="small"
+                              clickable
+                              onClick={() => setBagCount(cnt)}
+                              sx={{
+                                fontWeight: 800,
+                                bgcolor: bagCount === cnt ? BRAND : '#fff',
+                                color: bagCount === cnt ? '#fff' : '#334155',
+                                border: '1px solid #CBD5E1',
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
                     </Box>
                   ) : (
-                    /* Luggage Information Inputs */
+                    /* Baggage / Luggage Information Inputs */
                     <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                      <Typography variant="caption" fontWeight={800} color="#7C3AED" sx={{ display: 'block', mb: 1 }}>
-                        RECIPIENT & PACKAGE DETAILS
-                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="caption" fontWeight={800} color="#7C3AED">
+                          RECIPIENT & BAGGAGE DETAILS
+                        </Typography>
+                        <Typography variant="caption" fontWeight={700} color="#64748B" sx={{ fontSize: '0.68rem' }}>
+                          {fareSettings.baggage.freeWeightKg}kg free • +{fareSettings.currency} {fareSettings.baggage.perKgRate}/kg
+                        </Typography>
+                      </Box>
                       <Grid container spacing={1.5}>
                         <Grid item xs={6}>
                           <TextField
@@ -1186,16 +1281,33 @@ export default function TaxiRideBooking({ onBack }) {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Est. Weight (kg)"
+                            type="number"
+                            label="Weight (kg)"
                             value={packageWeight}
                             onChange={e => setPackageWeight(e.target.value)}
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                size="small"
+                                checked={isFragile}
+                                onChange={e => setIsFragile(e.target.checked)}
+                              />
+                            }
+                            label={
+                              <Typography variant="caption" fontWeight={700} color="#475569">
+                                Fragile / Special Handling (+{fareSettings.currency} {fareSettings.baggage.fragileFee})
+                              </Typography>
+                            }
                           />
                         </Grid>
                       </Grid>
                     </Box>
                   )}
 
-                  {/* ── OFFER YOUR FARE (INDRIVE CORE BIDDING) ── */}
+                  {/* ── OFFER YOUR FARE (RAPIDRIDE CORE BIDDING) ── */}
                   <Box
                     sx={{
                       p: 2.2,
@@ -1205,15 +1317,26 @@ export default function TaxiRideBooking({ onBack }) {
                       boxShadow: '0 4px 14px rgba(16,185,129,0.1)',
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
                       <Typography variant="caption" fontWeight={900} color="#065F46" letterSpacing={0.5}>
-                        OFFER YOUR FARE (BIDDING)
+                        OFFER YOUR FARE (RAPIDRIDE BIDDING)
                       </Typography>
                       <Chip
-                        label={`Est: Rs. ${suggestedFare}`}
+                        label={`Suggested: ${fareSettings.currency} ${suggestedFare}`}
                         size="small"
                         sx={{ bgcolor: '#fff', color: '#047857', fontWeight: 800, fontSize: '0.7rem' }}
                       />
+                    </Box>
+
+                    {/* Live Formula Fee Breakdown Row */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 0.8, mb: 1, px: 1, py: 0.6, borderRadius: 1.5, bgcolor: 'rgba(255,255,255,0.75)' }}>
+                      <Typography variant="caption" color="#065F46" fontWeight={700} sx={{ fontSize: '0.68rem' }}>
+                        Basic Platform Fee: {fareSettings.currency} {fareBreakdown.basicPlatformFee}
+                        {fareBreakdown.baggageFee > 0 ? ` • Baggage Fee: ${fareSettings.currency} ${fareBreakdown.baggageFee}` : ''}
+                      </Typography>
+                      <Typography variant="caption" color="#047857" fontWeight={800} sx={{ fontSize: '0.68rem' }}>
+                        Min Offer: {fareSettings.currency} {fareBreakdown.minAllowedFare}
+                      </Typography>
                     </Box>
 
                     {/* Numeric Display & Quick Steppers */}
@@ -1227,7 +1350,7 @@ export default function TaxiRideBooking({ onBack }) {
                           startAdornment: (
                             <InputAdornment position="start">
                               <Typography fontWeight={900} color="#065F46" fontSize="1.1rem">
-                                Rs.
+                                {fareSettings.currency}
                               </Typography>
                             </InputAdornment>
                           ),
@@ -1237,14 +1360,14 @@ export default function TaxiRideBooking({ onBack }) {
                       <Stack direction="row" spacing={0.5}>
                         <Button
                           variant="contained"
-                          onClick={() => adjustFare(-50)}
+                          onClick={() => adjustFare(-fareBreakdown.fareStepAmount)}
                           sx={{ minWidth: 42, px: 1, bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}
                         >
                           <RemoveIcon fontSize="small" />
                         </Button>
                         <Button
                           variant="contained"
-                          onClick={() => adjustFare(50)}
+                          onClick={() => adjustFare(fareBreakdown.fareStepAmount)}
                           sx={{ minWidth: 42, px: 1, bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}
                         >
                           <AddIcon fontSize="small" />
@@ -1254,7 +1377,7 @@ export default function TaxiRideBooking({ onBack }) {
 
                     {/* Quick Adjustment Pills */}
                     <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
-                      {[-50, 50, 100].map(amt => (
+                      {[-fareBreakdown.fareStepAmount, fareBreakdown.fareStepAmount, fareBreakdown.fareStepAmount * 2].map(amt => (
                         <Chip
                           key={amt}
                           label={`${amt > 0 ? '+' : ''}${amt}`}
@@ -1357,13 +1480,13 @@ export default function TaxiRideBooking({ onBack }) {
                   ],
                 }}
               >
-                {/* InDrive Turn-by-Turn Driving Route Polyline */}
+                {/* RapidRide Turn-by-Turn Driving Route Polyline */}
                 {directions ? (
                   <DirectionsRenderer
                     directions={directions}
                     options={{
                       polylineOptions: {
-                        strokeColor: INDRIVE_GREEN,
+                        strokeColor: RAPIDRIDE_GREEN,
                         strokeWeight: 6,
                         strokeOpacity: 0.95,
                       },
@@ -1373,21 +1496,21 @@ export default function TaxiRideBooking({ onBack }) {
                 ) : (
                   routePolyline.length > 0 && (
                     <>
-                      {/* InDrive Outer Casing / Glow */}
+                      {/* RapidRide Outer Casing / Glow */}
                       <Polyline
                         path={routePolyline}
                         options={{
-                          strokeColor: INDRIVE_DARK,
+                          strokeColor: RAPIDRIDE_DARK,
                           strokeWeight: 8,
                           strokeOpacity: 0.45,
                           zIndex: 1,
                         }}
                       />
-                      {/* InDrive Active Neon Green Road Path */}
+                      {/* RapidRide Active Neon Green Road Path */}
                       <Polyline
                         path={routePolyline}
                         options={{
-                          strokeColor: INDRIVE_GREEN,
+                          strokeColor: RAPIDRIDE_GREEN,
                           strokeWeight: 5,
                           strokeOpacity: 1.0,
                           zIndex: 2,
@@ -1397,20 +1520,20 @@ export default function TaxiRideBooking({ onBack }) {
                   )
                 )}
 
-                {/* InDrive Custom Pickup Marker */}
+                {/* RapidRide Custom Pickup Marker */}
                 {pickupCoord && (
                   <Marker
                     position={pickupCoord}
-                    icon={INDRIVE_PICKUP_ICON}
+                    icon={RAPIDRIDE_PICKUP_ICON}
                     title={`Pickup: ${pickupAddress || 'Selected Location'}`}
                   />
                 )}
 
-                {/* InDrive Custom Dropoff Marker */}
+                {/* RapidRide Custom Dropoff Marker */}
                 {dropoffCoord && (
                   <Marker
                     position={dropoffCoord}
-                    icon={INDRIVE_DROPOFF_ICON}
+                    icon={RAPIDRIDE_DROPOFF_ICON}
                     title={`Dropoff: ${dropoffAddress || 'Selected Destination'}`}
                   />
                 )}

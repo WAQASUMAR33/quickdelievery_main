@@ -31,7 +31,7 @@ export default function DriverOrderHistoryPage() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={36} sx={{ color: BRAND }} />
         <Typography color="text.secondary">Loading Order History…</Typography>
       </Box>
@@ -42,7 +42,7 @@ export default function DriverOrderHistoryPage() {
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" fontWeight={700}>Delivery History</Typography>
+          <Typography variant="h5" fontWeight={700} color="text.primary">Delivery History</Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
             Browse your completed and cancelled deliveries.
           </Typography>

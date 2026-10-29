@@ -27,6 +27,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation'
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 const mapContainerStyle = {
   width: '100%',
@@ -205,10 +206,12 @@ export default function DriverDeliveryNavigation({
           <IconButton
             onClick={onClose}
             sx={{
-              bgcolor: 'rgba(255, 255, 255, 0.95)',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+              bgcolor: 'rgba(15, 23, 42, 0.9)',
+              color: '#ffffff',
+              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
               pointerEvents: 'auto',
-              '&:hover': { bgcolor: '#ffffff' },
+              '&:hover': { bgcolor: '#1e293b' },
             }}
           >
             <CloseIcon />
@@ -217,7 +220,7 @@ export default function DriverDeliveryNavigation({
 
         {/* Map Section */}
         <Box sx={{ flex: 1, position: 'relative', bgcolor: '#1e293b' }}>
-          {isLoaded && apiKey ? (
+          {isLoaded && GOOGLE_MAPS_API_KEY ? (
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
               center={driverCoord}
@@ -262,8 +265,8 @@ export default function DriverDeliveryNavigation({
               alignItems: 'center', justifyContent: 'center',
               color: '#ffffff',
             }}>
-              <MyLocationIcon sx={{ fontSize: 56, color: BRAND, mb: 1.5, animation: 'pulse 1.5s infinite' }} />
-              <Typography variant="h6" fontWeight={700}>
+              <MyLocationIcon sx={{ fontSize: 56, color: '#4ade80', mb: 1.5, animation: 'pulse 1.5s infinite' }} />
+              <Typography variant="h6" fontWeight={700} color="#ffffff">
                 Live Navigation Active
               </Typography>
               <Typography variant="body2" sx={{ color: '#94a3b8' }}>
@@ -278,7 +281,9 @@ export default function DriverDeliveryNavigation({
           elevation={8}
           sx={{
             p: 3,
-            bgcolor: '#ffffff',
+            bgcolor: 'background.paper',
+            borderTop: '1px solid',
+            borderColor: 'divider',
             borderTopLeftRadius: '28px',
             borderTopRightRadius: '28px',
           }}
@@ -287,7 +292,7 @@ export default function DriverDeliveryNavigation({
             {/* Customer & Call / Chat Bar */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Avatar sx={{ bgcolor: BRAND, width: 48, height: 48 }}>
+                <Avatar sx={{ bgcolor: BRAND, color: '#fff', width: 48, height: 48 }}>
                   <HomeIcon />
                 </Avatar>
                 <Box>
@@ -306,12 +311,12 @@ export default function DriverDeliveryNavigation({
                   startIcon={<ChatBubbleIcon />}
                   onClick={() => setChatOpen(true)}
                   sx={{
-                    borderColor: BRAND,
-                    color: BRAND,
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                    color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
                     borderRadius: '12px',
                     fontWeight: 700,
                     textTransform: 'none',
-                    '&:hover': { bgcolor: '#f0fdf4', borderColor: '#2e6122' },
+                    '&:hover': { bgcolor: 'rgba(57, 119, 42, 0.1)', borderColor: '#2e6122' },
                   }}
                 >
                   Live Chat

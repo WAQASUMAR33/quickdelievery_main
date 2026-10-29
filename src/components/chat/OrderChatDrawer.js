@@ -25,6 +25,7 @@ import { soundAlert } from '@/lib/soundAlert'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 export default function OrderChatDrawer({
   open,
@@ -210,9 +211,9 @@ export default function OrderChatDrawer({
           width: { xs: '100%', sm: 420 },
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: '#f8fafc',
+          bgcolor: 'background.default',
           zIndex: 1500,
-          boxShadow: '-8px 0 32px rgba(0,0,0,0.18)',
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.3)',
         },
       }}
     >
@@ -220,15 +221,16 @@ export default function OrderChatDrawer({
       <Box
         sx={{
           p: 2.5,
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar sx={{ bgcolor: isCustomer ? BRAND : '#1e40af', width: 44, height: 44 }}>
+          <Avatar sx={{ bgcolor: isCustomer ? BRAND : '#1e40af', color: '#fff', width: 44, height: 44 }}>
             {isCustomer ? <TwoWheelerIcon /> : <PersonIcon />}
           </Avatar>
           <Box>
@@ -249,9 +251,9 @@ export default function OrderChatDrawer({
                 component="a"
                 href={`tel:${recipientUser.phone}`}
                 sx={{
-                  bgcolor: '#f0fdf4',
-                  color: BRAND,
-                  '&:hover': { bgcolor: '#dcfce7' },
+                  bgcolor: 'rgba(34, 197, 94, 0.14)',
+                  color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                  '&:hover': { bgcolor: 'rgba(34, 197, 94, 0.25)' },
                 }}
               >
                 <PhoneIcon fontSize="small" />
@@ -281,9 +283,9 @@ export default function OrderChatDrawer({
           </Box>
         ) : messages.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
-            <ChatBubbleOutlineIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1.5 }} />
-            <Typography variant="body2" fontWeight={600}>No messages yet</Typography>
-            <Typography variant="caption">Send a quick update or question below.</Typography>
+            <ChatBubbleOutlineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
+            <Typography variant="body2" fontWeight={600} color="text.primary">No messages yet</Typography>
+            <Typography variant="caption" color="text.secondary">Send a quick update or question below.</Typography>
           </Box>
         ) : (
           messages.map((msg, idx) => {
@@ -304,19 +306,20 @@ export default function OrderChatDrawer({
                     px: 2,
                     py: 1.25,
                     borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    bgcolor: isMe ? BRAND : '#ffffff',
-                    color: isMe ? '#ffffff' : '#1e293b',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    border: isMe ? 'none' : '1px solid #e2e8f0',
+                    bgcolor: isMe ? BRAND : 'background.paper',
+                    color: isMe ? '#ffffff' : 'text.primary',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    border: isMe ? 'none' : '1px solid',
+                    borderColor: 'divider',
                   }}
                 >
-                  <Typography variant="body2" sx={{ wordBreak: 'break-word', fontSize: 14 }}>
+                  <Typography variant="body2" sx={{ wordBreak: 'break-word', fontSize: 14, color: 'inherit' }}>
                     {msg.message}
                   </Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.4, px: 0.5 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, color: '#94a3b8' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
                     {formatTime(msg.createdAt)}
                   </Typography>
                   {isMe && (
@@ -331,7 +334,7 @@ export default function OrderChatDrawer({
       </Box>
 
       {/* Quick Action Chips */}
-      <Box sx={{ px: 2, py: 1, bgcolor: '#ffffff', borderTop: '1px solid #f1f5f9', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+      <Box sx={{ px: 2, py: 1, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <Stack direction="row" spacing={1}>
           {presets.map((preset, i) => (
             <Chip
@@ -340,11 +343,17 @@ export default function OrderChatDrawer({
               size="small"
               onClick={() => handleSendMessage(preset)}
               sx={{
-                bgcolor: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                bgcolor: 'grey.50',
+                color: 'text.primary',
+                border: '1px solid',
+                borderColor: 'divider',
                 fontSize: 12,
                 cursor: 'pointer',
-                '&:hover': { bgcolor: '#f0fdf4', borderColor: BRAND, color: BRAND },
+                '&:hover': {
+                  bgcolor: 'rgba(57, 119, 42, 0.12)',
+                  borderColor: BRAND,
+                  color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                },
               }}
             />
           ))}
@@ -360,8 +369,9 @@ export default function OrderChatDrawer({
         }}
         sx={{
           p: 2,
-          bgcolor: '#ffffff',
-          borderTop: '1px solid #e2e8f0',
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
           gap: 1,
@@ -376,7 +386,7 @@ export default function OrderChatDrawer({
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: '24px',
-              bgcolor: '#f8fafc',
+              bgcolor: 'grey.50',
               '&:hover fieldset': { borderColor: BRAND },
               '&.Mui-focused fieldset': { borderColor: BRAND },
             },
@@ -390,7 +400,7 @@ export default function OrderChatDrawer({
             color: '#fff',
             p: 1.25,
             '&:hover': { bgcolor: '#2e6122' },
-            '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' },
+            '&.Mui-disabled': { bgcolor: 'action.disabledBackground', color: 'text.disabled' },
           }}
         >
           {sending ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : <SendIcon fontSize="small" />}

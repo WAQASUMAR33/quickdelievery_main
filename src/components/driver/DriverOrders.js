@@ -46,13 +46,14 @@ import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 const STATUS_CONFIG = {
-  PENDING:    { label: 'Pending',      bg: '#fff3cd', color: '#856404', icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 16 }} /> },
-  PROCESSING: { label: 'Processing',  bg: '#cce5ff', color: '#004085', icon: <Inventory2OutlinedIcon sx={{ fontSize: 16 }} /> },
-  SHIPPED:    { label: 'Out for Delivery', bg: '#e2d9f3', color: '#4a1a8d', icon: <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} /> },
-  DELIVERED:  { label: 'Delivered',    bg: '#d4edda', color: '#155724', icon: <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} /> },
-  CANCELLED:  { label: 'Cancelled',   bg: '#f8d7da', color: '#721c24', icon: <CancelOutlinedIcon sx={{ fontSize: 16 }} /> },
+  PENDING:    { label: 'Pending',          bg: '#fff3cd', color: '#856404', darkBg: 'rgba(245, 158, 11, 0.2)', darkColor: '#fbbf24', icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 16 }} /> },
+  PROCESSING: { label: 'Processing',       bg: '#cce5ff', color: '#004085', darkBg: 'rgba(59, 130, 246, 0.2)', darkColor: '#60a5fa', icon: <Inventory2OutlinedIcon sx={{ fontSize: 16 }} /> },
+  SHIPPED:    { label: 'Out for Delivery', bg: '#e2d9f3', color: '#4a1a8d', darkBg: 'rgba(139, 92, 246, 0.2)', darkColor: '#a78bfa', icon: <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} /> },
+  DELIVERED:  { label: 'Delivered',        bg: '#d4edda', color: '#155724', darkBg: 'rgba(34, 197, 94, 0.2)',  darkColor: '#4ade80', icon: <CheckCircleOutlinedIcon sx={{ fontSize: 16 }} /> },
+  CANCELLED:  { label: 'Cancelled',        bg: '#f8d7da', color: '#721c24', darkBg: 'rgba(239, 68, 68, 0.2)',  darkColor: '#f87171', icon: <CancelOutlinedIcon sx={{ fontSize: 16 }} /> },
 }
 
 const STATUS_FLOW = {
@@ -63,13 +64,22 @@ const formatPrice = (v) =>
   `Rs. ${Number(parseFloat(v) || 0).toLocaleString()}`
 
 function StatusChip({ status }) {
-  const cfg = STATUS_CONFIG[status] || { label: status, bg: '#f5f5f5', color: '#555' }
+  const cfg = STATUS_CONFIG[status] || { label: status, bg: '#f5f5f5', color: '#555', darkBg: 'rgba(255,255,255,0.1)', darkColor: '#cbd5e1' }
   return (
     <Chip
       icon={cfg.icon}
       label={cfg.label}
       size="small"
-      sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, borderRadius: 0, fontSize: 11, '& .MuiChip-icon': { color: cfg.color } }}
+      sx={{
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? cfg.darkBg : cfg.bg,
+        color: (theme) => theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color,
+        fontWeight: 700,
+        borderRadius: 0,
+        fontSize: 11,
+        '& .MuiChip-icon': {
+          color: (theme) => theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color,
+        },
+      }}
     />
   )
 }
@@ -230,14 +240,14 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
         {[
           { label: 'Active Assignments',  value: stats.active,                       color: '#3b82f6', icon: <DeliveryDiningOutlinedIcon /> },
           { label: 'Delivered Today',     value: stats.delivered,                    color: '#10b981', icon: <CheckCircleOutlinedIcon /> },
-          { label: 'Driver Earnings',     value: formatPrice(stats.earnings || 0),   color: BRAND,     icon: <AttachMoneyOutlinedIcon /> },
+          { label: 'Driver Earnings',     value: formatPrice(stats.earnings || 0),   color: '#22c55e', icon: <AttachMoneyOutlinedIcon /> },
           { label: 'On-Time Score',       value: stats.onTime,                       color: '#f59e0b', icon: <StarIcon /> },
         ].map(({ label, value, color, icon }) => (
           <Card key={label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box>
-                  <Typography variant="caption" color="text.disabled" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
                     {label}
                   </Typography>
                   <Typography variant="h5" fontWeight={800} sx={{ color, mt: 0.5 }}>
@@ -281,11 +291,11 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
       {/* ── Empty State ── */}
       {orders.length === 0 && (
         <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 6, textAlign: 'center' }}>
-          <ShoppingBagOutlinedIcon sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+          <ShoppingBagOutlinedIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" color="text.secondary" fontWeight={600}>
             {historyMode ? 'No delivery history yet' : 'No active deliveries'}
           </Typography>
-          <Typography variant="body2" color="text.disabled" mt={1}>
+          <Typography variant="body2" color="text.secondary" mt={1}>
             {historyMode 
               ? 'Completed and cancelled deliveries will appear here.' 
               : poolMode 
@@ -337,18 +347,26 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: 'grey.50' },
+                      '&:hover': { bgcolor: 'action.hover' },
                       flexWrap: 'wrap',
                       gap: 1.5,
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: `${BRAND}15`, color: BRAND, width: 44, height: 44, fontWeight: 800, fontSize: 14, borderRadius: 0 }}>
+                      <Avatar sx={{
+                        bgcolor: 'rgba(34, 197, 94, 0.15)',
+                        color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                        width: 44,
+                        height: 44,
+                        fontWeight: 800,
+                        fontSize: 14,
+                        borderRadius: 0,
+                      }}>
                         #{order.id}
                       </Avatar>
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                          <Typography variant="subtitle1" fontWeight={700}>
+                          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                             Order #{order.id}
                           </Typography>
                           <StatusChip status={order.status} />
@@ -363,10 +381,10 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Typography variant="h6" fontWeight={800} color={BRAND}>
+                      <Typography variant="h6" fontWeight={800} sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }}>
                         {formatPrice(total)}
                       </Typography>
-                      <Typography variant="caption" color="text.disabled" sx={{ fontSize: 18 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 18 }}>
                         {isExpanded ? '▲' : '▼'}
                       </Typography>
                     </Box>
@@ -387,18 +405,23 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 3 }}>
 
                           {/* PICKUP LOCATION */}
-                          <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: '#f0fdf4' }}>
+                          <Box sx={{
+                            p: 2.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(22, 163, 74, 0.08)' : '#f0fdf4'
+                          }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                               <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <StorefrontOutlinedIcon sx={{ fontSize: 16, color: 'white' }} />
                               </Box>
-                              <Typography variant="subtitle2" fontWeight={700} color="#15803d">
+                              <Typography variant="subtitle2" fontWeight={700} sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#4ade80' : '#15803d' }}>
                                 PICK-UP LOCATION
                               </Typography>
                             </Box>
                             {vendors.length > 0 ? vendors.map((v) => (
                               <Box key={v.uid} sx={{ mb: 1 }}>
-                                <Typography variant="body2" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                   <StorefrontOutlinedIcon sx={{ fontSize: 15, color: '#16a34a' }} />
                                   {v.username || 'Restaurant / Store'}
                                 </Typography>
@@ -429,17 +452,22 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                           </Box>
 
                           {/* DROP-OFF LOCATION */}
-                          <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: '#fef2f2' }}>
+                          <Box sx={{
+                            p: 2.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2'
+                          }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                               <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <LocationOnOutlinedIcon sx={{ fontSize: 16, color: 'white' }} />
                               </Box>
-                              <Typography variant="subtitle2" fontWeight={700} color={BRAND}>
+                              <Typography variant="subtitle2" fontWeight={700} sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }}>
                                 DROP-OFF LOCATION
                               </Typography>
                             </Box>
-                            <Typography variant="body2" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <PersonOutlinedIcon sx={{ fontSize: 15, color: BRAND }} />
+                            <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <PersonOutlinedIcon sx={{ fontSize: 15, color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }} />
                               {customer?.username || 'Customer'}
                             </Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
@@ -468,12 +496,20 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
 
                         {/* ── Order Items ── */}
                         <Box sx={{ mb: 3 }}>
-                          <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 2 }}>
+                          <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: (theme) => `4px solid ${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND}`, pl: 1.5, mb: 2 }}>
                             Order Items
                           </Typography>
                           <Box sx={{ border: '1px solid', borderColor: 'divider' }}>
                             {/* Header */}
-                            <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 1, p: 1.5, bgcolor: 'grey.100', borderBottom: '1px solid', borderColor: 'divider' }}>
+                            <Box sx={{
+                              display: 'grid',
+                              gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                              gap: 1,
+                              p: 1.5,
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'grey.100',
+                              borderBottom: '1px solid',
+                              borderColor: 'divider'
+                            }}>
                               <Typography variant="caption" fontWeight={700} color="text.secondary">ITEM</Typography>
                               <Typography variant="caption" fontWeight={700} color="text.secondary" textAlign="center">QTY</Typography>
                               <Typography variant="caption" fontWeight={700} color="text.secondary" textAlign="right">UNIT PRICE</Typography>
@@ -491,34 +527,34 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                   alignItems: 'center',
                                   borderBottom: idx < items.length - 1 ? '1px solid' : 'none',
                                   borderColor: 'divider',
-                                  '&:hover': { bgcolor: 'grey.50' },
+                                  '&:hover': { bgcolor: 'action.hover' },
                                 }}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <TakeoutDiningOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                                   <Box>
-                                    <Typography variant="body2" fontWeight={600} noWrap>
+                                    <Typography variant="body2" fontWeight={600} color="text.primary" noWrap>
                                       {item.product?.proName || `Product #${item.productId}`}
                                     </Typography>
                                     {item.product?.category?.name && (
-                                      <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
+                                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                                         {item.product.category.name}
                                       </Typography>
                                     )}
                                     {item.variationJson && (
-                                      <Typography variant="caption" sx={{ color: BRAND, fontWeight: 600, display: 'block' }}>
+                                      <Typography variant="caption" sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND, fontWeight: 600, display: 'block' }}>
                                         Var: {JSON.parse(item.variationJson).name}
                                       </Typography>
                                     )}
                                   </Box>
                                 </Box>
-                                <Typography variant="body2" fontWeight={600} textAlign="center">
+                                <Typography variant="body2" fontWeight={600} color="text.primary" textAlign="center">
                                   ×{item.quantity}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary" textAlign="right">
                                   {formatPrice(item.price)}
                                 </Typography>
-                                <Typography variant="body2" fontWeight={700} textAlign="right">
+                                <Typography variant="body2" fontWeight={700} color="text.primary" textAlign="right">
                                   {formatPrice(parseFloat(item.price) * item.quantity)}
                                 </Typography>
                               </Box>
@@ -528,14 +564,19 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
 
                         {/* ── Pricing Breakdown ── */}
                         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 3 }}>
-                          <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
-                            <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 2 }}>
+                          <Box sx={{
+                            p: 2.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'grey.50'
+                          }}>
+                            <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: (theme) => `4px solid ${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND}`, pl: 1.5, mb: 2 }}>
                               Price Breakdown
                             </Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" color="text.secondary">Subtotal ({items.length} items)</Typography>
-                                <Typography variant="body2" fontWeight={600}>{formatPrice(subtotal)}</Typography>
+                                <Typography variant="body2" fontWeight={600} color="text.primary">{formatPrice(subtotal)}</Typography>
                               </Box>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" color="text.secondary">Service / Delivery Fee</Typography>
@@ -543,13 +584,18 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                               </Box>
                               <Divider sx={{ my: 0.5 }} />
                               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="subtitle2" fontWeight={800}>Order Total</Typography>
-                                <Typography variant="subtitle2" fontWeight={800} color={BRAND}>{formatPrice(total)}</Typography>
+                                <Typography variant="subtitle2" fontWeight={800} color="text.primary">Order Total</Typography>
+                                <Typography variant="subtitle2" fontWeight={800} sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }}>{formatPrice(total)}</Typography>
                               </Box>
                             </Box>
                           </Box>
 
-                          <Box sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                          <Box sx={{
+                            p: 2.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'grey.50'
+                          }}>
                             <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: '4px solid #10b981', pl: 1.5, mb: 2 }}>
                               Payment & Delivery Info
                             </Typography>
@@ -559,7 +605,13 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                 <Chip
                                   label={order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Cash on Delivery' : order.paymentMethod || 'COD'}
                                   size="small"
-                                  sx={{ borderRadius: 0, fontSize: 11, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af' }}
+                                  sx={{
+                                    borderRadius: 0,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe',
+                                    color: (theme) => theme.palette.mode === 'dark' ? '#60a5fa' : '#1e40af',
+                                  }}
                                 />
                               </Box>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -571,7 +623,7 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                               {order.trackingNumber && (
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <Typography variant="body2" color="text.secondary">Tracking #</Typography>
-                                  <Typography variant="body2" fontWeight={600} sx={{ fontFamily: 'monospace' }}>
+                                  <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ fontFamily: 'monospace' }}>
                                     {order.trackingNumber}
                                   </Typography>
                                 </Box>
@@ -579,7 +631,7 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                               {order.estimatedDelivery && (
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <Typography variant="body2" color="text.secondary">Est. Delivery</Typography>
-                                  <Typography variant="body2" fontWeight={600}>
+                                  <Typography variant="body2" fontWeight={600} color="text.primary">
                                     {new Date(order.estimatedDelivery).toLocaleString()}
                                   </Typography>
                                 </Box>
@@ -590,7 +642,7 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
 
                         {/* ── Delivery Status Progress ── */}
                         <Box sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5, mb: 2 }}>
+                          <Typography variant="subtitle2" fontWeight={700} sx={{ borderLeft: (theme) => `4px solid ${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND}`, pl: 1.5, mb: 2 }}>
                             Delivery Progress
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
@@ -609,9 +661,13 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                     <Box sx={{
                                       width: 32, height: 32, borderRadius: '50%',
                                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                      bgcolor: isDone ? cfg.bg : 'grey.200',
-                                      color: isDone ? cfg.color : 'grey.400',
-                                      border: isCurrent ? `2px solid ${cfg.color}` : 'none',
+                                      bgcolor: (theme) => isDone
+                                        ? (theme.palette.mode === 'dark' ? cfg.darkBg : cfg.bg)
+                                        : (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'grey.200'),
+                                      color: (theme) => isDone
+                                        ? (theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color)
+                                        : 'text.disabled',
+                                      border: (theme) => isCurrent ? `2px solid ${theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color}` : 'none',
                                       transition: 'all 0.3s',
                                     }}>
                                       {cfg.icon}
@@ -623,7 +679,9 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                   {idx < arr.length - 1 && (
                                     <Box sx={{
                                       flex: 1, height: 3, mx: 0.5, mt: -1.5,
-                                      bgcolor: stepOrder < currentStepOrder ? '#10b981' : 'grey.200',
+                                      bgcolor: (theme) => stepOrder < currentStepOrder
+                                        ? '#10b981'
+                                        : (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200'),
                                       transition: 'background-color 0.3s',
                                     }} />
                                   )}
@@ -648,7 +706,7 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                   borderColor: '#3b82f6',
                                   color: '#3b82f6',
                                   fontWeight: 700,
-                                  '&:hover': { borderColor: '#2563eb', bgcolor: '#eff6ff' },
+                                  '&:hover': { borderColor: '#2563eb', bgcolor: 'rgba(59, 130, 246, 0.08)' },
                                 }}
                               >
                                 Live Chat
@@ -684,8 +742,9 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                 sx={{
                                   borderRadius: 0,
                                   bgcolor: BRAND,
+                                  color: 'white',
                                   fontWeight: 700,
-                                  '&:hover': { bgcolor: BRAND, filter: 'brightness(0.9)' },
+                                  '&:hover': { bgcolor: '#2e6022' },
                                 }}
                               >
                                 Accept Order
@@ -700,6 +759,7 @@ export default function DriverOrders({ historyMode = false, poolMode = false }) 
                                 sx={{
                                   borderRadius: 0,
                                   bgcolor: flow.color,
+                                  color: 'white',
                                   fontWeight: 700,
                                   '&:hover': { bgcolor: flow.color, filter: 'brightness(0.9)' },
                                 }}

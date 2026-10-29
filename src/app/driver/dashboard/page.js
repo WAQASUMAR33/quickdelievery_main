@@ -20,6 +20,7 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import toast from 'react-hot-toast'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 export default function DriverDashboardPage() {
   const { user, userData, loading } = useAuth()
@@ -74,7 +75,7 @@ export default function DriverDashboardPage() {
 
   if (loading || !user || !userData || !['ADMIN', 'SUPER_ADMIN', 'DRIVER'].includes(userData?.role)) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={36} sx={{ color: BRAND }} />
         <Typography color="text.secondary">Loading Driver Dashboard…</Typography>
       </Box>
@@ -88,13 +89,17 @@ export default function DriverDashboardPage() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <div>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-              <Typography variant="h5" fontWeight={700}>Driver Dispatch Command Center</Typography>
+              <Typography variant="h5" fontWeight={700} color="text.primary">Driver Dispatch Command Center</Typography>
               <Chip
                 label={isOnDuty ? 'ON DUTY' : 'OFF DUTY'}
                 size="small"
                 sx={{
-                  bgcolor: isOnDuty ? '#d4edda' : '#f8d7da',
-                  color: isOnDuty ? '#155724' : '#721c24',
+                  bgcolor: (theme) => theme.palette.mode === 'dark'
+                    ? (isOnDuty ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)')
+                    : (isOnDuty ? '#d4edda' : '#f8d7da'),
+                  color: (theme) => theme.palette.mode === 'dark'
+                    ? (isOnDuty ? '#4ade80' : '#f87171')
+                    : (isOnDuty ? '#155724' : '#721c24'),
                   fontWeight: 700,
                   fontSize: 11,
                 }}
@@ -118,7 +123,7 @@ export default function DriverDashboardPage() {
                 />
               }
               label={
-                <Typography variant="body2" fontWeight={600}>
+                <Typography variant="body2" fontWeight={600} color="text.primary">
                   {isOnDuty ? 'Go Offline' : 'Go Online'}
                 </Typography>
               }
@@ -133,9 +138,13 @@ export default function DriverDashboardPage() {
               mb: 3,
               p: 2,
               borderRadius: 2,
-              bgcolor: walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#f8d7da' : '#e8f4fd',
+              bgcolor: (theme) => theme.palette.mode === 'dark'
+                ? (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? 'rgba(239, 68, 68, 0.14)' : 'rgba(59, 130, 246, 0.12)')
+                : (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#f8d7da' : '#e8f4fd'),
               border: 1,
-              borderColor: walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#f5c6cb' : '#b8daff',
+              borderColor: (theme) => theme.palette.mode === 'dark'
+                ? (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.25)')
+                : (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#f5c6cb' : '#b8daff'),
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -144,14 +153,34 @@ export default function DriverDashboardPage() {
             }}
           >
             <div>
-              <Typography variant="subtitle2" fontWeight={700} color={walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#721c24' : '#004085'}>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                sx={{
+                  color: (theme) => theme.palette.mode === 'dark'
+                    ? (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#f87171' : '#60a5fa')
+                    : (walletStats.codWallet.status === 'LIMIT_EXCEEDED' ? '#721c24' : '#004085')
+                }}
+              >
                 Floating Cash in Hand (COD): Rs. {walletStats.codWallet.cashInHand.toLocaleString()}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Remittance Limit: Rs. {walletStats.codWallet.remittanceLimit.toLocaleString()} • Remaining Capacity: Rs. {walletStats.codWallet.remainingCapacity.toLocaleString()}
               </Typography>
             </div>
-            <Typography variant="caption" fontWeight={600} sx={{ bgcolor: 'white', px: 1.5, py: 0.5, borderRadius: 1 }}>
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              sx={{
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'white',
+                color: 'text.primary',
+                border: '1px solid',
+                borderColor: 'divider',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1,
+              }}
+            >
               Today's Completed Trips: {walletStats.earnings.todayTrips}
             </Typography>
           </Box>
@@ -162,16 +191,23 @@ export default function DriverDashboardPage() {
           <Tabs 
             value={tabValue} 
             onChange={(e, val) => setTabValue(val)}
-            TabIndicatorProps={{ style: { backgroundColor: BRAND } }}
             sx={{
-              '& .MuiTab-root': { fontWeight: 600 },
-              '& .Mui-selected': { color: `${BRAND} !important` }
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                color: 'text.secondary',
+                '&.Mui-selected': {
+                  color: (theme) => `${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND} !important`,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              },
             }}
           >
             <Tab label="Available Orders (Pool)" />
             <Tab label="My Active Trips" />
             <Tab label="⚡ Smart Batched Trips" />
-            <Tab label="🚖 InDrive Taxi & Luggage" />
+            <Tab label="🚖 RapidRide Taxi & Luggage" />
           </Tabs>
         </Box>
 

@@ -65,6 +65,7 @@ import ThumbDownOutlinedIcon    from '@mui/icons-material/ThumbDownOutlined'
 import VendorBusinessProfile    from '@/components/vendor/VendorBusinessProfile'
 
 const BRAND = '#39772A'
+const BRAND_DARK = '#4ade80'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -86,7 +87,7 @@ function StatCard({ label, value, sub, Icon, color }) {
         borderRadius: 0,
         borderTop: `3px solid ${color}`,
         height: '100%',
-        bgcolor: '#ffffff',
+        bgcolor: 'background.paper',
       }}
     >
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
@@ -94,7 +95,7 @@ function StatCard({ label, value, sub, Icon, color }) {
           <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
             {label}
           </Typography>
-          <Typography variant="h4" fontWeight={800} color="#111827" sx={{ my: 0.5, lineHeight: 1 }}>
+          <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ my: 0.5, lineHeight: 1 }}>
             {value}
           </Typography>
           <Typography variant="caption" color="text.secondary">{sub}</Typography>
@@ -122,13 +123,22 @@ function ProfileField({ label, value }) {
 // ── Status chip helper ────────────────────────────────────────────────────────
 function BusinessStatusChip({ status }) {
   const map = {
-    APPROVED: { label: 'Approved', bg: '#dcfce7', color: '#16a34a' },
-    REJECTED: { label: 'Rejected', bg: '#fee2e2', color: '#dc2626' },
-    PENDING:  { label: 'Pending',  bg: '#fef9c3', color: '#854d0e' },
+    APPROVED: { label: 'Approved', bg: '#dcfce7', color: '#16a34a', darkBg: 'rgba(34,197,94,0.18)',  darkColor: '#4ade80' },
+    REJECTED: { label: 'Rejected', bg: '#fee2e2', color: '#dc2626', darkBg: 'rgba(239,68,68,0.18)',  darkColor: '#f87171' },
+    PENDING:  { label: 'Pending',  bg: '#fef9c3', color: '#854d0e', darkBg: 'rgba(245,158,11,0.18)', darkColor: '#fbbf24' },
   }
   const s = map[status] || map.PENDING
   return (
-    <Chip label={s.label} size="small" sx={{ bgcolor: s.bg, color: s.color, fontWeight: 700, fontSize: 12 }} />
+    <Chip
+      label={s.label}
+      size="small"
+      sx={{
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? s.darkBg : s.bg,
+        color: (theme) => theme.palette.mode === 'dark' ? s.darkColor : s.color,
+        fontWeight: 700,
+        fontSize: 12,
+      }}
+    />
   )
 }
 
@@ -351,7 +361,7 @@ export default function VendorManagement() {
       {/* ── Header ── */}
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={3} flexWrap="wrap" gap={2}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          <StorefrontOutlinedIcon sx={{ color: BRAND, fontSize: 30 }} />
+          <StorefrontOutlinedIcon sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND, fontSize: 30 }} />
           <Box>
             <Typography variant="h5" fontWeight={700} lineHeight={1.2}>Vendor Management</Typography>
             <Typography variant="body2" color="text.secondary">Manage all vendors on the platform</Typography>
@@ -401,7 +411,7 @@ export default function VendorManagement() {
           <Chip
             label={`${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
             size="small"
-            sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 700, borderRadius: 0, px: 0.5 }}
+            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(74, 222, 128, 0.15)' : `${BRAND}15`, color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND, fontWeight: 700, borderRadius: 0, px: 0.5 }}
           />
         </Stack>
       </Paper>
@@ -453,8 +463,8 @@ export default function VendorManagement() {
                   {/* Verification */}
                   <TableCell sx={{ py: 1.5 }}>
                     {vendor.emailVerification
-                      ? <Chip label="Verified" size="small" icon={<VerifiedUserOutlinedIcon />} sx={{ bgcolor: '#dcfce7', color: '#16a34a', fontWeight: 600, '& .MuiChip-icon': { color: '#16a34a', fontSize: 14 } }} />
-                      : <Chip label="Pending"  size="small" icon={<HourglassEmptyIcon />}       sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600, '& .MuiChip-icon': { color: '#854d0e', fontSize: 14 } }} />
+                      ? <Chip label="Verified" size="small" icon={<VerifiedUserOutlinedIcon />} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(34,197,94,0.18)' : '#dcfce7', color: (theme) => theme.palette.mode === 'dark' ? '#4ade80' : '#16a34a', fontWeight: 600, '& .MuiChip-icon': { color: 'inherit', fontSize: 14 } }} />
+                      : <Chip label="Pending"  size="small" icon={<HourglassEmptyIcon />}       sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(245,158,11,0.18)' : '#fef9c3', color: (theme) => theme.palette.mode === 'dark' ? '#fbbf24' : '#854d0e', fontWeight: 600, '& .MuiChip-icon': { color: 'inherit', fontSize: 14 } }} />
                     }
                   </TableCell>
 
@@ -527,8 +537,8 @@ export default function VendorManagement() {
                   <Typography variant="caption" color="text.secondary">UID: {viewTarget.uid}</Typography>
                 </Box>
                 {viewTarget.emailVerification
-                  ? <Chip label="Verified" size="small" sx={{ bgcolor: '#dcfce7', color: '#16a34a', fontWeight: 600, borderRadius: 0 }} />
-                  : <Chip label="Pending"  size="small" sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600, borderRadius: 0 }} />
+                  ? <Chip label="Verified" size="small" sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(34,197,94,0.18)' : '#dcfce7', color: (theme) => theme.palette.mode === 'dark' ? '#4ade80' : '#16a34a', fontWeight: 600, borderRadius: 0 }} />
+                  : <Chip label="Pending"  size="small" sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(245,158,11,0.18)' : '#fef9c3', color: (theme) => theme.palette.mode === 'dark' ? '#fbbf24' : '#854d0e', fontWeight: 600, borderRadius: 0 }} />
                 }
               </Stack>
               <Divider />
@@ -638,7 +648,7 @@ export default function VendorManagement() {
           </Stack>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ p: 0, flex: '1 1 auto', overflow: 'auto', minHeight: 0, bgcolor: '#f8fafc' }}>
+        <DialogContent dividers sx={{ p: 0, flex: '1 1 auto', overflow: 'auto', minHeight: 0, bgcolor: 'background.default' }}>
           {/* Loading */}
           {businessLoading && (
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={10} gap={2}>
@@ -877,7 +887,7 @@ function VendorAdminProfileView({ vendor, business, onVerify, verifying }) {
             <Typography variant="subtitle2" fontWeight={700} mb={1.5}>Restaurant / Business Gallery Photos</Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
               {restaurantImages.map((url, idx) => (
-                <Box key={idx} component="img" src={url} alt={`Gallery ${idx + 1}`} sx={{ width: '100%', height: 120, objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+                <Box key={idx} component="img" src={url} alt={`Gallery ${idx + 1}`} sx={{ width: '100%', height: 120, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }} />
               ))}
             </Box>
           </>

@@ -56,7 +56,13 @@ const ADMIN_ITEMS = [
   { id: 'dashboard',      label: 'Dashboard',         icon: DashboardOutlinedIcon,     path: '/admin/dashboard' },
   { id: 'vendors',        label: 'Vendors',            icon: StorefrontOutlinedIcon,    path: '/admin/dashboard/vendors' },
   { id: 'customers',      label: 'Customers',          icon: PeopleOutlinedIcon,        path: '/admin/dashboard/customers' },
-  { id: 'drivers',        label: 'Drivers',            icon: LocalShippingOutlinedIcon, path: '/admin/dashboard/drivers' },
+  {
+    id: 'drivers', label: 'Drivers', icon: LocalShippingOutlinedIcon,
+    children: [
+      { id: 'all-drivers',     label: 'Registered Drivers',      path: '/admin/dashboard/drivers' },
+      { id: 'driver-settings', label: 'Fare & Baggage Settings', path: '/admin/dashboard/drivers/settings' },
+    ],
+  },
   { id: 'payments',       label: 'Payments',           icon: CreditCardOutlinedIcon,    path: '/admin/dashboard/payments' },
   {
     id: 'orders', label: 'Orders', icon: ShoppingBagOutlinedIcon,
@@ -161,10 +167,13 @@ const SidebarContent = () => {
     catch (e) { console.error('Logout error:', e) }
   }
 
-  // Auto-expand restaurant menu if currently on restaurant route
+  // Auto-expand restaurant or drivers menu if currently on matching route
   useEffect(() => {
     if (pathname?.startsWith('/vendor/dashboard/restaurant')) {
       setExpanded(p => ({ ...p, 'restaurant-pos': true }))
+    }
+    if (pathname?.startsWith('/admin/dashboard/drivers')) {
+      setExpanded(p => ({ ...p, drivers: true }))
     }
   }, [pathname])
 
@@ -182,6 +191,7 @@ const SidebarContent = () => {
     }
 
     if (p === '/admin/dashboard') return cur === '/admin/dashboard'
+    if (p === '/admin/dashboard/drivers') return cur === '/admin/dashboard/drivers'
     if (p === '/vendor/dashboard') return cur === '/vendor/dashboard'
     if (p === '/vendor/dashboard/restaurant') return cur === '/vendor/dashboard/restaurant'
     return cur === p || cur.startsWith(`${p}/`)

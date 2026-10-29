@@ -31,6 +31,7 @@ import TextField        from '@mui/material/TextField'
 import Tooltip          from '@mui/material/Tooltip'
 import Typography       from '@mui/material/Typography'
 import Avatar           from '@mui/material/Avatar'
+import { useTheme }     from '@mui/material/styles'
 
 import AccessTimeIcon             from '@mui/icons-material/AccessTime'
 import CancelOutlinedIcon         from '@mui/icons-material/CancelOutlined'
@@ -60,6 +61,7 @@ import { formatPrice, COUNTRY_CURRENCIES, getActiveCountry, setActiveCountry } f
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
 const BRAND = '#39772A'
+const BRAND_DARK = '#4ade80'
 
 // Status Design Configurations
 const STATUS_CONFIG = {
@@ -69,6 +71,9 @@ const STATUS_CONFIG = {
     bg: '#FEF3C7',
     color: '#92400E',
     border: '#FDE68A',
+    darkBg: 'rgba(245, 158, 11, 0.16)',
+    darkColor: '#FBBF24',
+    darkBorder: 'rgba(251, 191, 36, 0.35)',
     dot: '#F59E0B',
     icon: <HourglassEmptyIcon sx={{ fontSize: 16 }} />
   },
@@ -78,6 +83,9 @@ const STATUS_CONFIG = {
     bg: '#EFF6FF',
     color: '#1E40AF',
     border: '#BFDBFE',
+    darkBg: 'rgba(59, 130, 246, 0.16)',
+    darkColor: '#60A5FA',
+    darkBorder: 'rgba(96, 165, 250, 0.35)',
     dot: '#3B82F6',
     icon: <InventoryIcon sx={{ fontSize: 16 }} />
   },
@@ -87,6 +95,9 @@ const STATUS_CONFIG = {
     bg: '#F5F3FF',
     color: '#5B21B6',
     border: '#DDD6FE',
+    darkBg: 'rgba(139, 92, 246, 0.18)',
+    darkColor: '#C4B5FD',
+    darkBorder: 'rgba(196, 181, 253, 0.35)',
     dot: '#8B5CF6',
     icon: <LocalShippingIcon sx={{ fontSize: 16 }} />
   },
@@ -96,6 +107,9 @@ const STATUS_CONFIG = {
     bg: '#ECFDF5',
     color: '#065F46',
     border: '#A7F3D0',
+    darkBg: 'rgba(16, 185, 129, 0.16)',
+    darkColor: '#34D399',
+    darkBorder: 'rgba(52, 211, 153, 0.35)',
     dot: '#10B981',
     icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
   },
@@ -105,18 +119,26 @@ const STATUS_CONFIG = {
     bg: '#FEF2F2',
     color: '#991B1B',
     border: '#FECACA',
+    darkBg: 'rgba(239, 68, 68, 0.16)',
+    darkColor: '#F87171',
+    darkBorder: 'rgba(248, 113, 113, 0.35)',
     dot: '#EF4444',
     icon: <CancelOutlinedIcon sx={{ fontSize: 16 }} />
   },
 }
 
 function StatusBadge({ status, pulse = false }) {
+  const muiTheme = useTheme()
+  const isDark = muiTheme.palette.mode === 'dark'
   const cfg = STATUS_CONFIG[status] || {
     label: status,
     shortLabel: status,
     bg: '#F3F4F6',
     color: '#374151',
     border: '#E5E7EB',
+    darkBg: 'rgba(148, 163, 184, 0.16)',
+    darkColor: '#CBD5E1',
+    darkBorder: 'rgba(148, 163, 184, 0.3)',
     dot: '#9CA3AF'
   }
 
@@ -131,9 +153,9 @@ function StatusBadge({ status, pulse = false }) {
         px: 1.25,
         py: 0.45,
         borderRadius: '999px',
-        bgcolor: cfg.bg,
-        color: cfg.color,
-        border: `1px solid ${cfg.border}`,
+        bgcolor: isDark ? cfg.darkBg : cfg.bg,
+        color: isDark ? cfg.darkColor : cfg.color,
+        border: `1px solid ${isDark ? cfg.darkBorder : cfg.border}`,
         fontSize: '0.75rem',
         fontWeight: 700,
         letterSpacing: '0.01em',
@@ -230,12 +252,13 @@ function ProductImageItem({ src, name, size = 42, sx = {} }) {
           width: size,
           height: size,
           borderRadius: '8px',
-          bgcolor: '#f1f5f9',
-          color: '#94a3b8',
+          bgcolor: 'grey.100',
+          color: 'text.secondary',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: '1px solid #e2e8f0',
+          border: '1px solid',
+          borderColor: 'divider',
           flexShrink: 0,
           ...sx,
         }}
@@ -256,8 +279,9 @@ function ProductImageItem({ src, name, size = 42, sx = {} }) {
         height: size,
         borderRadius: '8px',
         objectFit: 'cover',
-        border: '1px solid #e2e8f0',
-        bgcolor: '#f8fafc',
+        border: '1px solid',
+        borderColor: 'divider',
+        bgcolor: 'grey.50',
         flexShrink: 0,
         ...sx,
       }}
@@ -267,6 +291,13 @@ function ProductImageItem({ src, name, size = 42, sx = {} }) {
 
 export default function OrderManagement({ defaultStatusFilter = '', vendorId = '' }) {
   const router = useRouter()
+  const muiTheme = useTheme()
+  const isDark = muiTheme.palette.mode === 'dark'
+  const brandAccent = isDark ? BRAND_DARK : BRAND
+  const surfaceBg = isDark ? '#0F172A' : '#FFFFFF'
+  const subtleBg = isDark ? '#131C31' : '#F9FAFB'
+  const pillBg = isDark ? '#1E293B' : '#F3F4F6'
+  const borderCol = isDark ? 'rgba(255, 255, 255, 0.1)' : '#E5E7EB'
 
   const [orders,          setOrders]          = useState([])
   const [loading,         setLoading]         = useState(true)
@@ -476,7 +507,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
       >
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#111827', letterSpacing: '-0.02em', fontSize: { xs: '1.5rem', sm: '1.85rem' } }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.5rem', sm: '1.85rem' } }}>
               Order Management
             </Typography>
             <Box
@@ -487,9 +518,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 px: 1.5,
                 py: 0.4,
                 borderRadius: '999px',
-                bgcolor: '#ECFDF5',
-                border: '1px solid #A7F3D0',
-                color: '#065F46',
+                bgcolor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5',
+                border: isDark ? '1px solid rgba(52, 211, 153, 0.35)' : '1px solid #A7F3D0',
+                color: isDark ? '#34D399' : '#065F46',
                 fontSize: '0.75rem',
                 fontWeight: 700,
               }}
@@ -515,7 +546,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               Live Realtime Sync
             </Box>
           </Box>
-          <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5, fontSize: '0.875rem' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, fontSize: '0.875rem' }}>
             Monitor, dispatch, track deliveries, and broadcast customer mobile notifications in real time.
           </Typography>
         </Box>
@@ -532,11 +563,11 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               }}
               sx={{
                 borderRadius: '12px',
-                bgcolor: '#FFFFFF',
+                bgcolor: surfaceBg,
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E5E7EB' },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: borderCol },
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: BRAND },
               }}
             >
@@ -561,11 +592,11 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.85rem',
-              color: '#374151',
-              borderColor: '#E5E7EB',
-              bgcolor: '#FFFFFF',
+              color: 'text.primary',
+              borderColor: borderCol,
+              bgcolor: surfaceBg,
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: '#F9FAFB' },
+              '&:hover': { borderColor: brandAccent, color: brandAccent, bgcolor: subtleBg },
             }}
           >
             {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -601,8 +632,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               sx={{
                 borderRadius: '16px',
                 border: '1px solid',
-                borderColor: isActive ? stat.color : '#E5E7EB',
-                bgcolor: isActive ? `${stat.color}08` : '#FFFFFF',
+                borderColor: isActive ? stat.color : borderCol,
+                bgcolor: isActive ? `${stat.color}14` : surfaceBg,
                 boxShadow: isActive ? `0 4px 14px ${stat.color}25` : '0 2px 8px rgba(0,0,0,0.04)',
                 cursor: 'pointer',
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -619,7 +650,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     <Typography
                       variant="caption"
                       sx={{
-                        color: '#6B7280',
+                        color: 'text.secondary',
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
@@ -665,10 +696,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
       {/* ── Status Tabs / Segmented Control ── */}
       <Box
         sx={{
-          bgcolor: '#FFFFFF',
+          bgcolor: surfaceBg,
           p: 1,
           borderRadius: '16px',
-          border: '1px solid #E5E7EB',
+          border: `1px solid ${borderCol}`,
           boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
           display: 'flex',
           gap: 1,
@@ -697,10 +728,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 whiteSpace: 'nowrap',
                 transition: 'all 0.18s ease-in-out',
                 bgcolor: isSelected ? BRAND : 'transparent',
-                color: isSelected ? '#FFFFFF' : '#4B5563',
+                color: isSelected ? '#FFFFFF' : 'text.secondary',
                 '&:hover': {
-                  bgcolor: isSelected ? '#2E6121' : '#F3F4F6',
-                  color: isSelected ? '#FFFFFF' : '#111827',
+                  bgcolor: isSelected ? '#2E6121' : pillBg,
+                  color: isSelected ? '#FFFFFF' : 'text.primary',
                 },
               }}
             >
@@ -714,8 +745,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   borderRadius: '999px',
                   fontSize: '0.72rem',
                   fontWeight: 800,
-                  bgcolor: isSelected ? 'rgba(255,255,255,0.25)' : '#E5E7EB',
-                  color: isSelected ? '#FFFFFF' : '#4B5563',
+                  bgcolor: isSelected ? 'rgba(255,255,255,0.25)' : pillBg,
+                  color: isSelected ? '#FFFFFF' : 'text.secondary',
                 }}
               >
                 {tab.count}
@@ -728,10 +759,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
       {/* ── Filter Bar: Search, Type, Clear, & View Toggle ── */}
       <Box
         sx={{
-          bgcolor: '#FFFFFF',
+          bgcolor: surfaceBg,
           p: 2,
           borderRadius: '16px',
-          border: '1px solid #E5E7EB',
+          border: `1px solid ${borderCol}`,
           boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
@@ -754,7 +785,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />
+                  <SearchIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: searchTerm ? (
@@ -770,9 +801,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               maxWidth: { sm: 420 },
               '& .MuiOutlinedInput-root': {
                 borderRadius: '12px',
-                bgcolor: '#F9FAFB',
-                '&:hover': { bgcolor: '#FFFFFF' },
-                '& fieldset': { borderColor: '#E5E7EB' },
+                bgcolor: subtleBg,
+                '&:hover': { bgcolor: surfaceBg },
+                '& fieldset': { borderColor: borderCol },
                 '&.Mui-focused fieldset': { borderColor: BRAND },
               },
             }}
@@ -784,8 +815,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               display: 'inline-flex',
               p: 0.5,
               borderRadius: '12px',
-              bgcolor: '#F3F4F6',
-              border: '1px solid #E5E7EB',
+              bgcolor: pillBg,
+              border: `1px solid ${borderCol}`,
             }}
           >
             {[
@@ -807,10 +838,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   textTransform: 'none',
                   fontSize: '0.78rem',
                   fontWeight: 700,
-                  bgcolor: verticalFilter === v.id ? '#FFFFFF' : 'transparent',
-                  color: verticalFilter === v.id ? '#111827' : '#6B7280',
+                  bgcolor: verticalFilter === v.id ? surfaceBg : 'transparent',
+                  color: verticalFilter === v.id ? 'text.primary' : 'text.secondary',
                   boxShadow: verticalFilter === v.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  '&:hover': { bgcolor: verticalFilter === v.id ? '#FFFFFF' : 'rgba(0,0,0,0.04)' },
+                  '&:hover': { bgcolor: verticalFilter === v.id ? surfaceBg : 'action.hover' },
                 }}
               >
                 {v.label}
@@ -832,7 +863,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 color: '#EF4444',
-                '&:hover': { bgcolor: '#FEE2E2' },
+                '&:hover': { bgcolor: isDark ? 'rgba(239,68,68,0.15)' : '#FEE2E2' },
                 borderRadius: '8px',
               }}
             >
@@ -843,20 +874,20 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
         {/* Right Side: View Mode & Total Count */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: { xs: 'space-between', md: 'flex-end' } }}>
-          <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 600, fontSize: '0.85rem' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.85rem' }}>
             Showing <strong>{orders.length}</strong> of <strong>{counts.all || orders.length}</strong>
           </Typography>
 
           {/* View Mode Toggle: Table vs Cards */}
-          <Box sx={{ display: 'flex', p: 0.5, bgcolor: '#F3F4F6', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+          <Box sx={{ display: 'flex', p: 0.5, bgcolor: pillBg, borderRadius: '12px', border: `1px solid ${borderCol}` }}>
             <Tooltip title="Detailed Table View">
               <IconButton
                 size="small"
                 onClick={() => setViewMode('table')}
                 sx={{
                   borderRadius: '8px',
-                  bgcolor: viewMode === 'table' ? '#FFFFFF' : 'transparent',
-                  color: viewMode === 'table' ? BRAND : '#6B7280',
+                  bgcolor: viewMode === 'table' ? surfaceBg : 'transparent',
+                  color: viewMode === 'table' ? brandAccent : 'text.secondary',
                   boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 }}
               >
@@ -869,8 +900,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 onClick={() => setViewMode('cards')}
                 sx={{
                   borderRadius: '8px',
-                  bgcolor: viewMode === 'cards' ? '#FFFFFF' : 'transparent',
-                  color: viewMode === 'cards' ? BRAND : '#6B7280',
+                  bgcolor: viewMode === 'cards' ? surfaceBg : 'transparent',
+                  color: viewMode === 'cards' ? brandAccent : 'text.secondary',
                   boxShadow: viewMode === 'cards' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 }}
               >
@@ -883,9 +914,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
       {/* ── Content View: Table or Cards ── */}
       {loading ? (
-        <Box sx={{ textAlign: 'center', py: 12, bgcolor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E5E7EB' }}>
-          <CircularProgress size={36} sx={{ color: BRAND }} />
-          <Typography variant="body2" sx={{ color: '#6B7280', mt: 2, fontWeight: 600 }}>
+        <Box sx={{ textAlign: 'center', py: 12, bgcolor: surfaceBg, borderRadius: '16px', border: `1px solid ${borderCol}` }}>
+          <CircularProgress size={36} sx={{ color: brandAccent }} />
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2, fontWeight: 600 }}>
             Syncing order repository…
           </Typography>
         </Box>
@@ -895,9 +926,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
             textAlign: 'center',
             py: 12,
             px: 3,
-            bgcolor: '#FFFFFF',
+            bgcolor: surfaceBg,
             borderRadius: '16px',
-            border: '1px dashed #D1D5DB',
+            border: `1px dashed ${borderCol}`,
           }}
         >
           <Box
@@ -905,20 +936,20 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               width: 64,
               height: 64,
               borderRadius: '20px',
-              bgcolor: '#F3F4F6',
+              bgcolor: pillBg,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#9CA3AF',
+              color: 'text.disabled',
               mb: 2,
             }}
           >
             <ShoppingBagOutlinedIcon sx={{ fontSize: 32 }} />
           </Box>
-          <Typography variant="h6" fontWeight={700} color="#111827">
+          <Typography variant="h6" fontWeight={700} color="text.primary">
             No Orders Found
           </Typography>
-          <Typography variant="body2" color="#6B7280" mt={0.5} maxWidth={400} mx="auto">
+          <Typography variant="body2" color="text.secondary" mt={0.5} maxWidth={400} mx="auto">
             {searchTerm || statusFilter || verticalFilter
               ? 'No orders matched your active filters. Try resetting the filters or searching with a different term.'
               : 'There are currently no orders in this queue.'}
@@ -936,8 +967,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               sx={{
                 mt: 2.5,
                 borderRadius: '10px',
-                borderColor: '#D1D5DB',
-                color: '#374151',
+                borderColor: borderCol,
+                color: 'text.primary',
                 textTransform: 'none',
                 fontWeight: 700,
               }}
@@ -950,35 +981,35 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
         /* ── TABLE VIEW ── */
         <TableContainer
           sx={{
-            bgcolor: '#FFFFFF',
+            bgcolor: surfaceBg,
             borderRadius: '16px',
-            border: '1px solid #E5E7EB',
+            border: `1px solid ${borderCol}`,
             boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
             overflow: 'hidden',
           }}
         >
           <Table sx={{ minWidth: 900 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+              <TableRow sx={{ bgcolor: subtleBg, borderBottom: `1px solid ${borderCol}` }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Order # / Date
                 </TableCell>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Type
                 </TableCell>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Customer Details
                 </TableCell>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Items Preview
                 </TableCell>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Amount & Payment
                 </TableCell>
-                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Fulfillment Status
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#4B5563', py: 1.8 }}>
+                <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'text.secondary', py: 1.8 }}>
                   Quick Actions
                 </TableCell>
               </TableRow>
@@ -1000,7 +1031,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     onClick={() => openModal(order)}
                     sx={{
                       cursor: 'pointer',
-                      borderBottom: '1px solid #F3F4F6',
+                      borderBottom: `1px solid ${borderCol}`,
                       transition: 'background-color 0.15s ease',
                       '&:hover': { bgcolor: 'rgba(57, 119, 42, 0.03)' },
                     }}
@@ -1013,9 +1044,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           sx={{
                             fontFamily: 'monospace',
                             fontWeight: 800,
-                            color: '#111827',
+                            color: 'text.primary',
                             fontSize: '0.9rem',
-                            bgcolor: '#F3F4F6',
+                            bgcolor: pillBg,
                             px: 1,
                             py: 0.3,
                             borderRadius: '6px',
@@ -1033,7 +1064,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           </IconButton>
                         </Tooltip>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.75, color: '#6B7280' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.75, color: 'text.secondary' }}>
                         <AccessTimeIcon sx={{ fontSize: 13 }} />
                         <Typography variant="caption" sx={{ fontWeight: 600 }}>
                           {formatRelativeTime(order.createdAt)} • {new Date(order.createdAt).toLocaleDateString()}
@@ -1053,9 +1084,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           borderRadius: '8px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          bgcolor: isFood ? '#FEF2F2' : '#F0FDF4',
-                          color: isFood ? '#B91C1C' : '#15803D',
-                          border: `1px solid ${isFood ? '#FECACA' : '#BBF7D0'}`,
+                          bgcolor: isFood ? (isDark ? 'rgba(239,68,68,0.16)' : '#FEF2F2') : (isDark ? 'rgba(34,197,94,0.16)' : '#F0FDF4'),
+                          color: isFood ? (isDark ? '#F87171' : '#B91C1C') : (isDark ? '#4ADE80' : '#15803D'),
+                          border: `1px solid ${isFood ? (isDark ? 'rgba(248,113,113,0.35)' : '#FECACA') : (isDark ? 'rgba(74,222,128,0.35)' : '#BBF7D0')}`,
                         }}
                       >
                         <span>{isFood ? '🍽️ Food' : '🏬 Grocery'}</span>
@@ -1069,7 +1100,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           sx={{
                             width: 36,
                             height: 36,
-                            bgcolor: BRAND,
+                            bgcolor: brandAccent,
                             fontSize: '0.85rem',
                             fontWeight: 800,
                             color: '#FFFFFF',
@@ -1078,16 +1109,16 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           {(order.user?.username || 'C')[0].toUpperCase()}
                         </Avatar>
                         <Box sx={{ minWidth: 0, maxWidth: 220 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#111827', noWrap: true }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', noWrap: true }}>
                             {order.user?.username || 'Customer'}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', noWrap: true }}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', noWrap: true }}>
                             {order.user?.phoneNumber || order.user?.email || 'No contact info'}
                           </Typography>
                           {order.shippingAddress && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25, color: '#9CA3AF' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25, color: 'text.disabled' }}>
                               <LocationOnOutlinedIcon sx={{ fontSize: 13, flexShrink: 0 }} />
-                              <Typography variant="caption" sx={{ noWrap: true, maxWidth: 190, color: '#6B7280' }}>
+                              <Typography variant="caption" sx={{ noWrap: true, maxWidth: 190, color: 'text.secondary' }}>
                                 {order.shippingAddress}
                               </Typography>
                             </Box>
@@ -1112,19 +1143,19 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                                 height: 34,
                                 borderRadius: '8px',
                                 objectFit: 'cover',
-                                border: '2px solid #FFFFFF',
+                                border: `2px solid ${surfaceBg}`,
                                 ml: idx > 0 ? -1.2 : 0,
                                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                bgcolor: '#f8fafc',
+                                bgcolor: subtleBg,
                               }}
                             />
                           ))}
                         </Box>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#111827' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
                             {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                             {order.orderItems?.[0]?.product?.proName || 'Product'}
                             {(order.orderItems?.length || 0) > 1 && ` +${order.orderItems.length - 1} more`}
                           </Typography>
@@ -1134,7 +1165,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
                     {/* Total & Payment */}
                     <TableCell sx={{ py: 2 }}>
-                      <Typography variant="body1" sx={{ fontWeight: 800, color: BRAND, fontSize: '0.95rem' }}>
+                      <Typography variant="body1" sx={{ fontWeight: 800, color: brandAccent, fontSize: '0.95rem' }}>
                         {formatPrice(order.totalAmount, { country: selectedCountry, address: order.shippingAddress })}
                       </Typography>
                       <Box
@@ -1144,8 +1175,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           px: 1,
                           py: 0.2,
                           borderRadius: '6px',
-                          bgcolor: '#F3F4F6',
-                          color: '#4B5563',
+                          bgcolor: pillBg,
+                          color: 'text.secondary',
                           fontSize: '0.7rem',
                           fontWeight: 700,
                         }}
@@ -1218,7 +1249,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               fontSize: '0.75rem',
                               bgcolor: '#16A34A',
                               boxShadow: 'none',
-                              '&:hover': { bgcolor: '#15803D' },
+                              '&:hover': { bgcolor: isDark ? '#4ADE80' : '#15803D' },
                             }}
                           >
                             Complete
@@ -1232,14 +1263,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                             onClick={() => openModal(order)}
                             sx={{
                               borderRadius: '8px',
-                              borderColor: '#E5E7EB',
-                              color: '#374151',
+                              borderColor: borderCol,
+                              color: 'text.primary',
                               textTransform: 'none',
                               fontWeight: 600,
                               fontSize: '0.75rem',
                               minWidth: 'auto',
                               px: 1.25,
-                              '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: 'rgba(57, 119, 42, 0.04)' },
+                              '&:hover': { borderColor: BRAND, color: brandAccent, bgcolor: 'rgba(57, 119, 42, 0.04)' },
                             }}
                           >
                             Manage
@@ -1267,8 +1298,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 onClick={() => openModal(order)}
                 sx={{
                   borderRadius: '16px',
-                  border: '1px solid #E5E7EB',
-                  bgcolor: '#FFFFFF',
+                  border: `1px solid ${borderCol}`,
+                  bgcolor: surfaceBg,
                   boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                   cursor: 'pointer',
                   display: 'flex',
@@ -1277,7 +1308,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   '&:hover': {
                     transform: 'translateY(-3px)',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.07)',
-                    borderColor: '#D1D5DB',
+                    borderColor: borderCol,
                   },
                 }}
               >
@@ -1286,7 +1317,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 800, color: '#111827' }}>
+                        <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 800, color: 'text.primary' }}>
                           #{order.id.toString().padStart(6, '0')}
                         </Typography>
                         <Box
@@ -1296,14 +1327,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                             borderRadius: '6px',
                             fontSize: '0.7rem',
                             fontWeight: 700,
-                            bgcolor: isFood ? '#FEF2F2' : '#F0FDF4',
-                            color: isFood ? '#B91C1C' : '#15803D',
+                            bgcolor: isFood ? (isDark ? 'rgba(239,68,68,0.16)' : '#FEF2F2') : (isDark ? 'rgba(34,197,94,0.16)' : '#F0FDF4'),
+                            color: isFood ? (isDark ? '#F87171' : '#B91C1C') : (isDark ? '#4ADE80' : '#15803D'),
                           }}
                         >
                           {isFood ? 'Food' : 'Grocery'}
                         </Box>
                       </Box>
-                      <Typography variant="caption" sx={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                         <AccessTimeIcon sx={{ fontSize: 13 }} />
                         {formatRelativeTime(order.createdAt)}
                       </Typography>
@@ -1315,14 +1346,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
                   {/* Customer Info */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: BRAND, fontSize: '0.8rem', fontWeight: 700 }}>
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: brandAccent, fontSize: '0.8rem', fontWeight: 700 }}>
                       {(order.user?.username || 'C')[0].toUpperCase()}
                     </Avatar>
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#111827', noWrap: true }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', noWrap: true }}>
                         {order.user?.username || 'Customer'}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', noWrap: true }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', noWrap: true }}>
                         {order.user?.phoneNumber || order.user?.email || 'No contact'}
                       </Typography>
                     </Box>
@@ -1330,9 +1361,9 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
                   {/* Delivery Location Snippet */}
                   {order.shippingAddress && (
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 2, bgcolor: '#F9FAFB', p: 1.2, borderRadius: '8px' }}>
-                      <LocationOnOutlinedIcon sx={{ fontSize: 16, color: BRAND, mt: 0.2 }} />
-                      <Typography variant="caption" sx={{ color: '#4B5563', lineHeight: 1.3, fontWeight: 500, noWrap: true }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 2, bgcolor: subtleBg, p: 1.2, borderRadius: '8px' }}>
+                      <LocationOnOutlinedIcon sx={{ fontSize: 16, color: brandAccent, mt: 0.2 }} />
+                      <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.3, fontWeight: 500, noWrap: true }}>
                         {order.shippingAddress}
                       </Typography>
                     </Box>
@@ -1340,7 +1371,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
                   {/* Items Summary */}
                   <Box sx={{ mb: 2, flex: 1 }}>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    <Typography variant="caption" sx={{ color: 'text.disabled', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>
                       Order Items ({itemsCount})
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
@@ -1353,17 +1384,17 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               size={28}
                               sx={{ borderRadius: '6px' }}
                             />
-                            <Typography variant="caption" sx={{ color: '#374151', fontWeight: 600, noWrap: true, maxWidth: 170 }}>
+                            <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 600, noWrap: true, maxWidth: 170 }}>
                               {item.quantity}x {item.product?.proName || 'Product'}
                             </Typography>
                           </Box>
-                          <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600 }}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                             {formatPrice(parseFloat(item.price) * item.quantity, { country: selectedCountry, address: order.shippingAddress })}
                           </Typography>
                         </Box>
                       ))}
                       {(order.orderItems?.length || 0) > 2 && (
-                        <Typography variant="caption" sx={{ color: BRAND, fontWeight: 700 }}>
+                        <Typography variant="caption" sx={{ color: brandAccent, fontWeight: 700 }}>
                           +{order.orderItems.length - 2} more item(s)…
                         </Typography>
                       )}
@@ -1375,8 +1406,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                   {/* Total & Action Footer */}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 0.5 }} onClick={(e) => e.stopPropagation()}>
                     <Box>
-                      <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600 }}>Total</Typography>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: BRAND, lineHeight: 1.1 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Total</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: brandAccent, lineHeight: 1.1 }}>
                         {formatPrice(order.totalAmount, { country: selectedCountry, address: order.shippingAddress })}
                       </Typography>
                     </Box>
@@ -1412,7 +1443,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         disabled={updatingStatus}
                         onClick={() => handleUpdateStatus(order.id, 'DELIVERED')}
                         startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' } }}
+                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, bgcolor: '#16A34A', '&:hover': { bgcolor: isDark ? '#4ADE80' : '#15803D' } }}
                       >
                         Delivered
                       </Button>
@@ -1422,7 +1453,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         size="small"
                         variant="outlined"
                         onClick={() => openModal(order)}
-                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, borderColor: '#D1D5DB', color: '#4B5563' }}
+                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, borderColor: borderCol, color: 'text.secondary' }}
                       >
                         View Details
                       </Button>
@@ -1448,7 +1479,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               '& .MuiPaginationItem-root': {
                 borderRadius: '10px',
                 fontWeight: 700,
-                color: '#4B5563',
+                color: 'text.secondary',
               },
               '& .Mui-selected': {
                 bgcolor: `${BRAND} !important`,
@@ -1482,8 +1513,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
             <DialogTitle
               sx={{
                 p: 2.5,
-                bgcolor: '#FFFFFF',
-                borderBottom: '1px solid #E5E7EB',
+                bgcolor: surfaceBg,
+                borderBottom: `1px solid ${borderCol}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -1491,7 +1522,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
             >
               <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary' }}>
                     Order #{selectedOrder.id.toString().padStart(6, '0')}
                   </Typography>
                   <StatusBadge status={selectedOrder.status} />
@@ -1502,12 +1533,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                       borderRadius: '8px',
                       fontWeight: 700,
                       fontSize: '0.75rem',
-                      bgcolor: selectedOrder.vertical === 'GROCERY' ? '#FCE4EC' : '#E8F5E9',
-                      color: selectedOrder.vertical === 'GROCERY' ? '#C2185B' : '#2E7D32',
+                      bgcolor: selectedOrder.vertical === 'GROCERY' ? (isDark ? 'rgba(236,72,153,0.18)' : '#FCE4EC') : (isDark ? 'rgba(34,197,94,0.18)' : '#E8F5E9'),
+                      color: selectedOrder.vertical === 'GROCERY' ? (isDark ? '#F472B6' : '#C2185B') : (isDark ? '#4ADE80' : '#2E7D32'),
                     }}
                   />
                 </Box>
-                <Typography variant="caption" sx={{ color: '#6B7280', mt: 0.5, display: 'block' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
                   Placed on {new Date(selectedOrder.createdAt).toLocaleString()} • Payment: {selectedOrder.paymentMethod || 'Cash On Delivery'}
                 </Typography>
               </Box>
@@ -1528,14 +1559,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     textTransform: 'none',
                     fontWeight: 700,
                     fontSize: '0.8rem',
-                    color: BRAND,
+                    color: brandAccent,
                     borderColor: BRAND,
                     '&:hover': { bgcolor: 'rgba(57, 119, 42, 0.05)', borderColor: BRAND },
                   }}
                 >
                   Full Invoice
                 </Button>
-                <IconButton onClick={() => setShowModal(false)} sx={{ color: '#9CA3AF' }}>
+                <IconButton onClick={() => setShowModal(false)} sx={{ color: 'text.disabled' }}>
                   <CloseIcon />
                 </IconButton>
               </Box>
@@ -1547,12 +1578,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 sx={{
                   p: 2.5,
                   mb: 3,
-                  bgcolor: '#F9FAFB',
+                  bgcolor: subtleBg,
                   borderRadius: '16px',
-                  border: '1px solid #E5E7EB',
+                  border: `1px solid ${borderCol}`,
                 }}
               >
-                <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 2 }}>
+                <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 2 }}>
                   Live Fulfillment Stage
                 </Typography>
 
@@ -1576,7 +1607,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                             width: 40,
                             height: 40,
                             borderRadius: '50%',
-                            bgcolor: isDone ? BRAND : '#E5E7EB',
+                            bgcolor: isDone ? BRAND : pillBg,
                             color: isDone ? '#FFFFFF' : '#9CA3AF',
                             display: 'flex',
                             alignItems: 'center',
@@ -1592,7 +1623,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           sx={{
                             mt: 1,
                             fontWeight: isCurrent ? 800 : 600,
-                            color: isCurrent ? '#111827' : '#6B7280',
+                            color: isCurrent ? 'text.primary' : 'text.secondary',
                             fontSize: '0.75rem',
                           }}
                         >
@@ -1607,19 +1638,19 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
               {/* ── Customer & Destination Grid ── */}
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5, mb: 3 }}>
                 {/* Customer Details */}
-                <Box sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #E5E7EB', bgcolor: '#FFFFFF' }}>
-                  <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Box sx={{ p: 2.5, borderRadius: '16px', border: `1px solid ${borderCol}`, bgcolor: surfaceBg }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Customer Profile
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1.5 }}>
-                    <Avatar sx={{ width: 44, height: 44, bgcolor: BRAND, fontWeight: 800 }}>
+                    <Avatar sx={{ width: 44, height: 44, bgcolor: brandAccent, fontWeight: 800 }}>
                       {(selectedOrder.user?.username || 'C')[0].toUpperCase()}
                     </Avatar>
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#111827' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary' }}>
                         {selectedOrder.user?.username || 'Guest Customer'}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#6B7280', display: 'block' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
                         {selectedOrder.user?.email || 'No email attached'}
                       </Typography>
                     </Box>
@@ -1637,8 +1668,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           textTransform: 'none',
                           fontWeight: 700,
                           fontSize: '0.78rem',
-                          borderColor: '#E5E7EB',
-                          color: '#374151',
+                          borderColor: borderCol,
+                          color: 'text.primary',
                         }}
                       >
                         Call ({selectedOrder.user.phoneNumber})
@@ -1648,13 +1679,13 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 </Box>
 
                 {/* Shipping Destination */}
-                <Box sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #E5E7EB', bgcolor: '#FFFFFF' }}>
-                  <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Box sx={{ p: 2.5, borderRadius: '16px', border: `1px solid ${borderCol}`, bgcolor: surfaceBg }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Delivery Destination
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mt: 1.5 }}>
-                    <LocationOnOutlinedIcon sx={{ color: BRAND, fontSize: 20, mt: 0.2 }} />
-                    <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500, lineHeight: 1.5 }}>
+                    <LocationOnOutlinedIcon sx={{ color: brandAccent, fontSize: 20, mt: 0.2 }} />
+                    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, lineHeight: 1.5 }}>
                       {selectedOrder.shippingAddress || 'Customer pickup / No address provided'}
                     </Typography>
                   </Box>
@@ -1673,8 +1704,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                           textTransform: 'none',
                           fontWeight: 700,
                           fontSize: '0.78rem',
-                          borderColor: '#E5E7EB',
-                          color: BRAND,
+                          borderColor: borderCol,
+                          color: brandAccent,
                         }}
                       >
                         View in Google Maps
@@ -1686,19 +1717,19 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
 
               {/* ── Order Items Breakdown ── */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#111827', mb: 1.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 1.5 }}>
                   Itemized Order Breakdown ({selectedOrder.orderItems?.length || 0})
                 </Typography>
 
-                <TableContainer sx={{ borderRadius: '14px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+                <TableContainer sx={{ borderRadius: '14px', border: `1px solid ${borderCol}`, overflow: 'hidden' }}>
                   <Table size="small">
-                    <TableHead sx={{ bgcolor: '#F9FAFB' }}>
+                    <TableHead sx={{ bgcolor: subtleBg }}>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#4B5563' }}>Product</TableCell>
-                        <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#4B5563' }}>Category</TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#4B5563' }}>Qty</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#4B5563' }}>Price</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#4B5563' }}>Subtotal</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Product</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Category</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Qty</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Price</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', color: 'text.secondary' }}>Subtotal</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1723,7 +1754,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                                   sx={{ borderRadius: '10px' }}
                                 />
                                 <Box>
-                                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#111827' }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
                                     {item.product?.proName || 'Unknown Product'}
                                   </Typography>
                                   {variation && (
@@ -1734,8 +1765,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                                         px: 0.8,
                                         py: 0.1,
                                         borderRadius: '4px',
-                                        bgcolor: '#FEF3C7',
-                                        color: '#92400E',
+                                        bgcolor: isDark ? 'rgba(245,158,11,0.18)' : '#FEF3C7',
+                                        color: isDark ? '#FBBF24' : '#92400E',
                                         fontSize: '0.7rem',
                                         fontWeight: 700,
                                       }}
@@ -1747,7 +1778,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               </Box>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                 {item.product?.category?.name || '—'}
                               </Typography>
                             </TableCell>
@@ -1757,12 +1788,12 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                               </Typography>
                             </TableCell>
                             <TableCell align="right">
-                              <Typography variant="body2" sx={{ color: '#4B5563' }}>
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                 {formatPrice(item.price, { country: selectedCountry, address: selectedOrder.shippingAddress })}
                               </Typography>
                             </TableCell>
                             <TableCell align="right">
-                              <Typography variant="body2" sx={{ fontWeight: 800, color: BRAND }}>
+                              <Typography variant="body2" sx={{ fontWeight: 800, color: brandAccent }}>
                                 {formatPrice(parseFloat(item.price) * item.quantity, { country: selectedCountry, address: selectedOrder.shippingAddress })}
                               </Typography>
                             </TableCell>
@@ -1779,25 +1810,25 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 sx={{
                   p: 2.5,
                   borderRadius: '16px',
-                  bgcolor: '#F0FDF4',
-                  border: '1px solid #BBF7D0',
+                  bgcolor: isDark ? 'rgba(34, 197, 94, 0.08)' : '#F0FDF4',
+                  border: `1px solid ${isDark ? 'rgba(74, 222, 128, 0.25)' : '#BBF7D0'}`,
                   mb: 3,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <NotificationsActiveIcon sx={{ color: BRAND, fontSize: 22 }} />
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#166534' }}>
+                    <NotificationsActiveIcon sx={{ color: brandAccent, fontSize: 22 }} />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: isDark ? '#4ADE80' : '#166534' }}>
                       Flutter Mobile App Broadcast Center
                     </Typography>
                   </Box>
                   <Chip
                     label="Mobile Push Active 📲"
                     size="small"
-                    sx={{ bgcolor: '#DCFCE7', color: '#15803D', fontWeight: 800, fontSize: '0.72rem' }}
+                    sx={{ bgcolor: isDark ? 'rgba(34, 197, 94, 0.18)' : '#DCFCE7', color: isDark ? '#4ADE80' : '#15803D', fontWeight: 800, fontSize: '0.72rem' }}
                   />
                 </Box>
-                <Typography variant="body2" sx={{ color: '#374151', fontSize: '0.85rem', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'text.primary', fontSize: '0.85rem', mb: 2 }}>
                   Broadcast instant push updates to the customer&apos;s mobile device and driver tracking screen:
                 </Typography>
 
@@ -1815,10 +1846,10 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         textTransform: 'none',
                         fontSize: '0.75rem',
                         fontWeight: 700,
-                        bgcolor: '#FFFFFF',
-                        borderColor: '#BBF7D0',
-                        color: '#166534',
-                        '&:hover': { bgcolor: '#DCFCE7', borderColor: BRAND },
+                        bgcolor: surfaceBg,
+                        borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#BBF7D0',
+                        color: isDark ? '#4ADE80' : '#166534',
+                        '&:hover': { bgcolor: isDark ? 'rgba(34, 197, 94, 0.18)' : '#DCFCE7', borderColor: BRAND },
                       }}
                     >
                       {p.title}
@@ -1833,14 +1864,14 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     placeholder="Push Title (e.g. Order Update)"
                     value={customPushTitle}
                     onChange={e => setCustomPushTitle(e.target.value)}
-                    sx={{ bgcolor: '#FFFFFF', '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+                    sx={{ bgcolor: surfaceBg, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
                   />
                   <TextField
                     size="small"
                     placeholder="Message to customer's mobile app…"
                     value={customPushBody}
                     onChange={e => setCustomPushBody(e.target.value)}
-                    sx={{ bgcolor: '#FFFFFF', '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+                    sx={{ bgcolor: surfaceBg, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
                   />
                   <Button
                     variant="contained"
@@ -1851,7 +1882,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                       borderRadius: '10px',
                       textTransform: 'none',
                       fontWeight: 800,
-                      bgcolor: BRAND,
+                      bgcolor: brandAccent,
                       height: 40,
                       px: 2.5,
                       boxShadow: 'none',
@@ -1868,8 +1899,8 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 sx={{
                   p: 2.5,
                   borderRadius: '16px',
-                  bgcolor: '#F9FAFB',
-                  border: '1px solid #E5E7EB',
+                  bgcolor: subtleBg,
+                  border: `1px solid ${borderCol}`,
                   display: 'flex',
                   flexDirection: { xs: 'column', sm: 'row' },
                   justifyContent: 'space-between',
@@ -1878,7 +1909,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                 }}
               >
                 <Box>
-                  <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Quick Status Advancement
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
@@ -1930,7 +1961,7 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                         bgcolor: selectedOrder.status === 'DELIVERED' ? '#16A34A' : 'transparent',
                         borderColor: '#16A34A',
                         color: selectedOrder.status === 'DELIVERED' ? '#FFFFFF' : '#16A34A',
-                        '&:hover': { bgcolor: '#15803D', color: '#FFFFFF' },
+                        '&:hover': { bgcolor: isDark ? '#4ADE80' : '#15803D', color: '#FFFFFF' },
                       }}
                     >
                       ✅ Mark Delivered
@@ -1959,16 +1990,16 @@ export default function OrderManagement({ defaultStatusFilter = '', vendorId = '
                     px: 3,
                     py: 1.5,
                     borderRadius: '12px',
-                    bgcolor: '#FFFFFF',
+                    bgcolor: surfaceBg,
                     border: `1.5px solid ${BRAND}`,
                     textAlign: { xs: 'left', sm: 'right' },
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                   }}
                 >
-                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
                     Total Payable
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: BRAND, mt: 0.25 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: brandAccent, mt: 0.25 }}>
                     {formatPrice(selectedOrder.totalAmount, { country: selectedCountry, address: selectedOrder.shippingAddress })}
                   </Typography>
                 </Box>

@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { uploadProductImage } from '@/lib/imageUpload'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Typography       from '@mui/material/Typography'
 import Button           from '@mui/material/Button'
@@ -31,6 +32,9 @@ const ACCEPT = 'image/jpeg,image/png,image/webp,image/jpg'
  *  helperText — shown below the box
  */
 export default function ImageUploadField({ label, required, value, onChange, disabled, helperText }) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const inputRef          = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError]         = useState('')
@@ -179,8 +183,8 @@ export default function ImageUploadField({ label, required, value, onChange, dis
                 startIcon={<CloudUploadOutlinedIcon />}
                 onClick={handleClick}
                 sx={{
-                  textTransform: 'none', borderColor: BRAND, color: BRAND,
-                  '&:hover': { bgcolor: `${BRAND}10`, borderColor: BRAND },
+                  textTransform: 'none', borderColor: brandText, color: brandText,
+                  '&:hover': { bgcolor: isDark ? 'rgba(74,222,128,0.1)' : `${BRAND}10`, borderColor: brandText },
                 }}
               >
                 Choose Image
@@ -188,7 +192,7 @@ export default function ImageUploadField({ label, required, value, onChange, dis
             )}
             {error && (
               <Button size="small" variant="text" onClick={handleClick}
-                sx={{ textTransform: 'none', color: BRAND }}>
+                sx={{ textTransform: 'none', color: brandText }}>
                 Try again
               </Button>
             )}

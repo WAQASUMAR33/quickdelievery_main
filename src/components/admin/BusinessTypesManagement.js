@@ -280,7 +280,7 @@ export default function BusinessTypesManagement() {
           autoHeight
           sx={{
             border: 'none',
-            '& .MuiDataGrid-columnHeaders': { bgcolor: '#fafafa' },
+            '& .MuiDataGrid-columnHeaders': { bgcolor: 'grey.50' },
             '& .MuiDataGrid-row:hover': { bgcolor: `${BRAND}08` },
             '& .MuiDataGrid-cell:focus': { outline: 'none' },
           }}

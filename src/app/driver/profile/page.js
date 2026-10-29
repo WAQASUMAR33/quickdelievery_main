@@ -31,7 +31,7 @@ export default function DriverProfilePage() {
 
   if (loading || !user || !userData || !['ADMIN', 'SUPER_ADMIN', 'DRIVER'].includes(userData?.role)) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={36} sx={{ color: BRAND }} />
         <Typography color="text.secondary">Loading Driver Profile…</Typography>
       </Box>
@@ -42,7 +42,7 @@ export default function DriverProfilePage() {
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" fontWeight={700}>Driver Profile</Typography>
+          <Typography variant="h5" fontWeight={700} color="text.primary">Driver Profile</Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
             Manage vehicle information, duty status, identity verification, and payout preferences.
           </Typography>

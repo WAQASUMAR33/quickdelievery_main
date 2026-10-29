@@ -10,6 +10,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { isRestaurantVendor } from '@/lib/vendorHelpers'
 import toast from 'react-hot-toast'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Card             from '@mui/material/Card'
@@ -45,10 +46,12 @@ import InfoOutlinedIcon         from '@mui/icons-material/InfoOutlined'
 const BRAND = '#39772A'
 
 function SectionCard({ icon, title, children }) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   return (
     <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
       <Box sx={{ px: 2.5, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Box sx={{ p: 0.75, bgcolor: '#D8E9D6', color: BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
+        <Box sx={{ p: 0.75, bgcolor: isDark ? 'rgba(74,222,128,0.16)' : '#D8E9D6', color: isDark ? '#4ade80' : BRAND, borderRadius: 1, display: 'flex' }}>{icon}</Box>
         <Typography variant="subtitle2" fontWeight={700}>{title}</Typography>
       </Box>
       <CardContent sx={{ p: 2.5 }}>{children}</CardContent>

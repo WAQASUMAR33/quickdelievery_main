@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { authFetch } from '@/lib/apiClient'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Card             from '@mui/material/Card'
@@ -73,6 +74,9 @@ const formatPrice = (price) =>
   `Rs. ${Number(price || 0).toLocaleString()}`
 
 const ProductManagement = () => {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const [products, setProducts]           = useState([])
   const [categories, setCategories]       = useState([])
   const [vendors, setVendors]             = useState([])
@@ -429,8 +433,8 @@ const ProductManagement = () => {
                             borderRadius: 1,
                             fontSize: 11,
                             fontWeight: 600,
-                            bgcolor: product.vertical === 'GROCERY' ? '#FCE4EC' : '#E8F5E9',
-                            color: product.vertical === 'GROCERY' ? '#C2185B' : '#2E7D32'
+                            bgcolor: product.vertical === 'GROCERY' ? (isDark ? 'rgba(236,72,153,0.18)' : '#FCE4EC') : (isDark ? 'rgba(34,197,94,0.18)' : '#E8F5E9'),
+                            color: product.vertical === 'GROCERY' ? (isDark ? '#f472b6' : '#C2185B') : (isDark ? '#4ade80' : '#2E7D32')
                           }}
                         />
                       </TableCell>
@@ -463,7 +467,7 @@ const ProductManagement = () => {
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Tooltip title="View Details & Approval Status">
-                            <IconButton size="small" onClick={() => handleEdit(product)} sx={{ color: BRAND }}>
+                            <IconButton size="small" onClick={() => handleEdit(product)} sx={{ color: brandText }}>
                               <VisibilityOutlinedIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -649,7 +653,7 @@ const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
             {formData.proImages.map((img, i) => (
               <Box key={i} sx={{ position: 'relative' }}>
-                <img src={img} alt={`Product ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 4, border: '1px solid #e5e7eb' }} />
+                <img src={img} alt={`Product ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 4, border: '1px solid', borderColor: 'divider' }} />
               </Box>
             ))}
           </Box>

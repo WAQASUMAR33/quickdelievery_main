@@ -9,6 +9,7 @@ import { checkUserAccess } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
 import { uploadProductImage } from '@/lib/imageUpload'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Chip             from '@mui/material/Chip'
@@ -50,6 +51,9 @@ const DROP_MIN_W = 320
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 export default function SubcategoriesPage() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { user, userData, loading: authLoading } = useAuth()
   const router = useRouter()
   const fileInputRef = useRef(null)
@@ -284,7 +288,7 @@ export default function SubcategoriesPage() {
             ))}
           </TextField>
           <Chip label={`${filtered.length} / ${subcategories.length}`} size="small"
-            sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+            sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : '#D8E9D6', color: brandText, fontWeight: 700, borderRadius: 0 }} />
         </Box>
 
         {/* ── Table ── */}
@@ -346,7 +350,7 @@ export default function SubcategoriesPage() {
                         <Chip
                           label={prodCatName}
                           size="small"
-                          sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                          sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#eff6ff', color: isDark ? '#60a5fa' : '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
                         />
                       </TableCell>
 
@@ -391,7 +395,7 @@ export default function SubcategoriesPage() {
           PaperProps={{ sx: { borderRadius: 0 } }}>
           <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AccountTreeOutlinedIcon sx={{ color: BRAND }} />
+              <AccountTreeOutlinedIcon sx={{ color: brandText }} />
               <Typography variant="h6" fontWeight={700}>
                 {editingSub ? 'Edit Subcategory' : 'Add Subcategory'}
               </Typography>
@@ -481,7 +485,7 @@ export default function SubcategoriesPage() {
                       startIcon={<UploadFileOutlinedIcon />}
                       disabled={saving}
                       onClick={() => fileInputRef.current?.click()}
-                      sx={{ borderRadius: 0, borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: '#D8E9D6' }, mb: 1 }}
+                      sx={{ borderRadius: 0, borderColor: brandText, color: brandText, '&:hover': { borderColor: brandText, bgcolor: isDark ? 'rgba(74,222,128,0.12)' : '#D8E9D6' }, mb: 1 }}
                     >
                       {(localPreview || form.image) ? 'Change Image' : 'Choose Image'}
                     </Button>

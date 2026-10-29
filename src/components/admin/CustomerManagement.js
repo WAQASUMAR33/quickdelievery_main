@@ -56,24 +56,31 @@ import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutl
 import CustomerProfile from '@/components/customer/CustomerProfile'
 
 const BRAND      = '#39772A'
+const BRAND_DARK = '#4ade80'
 const DROP_MIN_W = 300
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 const ROLE_CONFIG = {
-  ADMIN:    { label: 'Admin',    bg: '#f3e8ff', color: '#7c3aed', icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} /> },
-  VENDOR:   { label: 'Vendor',   bg: '#dbeafe', color: '#1d4ed8', icon: <StoreOutlinedIcon sx={{ fontSize: 14 }} /> },
-  CUSTOMER: { label: 'Customer', bg: '#dcfce7', color: '#15803d', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
+  ADMIN:    { label: 'Admin',    bg: '#f3e8ff', color: '#7c3aed', darkBg: 'rgba(168,85,247,0.18)', darkColor: '#c084fc', icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} /> },
+  VENDOR:   { label: 'Vendor',   bg: '#dbeafe', color: '#1d4ed8', darkBg: 'rgba(59,130,246,0.18)', darkColor: '#60a5fa', icon: <StoreOutlinedIcon sx={{ fontSize: 14 }} /> },
+  CUSTOMER: { label: 'Customer', bg: '#dcfce7', color: '#15803d', darkBg: 'rgba(34,197,94,0.18)',  darkColor: '#4ade80', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
 }
 
 function RoleChip({ role }) {
-  const cfg = ROLE_CONFIG[role] || { label: role, bg: '#f3f4f6', color: '#374151' }
+  const cfg = ROLE_CONFIG[role] || { label: role, bg: '#f3f4f6', color: '#374151', darkBg: 'rgba(148,163,184,0.16)', darkColor: '#cbd5e1' }
   return (
     <Chip
       label={cfg.label}
       icon={cfg.icon}
       size="small"
-      sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, borderRadius: 0, fontSize: 11,
-        '& .MuiChip-icon': { color: cfg.color } }}
+      sx={{
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? cfg.darkBg : cfg.bg,
+        color: (theme) => theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color,
+        fontWeight: 700,
+        borderRadius: 0,
+        fontSize: 11,
+        '& .MuiChip-icon': { color: 'inherit' },
+      }}
     />
   )
 }
@@ -270,7 +277,7 @@ export default function CustomerManagement() {
         </Button>
 
         <Chip label={`${customers.length} shown`} size="small"
-          sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(74, 222, 128, 0.16)' : '#D8E9D6', color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND, fontWeight: 700, borderRadius: 0 }} />
       </Box>
 
       {/* ── Table ── */}
@@ -350,7 +357,7 @@ export default function CustomerManagement() {
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <Tooltip title="View Customer Details">
-                        <IconButton size="small" sx={{ color: BRAND }} onClick={() => { setViewCustomer(c); setShowViewModal(true) }}>
+                        <IconButton size="small" sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND }} onClick={() => { setViewCustomer(c); setShowViewModal(true) }}>
                           <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -407,21 +414,21 @@ export default function CustomerManagement() {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PersonOutlinedIcon sx={{ color: BRAND }} />
+            <PersonOutlinedIcon sx={{ color: BRAND_DARK }} />
             <Typography variant="h6" fontWeight={700}>Customer Details (Read-Only)</Typography>
           </Box>
           <IconButton size="small" onClick={() => setShowViewModal(false)} sx={{ color: 'white' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 0, bgcolor: '#f8fafc' }}>
+        <DialogContent sx={{ p: 0, bgcolor: 'background.default' }}>
           {viewCustomer && (
             <Box sx={{ width: '100%', overflowX: 'hidden' }}>
               <CustomerProfile isAdminView={true} customerData={viewCustomer} />
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, bgcolor: '#f8fafc' }}>
+        <DialogActions sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
           <Button onClick={() => setShowViewModal(false)} variant="outlined" sx={{ borderRadius: 0, textTransform: 'none' }}>Close</Button>
         </DialogActions>
       </Dialog>

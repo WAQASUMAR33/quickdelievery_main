@@ -975,3 +975,15 @@ model RideBid {
   @@index([status])
   @@map("ride_bids")
 }
+
+
+model PlatformSetting {
+  id           Int      @id @default(autoincrement())
+  settingKey   String   @unique @map("setting_key") @db.VarChar(100)
+  settingValue String   @map("setting_value") @db.LongText
+  updatedBy    String?  @map("updated_by") @db.VarChar(150)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -20,6 +20,12 @@ import Typography from '@mui/material/Typography'
 import Stack from '@mui/material/Stack'
 import toast from 'react-hot-toast'
 
+import {
+  DEFAULT_RAPIDRIDE_SETTINGS,
+  normalizeRapidRideSettings,
+  calculateDriverPayout,
+} from '@/lib/rapidRideFormula'
+
 import LocalTaxiIcon from '@mui/icons-material/LocalTaxi'
 import LuggageIcon from '@mui/icons-material/Luggage'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
@@ -27,15 +33,15 @@ import NavigationIcon from '@mui/icons-material/Navigation'
 import PhoneIcon from '@mui/icons-material/Phone'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import TwoWheelerIcon from '@mui/icons-material/TwoWheeler'
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import PinIcon from '@mui/icons-material/Pin'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
-export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
+export default function DriverTaxiBids({ driverId }) {
   const [activeTrip, setActiveTrip] = useState(null)
   const [availableRides, setAvailableRides] = useState([])
+  const [fareSettings, setFareSettings] = useState(() => normalizeRapidRideSettings(DEFAULT_RAPIDRIDE_SETTINGS))
   const [loading, setLoading] = useState(true)
   const [serviceFilter, setServiceFilter] = useState('ALL') // ALL, TAXI, LUGGAGE
   const [bidModalRide, setBidModalRide] = useState(null)
@@ -45,6 +51,8 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
   const [otpInput, setOtpInput] = useState('')
   const [verifyingOtp, setVerifyingOtp] = useState(false)
 
+  const cur = fareSettings.currency || 'Rs.'
+
   const fetchRides = useCallback(async () => {
     try {
       const url = `/api/rides?role=DRIVER${driverId ? `&driverId=${driverId}` : ''}${serviceFilter !== 'ALL' ? `&serviceType=${serviceFilter}` : ''}`
@@ -53,6 +61,9 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
       if (data.success) {
         setActiveTrip(data.activeTrip)
         setAvailableRides(data.availableRides || [])
+        if (data.settings) {
+          setFareSettings(normalizeRapidRideSettings(data.settings))
+        }
       }
     } catch {
       // Non-blocking
@@ -81,7 +92,7 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(`Bid placed for Rs. ${Number(ride.customerFare).toLocaleString()}! Waiting for customer confirmation.`)
+        toast.success(`RapidRide bid placed for ${cur} ${Number(ride.customerFare).toLocaleString()}! Waiting for customer confirmation.`)
         fetchRides()
       } else {
         toast.error(data.error || 'Failed to submit bid')
@@ -93,10 +104,11 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
     }
   }
 
-  // Open counter bid modal
+  // Open counter bid modal using Admin-configured defaultCounterMarkupPercent
   const openCounterModal = (ride) => {
+    const markupPct = fareSettings.bidding?.defaultCounterMarkupPercent ?? 15
     setBidModalRide(ride)
-    setCounterAmount(String(Math.round(Number(ride.customerFare) * 1.15)))
+    setCounterAmount(String(Math.round(Number(ride.customerFare) * (1 + markupPct / 100))))
     setEtaMinutes(5)
   }
 
@@ -119,7 +131,7 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(`Counter-fare of Rs. ${Number(counterAmount).toLocaleString()} sent to customer!`)
+        toast.success(`Counter-fare of ${cur} ${Number(counterAmount).toLocaleString()} sent to customer!`)
         setBidModalRide(null)
         fetchRides()
       } else {
@@ -157,6 +169,15 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
     }
   }
 
+  const counterPayoutPreview = useMemo(() => {
+    return calculateDriverPayout(Number(counterAmount) || 0, fareSettings)
+  }, [counterAmount, fareSettings])
+
+  const activeTripPayout = useMemo(() => {
+    if (!activeTrip) return null
+    return calculateDriverPayout(Number(activeTrip.finalFare || activeTrip.customerFare) || 0, fareSettings)
+  }, [activeTrip, fareSettings])
+
   return (
     <Box>
       {/* ─── ACTIVE IN-PROGRESS TRIP HUD ─── */}
@@ -171,15 +192,18 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
             border: '2px solid #38BDF8',
           }}
         >
-          <Box sx={{ p: 2.5, bgcolor: '#0284C7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ p: 2.5, bgcolor: '#0284C7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              {activeTrip.serviceType === 'LUGGAGE' ? <LuggageIcon sx={{ fontSize: 28 }} /> : <LocalTaxiIcon sx={{ fontSize: 28 }} />}
+              {activeTrip.serviceType === 'LUGGAGE' ? <LuggageIcon sx={{ fontSize: 28, color: '#fff' }} /> : <LocalTaxiIcon sx={{ fontSize: 28, color: '#fff' }} />}
               <div>
-                <Typography variant="h6" fontWeight={800}>
-                  {activeTrip.serviceType === 'LUGGAGE' ? 'ACTIVE LUGGAGE DELIVERY' : 'ACTIVE TAXI RIDE'}
+                <Typography variant="h6" fontWeight={800} color="#fff">
+                  {activeTrip.serviceType === 'LUGGAGE' ? 'ACTIVE RAPIDRIDE BAGGAGE DELIVERY' : 'ACTIVE RAPIDRIDE TAXI TRIP'}
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#E0F2FE' }}>
-                  Status: <strong>{activeTrip.status}</strong> • Agreed Fare: <strong>Rs. {Number(activeTrip.finalFare || activeTrip.customerFare).toLocaleString()}</strong>
+                  Status: <strong>{activeTrip.status}</strong> • Agreed Fare: <strong>{cur} {Number(activeTrip.finalFare || activeTrip.customerFare).toLocaleString()}</strong>
+                  {activeTripPayout && (
+                    <> • Your Net: <strong>{cur} {activeTripPayout.driverNetEarning.toLocaleString()}</strong> (Platform Fee: {cur} {activeTripPayout.totalPlatformFee})</>
+                  )}
                 </Typography>
               </div>
             </Box>
@@ -200,7 +224,7 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                       <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>
                         PICKUP LOCATION
                       </Typography>
-                      <Typography variant="body1" fontWeight={700}>
+                      <Typography variant="body1" fontWeight={700} color="#fff">
                         {activeTrip.pickupAddress}
                       </Typography>
                     </div>
@@ -212,24 +236,26 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                       <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>
                         DROPOFF DESTINATION
                       </Typography>
-                      <Typography variant="body1" fontWeight={700}>
+                      <Typography variant="body1" fontWeight={700} color="#fff">
                         {activeTrip.dropoffAddress}
                       </Typography>
                     </div>
                   </Box>
 
-                  {/* Luggage Details if applicable */}
+                  {/* Baggage Details if applicable */}
                   {activeTrip.serviceType === 'LUGGAGE' && (
                     <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <Typography variant="caption" sx={{ color: '#38BDF8', fontWeight: 800, display: 'block', mb: 0.5 }}>
-                        LUGGAGE SPECIFICATIONS
+                        BAGGAGE SPECIFICATIONS
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="#fff">
                         Recipient: <strong>{activeTrip.recipientName || 'Recipient'}</strong> ({activeTrip.recipientPhone || 'No Phone'})
                       </Typography>
-                      {activeTrip.packageDescription && (
+                      {(activeTrip.packageDescription || activeTrip.packageWeight || activeTrip.isFragile) && (
                         <Typography variant="caption" sx={{ color: '#CBD5E1', display: 'block' }}>
-                          Items: {activeTrip.packageDescription} {activeTrip.packageWeight && `• Weight: ${activeTrip.packageWeight}`}
+                          {activeTrip.packageDescription || 'Parcel'}
+                          {activeTrip.packageWeight ? ` • Weight: ${activeTrip.packageWeight} kg` : ''}
+                          {activeTrip.isFragile ? ' • ⚠️ Fragile Care' : ''}
                         </Typography>
                       )}
                     </Box>
@@ -246,7 +272,7 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                       <div>
-                        <Typography variant="subtitle1" fontWeight={800}>
+                        <Typography variant="subtitle1" fontWeight={800} color="#fff">
                           {activeTrip.customer?.name || 'Customer'}
                         </Typography>
                         <Typography variant="caption" sx={{ color: '#38BDF8' }}>
@@ -290,7 +316,12 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                           onChange={e => setOtpInput(e.target.value)}
                           InputProps={{
                             startAdornment: <InputAdornment position="start"><PinIcon sx={{ color: '#94A3B8' }} /></InputAdornment>,
-                            sx: { bgcolor: '#fff', borderRadius: 1.5 },
+                            sx: {
+                              bgcolor: 'rgba(255,255,255,0.08)',
+                              color: '#fff',
+                              borderRadius: 1.5,
+                              '& input': { color: '#fff' },
+                            },
                           }}
                         />
                         <Button
@@ -324,39 +355,59 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
         </Card>
       )}
 
-      {/* ─── AVAILABLE RIDES & LUGGAGE BIDS POOL ─── */}
+      {/* ─── AVAILABLE RAPIDRIDE & BAGGAGE BIDS POOL ─── */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography variant="h6" fontWeight={800} color="#0F172A">
-            InDrive Live Ride Requests ({availableRides.length})
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Typography variant="h6" fontWeight={800} color="text.primary">
+            RapidRide Live Ride Requests ({availableRides.length})
           </Typography>
-          <IconButton size="small" onClick={fetchRides} title="Refresh">
+          <Chip
+            label={`Basic Fee: ${cur} ${fareSettings.platformFee.basicPlatformFee} • ${fareSettings.platformFee.platformCommissionPercent}% Commission`}
+            size="small"
+            sx={{
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(74, 222, 128, 0.14)' : '#DCFCE7',
+              color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : '#15803D',
+              fontWeight: 700,
+              fontSize: '0.7rem',
+            }}
+          />
+          <IconButton size="small" onClick={fetchRides} title="Refresh" sx={{ color: 'text.secondary' }}>
             <RefreshIcon fontSize="small" />
           </IconButton>
         </Box>
 
         {/* Filter buttons */}
         <Stack direction="row" spacing={1}>
-          <Chip
-            label="All Requests"
-            clickable
-            onClick={() => setServiceFilter('ALL')}
-            sx={{ fontWeight: 700, bgcolor: serviceFilter === 'ALL' ? BRAND : '#F1F5F9', color: serviceFilter === 'ALL' ? '#fff' : '#475569' }}
-          />
-          <Chip
-            icon={<LocalTaxiIcon fontSize="small" />}
-            label="City Taxi"
-            clickable
-            onClick={() => setServiceFilter('TAXI')}
-            sx={{ fontWeight: 700, bgcolor: serviceFilter === 'TAXI' ? BRAND : '#F1F5F9', color: serviceFilter === 'TAXI' ? '#fff' : '#475569' }}
-          />
-          <Chip
-            icon={<LuggageIcon fontSize="small" />}
-            label="Luggage Drop"
-            clickable
-            onClick={() => setServiceFilter('LUGGAGE')}
-            sx={{ fontWeight: 700, bgcolor: serviceFilter === 'LUGGAGE' ? BRAND : '#F1F5F9', color: serviceFilter === 'LUGGAGE' ? '#fff' : '#475569' }}
-          />
+          {[
+            { id: 'ALL', label: 'All Requests', icon: undefined },
+            { id: 'TAXI', label: 'RapidRide Taxi', icon: <LocalTaxiIcon fontSize="small" /> },
+            { id: 'LUGGAGE', label: 'Baggage Drop', icon: <LuggageIcon fontSize="small" /> },
+          ].map((f) => {
+            const selected = serviceFilter === f.id
+            return (
+              <Chip
+                key={f.id}
+                icon={f.icon}
+                label={f.label}
+                clickable
+                onClick={() => setServiceFilter(f.id)}
+                sx={{
+                  fontWeight: 700,
+                  bgcolor: (theme) => selected
+                    ? BRAND
+                    : (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : '#F1F5F9'),
+                  color: (theme) => selected
+                    ? '#fff'
+                    : (theme.palette.mode === 'dark' ? '#CBD5E1' : '#475569'),
+                  '& .MuiChip-icon': {
+                    color: (theme) => selected
+                      ? '#fff'
+                      : (theme.palette.mode === 'dark' ? '#CBD5E1' : '#475569'),
+                  },
+                }}
+              />
+            )
+          })}
         </Stack>
       </Box>
 
@@ -365,13 +416,13 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
           <CircularProgress sx={{ color: BRAND }} />
         </Box>
       ) : availableRides.length === 0 ? (
-        <Card sx={{ p: 5, textAlign: 'center', borderRadius: 3, border: '1px dashed #CBD5E1' }}>
-          <LocalTaxiIcon sx={{ fontSize: 44, color: '#94A3B8', mb: 1.5 }} />
-          <Typography variant="h6" fontWeight={700} color="#334155">
-            No pending ride or luggage requests nearby
+        <Card sx={{ p: 5, textAlign: 'center', borderRadius: 3, border: '1px dashed', borderColor: 'divider' }}>
+          <LocalTaxiIcon sx={{ fontSize: 44, color: 'text.disabled', mb: 1.5 }} />
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            No pending RapidRide or baggage requests nearby
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            New customer requests appear here in real time. Keep your status Online.
+            New customer RapidRide offers appear here in real time. Keep your status Online.
           </Typography>
         </Card>
       ) : (
@@ -379,45 +430,60 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
           {availableRides.map((ride) => {
             const hasMyBid = ride.driverBids && ride.driverBids.length > 0
             const myBid = hasMyBid ? ride.driverBids[0] : null
+            const payout = calculateDriverPayout(Number(ride.customerFare) || 0, fareSettings)
 
             return (
               <Grid item xs={12} md={6} key={ride.id}>
                 <Card
                   sx={{
                     borderRadius: 3,
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid',
+                    borderColor: 'divider',
                     boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
                     p: 2.5,
                     transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' },
+                    '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' },
                   }}
                 >
                   {/* Top Bar: Service Type & Offered Fare */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                       <Chip
                         icon={ride.serviceType === 'LUGGAGE' ? <LuggageIcon fontSize="small" /> : <LocalTaxiIcon fontSize="small" />}
-                        label={ride.serviceType === 'LUGGAGE' ? 'Luggage Drop' : `Taxi: ${ride.rideCategory}`}
+                        label={ride.serviceType === 'LUGGAGE' ? 'Baggage Drop' : `RapidRide: ${ride.rideCategory}`}
                         size="small"
                         sx={{
-                          bgcolor: ride.serviceType === 'LUGGAGE' ? '#EDE9FE' : '#E0F2FE',
-                          color: ride.serviceType === 'LUGGAGE' ? '#6D28D9' : '#0369A1',
+                          bgcolor: (theme) => theme.palette.mode === 'dark'
+                            ? (ride.serviceType === 'LUGGAGE' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(56, 189, 248, 0.18)')
+                            : (ride.serviceType === 'LUGGAGE' ? '#EDE9FE' : '#E0F2FE'),
+                          color: (theme) => theme.palette.mode === 'dark'
+                            ? (ride.serviceType === 'LUGGAGE' ? '#C4B5FD' : '#7DD3FC')
+                            : (ride.serviceType === 'LUGGAGE' ? '#6D28D9' : '#0369A1'),
                           fontWeight: 800,
                           fontSize: '0.75rem',
                         }}
                       />
-                      <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600 }}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
                         ~{ride.estimatedDistanceKm || 5} km
                       </Typography>
+                      {ride.packageWeight && (
+                        <Chip label={`${ride.packageWeight} kg`} size="small" variant="outlined" sx={{ height: 20, fontSize: 10.5 }} />
+                      )}
+                      {ride.isFragile && (
+                        <Chip label="Fragile" size="small" color="warning" variant="outlined" sx={{ height: 20, fontSize: 10.5 }} />
+                      )}
                     </Box>
 
-                    {/* Customer Offer Fare */}
+                    {/* Customer Offer Fare & Driver Net */}
                     <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block' }}>
                         CUSTOMER FARE
                       </Typography>
-                      <Typography variant="h6" fontWeight={900} sx={{ color: '#16A34A', lineHeight: 1 }}>
-                        Rs. {Number(ride.customerFare).toLocaleString()}
+                      <Typography variant="h6" fontWeight={900} sx={{ color: '#22C55E', lineHeight: 1.1 }}>
+                        {cur} {Number(ride.customerFare).toLocaleString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
+                        Your Net: <strong>{cur} {payout.driverNetEarning}</strong> (Fee: {cur} {payout.totalPlatformFee})
                       </Typography>
                     </Box>
                   </Box>
@@ -425,24 +491,31 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                   {/* Route */}
                   <Stack spacing={1.5} sx={{ mb: 2.5 }}>
                     <Box sx={{ display: 'flex', gap: 1.2 }}>
-                      <LocationOnIcon sx={{ color: '#16A34A', fontSize: 20, mt: 0.2 }} />
-                      <Typography variant="body2" fontWeight={600} color="#1E293B">
+                      <LocationOnIcon sx={{ color: '#22C55E', fontSize: 20, mt: 0.2 }} />
+                      <Typography variant="body2" fontWeight={600} color="text.primary">
                         {ride.pickupAddress}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1.2 }}>
-                      <NavigationIcon sx={{ color: '#DC2626', fontSize: 20, mt: 0.2 }} />
-                      <Typography variant="body2" fontWeight={600} color="#1E293B">
+                      <NavigationIcon sx={{ color: '#EF4444', fontSize: 20, mt: 0.2 }} />
+                      <Typography variant="body2" fontWeight={600} color="text.primary">
                         {ride.dropoffAddress}
                       </Typography>
                     </Box>
                   </Stack>
 
-                  {/* Notes / Luggage details */}
+                  {/* Notes / Baggage details */}
                   {ride.customerNotes && (
-                    <Box sx={{ p: 1.2, mb: 2, borderRadius: 1.5, bgcolor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                      <Typography variant="caption" color="#475569">
-                        Note: <strong>{ride.customerNotes}</strong>
+                    <Box sx={{
+                      p: 1.2,
+                      mb: 2,
+                      borderRadius: 1.5,
+                      bgcolor: 'grey.50',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                    }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Note: <strong style={{ color: 'inherit' }}>{ride.customerNotes}</strong>
                       </Typography>
                     </Box>
                   )}
@@ -451,11 +524,25 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
 
                   {/* Action Buttons */}
                   {hasMyBid ? (
-                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#ECFDF5', border: '1px solid #A7F3D0', textAlign: 'center' }}>
-                      <Typography variant="subtitle2" fontWeight={800} color="#065F46">
-                        ✓ Bid Placed: Rs. {Number(myBid.bidAmount).toLocaleString()} ({myBid.etaMinutes} min ETA)
+                    <Box sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5',
+                      border: '1px solid',
+                      borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(52, 211, 153, 0.35)' : '#A7F3D0',
+                      textAlign: 'center',
+                    }}>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={800}
+                        sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#34D399' : '#065F46' }}
+                      >
+                        ✓ Bid Placed: {cur} {Number(myBid.bidAmount).toLocaleString()} ({myBid.etaMinutes} min ETA)
                       </Typography>
-                      <Typography variant="caption" color="#047857">
+                      <Typography
+                        variant="caption"
+                        sx={{ color: (theme) => theme.palette.mode === 'dark' ? '#6EE7B7' : '#047857' }}
+                      >
                         Waiting for customer to select your bid...
                       </Typography>
                     </Box>
@@ -477,7 +564,7 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                             '&:hover': { bgcolor: '#15803d' },
                           }}
                         >
-                          Accept Rs. {Number(ride.customerFare).toLocaleString()}
+                          Accept {cur} {Number(ride.customerFare).toLocaleString()}
                         </Button>
                       </Grid>
                       <Grid item xs={6}>
@@ -487,13 +574,13 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
                           onClick={() => openCounterModal(ride)}
                           disabled={submittingBid}
                           sx={{
-                            borderColor: BRAND,
-                            color: BRAND,
+                            borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                            color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
                             fontWeight: 800,
                             textTransform: 'none',
                             py: 1,
                             borderRadius: 2,
-                            '&:hover': { borderColor: '#2d5e21', bgcolor: '#F0FDF4' },
+                            '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.08)' },
                           }}
                         >
                           Offer Counter-Fare
@@ -511,29 +598,48 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
       {/* ─── COUNTER BID DIALOG ─── */}
       <Dialog open={Boolean(bidModalRide)} onClose={() => setBidModalRide(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ fontWeight: 800 }}>
-          Propose Counter-Fare
+          Propose RapidRide Counter-Fare
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
-            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#F8FAFC' }}>
+            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
               <Typography variant="caption" color="text.secondary">
-                Customer proposed: <strong>Rs. {Number(bidModalRide?.customerFare || 0).toLocaleString()}</strong>
+                Customer proposed: <strong>{cur} {Number(bidModalRide?.customerFare || 0).toLocaleString()}</strong>
               </Typography>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" fontWeight={600} color="text.primary">
                 {bidModalRide?.pickupAddress} ➔ {bidModalRide?.dropoffAddress}
               </Typography>
             </Box>
 
             <TextField
               fullWidth
-              label="Your Counter-Fare (Rs.)"
+              label={`Your Counter-Fare (${cur})`}
               type="number"
               value={counterAmount}
               onChange={e => setCounterAmount(e.target.value)}
               InputProps={{
-                startAdornment: <InputAdornment position="start">Rs.</InputAdornment>,
+                startAdornment: <InputAdornment position="start">{cur}</InputAdornment>,
               }}
             />
+
+            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="caption" color="text.secondary">
+                  Platform Fee (Basic + {counterPayoutPreview.commissionPercent}%):
+                </Typography>
+                <Typography variant="caption" fontWeight={700} color="error.main">
+                  − {cur} {counterPayoutPreview.totalPlatformFee}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.4 }}>
+                <Typography variant="caption" fontWeight={800} color="text.primary">
+                  Your Estimated Net Take-Home:
+                </Typography>
+                <Typography variant="caption" fontWeight={900} sx={{ color: '#10B981' }}>
+                  {cur} {counterPayoutPreview.driverNetEarning.toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
 
             <TextField
               fullWidth
@@ -548,14 +654,14 @@ export default function DriverTaxiBids({ driverId, isOnDuty = true }) {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={() => setBidModalRide(null)} sx={{ textTransform: 'none', color: '#64748B' }}>
+          <Button onClick={() => setBidModalRide(null)} sx={{ textTransform: 'none', color: 'text.secondary' }}>
             Cancel
           </Button>
           <Button
             variant="contained"
             onClick={handleSubmitCounterBid}
             disabled={submittingBid}
-            sx={{ bgcolor: BRAND, fontWeight: 700, textTransform: 'none', px: 3, '&:hover': { bgcolor: '#2d5e21' } }}
+            sx={{ bgcolor: BRAND, color: '#fff', fontWeight: 700, textTransform: 'none', px: 3, '&:hover': { bgcolor: '#2d5e21' } }}
           >
             {submittingBid ? 'Sending...' : 'Send Counter Offer'}
           </Button>

@@ -23,6 +23,8 @@ import MenuItem         from '@mui/material/MenuItem'
 import Pagination       from '@mui/material/Pagination'
 import Select           from '@mui/material/Select'
 import Switch           from '@mui/material/Switch'
+import Tab              from '@mui/material/Tab'
+import Tabs             from '@mui/material/Tabs'
 import Table            from '@mui/material/Table'
 import TableBody        from '@mui/material/TableBody'
 import TableCell        from '@mui/material/TableCell'
@@ -48,29 +50,38 @@ import SearchIcon                     from '@mui/icons-material/Search'
 import StoreOutlinedIcon              from '@mui/icons-material/StoreOutlined'
 import VerifiedUserOutlinedIcon       from '@mui/icons-material/VerifiedUserOutlined'
 import WarningAmberOutlinedIcon       from '@mui/icons-material/WarningAmberOutlined'
+import TuneOutlinedIcon               from '@mui/icons-material/TuneOutlined'
 import VisibilityOutlinedIcon         from '@mui/icons-material/VisibilityOutlined'
 import DriverProfile                  from '@/components/driver/DriverProfile'
+import DriverFareSettings             from '@/components/admin/DriverFareSettings'
 
 const BRAND      = '#39772A'
+const BRAND_DARK = '#4ade80'
 const DROP_MIN_W = 300
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 const ROLE_CONFIG = {
-  ADMIN:    { label: 'Admin',    bg: '#f3e8ff', color: '#7c3aed', icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} /> },
-  VENDOR:   { label: 'Vendor',   bg: '#dbeafe', color: '#1d4ed8', icon: <StoreOutlinedIcon sx={{ fontSize: 14 }} /> },
-  DRIVER: { label: 'Driver', bg: '#dcfce7', color: '#15803d', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
-  CUSTOMER: { label: 'Customer', bg: '#dcfce7', color: '#15803d', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
+  ADMIN:    { label: 'Admin',    bg: '#f3e8ff', color: '#7c3aed', darkBg: 'rgba(168,85,247,0.18)', darkColor: '#c084fc', icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} /> },
+  VENDOR:   { label: 'Vendor',   bg: '#dbeafe', color: '#1d4ed8', darkBg: 'rgba(59,130,246,0.18)', darkColor: '#60a5fa', icon: <StoreOutlinedIcon sx={{ fontSize: 14 }} /> },
+  DRIVER:   { label: 'Driver',   bg: '#dcfce7', color: '#15803d', darkBg: 'rgba(34,197,94,0.18)',  darkColor: '#4ade80', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
+  CUSTOMER: { label: 'Customer', bg: '#dcfce7', color: '#15803d', darkBg: 'rgba(34,197,94,0.18)',  darkColor: '#4ade80', icon: <PersonOutlinedIcon sx={{ fontSize: 14 }} /> },
 }
 
 function RoleChip({ role }) {
-  const cfg = ROLE_CONFIG[role] || { label: role, bg: '#f3f4f6', color: '#374151' }
+  const cfg = ROLE_CONFIG[role] || { label: role, bg: '#f3f4f6', color: '#374151', darkBg: 'rgba(148,163,184,0.16)', darkColor: '#cbd5e1' }
   return (
     <Chip
       label={cfg.label}
       icon={cfg.icon}
       size="small"
-      sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, borderRadius: 0, fontSize: 11,
-        '& .MuiChip-icon': { color: cfg.color } }}
+      sx={{
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? cfg.darkBg : cfg.bg,
+        color: (theme) => theme.palette.mode === 'dark' ? cfg.darkColor : cfg.color,
+        fontWeight: 700,
+        borderRadius: 0,
+        fontSize: 11,
+        '& .MuiChip-icon': { color: 'inherit' },
+      }}
     />
   )
 }
@@ -82,6 +93,7 @@ const STAT_CARDS = [
 ]
 
 export default function DriverManagement() {
+  const [activeTab,      setActiveTab]      = useState(0)
   const [drivers,        setDrivers]        = useState([])
   const [loading,          setLoading]          = useState(true)
   const [searchTerm,       setSearchTerm]       = useState('')
@@ -190,13 +202,60 @@ export default function DriverManagement() {
     <Box sx={{ p: 3 }}>
 
       {/* ── Header ── */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700}>Driver Management</Typography>
-        <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Manage registered drivers
-        </Typography>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>Driver Management</Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.5}>
+            Manage registered drivers, RapidRide fare calculation formulas, platform fees, and baggage fees
+          </Typography>
+        </Box>
+        <Button
+          variant={activeTab === 1 ? 'outlined' : 'contained'}
+          size="small"
+          startIcon={<TuneOutlinedIcon />}
+          onClick={() => setActiveTab(activeTab === 1 ? 0 : 1)}
+          sx={{
+            borderRadius: 0,
+            textTransform: 'none',
+            fontWeight: 700,
+            ...(activeTab === 1
+              ? { borderColor: 'divider', color: 'text.primary' }
+              : { bgcolor: BRAND, color: '#fff', '&:hover': { bgcolor: '#2e6022' } }),
+          }}
+        >
+          {activeTab === 1 ? 'Back to Registered Drivers' : 'RapidRide Fare & Fee Settings'}
+        </Button>
       </Box>
 
+      {/* ── Section Tabs ── */}
+      <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          sx={{
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 700,
+              color: 'text.secondary',
+              minHeight: 44,
+              '&.Mui-selected': {
+                color: (theme) => `${theme.palette.mode === 'dark' ? BRAND_DARK : BRAND} !important`,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND,
+            },
+          }}
+        >
+          <Tab icon={<PeopleOutlinedIcon fontSize="small" />} iconPosition="start" label="Registered Drivers" />
+          <Tab icon={<TuneOutlinedIcon fontSize="small" />} iconPosition="start" label="RapidRide Fare & Baggage Fee Formula" />
+        </Tabs>
+      </Box>
+
+      {activeTab === 1 ? (
+        <DriverFareSettings embedded />
+      ) : (
+      <>
       {/* ── Stats Cards ── */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: `repeat(${STAT_CARDS.length}, 1fr)` }, gap: 2.5, mb: 3 }}>
         {STAT_CARDS.map(({ key, label, color, icon }) => (
@@ -246,7 +305,7 @@ export default function DriverManagement() {
         </Button>
 
         <Chip label={`${drivers.length} shown`} size="small"
-          sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(74, 222, 128, 0.16)' : '#D8E9D6', color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND, fontWeight: 700, borderRadius: 0 }} />
       </Box>
 
       {/* ── Table ── */}
@@ -326,7 +385,7 @@ export default function DriverManagement() {
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <Tooltip title="View Driver Profile (Read-Only)">
-                        <IconButton size="small" sx={{ color: BRAND }} onClick={() => { setProfileDriver(c); setShowProfileModal(true) }}>
+                        <IconButton size="small" sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND }} onClick={() => { setProfileDriver(c); setShowProfileModal(true) }}>
                           <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -383,14 +442,14 @@ export default function DriverManagement() {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PersonOutlinedIcon sx={{ color: BRAND }} />
+            <PersonOutlinedIcon sx={{ color: BRAND_DARK }} />
             <Typography variant="h6" fontWeight={700}>Full Driver Profile (Read-Only)</Typography>
           </Box>
           <IconButton size="small" onClick={() => setShowProfileModal(false)} sx={{ color: 'white' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 3, bgcolor: '#f8fafc' }}>
+        <DialogContent sx={{ p: 3, bgcolor: 'background.default' }}>
           {profileDriver && (
             <DriverProfile
               driverData={profileDriver}
@@ -440,6 +499,8 @@ export default function DriverManagement() {
           </Button>
         </DialogActions>
       </Dialog>
+      </>
+      )}
 
     </Box>
   )

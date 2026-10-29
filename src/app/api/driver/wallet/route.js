@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma'
-
-const COD_REMITTANCE_LIMIT = 15000 // In PKR / local currency
+import { calculateDriverPayout } from '@/lib/rapidRideFormula'
+import { getRapidRideSettings } from '@/lib/rapidRideSettings'
 
 /**
  * GET /api/driver/wallet
- * Returns driver's earnings, tip breakdown, and floating Cash on Delivery (COD) pocket balance.
+ * Returns driver's earnings (Store/Food Orders + RapidRide Trips net of Platform Fee),
+ * tip breakdown, and floating Cash on Delivery (COD) pocket balance.
  * Query: ?driverId=<id>
  */
 export async function GET(request) {
@@ -20,6 +21,9 @@ export async function GET(request) {
     }
 
     const driverId = parseInt(driverIdParam, 10)
+    const settings = await getRapidRideSettings()
+    const codRemittanceLimit = settings.platformFee.codRemittanceLimit || 15000
+    const defaultDeliveryBaseFee = settings.platformFee.deliveryOrderBaseFee || 150
 
     // Fetch driver profile
     const profile = await prisma.driverProfile.findUnique({
@@ -31,23 +35,42 @@ export async function GET(request) {
       },
     })
 
-    // Fetch all delivered orders for this driver
-    const deliveredOrders = await prisma.order.findMany({
-      where: {
-        driverId,
-        status: 'DELIVERED',
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 50,
-      select: {
-        id: true,
-        totalAmount: true,
-        serviceCharge: true,
-        paymentMethod: true,
-        updatedAt: true,
-        shippingAddress: true,
-      },
-    })
+    // Fetch delivered orders & completed RapidRide trips for this driver
+    const [deliveredOrders, completedRides] = await Promise.all([
+      prisma.order.findMany({
+        where: {
+          driverId,
+          status: 'DELIVERED',
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          totalAmount: true,
+          serviceCharge: true,
+          paymentMethod: true,
+          updatedAt: true,
+          shippingAddress: true,
+        },
+      }),
+      prisma.rideRequest.findMany({
+        where: {
+          driverId,
+          status: 'COMPLETED',
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          serviceType: true,
+          customerFare: true,
+          finalFare: true,
+          paymentMethod: true,
+          dropoffAddress: true,
+          updatedAt: true,
+        },
+      }),
+    ])
 
     const now = new Date()
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -61,7 +84,7 @@ export async function GET(request) {
 
     for (const o of deliveredOrders) {
       const orderDate = new Date(o.updatedAt)
-      const fare = parseFloat(o.serviceCharge) || 150 // default delivery fare Rs. 150
+      const fare = parseFloat(o.serviceCharge) || defaultDeliveryBaseFee
       const orderTotal = parseFloat(o.totalAmount) || 0
       const isCod = ['COD', 'CASH', 'Cash', 'cash', 'cod'].includes(o.paymentMethod || '')
 
@@ -76,17 +99,40 @@ export async function GET(request) {
         weeklyEarnings += fare
       }
 
-      // If customer paid cash on delivery, rider holds that cash in pocket
       if (isCod) {
         codCashInHand += orderTotal
       }
     }
 
+    for (const r of completedRides) {
+      const rideDate = new Date(r.updatedAt)
+      const grossFare = parseFloat(r.finalFare || r.customerFare) || 0
+      const payout = calculateDriverPayout(grossFare, settings)
+      const netEarning = payout.driverNetEarning
+      const isCash = ['CASH', 'COD', 'cash'].includes(r.paymentMethod || 'CASH')
+
+      totalEarnings += netEarning
+
+      if (rideDate >= startOfToday) {
+        todayEarnings += netEarning
+        todayDeliveriesCount += 1
+      }
+
+      if (rideDate >= startOfWeek) {
+        weeklyEarnings += netEarning
+      }
+
+      // On Cash RapidRide trips, driver collects grossFare and owes totalPlatformFee to platform
+      if (isCash) {
+        codCashInHand += payout.totalPlatformFee
+      }
+    }
+
     // Remittance health check
     let remittanceStatus = 'HEALTHY'
-    if (codCashInHand >= COD_REMITTANCE_LIMIT) {
+    if (codCashInHand >= codRemittanceLimit) {
       remittanceStatus = 'LIMIT_EXCEEDED'
-    } else if (codCashInHand >= COD_REMITTANCE_LIMIT * 0.7) {
+    } else if (codCashInHand >= codRemittanceLimit * 0.7) {
       remittanceStatus = 'WARNING'
     }
 
@@ -95,6 +141,7 @@ export async function GET(request) {
       data: {
         driverId,
         driverName: profile?.user?.username || 'Driver',
+        platformFeeFormula: settings.platformFee,
         bankDetails: {
           bankName: profile?.bankName || 'Meezan Bank',
           accountTitle: profile?.bankAccountTitle || profile?.user?.username || '',
@@ -104,24 +151,41 @@ export async function GET(request) {
           today: Math.round(todayEarnings * 10) / 10,
           thisWeek: Math.round(weeklyEarnings * 10) / 10,
           lifetime: Math.round(totalEarnings * 10) / 10,
-          completedTrips: deliveredOrders.length,
+          completedTrips: deliveredOrders.length + completedRides.length,
           todayTrips: todayDeliveriesCount,
         },
         codWallet: {
           cashInHand: Math.round(codCashInHand * 10) / 10,
-          remittanceLimit: COD_REMITTANCE_LIMIT,
-          remainingCapacity: Math.max(0, COD_REMITTANCE_LIMIT - codCashInHand),
+          remittanceLimit: codRemittanceLimit,
+          remainingCapacity: Math.max(0, codRemittanceLimit - codCashInHand),
           status: remittanceStatus,
-          canAcceptCodOrders: codCashInHand < COD_REMITTANCE_LIMIT,
+          canAcceptCodOrders: codCashInHand < codRemittanceLimit,
         },
-        recentTransactions: deliveredOrders.slice(0, 10).map((o) => ({
-          orderId: o.id,
-          date: o.updatedAt,
-          earning: parseFloat(o.serviceCharge) || 150,
-          collectedAmount: parseFloat(o.totalAmount) || 0,
-          paymentMethod: o.paymentMethod || 'PREPAID',
-          address: o.shippingAddress,
-        })),
+        recentTransactions: [
+          ...deliveredOrders.slice(0, 6).map((o) => ({
+            orderId: `ORD-${o.id}`,
+            date: o.updatedAt,
+            earning: parseFloat(o.serviceCharge) || defaultDeliveryBaseFee,
+            collectedAmount: parseFloat(o.totalAmount) || 0,
+            paymentMethod: o.paymentMethod || 'PREPAID',
+            address: o.shippingAddress,
+          })),
+          ...completedRides.slice(0, 6).map((r) => {
+            const gross = parseFloat(r.finalFare || r.customerFare) || 0
+            const payout = calculateDriverPayout(gross, settings)
+            return {
+              orderId: `RIDE-${r.id}`,
+              date: r.updatedAt,
+              earning: payout.driverNetEarning,
+              platformFee: payout.totalPlatformFee,
+              collectedAmount: gross,
+              paymentMethod: r.paymentMethod || 'CASH',
+              address: r.dropoffAddress,
+            }
+          }),
+        ]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 10),
       },
     })
   } catch (error) {
@@ -152,7 +216,6 @@ export async function POST(request) {
     const numericDriverId = parseInt(driverId, 10)
     const remitAmount = parseFloat(amount)
 
-    // Log the remittance record into driver profile / wallet
     return Response.json({
       success: true,
       message: `Remittance of Rs. ${remitAmount.toLocaleString()} submitted successfully. Awaiting finance confirmation.`,
@@ -173,4 +236,3 @@ export async function POST(request) {
     )
   }
 }
-

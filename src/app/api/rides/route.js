@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth-server'
+import { calculateRapidRideFare } from '@/lib/rapidRideFormula'
+import { getRapidRideSettings } from '@/lib/rapidRideSettings'
 
 // Generate a random 4-digit ride OTP
 function generateOtp() {
   return String(Math.floor(1000 + Math.random() * 9000))
 }
 
-// GET: Retrieve ride requests
+// GET: Retrieve RapidRide requests
 // - For Drivers: Available search pool (status: SEARCHING) or currently assigned active trip
 // - For Customers: Their active ride requests and past trips
 export async function GET(request) {
@@ -17,6 +19,7 @@ export async function GET(request) {
     const role = searchParams.get('role') || authUser?.role || 'CUSTOMER'
     const statusParam = searchParams.get('status')
     const serviceType = searchParams.get('serviceType') // TAXI, LUGGAGE, or all
+    const settings = await getRapidRideSettings()
 
     // ── Driver Mode: Query open rides waiting for bids or currently assigned trip ──
     if (role === 'DRIVER') {
@@ -31,7 +34,7 @@ export async function GET(request) {
           },
           include: {
             customer: {
-              select: { id: true, name: true, phoneNumber: true, image: true },
+              select: { id: true, username: true, phoneNumber: true, image: true },
             },
           },
         })
@@ -39,8 +42,14 @@ export async function GET(request) {
         if (activeTrip) {
           return NextResponse.json({
             success: true,
-            activeTrip,
+            activeTrip: {
+              ...activeTrip,
+              customer: activeTrip.customer
+                ? { ...activeTrip.customer, name: activeTrip.customer.username }
+                : null,
+            },
             availableRides: [],
+            settings,
           })
         }
       }
@@ -51,11 +60,11 @@ export async function GET(request) {
         ...(serviceType && { serviceType }),
       }
 
-      const availableRides = await prisma.rideRequest.findMany({
+      const availableRidesRaw = await prisma.rideRequest.findMany({
         where: whereClause,
         include: {
           customer: {
-            select: { id: true, name: true, phoneNumber: true, image: true },
+            select: { id: true, username: true, phoneNumber: true, image: true },
           },
           driverBids: {
             where: driverId ? { driverId } : undefined,
@@ -65,10 +74,16 @@ export async function GET(request) {
         take: 30,
       })
 
+      const availableRides = availableRidesRaw.map(r => ({
+        ...r,
+        customer: r.customer ? { ...r.customer, name: r.customer.username } : null,
+      }))
+
       return NextResponse.json({
         success: true,
         activeTrip: null,
         availableRides,
+        settings,
       })
     }
 
@@ -77,7 +92,7 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const rides = await prisma.rideRequest.findMany({
+    const ridesRaw = await prisma.rideRequest.findMany({
       where: {
         customerId: authUser.id,
         ...(statusParam ? { status: statusParam } : {}),
@@ -86,7 +101,7 @@ export async function GET(request) {
         driver: {
           select: {
             id: true,
-            name: true,
+            username: true,
             phoneNumber: true,
             image: true,
             driverProfile: true,
@@ -97,7 +112,7 @@ export async function GET(request) {
             driver: {
               select: {
                 id: true,
-                name: true,
+                username: true,
                 phoneNumber: true,
                 image: true,
                 driverProfile: true,
@@ -111,14 +126,23 @@ export async function GET(request) {
       take: 20,
     })
 
-    return NextResponse.json({ success: true, data: rides })
+    const rides = ridesRaw.map(r => ({
+      ...r,
+      driver: r.driver ? { ...r.driver, name: r.driver.username } : null,
+      driverBids: (r.driverBids || []).map(b => ({
+        ...b,
+        driver: b.driver ? { ...b.driver, name: b.driver.username } : null,
+      })),
+    }))
+
+    return NextResponse.json({ success: true, data: rides, settings })
   } catch (error) {
     console.error('Failed to get rides:', error)
     return NextResponse.json({ success: false, error: error.message || 'Failed to fetch rides' }, { status: 500 })
   }
 }
 
-// POST: Customer creates an InDrive Taxi or Luggage Drop Request
+// POST: Customer creates a RapidRide Taxi or Baggage Drop Request
 export async function POST(request) {
   try {
     const authUser = await getAuthUser(request)
@@ -137,10 +161,12 @@ export async function POST(request) {
       dropoffLat,
       dropoffLng,
       estimatedDistanceKm = 5.0,
+      estimatedDurationMin = null,
+      bagCount = 0,
       customerFare,
       customerNotes,
       paymentMethod = 'CASH',
-      // Luggage specific:
+      // Baggage / Luggage specific:
       recipientName,
       recipientPhone,
       packageDescription,
@@ -152,8 +178,32 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Pickup and Dropoff locations are required' }, { status: 400 })
     }
 
-    if (!customerFare || Number(customerFare) <= 0) {
-      return NextResponse.json({ success: false, error: 'Please propose a fair fare amount' }, { status: 400 })
+    const settings = await getRapidRideSettings()
+    const fareCalc = calculateRapidRideFare({
+      serviceType: serviceType === 'LUGGAGE' ? 'LUGGAGE' : 'TAXI',
+      vehicleId: rideCategory,
+      distanceKm: Number(estimatedDistanceKm) || 5.0,
+      durationMin: estimatedDurationMin,
+      weightKg: packageWeight,
+      isFragile: Boolean(isFragile),
+      bagCount: Number(bagCount) || 0,
+      settings,
+    })
+
+    const proposedFare = Number(customerFare)
+    if (!proposedFare || proposedFare <= 0) {
+      return NextResponse.json({ success: false, error: 'Please propose a valid fare amount' }, { status: 400 })
+    }
+
+    if (proposedFare < fareCalc.minAllowedFare) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Minimum RapidRide offer for this route is ${settings.currency} ${fareCalc.minAllowedFare} (Suggested: ${settings.currency} ${fareCalc.suggestedFare})`,
+          fareBreakdown: fareCalc,
+        },
+        { status: 400 }
+      )
     }
 
     // Cancel any existing pending rides for this customer to prevent duplicate floating requests
@@ -165,7 +215,13 @@ export async function POST(request) {
       data: { status: 'CANCELLED' },
     })
 
-    const ride = await prisma.rideRequest.create({
+    const notesParts = []
+    if (customerNotes && customerNotes.trim()) notesParts.push(customerNotes.trim())
+    if (serviceType !== 'LUGGAGE' && Number(bagCount) > 0) {
+      notesParts.push(`Passenger Bags: ${Number(bagCount)}`)
+    }
+
+    const rideRaw = await prisma.rideRequest.create({
       data: {
         customerId: authUser.id,
         serviceType: serviceType === 'LUGGAGE' ? 'LUGGAGE' : 'TAXI',
@@ -177,26 +233,32 @@ export async function POST(request) {
         dropoffLat: dropoffLat ? Number(dropoffLat) : null,
         dropoffLng: dropoffLng ? Number(dropoffLng) : null,
         estimatedDistanceKm: Number(estimatedDistanceKm) || 5.0,
-        customerFare: Number(customerFare),
+        customerFare: proposedFare,
         paymentMethod,
-        customerNotes: customerNotes ? customerNotes.trim() : null,
+        customerNotes: notesParts.length > 0 ? notesParts.join(' • ') : null,
         rideOtp: generateOtp(),
         status: 'SEARCHING',
         // Luggage fields:
         recipientName: recipientName ? recipientName.trim() : null,
         recipientPhone: recipientPhone ? recipientPhone.trim() : null,
         packageDescription: packageDescription ? packageDescription.trim() : null,
-        packageWeight: packageWeight ? packageWeight.trim() : null,
+        packageWeight: packageWeight ? String(packageWeight).trim() : null,
         isFragile: Boolean(isFragile),
       },
       include: {
         customer: {
-          select: { id: true, name: true, phoneNumber: true, image: true },
+          select: { id: true, username: true, phoneNumber: true, image: true },
         },
       },
     })
 
-    return NextResponse.json({ success: true, data: ride }, { status: 201 })
+    const ride = {
+      ...rideRaw,
+      customer: rideRaw.customer ? { ...rideRaw.customer, name: rideRaw.customer.username } : null,
+      fareBreakdown: fareCalc,
+    }
+
+    return NextResponse.json({ success: true, data: ride, fareBreakdown: fareCalc }, { status: 201 })
   } catch (error) {
     console.error('Failed to create ride request:', error)
     return NextResponse.json({ success: false, error: error.message || 'Failed to create ride' }, { status: 500 })

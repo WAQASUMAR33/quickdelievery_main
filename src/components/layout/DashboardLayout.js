@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import Sidebar from './Sidebar'
 
 import AppBar         from '@mui/material/AppBar'
@@ -28,11 +29,14 @@ import PersonOutlinedIcon        from '@mui/icons-material/PersonOutlined'
 import SearchIcon                from '@mui/icons-material/Search'
 import SettingsOutlinedIcon      from '@mui/icons-material/SettingsOutlined'
 import ShoppingBagOutlinedIcon   from '@mui/icons-material/ShoppingBagOutlined'
+import DarkModeOutlinedIcon      from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon     from '@mui/icons-material/LightModeOutlined'
 
 const BRAND = '#D70F64'
 
 const DashboardLayout = ({ children }) => {
   const { user, userData, logout } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState(null)
   const [notifAnchorEl, setNotifAnchorEl] = useState(null)
@@ -85,7 +89,7 @@ const DashboardLayout = ({ children }) => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'flex-start' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'flex-start' }}>
 
       {/* Sidebar */}
       <Suspense fallback={<Box sx={{ width: 260, minHeight: '100vh', bgcolor: '#0D141C', flexShrink: 0 }} />}>
@@ -93,13 +97,19 @@ const DashboardLayout = ({ children }) => {
       </Suspense>
 
       {/* Right panel */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* ── Top AppBar ── */}
         <AppBar
           position="sticky"
           elevation={0}
-          sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}
+          sx={{
+            bgcolor: 'background.paper',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            color: 'text.primary',
+            backgroundImage: 'none',
+          }}
         >
           <Toolbar sx={{ gap: 2, minHeight: '56px !important', px: 3 }}>
 
@@ -107,11 +117,28 @@ const DashboardLayout = ({ children }) => {
             <TextField
               size="small"
               placeholder="Search…"
-              sx={{ maxWidth: 360, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+              sx={{
+                maxWidth: 360,
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 0,
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                  '& fieldset': {
+                    borderColor: 'divider',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.25)',
+                  },
+                },
+                '& .MuiInputBase-input': {
+                  color: 'text.primary',
+                  fontSize: 13.5,
+                },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+                    <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                   </InputAdornment>
                 ),
               }}
@@ -119,9 +146,27 @@ const DashboardLayout = ({ children }) => {
 
             <Box sx={{ flex: 1 }} />
 
+            {/* Dark / Light Theme Toggle Button */}
+            <Tooltip title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+              <IconButton
+                size="small"
+                onClick={toggleTheme}
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { color: 'text.primary', bgcolor: 'action.hover' }
+                }}
+              >
+                {isDark ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+
             {/* Notifications / Pending Orders Badge */}
             <Tooltip title={pendingOrdersCount > 0 ? `${pendingOrdersCount} Pending Order${pendingOrdersCount > 1 ? 's' : ''}` : 'Notifications'}>
-              <IconButton size="small" sx={{ color: 'text.secondary' }} onClick={e => setNotifAnchorEl(e.currentTarget)}>
+              <IconButton
+                size="small"
+                sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary', bgcolor: 'action.hover' } }}
+                onClick={e => setNotifAnchorEl(e.currentTarget)}
+              >
                 <Badge
                   badgeContent={pendingOrdersCount}
                   color="error"
@@ -147,14 +192,34 @@ const DashboardLayout = ({ children }) => {
               anchorEl={notifAnchorEl}
               open={notifOpen}
               onClose={() => setNotifAnchorEl(null)}
-              PaperProps={{ elevation: 4, sx: { borderRadius: 0, width: 310, mt: 0.75, p: 0 } }}
+              PaperProps={{
+                elevation: 4,
+                sx: {
+                  borderRadius: 0,
+                  width: 310,
+                  mt: 0.75,
+                  p: 0,
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  backgroundImage: 'none',
+                }
+              }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <Box sx={{ p: 2, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{
+                p: 2,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ShoppingBagOutlinedIcon sx={{ color: BRAND, fontSize: 18 }} />
-                  <Typography variant="subtitle2" fontWeight={800} color="#111827">Order Alerts</Typography>
+                  <Typography variant="subtitle2" fontWeight={800} color="text.primary">Order Alerts</Typography>
                 </Box>
                 {pendingOrdersCount > 0 && (
                   <Chip
@@ -176,7 +241,7 @@ const DashboardLayout = ({ children }) => {
                       size="small"
                       fullWidth
                       onClick={handleOpenPendingOrders}
-                      sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#2e6022' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 0.75 }}
+                      sx={{ bgcolor: BRAND, '&:hover': { bgcolor: '#b00d52' }, borderRadius: 0, textTransform: 'none', fontWeight: 700, py: 0.75 }}
                     >
                       View Pending Orders
                     </Button>
@@ -191,18 +256,28 @@ const DashboardLayout = ({ children }) => {
 
             {/* User avatar */}
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', px: 1, py: 0.5, '&:hover': { bgcolor: 'grey.100' } }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                cursor: 'pointer',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                '&:hover': { bgcolor: 'action.hover' },
+                transition: 'background-color 0.2s',
+              }}
               onClick={e => setAnchorEl(e.currentTarget)}
             >
               <Avatar
                 src={userData?.urlLogo || userData?.avatarUrl || userData?.photoURL || user?.photoURL || ''}
                 alt={displayName}
-                sx={{ width: 32, height: 32, bgcolor: BRAND, fontSize: 13, fontWeight: 700, border: '1px solid #e2e8f0' }}
+                sx={{ width: 32, height: 32, bgcolor: BRAND, fontSize: 13, fontWeight: 700, border: '1px solid', borderColor: 'divider' }}
               >
                 {initials}
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Typography variant="body2" fontWeight={600} lineHeight={1.2}>{displayName}</Typography>
+                <Typography variant="body2" fontWeight={600} lineHeight={1.2} color="text.primary">{displayName}</Typography>
                 <Typography variant="caption" color="text.secondary" textTransform="capitalize" lineHeight={1}>{role}</Typography>
               </Box>
             </Box>
@@ -212,17 +287,28 @@ const DashboardLayout = ({ children }) => {
               anchorEl={anchorEl}
               open={menuOpen}
               onClose={() => setAnchorEl(null)}
-              PaperProps={{ elevation: 2, sx: { borderRadius: 0, minWidth: 180, mt: 0.5 } }}
+              PaperProps={{
+                elevation: 2,
+                sx: {
+                  borderRadius: 0,
+                  minWidth: 180,
+                  mt: 0.5,
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  backgroundImage: 'none',
+                }
+              }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MenuItem onClick={() => { setAnchorEl(null); router.push(userData?.role === 'VENDOR' ? '/vendor/dashboard/profile' : '/admin/dashboard/settings') }} dense>
+              <MenuItem onClick={() => { setAnchorEl(null); router.push(userData?.role === 'VENDOR' ? '/vendor/dashboard/profile' : userData?.role === 'DRIVER' ? '/driver/profile' : '/admin/dashboard/settings') }} dense>
                 <PersonOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} />
-                <Typography variant="body2">Profile</Typography>
+                <Typography variant="body2" color="text.primary">Profile</Typography>
               </MenuItem>
               <MenuItem onClick={() => { setAnchorEl(null); router.push('/admin/dashboard/settings') }} dense>
                 <SettingsOutlinedIcon fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} />
-                <Typography variant="body2">Settings</Typography>
+                <Typography variant="body2" color="text.primary">Settings</Typography>
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout} dense sx={{ color: 'error.main' }}>
@@ -235,7 +321,7 @@ const DashboardLayout = ({ children }) => {
         </AppBar>
 
         {/* ── Main content ── */}
-        <Box component="main" sx={{ flex: 1 }}>
+        <Box component="main" sx={{ flex: 1, bgcolor: 'background.default' }}>
           {children}
         </Box>
 
@@ -245,4 +331,3 @@ const DashboardLayout = ({ children }) => {
 }
 
 export default DashboardLayout
-

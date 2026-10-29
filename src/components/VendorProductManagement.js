@@ -8,6 +8,7 @@ import { uploadMultipleImages } from '@/lib/imageUpload'
 import { getFirstProductImage, hasProductImages } from '@/lib/imageUtils'
 import NextImage from 'next/image'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Card             from '@mui/material/Card'
@@ -76,6 +77,9 @@ const BRAND_DARK = '#2E5F22'
 const DROP_MIN_W = 300
 
 const VendorProductManagement = () => {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { userData } = useAuth()
   const router = useRouter()
   const [products, setProducts] = useState([])
@@ -638,15 +642,15 @@ const VendorProductManagement = () => {
             startIcon={<UploadFileOutlinedIcon />}
             onClick={() => setShowFeedDialog(true)}
             sx={{
-              borderColor: '#cbd5e1',
-              color: '#334155',
+              borderColor: 'divider',
+              color: 'text.primary',
               borderRadius: 0,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: 13,
               px: 2,
               py: 1,
-              '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: `${BRAND}08` },
+              '&:hover': { borderColor: brandText, color: brandText, bgcolor: isDark ? 'rgba(74,222,128,0.08)' : `${BRAND}08` },
             }}
           >
             Unified Feed Tools (CSV / XML)
@@ -664,10 +668,10 @@ const VendorProductManagement = () => {
       {/* ── Stats Cards ── */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
         {[
-          { label: 'Total Products', value: products.length,                                                                           icon: <Inventory2OutlinedIcon />, color: '#3b82f6', bg: '#eff6ff' },
-          { label: 'Approved',       value: products.filter(p => p.approvalStatus === 'Approved').length,                             icon: <CheckCircleOutlinedIcon />, color: '#10b981', bg: '#f0fdf4' },
-          { label: 'Pending',        value: products.filter(p => p.approvalStatus === 'Pending').length,                              icon: <PendingOutlinedIcon />,     color: '#f59e0b', bg: '#fffbeb' },
-          { label: 'Total Value',    value: `Rs. ${products.reduce((s, p) => s + (parseFloat(p.price || 0) * (p.stock || 0)), 0).toLocaleString()}`, icon: <AttachMoneyIcon />, color: '#8b5cf6', bg: '#f5f3ff' },
+          { label: 'Total Products', value: products.length,                                                                           icon: <Inventory2OutlinedIcon />, color: isDark ? '#60a5fa' : '#3b82f6', bg: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff' },
+          { label: 'Approved',       value: products.filter(p => p.approvalStatus === 'Approved').length,                             icon: <CheckCircleOutlinedIcon />, color: isDark ? '#34d399' : '#10b981', bg: isDark ? 'rgba(16,185,129,0.16)' : '#f0fdf4' },
+          { label: 'Pending',        value: products.filter(p => p.approvalStatus === 'Pending').length,                              icon: <PendingOutlinedIcon />,     color: isDark ? '#fbbf24' : '#f59e0b', bg: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb' },
+          { label: 'Total Value',    value: `Rs. ${products.reduce((s, p) => s + (parseFloat(p.price || 0) * (p.stock || 0)), 0).toLocaleString()}`, icon: <AttachMoneyIcon />, color: isDark ? '#a78bfa' : '#8b5cf6', bg: isDark ? 'rgba(139,92,246,0.16)' : '#f5f3ff' },
         ].map((stat, i) => (
           <Card key={i} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
             <CardContent>
@@ -723,7 +727,7 @@ const VendorProductManagement = () => {
           </FormControl>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip label={`${filteredProducts.length} products`} size="small" sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          <Chip label={`${filteredProducts.length} products`} size="small" sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : '#D8E9D6', color: brandText, fontWeight: 700, borderRadius: 0 }} />
           <ToggleButtonGroup value={viewMode} exclusive size="small" onChange={(_, v) => v && setViewMode(v)} sx={{ '& .MuiToggleButton-root': { borderRadius: 0 } }}>
             <ToggleButton value="table"><Tooltip title="Table"><TableRowsOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
             <ToggleButton value="grid"><Tooltip title="Grid"><GridViewOutlinedIcon fontSize="small" /></Tooltip></ToggleButton>
@@ -768,15 +772,15 @@ const VendorProductManagement = () => {
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
                       {isRestaurant ? (
                         <>
-                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
-                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(34,197,94,0.16)' : '#f0fdf4', color: isDark ? '#4ade80' : '#166534', fontWeight: 800, borderRadius: 0 }} />
+                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 700, borderRadius: 0 }} />
                         </>
                       ) : (
                         <>
                           {product.brandName && (
-                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', color: isDark ? '#60a5fa' : '#1e40af', fontWeight: 700, borderRadius: 0 }} />
                           )}
-                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(148,163,184,0.16)' : '#f8fafc', color: isDark ? '#cbd5e1' : '#475569', fontWeight: 700, borderRadius: 0 }} />
                         </>
                       )}
                     </Box>
@@ -848,15 +852,15 @@ const VendorProductManagement = () => {
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
                     {isRestaurant ? (
                       <>
-                        <Chip label="🥩 100% Halal" size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
-                        <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                        <Chip label="🥩 100% Halal" size="small" sx={{ height: 20, fontSize: 10, bgcolor: isDark ? 'rgba(34,197,94,0.16)' : '#f0fdf4', color: isDark ? '#4ade80' : '#166534', fontWeight: 800, borderRadius: 0 }} />
+                        <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 20, fontSize: 10, bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 700, borderRadius: 0 }} />
                       </>
                     ) : (
                       <>
                         {product.brandName && (
-                          <Chip label={product.brandName} size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                          <Chip label={product.brandName} size="small" sx={{ height: 20, fontSize: 10, bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', color: isDark ? '#60a5fa' : '#1e40af', fontWeight: 700, borderRadius: 0 }} />
                         )}
-                        <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 20, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                        <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 20, fontSize: 10, bgcolor: isDark ? 'rgba(148,163,184,0.16)' : '#f8fafc', color: isDark ? '#cbd5e1' : '#475569', fontWeight: 700, borderRadius: 0 }} />
                       </>
                     )}
                   </Box>
@@ -886,15 +890,15 @@ const VendorProductManagement = () => {
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
                       {isRestaurant ? (
                         <>
-                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f0fdf4', color: '#166534', fontWeight: 800, borderRadius: 0 }} />
-                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#fffbeb', color: '#b45309', fontWeight: 700, borderRadius: 0 }} />
+                          <Chip label="🥩 100% Halal" size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(34,197,94,0.16)' : '#f0fdf4', color: isDark ? '#4ade80' : '#166534', fontWeight: 800, borderRadius: 0 }} />
+                          <Chip label="⏱️ 20m Prep" size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 700, borderRadius: 0 }} />
                         </>
                       ) : (
                         <>
                           {product.brandName && (
-                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#eff6ff', color: '#1e40af', fontWeight: 700, borderRadius: 0 }} />
+                            <Chip label={product.brandName} size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', color: isDark ? '#60a5fa' : '#1e40af', fontWeight: 700, borderRadius: 0 }} />
                           )}
-                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: '#f8fafc', color: '#475569', fontWeight: 700, borderRadius: 0 }} />
+                          <Chip label={product.warranty ? `🛡️ ${product.warranty}` : '🛡️ 1 Year Brand Warranty'} size="small" sx={{ height: 18, fontSize: 10, bgcolor: isDark ? 'rgba(148,163,184,0.16)' : '#f8fafc', color: isDark ? '#cbd5e1' : '#475569', fontWeight: 700, borderRadius: 0 }} />
                         </>
                       )}
                     </Box>
@@ -1065,9 +1069,9 @@ const VendorProductManagement = () => {
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 3, py: 2, bgcolor: '#ffffff', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 3, py: 2, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box>
-            <Typography variant="h6" fontWeight={800} color="#111827">
+            <Typography variant="h6" fontWeight={800} color="text.primary">
               {isRestaurant ? 'Edit Food Item' : 'Edit Product'}
             </Typography>
             <Typography variant="caption" color="text.secondary">SKU: {formData.sku || 'N/A'}</Typography>
@@ -1099,13 +1103,13 @@ const VendorProductManagement = () => {
                   fontWeight: activeEditPhase === tab.id ? 800 : 600,
                   fontSize: 12,
                   whiteSpace: 'nowrap',
-                  bgcolor: activeEditPhase === tab.id ? BRAND : '#ffffff',
-                  borderColor: activeEditPhase === tab.id ? BRAND : '#cbd5e1',
-                  color: activeEditPhase === tab.id ? '#ffffff' : '#334155',
+                  bgcolor: activeEditPhase === tab.id ? BRAND : 'background.paper',
+                  borderColor: activeEditPhase === tab.id ? BRAND : 'divider',
+                  color: activeEditPhase === tab.id ? '#ffffff' : 'text.primary',
                   boxShadow: 'none',
                   '&:hover': {
-                    bgcolor: activeEditPhase === tab.id ? BRAND_DARK : '#f8fafc',
-                    borderColor: activeEditPhase === tab.id ? BRAND_DARK : '#94a3b8',
+                    bgcolor: activeEditPhase === tab.id ? BRAND_DARK : 'action.hover',
+                    borderColor: activeEditPhase === tab.id ? BRAND_DARK : 'text.secondary',
                   }
                 }}
               >
@@ -1117,11 +1121,11 @@ const VendorProductManagement = () => {
           <Stack spacing={3}>
             {/* ── PHASE 1: Core Identifiers & Taxonomy (Vital Info) ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_1') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 1" size="small" sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 1" size="small" sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : `${BRAND}15`, color: brandText, fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Core Identifiers & Taxonomy (Vital Info)
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1276,11 +1280,11 @@ const VendorProductManagement = () => {
 
                   {/* Restaurant Mode Banner */}
                   {isRestaurantActive && (
-                    <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: '#f0fdf4', border: '1px solid #86efac', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Typography variant="body2" fontWeight={800} color="#166534">
+                    <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#86efac', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Typography variant="body2" fontWeight={800} color={isDark ? "#4ade80" : "#166534"}>
                         🍽️ RESTAURANT ACTIVE:
                       </Typography>
-                      <Typography variant="caption" color="#15803d">
+                      <Typography variant="caption" color={isDark ? "#86efac" : "#15803d"}>
                         Showing scoped food categories, menu sections, and culinary attributes. Non-food options are automatically filtered out.
                       </Typography>
                     </Box>
@@ -1291,11 +1295,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 2: Pricing, Availability & Offer Data ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_2') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 2" size="small" sx={{ bgcolor: '#dbeafe', color: '#1e40af', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 2" size="small" sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1e40af', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Pricing, Availability & Offer Data
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1420,11 +1424,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 3: Discoverability, Content & Descriptions ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_3') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 3" size="small" sx={{ bgcolor: '#fef3c7', color: '#b45309', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 3" size="small" sx={{ bgcolor: isDark ? 'rgba(245,158,11,0.18)' : '#fef3c7', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Discoverability, Content & Descriptions
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1507,11 +1511,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 4: Food, Dietary & Safety Compliance (Only for Restaurant Items) ── */}
             {isRestaurantActive && (activeEditPhase === 'all' || activeEditPhase === 'phase_4') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 4" size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 4" size="small" sx={{ bgcolor: isDark ? 'rgba(34,197,94,0.18)' : '#dcfce7', color: isDark ? '#4ade80' : '#15803d', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Food, Dietary & Safety Compliance
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1546,7 +1550,7 @@ const VendorProductManagement = () => {
                     sx={{ width: '100%', '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
                   />
 
-                  <Box sx={{ p: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ p: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
                       <Typography variant="body2" fontWeight={700}>Expiration Dated Product</Typography>
                       <Typography variant="caption" color="text.secondary">Indicates items with short shelf life or prepared fresh consumption window</Typography>
@@ -1589,35 +1593,35 @@ const VendorProductManagement = () => {
                   />
 
                   {/* Food Vendor Quick Badges */}
-                  <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                    <Typography variant="subtitle2" fontWeight={800} color="#166534" mb={1.5}>
+                  <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0' }}>
+                    <Typography variant="subtitle2" fontWeight={800} color={isDark ? "#4ade80" : "#166534"} mb={1.5}>
                       Food Kitchen Badges & Preparation Attributes
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 2 }}>
                       <FormControlLabel
                         control={<Switch checked={Boolean(formData.isHalal)} onChange={e => setFormData({ ...formData, isHalal: e.target.checked })} color="success" />}
-                        label={<Typography variant="body2" fontWeight={700} color="#166534">🥩 100% Halal Certified</Typography>}
+                        label={<Typography variant="body2" fontWeight={700} color={isDark ? "#4ade80" : "#166534"}>🥩 100% Halal Certified</Typography>}
                       />
                       <FormControlLabel
                         control={<Switch checked={Boolean(formData.isVeg)} onChange={e => setFormData({ ...formData, isVeg: e.target.checked })} color="success" />}
-                        label={<Typography variant="body2" fontWeight={700} color="#166534">🌱 Pure Vegetarian</Typography>}
+                        label={<Typography variant="body2" fontWeight={700} color={isDark ? "#4ade80" : "#166534"}>🌱 Pure Vegetarian</Typography>}
                       />
                     </Box>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
                       <TextField size="small" label="Prep Time (mins)" value={formData.prepTime || '20'}
                         onChange={e => setFormData({ ...formData, prepTime: e.target.value })}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'background.paper' } }} />
                       <TextField size="small" label="Calories (kcal)" value={formData.calories || ''}
                         onChange={e => setFormData({ ...formData, calories: e.target.value })}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'background.paper' } }} />
                       <TextField size="small" label="Portion / Servings" value={formData.servings || '1-2 Persons'}
                         onChange={e => setFormData({ ...formData, servings: e.target.value })}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'background.paper' } }} />
                       <FormControl size="small">
                         <InputLabel>Spice Level</InputLabel>
                         <Select value={formData.spiceLevel || 'Medium'} label="Spice Level"
                           onChange={e => setFormData({ ...formData, spiceLevel: e.target.value })}
-                          sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                          sx={{ borderRadius: 0, bgcolor: 'background.paper' }}>
                           <MenuItem value="Mild">Mild 🟢</MenuItem>
                           <MenuItem value="Medium">Medium 🟡</MenuItem>
                           <MenuItem value="Hot">Hot 🔴</MenuItem>
@@ -1632,11 +1636,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 5: Modifiers, Options & Variations (Customizations) ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_5') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 5" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7e22ce', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 5" size="small" sx={{ bgcolor: isDark ? 'rgba(168,85,247,0.18)' : '#f3e8ff', color: isDark ? '#c084fc' : '#7e22ce', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Modifiers, Options & Variations (Customizations)
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1702,17 +1706,17 @@ const VendorProductManagement = () => {
 
                 {/* Interactive Modifiers / Add-ons List */}
                 <Box sx={{ p: 2.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', mb: 3 }}>
-                  <Typography variant="subtitle2" fontWeight={800} color="#111827" mb={1.5}>
+                  <Typography variant="subtitle2" fontWeight={800} color="text.primary" mb={1.5}>
                     Active Modifiers & Add-on Items ({formData.addons?.length || 0})
                   </Typography>
 
                   <Stack spacing={1.5} sx={{ mb: 2 }}>
                     {(formData.addons || []).map((addon, index) => (
-                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: '#ffffff', border: '1px solid', borderColor: 'divider' }}>
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Typography variant="body2" fontWeight={700} color="#111827">{addon.name}</Typography>
+                          <Typography variant="body2" fontWeight={700} color="text.primary">{addon.name}</Typography>
                           <Chip label={`+ Rs. ${parseFloat(addon.price || 0).toLocaleString()}`} size="small"
-                            sx={{ height: 22, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af', borderRadius: 0 }} />
+                            sx={{ height: 22, fontWeight: 700, bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1e40af', borderRadius: 0 }} />
                         </Box>
                         <IconButton size="small" color="error" onClick={() => setFormData({ ...formData, addons: formData.addons.filter((_, i) => i !== index) })}>
                           <CloseIcon fontSize="small" />
@@ -1728,11 +1732,11 @@ const VendorProductManagement = () => {
                   <Box sx={{ display: 'flex', gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' }, alignItems: 'center' }}>
                     <TextField size="small" label="Modifier Item Name" placeholder="e.g. Extra Cheddar Cheese, Grilled Chicken"
                       value={newAddon.name} onChange={e => setNewAddon({ ...newAddon, name: e.target.value })}
-                      sx={{ flex: 2, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                      sx={{ flex: 2, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'background.paper' } }} />
                     <TextField size="small" label="Price Delta (Rs.)" type="number" placeholder="e.g. 150"
                       value={newAddon.price} onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
                       InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                      sx={{ flex: 1, minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: '#ffffff' } }} />
+                      sx={{ flex: 1, minWidth: 120, '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'background.paper' } }} />
                     <Button variant="contained" startIcon={<AddIcon />}
                       onClick={() => {
                         if (!newAddon.name.trim() || !newAddon.price) { toast.error('Please enter modifier name and price'); return }
@@ -1756,7 +1760,7 @@ const VendorProductManagement = () => {
                       </Box>
                       <FormControl fullWidth size="small">
                         <InputLabel>Select Size</InputLabel>
-                        <Select value={formData.size || ''} label="Select Size" onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <Select value={formData.size || ''} label="Select Size" onChange={e => setFormData({ ...formData, size: e.target.value })} sx={{ borderRadius: 0, bgcolor: 'background.paper' }}>
                           <MenuItem value=""><em>None / Standard</em></MenuItem>
                           {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                         </Select>
@@ -1770,7 +1774,7 @@ const VendorProductManagement = () => {
                       </Box>
                       <FormControl fullWidth size="small">
                         <InputLabel>Select Color</InputLabel>
-                        <Select value={formData.color || ''} label="Select Color" onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: '#ffffff' }}>
+                        <Select value={formData.color || ''} label="Select Color" onChange={e => setFormData({ ...formData, color: e.target.value })} sx={{ borderRadius: 0, bgcolor: 'background.paper' }}>
                           <MenuItem value=""><em>None / Default</em></MenuItem>
                           {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
                         </Select>
@@ -1783,11 +1787,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 6: Image Media Assets ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_6') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 6" size="small" sx={{ bgcolor: '#ffe4e6', color: '#be123c', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 6" size="small" sx={{ bgcolor: isDark ? 'rgba(244,63,94,0.18)' : '#ffe4e6', color: isDark ? '#fb7185' : '#be123c', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       Image Media Assets
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1827,7 +1831,7 @@ const VendorProductManagement = () => {
                       </Typography>
                       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 1.5 }}>
                         {formData.images.map((url, i) => (
-                          <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: i === 0 ? BRAND : 'divider', height: 100, bgcolor: '#ffffff', overflow: 'hidden' }}>
+                          <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: i === 0 ? BRAND : 'divider', height: 100, bgcolor: 'background.paper', overflow: 'hidden' }}>
                             <NextImage src={url} alt={`Upload ${i + 1}`} width={100} height={100} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                             <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, bgcolor: i === 0 ? BRAND : 'rgba(0,0,0,0.6)', color: '#ffffff', fontSize: 10, py: 0.25, textAlign: 'center', fontWeight: 800 }}>
                               {i === 0 ? 'MAIN IMAGE' : `OTHER #${i}`}
@@ -1847,11 +1851,11 @@ const VendorProductManagement = () => {
 
             {/* ── PHASE 7: Dimensions, Weight & Shipping / Packaging & Handover ── */}
             {(activeEditPhase === 'all' || activeEditPhase === 'phase_7') && (
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box>
-                    <Chip label="PHASE 7" size="small" sx={{ bgcolor: '#e0e7ff', color: '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                    <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                    <Chip label="PHASE 7" size="small" sx={{ bgcolor: isDark ? 'rgba(99,102,241,0.18)' : '#e0e7ff', color: isDark ? '#818cf8' : '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                       {isRestaurantActive ? 'Food Packaging, Handover & Freshness Assurance' : 'Dimensions, Weight & Shipping'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -2043,7 +2047,7 @@ const VendorProductManagement = () => {
         </DialogContent>
 
         <Divider />
-        <DialogActions sx={{ flexShrink: 0, px: 3, py: 2, gap: 1.5, bgcolor: '#ffffff' }}>
+        <DialogActions sx={{ flexShrink: 0, px: 3, py: 2, gap: 1.5, bgcolor: 'background.paper' }}>
           <Button onClick={() => setShowEditModal(false)} variant="outlined" sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 600 }}>
             Cancel
           </Button>
@@ -2064,7 +2068,7 @@ const VendorProductManagement = () => {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}>
           <Box>
-            <Typography variant="h6" fontWeight={800} color="#111827">
+            <Typography variant="h6" fontWeight={800} color="text.primary">
               Unified Catalog Feed & Ingestion Engine
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -2077,8 +2081,8 @@ const VendorProductManagement = () => {
         <DialogContent sx={{ p: 3 }}>
           <Stack spacing={3}>
             {/* Step 1: Download Official Template */}
-            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#f8fafc' }}>
-              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="text.primary" mb={0.5}>
                 1. Download Official 7-Phase Schema Template
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mb={2}>
@@ -2092,7 +2096,7 @@ const VendorProductManagement = () => {
                   component="a"
                   href="/api/products/feed?type=template&format=csv"
                   download="unified_product_template.csv"
-                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: 'background.paper' }}
                 >
                   Download Flat CSV
                 </Button>
@@ -2103,7 +2107,7 @@ const VendorProductManagement = () => {
                   component="a"
                   href="/api/products/feed?type=template&format=xml"
                   download="unified_product_feed.xml"
-                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: 'background.paper' }}
                 >
                   Download XML Feed
                 </Button>
@@ -2114,7 +2118,7 @@ const VendorProductManagement = () => {
                   component="a"
                   href="/api/products/feed?type=template&format=json"
                   download="unified_product_schema.json"
-                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: 'background.paper' }}
                 >
                   Download JSON Schema
                 </Button>
@@ -2122,8 +2126,8 @@ const VendorProductManagement = () => {
             </Paper>
 
             {/* Step 2: Export Current Catalog */}
-            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#f8fafc' }}>
-              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="text.primary" mb={0.5}>
                 2. Export Store Inventory in Unified 7-Phase Format
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mb={2}>
@@ -2137,7 +2141,7 @@ const VendorProductManagement = () => {
                   component="a"
                   href={`/api/products/feed?type=export&format=csv&vendorId=${userData?.uid || ''}`}
                   download="my_store_catalog.csv"
-                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: 'background.paper' }}
                 >
                   Export Store CSV
                 </Button>
@@ -2148,7 +2152,7 @@ const VendorProductManagement = () => {
                   component="a"
                   href={`/api/products/feed?type=export&format=xml&vendorId=${userData?.uid || ''}`}
                   download="my_store_catalog.xml"
-                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: '#ffffff' }}
+                  sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, bgcolor: 'background.paper' }}
                 >
                   Export Store XML
                 </Button>
@@ -2156,8 +2160,8 @@ const VendorProductManagement = () => {
             </Paper>
 
             {/* Step 3: Bulk Upload / Ingest */}
-            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: '#cbd5e1', bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={0.5}>
+            <Paper elevation={0} sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+              <Typography variant="subtitle2" fontWeight={800} color="text.primary" mb={0.5}>
                 3. Bulk Ingest / Upload Products (CSV File or Raw Text)
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mb={2}>
@@ -2208,8 +2212,8 @@ item_sku,product_name,brand_name,manufacturer,product_id,product_id_type,product
               />
 
               {feedImportResult && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: '#f0fdf4', border: '1px solid #86efac' }}>
-                  <Typography variant="body2" fontWeight={800} color="#166534">
+                <Box sx={{ mt: 2, p: 2, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#86efac' }}>
+                  <Typography variant="body2" fontWeight={800} color={isDark ? "#4ade80" : "#166534"}>
                     Batch Results: {feedImportResult.created} Created, {feedImportResult.updated} Updated, {feedImportResult.failed} Failed (Total Processed: {feedImportResult.total})
                   </Typography>
                   {feedImportResult.errors?.length > 0 && (

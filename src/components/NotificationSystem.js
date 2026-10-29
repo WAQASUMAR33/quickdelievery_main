@@ -45,14 +45,14 @@ const NotificationSystem = () => {
   const getNotificationStyles = (type) => {
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-800'
+        return 'bg-green-50 dark:bg-emerald-950/90 border-green-200 dark:border-emerald-700 text-green-800 dark:text-emerald-200'
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-800'
+        return 'bg-red-50 dark:bg-red-950/90 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200'
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        return 'bg-yellow-50 dark:bg-amber-950/90 border-yellow-200 dark:border-amber-700 text-yellow-800 dark:text-amber-200'
       case 'info':
       default:
-        return 'bg-blue-50 border-blue-200 text-blue-800'
+        return 'bg-blue-50 dark:bg-slate-900 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200'
     }
   }
 
@@ -79,7 +79,7 @@ const NotificationSystem = () => {
               stiffness: 300,
               duration: 0.3 
             }}
-            className={`max-w-sm w-full bg-white rounded-lg shadow-lg border-l-4 p-4 ${getNotificationStyles(notification.type)}`}
+            className={`max-w-sm w-full rounded-lg shadow-lg border-l-4 p-4 ${getNotificationStyles(notification.type)}`}
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -93,7 +93,7 @@ const NotificationSystem = () => {
               <div className="ml-4 flex-shrink-0">
                 <button
                   onClick={() => removeNotification(notification.id)}
-                  className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors"
+                  className="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

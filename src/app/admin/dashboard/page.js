@@ -122,7 +122,7 @@ export default function AdminDashboard() {
 
         {/* Header */}
         <Box sx={{ mb: 2 }}>
-          <Typography variant="h5" fontWeight={800} sx={{ color: '#0f172a', letterSpacing: '-0.3px' }}>
+          <Typography variant="h5" fontWeight={800} sx={{ color: 'text.primary', letterSpacing: '-0.3px' }}>
             System Executive Dashboard
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>

@@ -66,29 +66,29 @@ const tfReadOnly = {
   sx: {
     '& .MuiOutlinedInput-root': {
       borderRadius: 0,
-      bgcolor: '#f8fafc',
-      '& fieldset': { borderColor: '#e2e8f0' },
-      '&:hover fieldset': { borderColor: '#cbd5e1' },
-      '&.Mui-focused fieldset': { borderColor: '#94a3b8' },
+      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+      '& fieldset': { borderColor: 'divider' },
+      '&:hover fieldset': { borderColor: 'text.disabled' },
+      '&.Mui-focused fieldset': { borderColor: 'text.secondary' },
     },
     '& .MuiInputBase-input': {
       cursor: 'default',
-      color: '#334155',
+      color: 'text.primary',
       fontWeight: 500,
     },
-    '& label': { color: '#64748b' },
-    '& label.Mui-focused': { color: '#64748b' },
+    '& label': { color: 'text.secondary' },
+    '& label.Mui-focused': { color: 'text.secondary' },
   },
 }
 
 function SectionHeading({ icon, title, subtitle }) {
   return (
     <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
-      <Box sx={{ p: 0.75, bgcolor: '#D8E9D6', color: BRAND, display: 'flex' }}>
+      <Box sx={{ p: 0.75, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(74,222,128,0.16)' : '#D8E9D6', color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK : BRAND, display: 'flex' }}>
         {icon}
       </Box>
       <Box>
-        <Typography variant="subtitle1" fontWeight={700} color="#111827">
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
           {title}
         </Typography>
         {subtitle && (
@@ -335,10 +335,10 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
   }
 
   const statusConfig = {
-    APPROVED: { label: 'Verified & Approved', bg: '#dcfce7', color: '#15803d' },
-    PENDING:  { label: 'Pending Review',      bg: '#fef9c3', color: '#854d0e' },
-    REJECTED: { label: 'Application Rejected', bg: '#fee2e2', color: '#b91c1c' },
-  }[business.verificationStatus] || { label: business.verificationStatus, bg: '#f3f4f6', color: '#374151' }
+    APPROVED: { label: 'Verified & Approved', bg: '#dcfce7', color: '#15803d', darkBg: 'rgba(34,197,94,0.18)', darkColor: '#4ade80' },
+    PENDING:  { label: 'Pending Review',      bg: '#fef9c3', color: '#854d0e', darkBg: 'rgba(245,158,11,0.18)', darkColor: '#fbbf24' },
+    REJECTED: { label: 'Application Rejected', bg: '#fee2e2', color: '#b91c1c', darkBg: 'rgba(239,68,68,0.18)', darkColor: '#f87171' },
+  }[business.verificationStatus] || { label: business.verificationStatus, bg: '#f3f4f6', color: '#374151', darkBg: 'rgba(148,163,184,0.16)', darkColor: '#cbd5e1' }
 
   return (
     <Box sx={{ pb: 6 }}>
@@ -368,7 +368,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
         </Box>
 
         {/* Business Header Bar */}
-        <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#ffffff' }}>
+        <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: 'background.paper' }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
               {/* Logo Avatar */}
@@ -392,19 +392,19 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
 
               <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                  <Typography variant="h5" fontWeight={800} color="#111827">
+                  <Typography variant="h5" fontWeight={800} color="text.primary">
                     {business.businessName}
                   </Typography>
                   <Chip
                     label={statusConfig.label}
                     size="small"
-                    sx={{ bgcolor: statusConfig.bg, color: statusConfig.color, fontWeight: 700, borderRadius: 0, fontSize: 11 }}
+                    sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? statusConfig.darkBg : statusConfig.bg, color: (theme) => theme.palette.mode === 'dark' ? statusConfig.darkColor : statusConfig.color, fontWeight: 700, borderRadius: 0, fontSize: 11 }}
                   />
                   {(business.category?.name || business.vertical) && (
                     <Chip
                       label={business.category?.name || business.vertical}
                       size="small"
-                      sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
+                      sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(59,130,246,0.18)' : '#eff6ff', color: (theme) => theme.palette.mode === 'dark' ? '#60a5fa' : '#1d4ed8', fontWeight: 600, borderRadius: 0, fontSize: 11 }}
                     />
                   )}
                 </Box>
@@ -756,7 +756,7 @@ export default function VendorBusinessProfile({ isAdminView = false, vendorData 
             </Box>
 
             {!isAdminView && (
-              <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: '#ffffff' }}>
+              <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 {isLoaded ? (
                   <StandaloneSearchBox
                     onLoad={ref => (searchBoxRef.current = ref)}

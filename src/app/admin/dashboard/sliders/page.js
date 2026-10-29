@@ -9,6 +9,7 @@ import { checkUserAccess } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
 import { fileToBase64DataUrl, uploadBase64Image } from '@/lib/imageUpload'
 
+import { useTheme } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -71,6 +72,9 @@ const INITIAL_FORM = {
 }
 
 export default function SlidersManagementPage() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { user, userData, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -382,7 +386,7 @@ export default function SlidersManagementPage() {
     <DashboardLayout>
       <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
         {/* Navigation Tabs */}
-        <Box sx={{ borderBottom: '2px solid #E2E8F0', mb: 3.5 }}>
+        <Box sx={{ borderBottom: '2px solid', borderColor: 'divider', mb: 3.5 }}>
           <Tabs
             value={activeTab}
             onChange={(_, val) => setActiveTab(val)}
@@ -392,13 +396,13 @@ export default function SlidersManagementPage() {
                 fontWeight: 700,
                 fontSize: '0.95rem',
                 minHeight: 52,
-                color: '#64748B',
+                color: 'text.secondary',
                 '&.Mui-selected': {
-                  color: BRAND,
+                  color: brandText,
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: BRAND,
+                backgroundColor: brandText,
                 height: 3,
                 borderRadius: '3px 3px 0 0',
               },
@@ -427,12 +431,12 @@ export default function SlidersManagementPage() {
         >
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-              <ViewCarouselOutlinedIcon sx={{ color: BRAND, fontSize: 32 }} />
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A' }}>
+              <ViewCarouselOutlinedIcon sx={{ color: brandText, fontSize: 32 }} />
+              <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>
                 Storefront Banner Slider
               </Typography>
             </Box>
-            <Typography variant="body2" sx={{ color: '#64748B' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Upload your promotional banner images and set where they navigate when clicked.
             </Typography>
           </Box>
@@ -465,14 +469,14 @@ export default function SlidersManagementPage() {
               borderRadius: 3,
               overflow: 'hidden',
               boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-              border: '1px solid #CBD5E1',
+              border: '1px solid', borderColor: 'divider',
             }}
           >
             <Box
               sx={{
                 px: 2.5,
                 py: 1.2,
-                bgcolor: '#0F172A',
+                bgcolor: 'text.primary',
                 color: '#fff',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -549,7 +553,7 @@ export default function SlidersManagementPage() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             size="small"
-            sx={{ maxWidth: 400, width: '100%', bgcolor: '#fff', ...tf.sx }}
+            sx={{ maxWidth: 400, width: '100%', bgcolor: 'background.paper', ...tf.sx }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -559,7 +563,7 @@ export default function SlidersManagementPage() {
             }}
           />
 
-          <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 600 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {slides.length} total banner{slides.length === 1 ? '' : 's'} ({activeSlides.length} active)
           </Typography>
         </Box>
@@ -570,9 +574,9 @@ export default function SlidersManagementPage() {
             <CircularProgress sx={{ color: BRAND }} />
           </Box>
         ) : filteredSlides.length === 0 ? (
-          <Card sx={{ p: 6, textAlign: 'center', borderRadius: 3, border: '1px dashed #CBD5E1' }}>
+          <Card sx={{ p: 6, textAlign: 'center', borderRadius: 3, border: '1px dashed', borderColor: 'divider' }}>
             <ImageIcon sx={{ fontSize: 48, color: '#94A3B8', mb: 1 }} />
-            <Typography variant="h6" sx={{ color: '#475569', fontWeight: 700 }}>
+            <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               No Banners Found
             </Typography>
             <Typography variant="body2" sx={{ color: '#94A3B8', mb: 3 }}>
@@ -589,7 +593,7 @@ export default function SlidersManagementPage() {
                 <Card
                   sx={{
                     borderRadius: 2.5,
-                    border: '1px solid #E2E8F0',
+                    border: '1px solid', borderColor: 'divider',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                     overflow: 'hidden',
                     display: 'flex',
@@ -603,7 +607,7 @@ export default function SlidersManagementPage() {
                   }}
                 >
                   {/* Banner Image Preview */}
-                  <div className="relative w-full aspect-[2.2/1] bg-slate-100 overflow-hidden">
+                  <div className="relative w-full aspect-[2.2/1] bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <img
                       src={slide.image}
                       alt={slide.title || 'Banner'}
@@ -630,11 +634,11 @@ export default function SlidersManagementPage() {
 
                   {/* Banner Info */}
                   <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
                       {slide.title || 'Untitled Banner'}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#64748B', fontSize: '0.8rem' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', fontSize: '0.8rem' }}>
                       <LinkIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
                       <span className="font-mono text-xs truncate">
                         {slide.ctaLink || '/customer'}
@@ -649,11 +653,11 @@ export default function SlidersManagementPage() {
                         justifyContent: 'space-between',
                         pt: 1.5,
                         mt: 'auto',
-                        borderTop: '1px solid #F1F5F9',
+                        borderTop: '1px solid', borderColor: 'divider',
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, mr: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>
                           Active:
                         </Typography>
                         <Switch
@@ -686,14 +690,14 @@ export default function SlidersManagementPage() {
                           variant="outlined"
                           startIcon={<EditOutlinedIcon />}
                           onClick={() => openEdit(slide)}
-                          sx={{ textTransform: 'none', color: '#1E293B', borderColor: '#CBD5E1', borderRadius: 1.5 }}
+                          sx={{ textTransform: 'none', color: 'text.primary', borderColor: 'divider', borderRadius: 1.5 }}
                         >
                           Edit
                         </Button>
                         <IconButton
                           size="small"
                           onClick={() => handleDelete(slide)}
-                          sx={{ color: '#EF4444', '&:hover': { bgcolor: '#FEE2E2' } }}
+                          sx={{ color: '#EF4444', '&:hover': { bgcolor: isDark ? 'rgba(239,68,68,0.16)' : '#FEE2E2' } }}
                           title="Delete Banner"
                         >
                           <DeleteOutlinedIcon fontSize="small" />
@@ -717,12 +721,12 @@ export default function SlidersManagementPage() {
             {/* Header */}
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                <WidgetsOutlinedIcon sx={{ color: BRAND, fontSize: 32 }} />
-                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                <WidgetsOutlinedIcon sx={{ color: brandText, fontSize: 32 }} />
+                <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>
                   Storefront Side Promo Bento Cards
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: '#64748B' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Customize the 2 cards shown adjacent to the hero slider on the homepage. Edit titles, badges, countdown, and destination links with real-time live preview.
               </Typography>
             </Box>
@@ -739,7 +743,7 @@ export default function SlidersManagementPage() {
                     sx={{
                       p: { xs: 2.5, sm: 3 },
                       borderRadius: 3,
-                      border: '1px solid #E2E8F0',
+                      border: '1px solid', borderColor: 'divider',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                       height: '100%',
                       display: 'flex',
@@ -754,8 +758,8 @@ export default function SlidersManagementPage() {
                           icon={<LocalFireDepartmentIcon sx={{ color: '#F43F5E !important', fontSize: 18 }} />}
                           label="BENTO CARD 1: FLASH DROPS"
                           sx={{
-                            bgcolor: '#FFE4E6',
-                            color: '#9F1239',
+                            bgcolor: isDark ? 'rgba(244,63,94,0.18)' : '#FFE4E6',
+                            color: isDark ? '#fda4af' : '#9F1239',
                             fontWeight: 800,
                             fontSize: '0.75rem',
                             letterSpacing: 0.5,
@@ -776,7 +780,7 @@ export default function SlidersManagementPage() {
                       </Box>
 
                       {/* Live Storefront Preview Box */}
-                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748B', display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 1, letterSpacing: 0.5 }}>
                         STOREFRONT PREVIEW (HOW CUSTOMERS SEE IT)
                       </Typography>
                       <Box
@@ -984,7 +988,7 @@ export default function SlidersManagementPage() {
                     sx={{
                       p: { xs: 2.5, sm: 3 },
                       borderRadius: 3,
-                      border: '1px solid #E2E8F0',
+                      border: '1px solid', borderColor: 'divider',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                       height: '100%',
                       display: 'flex',
@@ -999,8 +1003,8 @@ export default function SlidersManagementPage() {
                           icon={<ShieldOutlinedIcon sx={{ color: '#059669 !important', fontSize: 18 }} />}
                           label="BENTO CARD 2: BRAND GUARANTEE"
                           sx={{
-                            bgcolor: '#D1FAE5',
-                            color: '#065F46',
+                            bgcolor: isDark ? 'rgba(16,185,129,0.18)' : '#D1FAE5',
+                            color: isDark ? '#6ee7b7' : '#065F46',
                             fontWeight: 800,
                             fontSize: '0.75rem',
                             letterSpacing: 0.5,
@@ -1021,7 +1025,7 @@ export default function SlidersManagementPage() {
                       </Box>
 
                       {/* Live Storefront Preview Box */}
-                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748B', display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 1, letterSpacing: 0.5 }}>
                         STOREFRONT PREVIEW (HOW CUSTOMERS SEE IT)
                       </Typography>
                       <Box
@@ -1244,11 +1248,11 @@ export default function SlidersManagementPage() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: '1px solid #E2E8F0',
+              borderBottom: '1px solid', borderColor: 'divider',
               pb: 1.5,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary' }}>
               {editingSlide ? 'Edit Banner' : 'Upload New Banner'}
             </Typography>
             <IconButton size="small" onClick={() => setShowModal(false)}>
@@ -1261,18 +1265,18 @@ export default function SlidersManagementPage() {
               {/* Live Preview Box */}
               {form.image ? (
                 <Box>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', display: 'block', mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block', mb: 1 }}>
                     BANNER PREVIEW
                   </Typography>
-                  <div className="relative w-full aspect-[2.2/1] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
+                  <div className="relative w-full aspect-[2.2/1] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-inner">
                     <img src={form.image} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 </Box>
               ) : null}
 
               {/* Banner Image Upload / URL */}
-              <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 2, border: '1px solid #E2E8F0' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1E293B', mb: 1 }}>
+              <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
                   1. Banner Image *
                 </Typography>
                 <Grid container spacing={1.5} alignItems="center">
@@ -1386,8 +1390,8 @@ export default function SlidersManagementPage() {
             </Stack>
           </DialogContent>
 
-          <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E2E8F0' }}>
-            <Button onClick={() => setShowModal(false)} sx={{ textTransform: 'none', color: '#64748B' }}>
+          <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button onClick={() => setShowModal(false)} sx={{ textTransform: 'none', color: 'text.secondary' }}>
               Cancel
             </Button>
             <Button

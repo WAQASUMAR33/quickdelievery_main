@@ -16,6 +16,7 @@ import Button from '@mui/material/Button'
 import HistoryIcon from '@mui/icons-material/History'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 export default function DriverOrdersPage() {
   const { user, userData, loading } = useAuth()
@@ -36,7 +37,7 @@ export default function DriverOrdersPage() {
 
   if (loading || !user || !userData || !['ADMIN', 'SUPER_ADMIN', 'DRIVER'].includes(userData?.role)) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={36} sx={{ color: BRAND }} />
         <Typography color="text.secondary">Loading Driver Deliveries…</Typography>
       </Box>
@@ -48,7 +49,7 @@ export default function DriverOrdersPage() {
       <Box sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <div>
-            <Typography variant="h5" fontWeight={700}>Active Delivery Orders</Typography>
+            <Typography variant="h5" fontWeight={700} color="text.primary">Active Delivery Orders</Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               Manage assigned trips, turn-by-turn navigation, and customer handovers.
             </Typography>
@@ -57,7 +58,15 @@ export default function DriverOrdersPage() {
             variant="outlined"
             startIcon={<HistoryIcon />}
             onClick={() => router.push('/driver/orders/history')}
-            sx={{ borderColor: BRAND, color: BRAND, fontWeight: 600, '&:hover': { borderColor: BRAND, bgcolor: `${BRAND}10` } }}
+            sx={{
+              borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              fontWeight: 600,
+              '&:hover': {
+                borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+                bgcolor: 'rgba(57, 119, 42, 0.1)',
+              },
+            }}
           >
             Delivery History
           </Button>
@@ -67,10 +76,17 @@ export default function DriverOrdersPage() {
           <Tabs 
             value={tabValue} 
             onChange={(e, val) => setTabValue(val)}
-            TabIndicatorProps={{ style: { backgroundColor: BRAND } }}
             sx={{
-              '& .MuiTab-root': { fontWeight: 600 },
-              '& .Mui-selected': { color: `${BRAND} !important` }
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                color: 'text.secondary',
+                '&.Mui-selected': {
+                  color: (theme) => `${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND} !important`,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              },
             }}
           >
             <Tab label="My Active Trips" />

@@ -12,6 +12,7 @@ import { isRestaurantVendor } from '@/lib/vendorHelpers'
 import { getSampleUnifiedProducts } from '@/lib/unifiedProductSchema'
 import toast from 'react-hot-toast'
 
+import { useTheme } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -64,6 +65,9 @@ const tfStyle = {
 }
 
 export default function AddProductPage() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const router = useRouter()
   const { userData, user, loading } = useAuth()
   const fileInputRef = useRef(null)
@@ -529,7 +533,7 @@ export default function AddProductPage() {
           width: '100%',
           px: { xs: 2, md: 4 },
           py: 3,
-          bgcolor: '#f8fafc',
+          bgcolor: 'background.default',
           '&, & *': {
             borderRadius: '0px !important',
           },
@@ -551,15 +555,15 @@ export default function AddProductPage() {
         {/* ── Top Bar Header ── */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <IconButton size="small" onClick={() => router.back()} sx={{ border: '1px solid', borderColor: '#cbd5e1', borderRadius: 0, bgcolor: '#ffffff' }}>
+            <IconButton size="small" onClick={() => router.back()} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, bgcolor: 'background.paper' }}>
               <ArrowBackOutlinedIcon fontSize="small" />
             </IconButton>
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h5" fontWeight={800} color="#0f172a">
+                <Typography variant="h5" fontWeight={800} color="text.primary">
                   {isRestaurant ? 'Add Restaurant Menu Item' : 'Add Catalog Product'}
                 </Typography>
-                <Chip label="7-PHASE UNIFIED SCHEMA" size="small" sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 900, borderRadius: 0 }} />
+                <Chip label="7-PHASE UNIFIED SCHEMA" size="small" sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : `${BRAND}15`, color: brandText, fontWeight: 900, borderRadius: 0 }} />
               </Box>
               <Typography variant="body2" color="text.secondary" mt={0.5}>
                 Consolidated data definition combining vital info, pricing, discoverability, food compliance, modifiers, media, and dimensions (Amazon & Daraz compatible)
@@ -573,7 +577,7 @@ export default function AddProductPage() {
               size="small"
               startIcon={<AutoFixHighOutlinedIcon />}
               onClick={e => setSampleMenuAnchor(e.currentTarget)}
-              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, borderColor: '#cbd5e1', bgcolor: '#ffffff' }}
+              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, borderColor: 'divider', bgcolor: 'background.paper' }}
             >
               Load Sample 7-Phase Data
             </Button>
@@ -589,7 +593,7 @@ export default function AddProductPage() {
               component="a"
               href="/api/products/feed?type=template&format=csv"
               download="unified_product_template.csv"
-              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, borderColor: '#cbd5e1', bgcolor: '#ffffff' }}
+              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 700, borderColor: 'divider', bgcolor: 'background.paper' }}
             >
               Feed Template (CSV)
             </Button>
@@ -607,7 +611,7 @@ export default function AddProductPage() {
         </Box>
 
         {/* ── Phase Filter Navigation Pills ── */}
-        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 3, borderBottom: '1px solid', borderColor: '#e2e8f0' }}>
+        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
           {[
             { id: 'all', label: 'All Phases' },
             { id: 'phase_1', label: 'Phase 1: Vital Info' },
@@ -629,13 +633,13 @@ export default function AddProductPage() {
                 fontWeight: activePhase === tab.id ? 800 : 600,
                 fontSize: 12,
                 whiteSpace: 'nowrap',
-                bgcolor: activePhase === tab.id ? BRAND : '#ffffff',
-                borderColor: activePhase === tab.id ? BRAND : '#cbd5e1',
-                color: activePhase === tab.id ? '#ffffff' : '#334155',
+                bgcolor: activePhase === tab.id ? BRAND : 'background.paper',
+                borderColor: activePhase === tab.id ? BRAND : 'divider',
+                color: activePhase === tab.id ? '#ffffff' : 'text.primary',
                 boxShadow: 'none',
                 '&:hover': {
-                  bgcolor: activePhase === tab.id ? BRAND_DARK : '#f1f5f9',
-                  borderColor: activePhase === tab.id ? BRAND_DARK : '#94a3b8',
+                  bgcolor: activePhase === tab.id ? BRAND_DARK : 'action.hover',
+                  borderColor: activePhase === tab.id ? BRAND_DARK : 'text.secondary',
                 }
               }}
             >
@@ -650,11 +654,11 @@ export default function AddProductPage() {
               PHASE 1: Core Identifiers & Taxonomy (Vital Info)
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_1') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 1" size="small" sx={{ bgcolor: `${BRAND}15`, color: BRAND, fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 1" size="small" sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : `${BRAND}15`, color: brandText, fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Core Identifiers & Taxonomy (Vital Info)
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -790,9 +794,9 @@ export default function AddProductPage() {
 
                 {/* Restaurant Mode Status Banner */}
                 {isRestaurantCategory && (
-                  <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ gridColumn: '1 / -1', p: 1.5, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Chip label="RESTAURANT ACTIVE" size="small" sx={{ bgcolor: '#166534', color: '#ffffff', fontWeight: 900, borderRadius: 0 }} />
-                    <Typography variant="caption" fontWeight={700} color="#166534">
+                    <Typography variant="caption" fontWeight={700} color={isDark ? "#4ade80" : "#166534"}>
                       Restaurant root category active — Showing only restaurant categories, dishes, kitchen attributes &amp; modifiers.
                     </Typography>
                   </Box>
@@ -805,11 +809,11 @@ export default function AddProductPage() {
               PHASE 2: Pricing, Availability & Offer Data
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_2') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 2" size="small" sx={{ bgcolor: '#dbeafe', color: '#1e40af', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 2" size="small" sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1e40af', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Pricing, Availability & Offer Data
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -919,11 +923,11 @@ export default function AddProductPage() {
               PHASE 3: Discoverability, Content & Descriptions
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_3') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 3" size="small" sx={{ bgcolor: '#fef3c7', color: '#b45309', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 3" size="small" sx={{ bgcolor: isDark ? 'rgba(245,158,11,0.18)' : '#fef3c7', color: isDark ? '#fbbf24' : '#b45309', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Discoverability, Content & Descriptions
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -983,11 +987,11 @@ export default function AddProductPage() {
               PHASE 4: Food, Dietary & Safety Compliance
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_4') && isRestaurantCategory && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 4" size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 4" size="small" sx={{ bgcolor: isDark ? 'rgba(34,197,94,0.18)' : '#dcfce7', color: isDark ? '#4ade80' : '#15803d', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Food, Dietary & Safety Compliance
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -1017,7 +1021,7 @@ export default function AddProductPage() {
                   placeholder="e.g. Halal Certified, Gluten-Free, Vegan, High Protein"
                 />
 
-                <Box sx={{ p: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ p: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="body2" fontWeight={700}>Expiration Dated Product</Typography>
                     <Typography variant="caption" color="text.secondary">Indicates items with short shelf life or fresh consumption window</Typography>
@@ -1058,28 +1062,28 @@ export default function AddProductPage() {
                 />
 
                 {/* Food Vendor Quick Badges */}
-                <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                  <Typography variant="subtitle2" fontWeight={800} color="#166534" mb={1.5}>
+                <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0' }}>
+                  <Typography variant="subtitle2" fontWeight={800} color={isDark ? "#4ade80" : "#166534"} mb={1.5}>
                     Food Kitchen Badges & Preparation Attributes
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 2 }}>
                     <FormControlLabel
                       control={<Switch checked={Boolean(form.isHalal)} onChange={e => setField('isHalal', e.target.checked)} color="success" />}
-                      label={<Typography variant="body2" fontWeight={700} color="#166534">🥩 100% Halal Certified</Typography>}
+                      label={<Typography variant="body2" fontWeight={700} color={isDark ? "#4ade80" : "#166534"}>🥩 100% Halal Certified</Typography>}
                     />
                     <FormControlLabel
                       control={<Switch checked={Boolean(form.isVeg)} onChange={e => setField('isVeg', e.target.checked)} color="success" />}
-                      label={<Typography variant="body2" fontWeight={700} color="#166534">🌱 Pure Vegetarian</Typography>}
+                      label={<Typography variant="body2" fontWeight={700} color={isDark ? "#4ade80" : "#166534"}>🌱 Pure Vegetarian</Typography>}
                     />
                   </Box>
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
                     <TextField {...tfStyle} size="small" label="Prep Time (mins)" value={form.prepTime || '20'}
-                      onChange={e => setField('prepTime', e.target.value)} sx={{ bgcolor: '#ffffff' }} />
+                      onChange={e => setField('prepTime', e.target.value)} sx={{ bgcolor: 'background.paper' }} />
                     <TextField {...tfStyle} size="small" label="Calories (kcal)" value={form.calories || ''}
-                      onChange={e => setField('calories', e.target.value)} sx={{ bgcolor: '#ffffff' }} />
+                      onChange={e => setField('calories', e.target.value)} sx={{ bgcolor: 'background.paper' }} />
                     <TextField {...tfStyle} size="small" label="Portion / Servings" value={form.servings || '1-2 Persons'}
-                      onChange={e => setField('servings', e.target.value)} sx={{ bgcolor: '#ffffff' }} />
-                    <FormControl size="small" sx={{ ...tfStyle, bgcolor: '#ffffff' }}>
+                      onChange={e => setField('servings', e.target.value)} sx={{ bgcolor: 'background.paper' }} />
+                    <FormControl size="small" sx={{ ...tfStyle, bgcolor: 'background.paper' }}>
                       <InputLabel>Spice Level</InputLabel>
                       <Select value={form.spiceLevel || 'Medium'} label="Spice Level"
                         onChange={e => setField('spiceLevel', e.target.value)}>
@@ -1099,11 +1103,11 @@ export default function AddProductPage() {
               PHASE 5: Modifiers, Options & Variations (Customizations)
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_5') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 5" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7e22ce', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 5" size="small" sx={{ bgcolor: isDark ? 'rgba(168,85,247,0.18)' : '#f3e8ff', color: isDark ? '#c084fc' : '#7e22ce', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Modifiers, Options & Variations (Customizations)
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -1158,18 +1162,18 @@ export default function AddProductPage() {
               </Box>
 
               {/* Interactive Modifiers / Add-ons List */}
-              <Box sx={{ p: 2.5, bgcolor: '#f8fafc', border: '1px solid', borderColor: '#e2e8f0', mb: 3 }}>
-                <Typography variant="subtitle2" fontWeight={800} color="#0f172a" mb={1.5}>
+              <Box sx={{ p: 2.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', mb: 3 }}>
+                <Typography variant="subtitle2" fontWeight={800} color="text.primary" mb={1.5}>
                   Active Modifiers & Add-on Items ({form.addons?.length || 0})
                 </Typography>
 
                 <Stack spacing={1.5} sx={{ mb: 2 }}>
                   {(form.addons || []).map((addon, index) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: '#ffffff', border: '1px solid', borderColor: '#e2e8f0' }}>
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" fontWeight={700} color="#111827">{addon.name}</Typography>
+                        <Typography variant="body2" fontWeight={700} color="text.primary">{addon.name}</Typography>
                         <Chip label={`+ Rs. ${parseFloat(addon.price || 0).toLocaleString()}`} size="small"
-                          sx={{ height: 22, fontWeight: 700, bgcolor: '#dbeafe', color: '#1e40af', borderRadius: 0 }} />
+                          sx={{ height: 22, fontWeight: 700, bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1e40af', borderRadius: 0 }} />
                       </Box>
                       <IconButton size="small" color="error" onClick={() => setField('addons', form.addons.filter((_, i) => i !== index))}>
                         <CloseIcon fontSize="small" />
@@ -1185,11 +1189,11 @@ export default function AddProductPage() {
                 <Box sx={{ display: 'flex', gap: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' }, alignItems: 'center' }}>
                   <TextField {...tfStyle} size="small" label="Modifier Item Name" placeholder="e.g. Extra Cheddar Cheese, Grilled Chicken"
                     value={newAddon.name} onChange={e => setNewAddon({ ...newAddon, name: e.target.value })}
-                    sx={{ flex: 2, minWidth: 200, bgcolor: '#ffffff' }} />
+                    sx={{ flex: 2, minWidth: 200, bgcolor: 'background.paper' }} />
                   <TextField {...tfStyle} size="small" label="Price Delta (Rs.)" type="number" placeholder="e.g. 150"
                     value={newAddon.price} onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
                     InputProps={{ startAdornment: <InputAdornment position="start">Rs.</InputAdornment> }}
-                    sx={{ flex: 1, minWidth: 120, bgcolor: '#ffffff' }} />
+                    sx={{ flex: 1, minWidth: 120, bgcolor: 'background.paper' }} />
                   <Button variant="contained" startIcon={<AddIcon />}
                     onClick={() => {
                       if (!newAddon.name.trim() || !newAddon.price) { toast.error('Please enter modifier name and price'); return }
@@ -1206,28 +1210,28 @@ export default function AddProductPage() {
               {/* Retail Size & Color Variant Pickers - Only for retail items */}
               {!isRestaurantCategory && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                       <Typography variant="subtitle2" fontWeight={700}>Standard Size Attribute</Typography>
                       <Button size="small" variant="outlined" onClick={() => setShowSizePopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Size</Button>
                     </Box>
                     <FormControl fullWidth size="small" sx={tfStyle}>
                       <InputLabel>Select Size</InputLabel>
-                      <Select value={form.size || ''} label="Select Size" onChange={e => setField('size', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
+                      <Select value={form.size || ''} label="Select Size" onChange={e => setField('size', e.target.value)} sx={{ bgcolor: 'background.paper' }}>
                         <MenuItem value=""><em>None / Standard</em></MenuItem>
                         {['Small', 'Medium', 'Large', 'XL', 'XXL'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Box>
 
-                  <Box sx={{ p: 2, border: '1px solid', borderColor: '#e2e8f0', bgcolor: '#f8fafc' }}>
+                  <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                       <Typography variant="subtitle2" fontWeight={700}>Color Attribute</Typography>
                       <Button size="small" variant="outlined" onClick={() => setShowColorPopup(true)} sx={{ borderRadius: 0, textTransform: 'none', fontSize: 11 }}>+ Custom Color</Button>
                     </Box>
                     <FormControl fullWidth size="small" sx={tfStyle}>
                       <InputLabel>Select Color</InputLabel>
-                      <Select value={form.color || ''} label="Select Color" onChange={e => setField('color', e.target.value)} sx={{ bgcolor: '#ffffff' }}>
+                      <Select value={form.color || ''} label="Select Color" onChange={e => setField('color', e.target.value)} sx={{ bgcolor: 'background.paper' }}>
                         <MenuItem value=""><em>None / Default</em></MenuItem>
                         {predefinedColors.map(c => <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>)}
                       </Select>
@@ -1242,11 +1246,11 @@ export default function AddProductPage() {
               PHASE 6: Image Media Assets
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_6') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 6" size="small" sx={{ bgcolor: '#ffe4e6', color: '#be123c', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 6" size="small" sx={{ bgcolor: isDark ? 'rgba(244,63,94,0.18)' : '#ffe4e6', color: isDark ? '#fb7185' : '#be123c', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Image Media Assets
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -1267,8 +1271,8 @@ export default function AddProductPage() {
                   if (files.length) handleImageUpload(files)
                 }}
                 sx={{
-                  border: '2px dashed', borderColor: dragOver ? BRAND : '#cbd5e1',
-                  borderRadius: 0, p: 4, textAlign: 'center', bgcolor: dragOver ? `${BRAND}08` : '#f8fafc',
+                  border: '2px dashed', borderColor: dragOver ? brandText : 'divider',
+                  borderRadius: 0, p: 4, textAlign: 'center', bgcolor: dragOver ? (isDark ? 'rgba(74,222,128,0.08)' : `${BRAND}08`) : 'grey.50',
                   cursor: 'pointer', transition: 'all 0.2s',
                   '&:hover': { borderColor: BRAND, bgcolor: `${BRAND}08` }
                 }}
@@ -1281,7 +1285,7 @@ export default function AddProductPage() {
                 ) : (
                   <>
                     <UploadOutlinedIcon sx={{ fontSize: 44, color: '#94a3b8', mb: 1 }} />
-                    <Typography variant="body1" fontWeight={700} color="#0f172a" mb={0.5}>
+                    <Typography variant="body1" fontWeight={700} color="text.primary" mb={0.5}>
                       Drag and drop images here, or browse files
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
@@ -1303,7 +1307,7 @@ export default function AddProductPage() {
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 1.5 }}>
                     {form.images.map((img, i) => (
-                      <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: i === 0 ? BRAND : '#cbd5e1', height: 110, bgcolor: '#ffffff', overflow: 'hidden' }}>
+                      <Box key={i} sx={{ position: 'relative', border: '1px solid', borderColor: i === 0 ? brandText : 'divider', height: 110, bgcolor: 'background.paper', overflow: 'hidden' }}>
                         <NextImage src={img} alt={`Asset ${i + 1}`} width={110} height={110} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, bgcolor: i === 0 ? BRAND : 'rgba(0,0,0,0.65)', color: '#ffffff', fontSize: 10, py: 0.25, textAlign: 'center', fontWeight: 800 }}>
                           {i === 0 ? 'MAIN IMAGE' : `OTHER #${i}`}
@@ -1324,11 +1328,11 @@ export default function AddProductPage() {
               PHASE 7: Dimensions, Weight & Shipping
           ══════════════════════════════════════════════════════════════════════ */}
           {(activePhase === 'all' || activePhase === 'phase_7') && (
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: '#e2e8f0', borderRadius: 0, p: 3, bgcolor: '#ffffff' }}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Chip label="PHASE 7" size="small" sx={{ bgcolor: '#e0e7ff', color: '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="#111827">
+                  <Chip label="PHASE 7" size="small" sx={{ bgcolor: isDark ? 'rgba(99,102,241,0.18)' : '#e0e7ff', color: isDark ? '#818cf8' : '#4338ca', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     Dimensions, Weight & Shipping
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -1340,11 +1344,11 @@ export default function AddProductPage() {
 
               {isRestaurantCategory ? (
                 <Box sx={{ mb: 2.5 }}>
-                  <Box sx={{ p: 2.5, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', mb: 2.5 }}>
-                    <Typography variant="subtitle2" fontWeight={800} color="#166534" mb={1}>
+                  <Box sx={{ p: 2.5, bgcolor: isDark ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: '1px solid', borderColor: isDark ? 'rgba(74,222,128,0.35)' : '#bbf7d0', mb: 2.5 }}>
+                    <Typography variant="subtitle2" fontWeight={800} color={isDark ? "#4ade80" : "#166534"} mb={1}>
                       🍽️ Takeaway &amp; Delivery Food Packaging Standards
                     </Typography>
-                    <Typography variant="body2" color="#166534" mb={2}>
+                    <Typography variant="body2" color={isDark ? "#4ade80" : "#166534"} mb={2}>
                       Prepared fresh to order and dispatched in thermal food packaging. Freight physical dimensions (L × W × H) are waived for restaurant items.
                     </Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
@@ -1482,7 +1486,7 @@ export default function AddProductPage() {
             <Button
               variant="outlined"
               onClick={() => router.back()}
-              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 600, borderColor: '#cbd5e1', color: '#475569' }}
+              sx={{ borderRadius: 0, textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
             >
               Cancel
             </Button>

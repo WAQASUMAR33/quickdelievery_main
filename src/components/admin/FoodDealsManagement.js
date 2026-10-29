@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { authFetch } from '@/lib/apiClient'
 
+import { useTheme }      from '@mui/material/styles'
 import Alert             from '@mui/material/Alert'
 import Autocomplete     from '@mui/material/Autocomplete'
 import Box               from '@mui/material/Box'
@@ -65,6 +66,9 @@ function toLocalInputValue(iso) {
 }
 
 export default function FoodDealsManagement({ mode = 'admin' }) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { userData } = useAuth()
   const [deals, setDeals] = useState([])
   const [products, setProducts] = useState([])
@@ -500,7 +504,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
       )}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <LocalOfferOutlinedIcon sx={{ color: BRAND, fontSize: 32 }} />
+          <LocalOfferOutlinedIcon sx={{ color: brandText, fontSize: 32 }} />
           <Box>
             <Typography variant="h5" fontWeight={800}>
               Food deals management
@@ -523,7 +527,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
         </Button>
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 0 }}>
+      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
@@ -575,8 +579,8 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                             width: 48,
                             height: 48,
                             objectFit: 'cover',
-                            border: '1px solid #e2e8f0',
-                            bgcolor: '#f8fafc',
+                            border: '1px solid', borderColor: 'divider',
+                            bgcolor: 'grey.50',
                             flexShrink: 0,
                           }}
                           onError={(e) => {
@@ -592,7 +596,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                               <Chip
                                 label={`${row.customItems.length} Items Combo`}
                                 size="small"
-                                sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#e0e7ff', color: '#4338ca' }}
+                                sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: isDark ? 'rgba(99,102,241,0.18)' : '#e0e7ff', color: isDark ? '#818cf8' : '#4338ca' }}
                               />
                             )}
                           </Stack>
@@ -620,7 +624,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                     <TableCell>
                       <Stack spacing={0.5}>
                         {row.customPriceLabel && (
-                          <Typography variant="body2" fontWeight={700} color={BRAND}>
+                          <Typography variant="body2" fontWeight={700} color={brandText}>
                             {row.customPriceLabel}
                           </Typography>
                         )}
@@ -628,7 +632,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                           <Chip
                             label={row.badgeLabel}
                             size="small"
-                            sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: '#fef3c7', color: '#b45309', alignSelf: 'flex-start' }}
+                            sx={{ borderRadius: 0, height: 20, fontSize: 10, fontWeight: 700, bgcolor: isDark ? 'rgba(245,158,11,0.18)' : '#fef3c7', color: isDark ? '#fbbf24' : '#b45309', alignSelf: 'flex-start' }}
                           />
                         )}
                         {!row.customPriceLabel && !row.badgeLabel && !row.isCustom && (
@@ -655,8 +659,8 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                         sx={{
                           borderRadius: 0,
                           fontWeight: 700,
-                          bgcolor: row.active ? '#dcfce7' : '#f1f5f9',
-                          color: row.active ? '#166534' : '#64748b',
+                          bgcolor: row.active ? (isDark ? 'rgba(34,197,94,0.18)' : '#dcfce7') : (isDark ? 'rgba(148,163,184,0.16)' : '#f1f5f9'),
+                          color: row.active ? (isDark ? '#4ade80' : '#166534') : (isDark ? '#94a3b8' : '#64748b'),
                         }}
                       />
                     </TableCell>
@@ -750,14 +754,14 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                     renderOption={(props, option) => {
                       const img = Array.isArray(option.proImages) ? option.proImages[0] : (option.proImages || '')
                       return (
-                        <Box component="li" {...props} key={option.proId} sx={{ py: 1, borderBottom: '1px solid #f1f5f9' }}>
+                        <Box component="li" {...props} key={option.proId} sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
                           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%' }}>
                             {img && (
                               <Box
                                 component="img"
                                 src={img}
                                 alt={option.proName}
-                                sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
                               />
                             )}
                             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -765,7 +769,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                                 {option.proName}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                SKU: {option.sku || 'N/A'} · Category: {option.productCategory?.productCategoryName || option.category?.name || 'General'} · <Box component="span" sx={{ color: BRAND, fontWeight: 700 }}>Rs. {parseFloat(option.price || 0).toLocaleString()}</Box>
+                                SKU: {option.sku || 'N/A'} · Category: {option.productCategory?.productCategoryName || option.category?.name || 'General'} · <Box component="span" sx={{ color: brandText, fontWeight: 700 }}>Rs. {parseFloat(option.price || 0).toLocaleString()}</Box>
                               </Typography>
                             </Box>
                           </Stack>
@@ -784,14 +788,14 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                 {/* Selected products table */}
                 {form.selectedProducts.length > 0 && (
                   <Paper variant="outlined" sx={{ borderRadius: 0, overflow: 'hidden' }}>
-                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <Box sx={{ p: 1.5, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
                       <Typography variant="subtitle2" fontWeight={800}>
                         Products Included in Deal ({form.selectedProducts.length})
                       </Typography>
                     </Box>
                     <Table size="small">
                       <TableHead>
-                        <TableRow sx={{ bgcolor: '#fafafa' }}>
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
                           <TableCell sx={{ fontWeight: 700, fontSize: 12 }}>Product</TableCell>
                           <TableCell sx={{ fontWeight: 700, fontSize: 12, width: 140 }} align="center">Quantity</TableCell>
                           <TableCell sx={{ width: 48 }} align="right"></TableCell>
@@ -807,7 +811,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                                     component="img"
                                     src={p.image}
                                     alt={p.proName}
-                                    sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid #e2e8f0', flexShrink: 0 }}
+                                    sx={{ width: 36, height: 36, objectFit: 'cover', border: '1px solid', borderColor: 'divider', flexShrink: 0 }}
                                   />
                                 )}
                                 <Box sx={{ minWidth: 0 }}>
@@ -828,7 +832,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                                   size="small"
                                   onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) - 1)}
                                   disabled={p.quantity <= 1}
-                                  sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
+                                  sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 0.5 }}
                                 >
                                   <RemoveIcon sx={{ fontSize: 14 }} />
                                 </IconButton>
@@ -838,7 +842,7 @@ export default function FoodDealsManagement({ mode = 'admin' }) {
                                 <IconButton
                                   size="small"
                                   onClick={() => handleUpdateProductQuantity(p.proId, (p.quantity || 1) + 1)}
-                                  sx={{ border: '1px solid #e2e8f0', borderRadius: 0, p: 0.5 }}
+                                  sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 0.5 }}
                                 >
                                   <AddIcon sx={{ fontSize: 14 }} />
                                 </IconButton>

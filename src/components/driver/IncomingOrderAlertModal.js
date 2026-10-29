@@ -21,6 +21,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import { soundAlert } from '@/lib/soundAlert'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 export default function IncomingOrderAlertModal({
   order,
@@ -91,9 +92,10 @@ export default function IncomingOrderAlertModal({
         sx: {
           borderRadius: '24px',
           overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
           border: '2px solid',
           borderColor: BRAND,
+          bgcolor: 'background.paper',
         },
       }}
     >
@@ -114,7 +116,7 @@ export default function IncomingOrderAlertModal({
           bgcolor: 'rgba(255,255,255,0.2)', px: 1.5, py: 0.5, borderRadius: '12px'
         }}>
           <VolumeUpIcon sx={{ fontSize: 16 }} />
-          <Typography variant="caption" fontWeight={700}>Alerting</Typography>
+          <Typography variant="caption" fontWeight={700} color="#ffffff">Alerting</Typography>
         </Box>
 
         <Box sx={{
@@ -127,10 +129,10 @@ export default function IncomingOrderAlertModal({
           <DeliveryDiningIcon sx={{ fontSize: 38 }} />
         </Box>
 
-        <Typography variant="h5" fontWeight={800} gutterBottom>
+        <Typography variant="h5" fontWeight={800} color="#ffffff" gutterBottom>
           New Delivery Request!
         </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
           Vendor has accepted the order & started food prep
         </Typography>
       </Box>
@@ -142,9 +144,9 @@ export default function IncomingOrderAlertModal({
           value={(secondsLeft / 30) * 100}
           sx={{
             height: 6,
-            bgcolor: '#fee2e2',
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : '#fee2e2',
             '& .MuiLinearProgress-bar': {
-              bgcolor: secondsLeft > 10 ? BRAND : '#ef4444',
+              bgcolor: secondsLeft > 10 ? '#22c55e' : '#ef4444',
               transition: 'transform 1s linear',
             },
           }}
@@ -152,13 +154,17 @@ export default function IncomingOrderAlertModal({
       </Box>
 
       {/* Content Body */}
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 3, bgcolor: 'background.paper' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
           <Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+            <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.5}>
               ESTIMATED EARNINGS
             </Typography>
-            <Typography variant="h4" fontWeight={900} color={BRAND}>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }}
+            >
               {estPayout}
             </Typography>
           </Box>
@@ -168,25 +174,41 @@ export default function IncomingOrderAlertModal({
             sx={{
               fontWeight: 800,
               fontSize: 14,
-              bgcolor: secondsLeft > 10 ? '#f0fdf4' : '#fef2f2',
-              color: secondsLeft > 10 ? BRAND : '#dc2626',
+              bgcolor: (theme) => theme.palette.mode === 'dark'
+                ? (secondsLeft > 10 ? 'rgba(34, 197, 94, 0.18)' : 'rgba(239, 68, 68, 0.2)')
+                : (secondsLeft > 10 ? '#f0fdf4' : '#fef2f2'),
+              color: (theme) => theme.palette.mode === 'dark'
+                ? (secondsLeft > 10 ? '#4ade80' : '#f87171')
+                : (secondsLeft > 10 ? BRAND : '#dc2626'),
               border: '1px solid',
-              borderColor: secondsLeft > 10 ? '#bbf7d0' : '#fecaca',
+              borderColor: (theme) => theme.palette.mode === 'dark'
+                ? (secondsLeft > 10 ? 'rgba(74, 222, 128, 0.35)' : 'rgba(248, 113, 113, 0.4)')
+                : (secondsLeft > 10 ? '#bbf7d0' : '#fecaca'),
             }}
           />
         </Box>
 
         {/* Pickup & Dropoff details */}
-        <Paper elevation={0} sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', mb: 3 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#131C31' : '#f8fafc',
+            borderRadius: '16px',
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 3,
+          }}
+        >
           <Stack spacing={2}>
             {/* Pickup */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
               <StorefrontIcon sx={{ color: '#3b82f6', mt: 0.3 }} />
               <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.4}>
                   PICKUP (RESTAURANT)
                 </Typography>
-                <Typography variant="body2" fontWeight={700} color="text.primary">
+                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
                   {vendorName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -199,10 +221,10 @@ export default function IncomingOrderAlertModal({
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
               <LocationOnIcon sx={{ color: '#ef4444', mt: 0.3 }} />
               <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                <Typography variant="caption" color="text.secondary" fontWeight={700} letterSpacing={0.4}>
                   DROPOFF (CUSTOMER)
                 </Typography>
-                <Typography variant="body2" fontWeight={700} color="text.primary">
+                <Typography variant="body2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
                   {order?.shippingAddress || 'Customer Address (1.8 km)'}
                 </Typography>
               </Box>
@@ -220,11 +242,15 @@ export default function IncomingOrderAlertModal({
             sx={{
               py: 1.5,
               borderRadius: '14px',
-              borderColor: '#cbd5e1',
-              color: '#64748b',
+              borderColor: 'divider',
+              color: 'text.secondary',
               fontWeight: 700,
               textTransform: 'none',
-              '&:hover': { borderColor: '#ef4444', color: '#ef4444', bgcolor: '#fef2f2' },
+              '&:hover': {
+                borderColor: '#ef4444',
+                color: '#ef4444',
+                bgcolor: 'rgba(239, 68, 68, 0.08)',
+              },
             }}
           >
             Decline

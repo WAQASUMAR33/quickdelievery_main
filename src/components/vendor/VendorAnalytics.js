@@ -29,6 +29,7 @@ import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
 import Alert from '@mui/material/Alert'
 import Stack from '@mui/material/Stack'
+import { useTheme } from '@mui/material/styles'
 
 // Icons
 import StorefrontIcon from '@mui/icons-material/Storefront'
@@ -64,6 +65,13 @@ const BRAND_MUTED = 'rgba(215, 15, 100, 0.08)'
 export default function VendorAnalytics({ vendorId }) {
   const router = useRouter()
   const { userData } = useAuth()
+  const muiTheme = useTheme()
+  const isDark = muiTheme.palette.mode === 'dark'
+  const surfaceBg = isDark ? '#0F172A' : '#ffffff'
+  const subtleBg = isDark ? '#131C31' : '#f8fafc'
+  const pillBg = isDark ? '#1E293B' : '#f1f5f9'
+  const borderCol = isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
+  const brandSoftBg = isDark ? 'rgba(215, 15, 100, 0.16)' : BRAND_LIGHT
 
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
@@ -179,12 +187,12 @@ export default function VendorAnalytics({ vendorId }) {
   // Status color helper
   const getStatusColor = (status) => {
     switch (status) {
-      case 'DELIVERED': return { color: '#059669', bg: '#ecfdf5', label: 'Delivered' }
-      case 'PROCESSING': return { color: '#2563eb', bg: '#eff6ff', label: 'In Kitchen' }
-      case 'SHIPPED': return { color: '#7c3aed', bg: '#f5f3ff', label: 'Out for Delivery' }
-      case 'PENDING': return { color: '#d97706', bg: '#fffbeb', label: 'Action Required' }
-      case 'CANCELLED': return { color: '#dc2626', bg: '#fef2f2', label: 'Cancelled' }
-      default: return { color: '#64748b', bg: '#f8fafc', label: status }
+      case 'DELIVERED': return { color: isDark ? '#34d399' : '#059669', bg: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5', label: 'Delivered' }
+      case 'PROCESSING': return { color: isDark ? '#60a5fa' : '#2563eb', bg: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', label: 'In Kitchen' }
+      case 'SHIPPED': return { color: isDark ? '#c4b5fd' : '#7c3aed', bg: isDark ? 'rgba(139,92,246,0.18)' : '#f5f3ff', label: 'Out for Delivery' }
+      case 'PENDING': return { color: isDark ? '#fbbf24' : '#d97706', bg: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', label: 'Action Required' }
+      case 'CANCELLED': return { color: isDark ? '#f87171' : '#dc2626', bg: isDark ? 'rgba(239,68,68,0.16)' : '#fef2f2', label: 'Cancelled' }
+      default: return { color: isDark ? '#cbd5e1' : '#64748b', bg: pillBg, label: status }
     }
   }
 
@@ -208,8 +216,8 @@ export default function VendorAnalytics({ vendorId }) {
           p: { xs: 2.5, sm: 3 },
           mb: 3,
           borderRadius: '24px',
-          bgcolor: '#ffffff',
-          border: '1px solid #e2e8f0',
+          bgcolor: surfaceBg,
+          border: `1px solid ${borderCol}`,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
           position: 'relative',
           overflow: 'hidden',
@@ -255,7 +263,7 @@ export default function VendorAnalytics({ vendorId }) {
 
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
-                <Typography variant="h5" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+                <Typography variant="h5" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.5 }}>
                   {businessProfile?.businessName || userData?.username || 'Store Partner'}
                 </Typography>
 
@@ -264,13 +272,13 @@ export default function VendorAnalytics({ vendorId }) {
                     icon={<CheckCircleIcon sx={{ fontSize: '15px !important', color: '#059669' }} />}
                     label="Verified Merchant"
                     size="small"
-                    sx={{ bgcolor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', fontWeight: 800, fontSize: 11.5, borderRadius: '8px' }}
+                    sx={{ bgcolor: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5', color: isDark ? '#34d399' : '#059669', border: `1px solid ${isDark ? 'rgba(52,211,153,0.35)' : '#a7f3d0'}`, fontWeight: 800, fontSize: 11.5, borderRadius: '8px' }}
                   />
                 ) : (
                   <Chip
                     label="Partner Store"
                     size="small"
-                    sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: 11.5, borderRadius: '8px' }}
+                    sx={{ bgcolor: pillBg, color: 'text.secondary', fontWeight: 700, fontSize: 11.5, borderRadius: '8px' }}
                   />
                 )}
 
@@ -298,16 +306,16 @@ export default function VendorAnalytics({ vendorId }) {
                     size="small"
                     onClick={() => setIsOpenForOrders(!isOpenForOrders)}
                     sx={{
-                      bgcolor: isOpenForOrders ? '#ecfdf5' : '#fef2f2',
-                      color: isOpenForOrders ? '#059669' : '#dc2626',
-                      border: isOpenForOrders ? '1px solid #a7f3d0' : '1px solid #fecaca',
+                      bgcolor: isOpenForOrders ? (isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5') : (isDark ? 'rgba(239,68,68,0.16)' : '#fef2f2'),
+                      color: isOpenForOrders ? (isDark ? '#34d399' : '#059669') : (isDark ? '#f87171' : '#dc2626'),
+                      border: isOpenForOrders ? `1px solid ${isDark ? 'rgba(52,211,153,0.35)' : '#a7f3d0'}` : `1px solid ${isDark ? 'rgba(248,113,113,0.35)' : '#fecaca'}`,
                       fontWeight: 800,
                       fontSize: 12,
                       cursor: 'pointer',
                       borderRadius: '8px',
                       transition: 'all 0.15s ease',
                       '&:hover': {
-                        bgcolor: isOpenForOrders ? '#d1fae5' : '#fee2e2',
+                        bgcolor: isOpenForOrders ? (isDark ? 'rgba(16,185,129,0.25)' : '#d1fae5') : (isDark ? 'rgba(239,68,68,0.25)' : '#fee2e2'),
                       },
                     }}
                   />
@@ -320,7 +328,7 @@ export default function VendorAnalytics({ vendorId }) {
                     icon={<FastfoodOutlinedIcon sx={{ fontSize: '14px !important', color: BRAND }} />}
                     label={businessProfile.category.name}
                     size="small"
-                    sx={{ bgcolor: BRAND_LIGHT, color: BRAND, fontWeight: 700, fontSize: 11, borderRadius: '6px' }}
+                    sx={{ bgcolor: brandSoftBg, color: BRAND, fontWeight: 700, fontSize: 11, borderRadius: '6px' }}
                   />
                 )}
                 {businessProfile?.city && (
@@ -342,12 +350,12 @@ export default function VendorAnalytics({ vendorId }) {
                 onClick={() => fetchData(true)}
                 disabled={refreshing}
                 sx={{
-                  bgcolor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  color: '#475569',
+                  bgcolor: subtleBg,
+                  border: `1px solid ${borderCol}`,
+                  color: 'text.secondary',
                   borderRadius: '12px',
                   p: 1.1,
-                  '&:hover': { bgcolor: '#f1f5f9', color: '#0f172a' },
+                  '&:hover': { bgcolor: pillBg, color: 'text.primary' },
                 }}
               >
                 <RefreshIcon sx={{ fontSize: 20, animation: refreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } } }} />
@@ -359,15 +367,15 @@ export default function VendorAnalytics({ vendorId }) {
               startIcon={<LocalOfferOutlinedIcon sx={{ color: BRAND }} />}
               onClick={() => router.push('/vendor/dashboard/deals')}
               sx={{
-                borderColor: '#e2e8f0',
-                color: '#334155',
+                borderColor: borderCol,
+                color: 'text.primary',
                 borderRadius: '12px',
                 textTransform: 'none',
                 fontWeight: 700,
                 px: 2,
                 py: 0.9,
                 fontSize: 13,
-                '&:hover': { borderColor: BRAND, bgcolor: BRAND_LIGHT, color: BRAND },
+                '&:hover': { borderColor: BRAND, bgcolor: brandSoftBg, color: BRAND },
               }}
             >
               Create Promo
@@ -416,10 +424,10 @@ export default function VendorAnalytics({ vendorId }) {
               }
               sx={{
                 borderRadius: '16px',
-                bgcolor: '#fffbeb',
-                borderColor: '#fde68a',
+                bgcolor: isDark ? 'rgba(245,158,11,0.12)' : '#fffbeb',
+                borderColor: isDark ? 'rgba(251,191,36,0.3)' : '#fde68a',
                 border: '1px solid',
-                '& .MuiAlert-message': { fontWeight: 700, color: '#92400e' },
+                '& .MuiAlert-message': { fontWeight: 700, color: isDark ? '#fbbf24' : '#92400e' },
               }}
             >
               Action Required: You have {pendingOrders.length} pending customer order{pendingOrders.length > 1 ? 's' : ''} awaiting {isRestaurant ? 'kitchen' : 'store'} confirmation!
@@ -442,10 +450,10 @@ export default function VendorAnalytics({ vendorId }) {
               }
               sx={{
                 borderRadius: '16px',
-                bgcolor: '#f0f9ff',
-                borderColor: '#bae6fd',
+                bgcolor: isDark ? 'rgba(14,165,233,0.12)' : '#f0f9ff',
+                borderColor: isDark ? 'rgba(56,189,248,0.3)' : '#bae6fd',
                 border: '1px solid',
-                '& .MuiAlert-message': { fontWeight: 600, color: '#0369a1' },
+                '& .MuiAlert-message': { fontWeight: 600, color: isDark ? '#38bdf8' : '#0369a1' },
               }}
             >
               {lowStockProducts.length} item{lowStockProducts.length > 1 ? 's are' : ' is'} running low on inventory (&le; 5 left in stock).
@@ -463,8 +471,8 @@ export default function VendorAnalytics({ vendorId }) {
             sx={{
               p: 2.75,
               borderRadius: '20px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
               '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
@@ -476,8 +484,8 @@ export default function VendorAnalytics({ vendorId }) {
                   width: 46,
                   height: 46,
                   borderRadius: '14px',
-                  bgcolor: '#ecfdf5',
-                  color: '#059669',
+                  bgcolor: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5',
+                  color: isDark ? '#34d399' : '#059669',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -488,10 +496,10 @@ export default function VendorAnalytics({ vendorId }) {
               <Chip
                 label={todayRevenue > 0 ? `+Rs. ${todayRevenue.toLocaleString()} today` : 'Delivered'}
                 size="small"
-                sx={{ bgcolor: '#ecfdf5', color: '#059669', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
+                sx={{ bgcolor: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5', color: isDark ? '#34d399' : '#059669', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
               />
             </Box>
-            <Typography variant="h4" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+            <Typography variant="h4" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               PKR {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
@@ -507,8 +515,8 @@ export default function VendorAnalytics({ vendorId }) {
             sx={{
               p: 2.75,
               borderRadius: '20px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
               '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
@@ -520,8 +528,8 @@ export default function VendorAnalytics({ vendorId }) {
                   width: 46,
                   height: 46,
                   borderRadius: '14px',
-                  bgcolor: '#eff6ff',
-                  color: '#2563eb',
+                  bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff',
+                  color: isDark ? '#60a5fa' : '#2563eb',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -532,10 +540,10 @@ export default function VendorAnalytics({ vendorId }) {
               <Chip
                 label={`${orders.length} total`}
                 size="small"
-                sx={{ bgcolor: '#eff6ff', color: '#2563eb', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
+                sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.16)' : '#eff6ff', color: isDark ? '#60a5fa' : '#2563eb', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
               />
             </Box>
-            <Typography variant="h4" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+            <Typography variant="h4" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               {orders.length}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
@@ -551,8 +559,8 @@ export default function VendorAnalytics({ vendorId }) {
             sx={{
               p: 2.75,
               borderRadius: '20px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
               '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
@@ -564,7 +572,7 @@ export default function VendorAnalytics({ vendorId }) {
                   width: 46,
                   height: 46,
                   borderRadius: '14px',
-                  bgcolor: BRAND_LIGHT,
+                  bgcolor: brandSoftBg,
                   color: BRAND,
                   display: 'flex',
                   alignItems: 'center',
@@ -576,10 +584,10 @@ export default function VendorAnalytics({ vendorId }) {
               <Chip
                 label={`${approvalRate}% Live`}
                 size="small"
-                sx={{ bgcolor: BRAND_LIGHT, color: BRAND, fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
+                sx={{ bgcolor: brandSoftBg, color: BRAND, fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
               />
             </Box>
-            <Typography variant="h4" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+            <Typography variant="h4" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               {products.length}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
@@ -595,8 +603,8 @@ export default function VendorAnalytics({ vendorId }) {
             sx={{
               p: 2.75,
               borderRadius: '20px',
-              border: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              border: `1px solid ${borderCol}`,
+              bgcolor: surfaceBg,
               boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)',
               transition: 'all 0.2s ease',
               '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)' },
@@ -608,8 +616,8 @@ export default function VendorAnalytics({ vendorId }) {
                   width: 46,
                   height: 46,
                   borderRadius: '14px',
-                  bgcolor: '#fffbeb',
-                  color: '#d97706',
+                  bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb',
+                  color: isDark ? '#fbbf24' : '#d97706',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -620,10 +628,10 @@ export default function VendorAnalytics({ vendorId }) {
               <Chip
                 label="Avg Basket"
                 size="small"
-                sx={{ bgcolor: '#fffbeb', color: '#d97706', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
+                sx={{ bgcolor: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb', color: isDark ? '#fbbf24' : '#d97706', fontWeight: 800, fontSize: 11, borderRadius: '8px' }}
               />
             </Box>
-            <Typography variant="h4" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.5 }}>
+            <Typography variant="h4" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.5 }}>
               PKR {averageOrderValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontWeight={600} mt={0.5}>
@@ -638,11 +646,11 @@ export default function VendorAnalytics({ vendorId }) {
         {/* ── LEFT COLUMN (66%): Live Kitchen Queue & Top Dishes ── */}
         <Grid item xs={12} lg={8}>
           {/* Live Kitchen Queue */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '22px', mb: 3, bgcolor: surfaceBg, boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
                 <Box>
-                  <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+                  <Typography variant="h6" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.3 }}>
                     Live Kitchen Queue
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -674,14 +682,14 @@ export default function VendorAnalytics({ vendorId }) {
                           py: 1.8,
                           bgcolor: isActive
                             ? (tab.alert ? '#d97706' : BRAND)
-                            : (tab.alert ? '#fef3c7' : '#f1f5f9'),
+                            : (tab.alert ? (isDark ? 'rgba(245,158,11,0.18)' : '#fef3c7') : pillBg),
                           color: isActive
                             ? '#ffffff'
-                            : (tab.alert ? '#92400e' : '#475569'),
+                            : (tab.alert ? (isDark ? '#fbbf24' : '#92400e') : 'text.secondary'),
                           '&:hover': {
                             bgcolor: isActive
                               ? (tab.alert ? '#b45309' : BRAND_DARK)
-                              : '#e2e8f0',
+                              : borderCol,
                           },
                         }}
                       />
@@ -708,8 +716,8 @@ export default function VendorAnalytics({ vendorId }) {
                   mb: 2.5,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '14px',
-                    bgcolor: '#f8fafc',
-                    borderColor: '#e2e8f0',
+                    bgcolor: subtleBg,
+                    borderColor: borderCol,
                   }
                 }}
               />
@@ -722,7 +730,7 @@ export default function VendorAnalytics({ vendorId }) {
                       width: 64,
                       height: 64,
                       borderRadius: '50%',
-                      bgcolor: '#f8fafc',
+                      bgcolor: subtleBg,
                       color: 'text.disabled',
                       display: 'flex',
                       alignItems: 'center',
@@ -733,7 +741,7 @@ export default function VendorAnalytics({ vendorId }) {
                   >
                     <ShoppingBagOutlinedIcon sx={{ fontSize: 32 }} />
                   </Box>
-                  <Typography variant="subtitle1" fontWeight={800} color="#334155">
+                  <Typography variant="subtitle1" fontWeight={800} color="text.primary">
                     No orders in this queue
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -741,16 +749,16 @@ export default function VendorAnalytics({ vendorId }) {
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden' }}>
+                <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '16px', overflow: 'hidden' }}>
                   <Table size="medium">
-                    <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                    <TableHead sx={{ bgcolor: subtleBg }}>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>ORDER</TableCell>
-                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>CUSTOMER</TableCell>
-                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>ITEMS</TableCell>
-                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>AMOUNT</TableCell>
-                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>STATUS</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: '#475569' }}>ACTION</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>ORDER</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>CUSTOMER</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>ITEMS</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>AMOUNT</TableCell>
+                        <TableCell sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>STATUS</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: 11.5, py: 1.5, color: 'text.secondary' }}>ACTION</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -765,7 +773,7 @@ export default function VendorAnalytics({ vendorId }) {
                               #{order.id}
                             </TableCell>
                             <TableCell>
-                              <Typography variant="body2" fontWeight={700} color="#0f172a">
+                              <Typography variant="body2" fontWeight={700} color="text.primary">
                                 {order.user?.username || 'Customer'}
                               </Typography>
                               <Typography variant="caption" color="text.secondary" display="block">
@@ -777,7 +785,7 @@ export default function VendorAnalytics({ vendorId }) {
                                 {firstItemName} {itemCount > 1 ? `+${itemCount - 1} more` : ''}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ fontWeight: 800, color: '#0f172a' }}>
+                            <TableCell sx={{ fontWeight: 800, color: 'text.primary' }}>
                               Rs. {parseFloat(order.totalAmount || 0).toLocaleString()}
                             </TableCell>
                             <TableCell>
@@ -799,15 +807,15 @@ export default function VendorAnalytics({ vendorId }) {
                                 variant="outlined"
                                 onClick={() => router.push(`/vendor/dashboard/orders/new`)}
                                 sx={{
-                                  borderColor: '#e2e8f0',
-                                  color: '#0f172a',
+                                  borderColor: borderCol,
+                                  color: 'text.primary',
                                   borderRadius: '8px',
                                   textTransform: 'none',
                                   fontWeight: 700,
                                   px: 1.5,
                                   py: 0.4,
                                   fontSize: 12,
-                                  '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: BRAND_LIGHT },
+                                  '&:hover': { borderColor: BRAND, color: BRAND, bgcolor: brandSoftBg },
                                 }}
                               >
                                 View
@@ -836,12 +844,12 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
 
           {/* Top Menu Products */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '22px', bgcolor: surfaceBg, boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                   <StarIcon sx={{ color: '#f59e0b' }} />
-                  <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+                  <Typography variant="h6" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.3 }}>
                     Top Menu Products
                   </Typography>
                 </Box>
@@ -877,13 +885,13 @@ export default function VendorAnalytics({ vendorId }) {
                         sx={{
                           p: 2,
                           borderRadius: '16px',
-                          border: '1px solid #f1f5f9',
-                          bgcolor: '#f8fafc',
+                          border: `1px solid ${borderCol}`,
+                          bgcolor: subtleBg,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 2,
                           transition: 'all 0.15s ease',
-                          '&:hover': { bgcolor: '#ffffff', borderColor: BRAND, boxShadow: '0 6px 18px rgba(0,0,0,0.04)' },
+                          '&:hover': { bgcolor: surfaceBg, borderColor: BRAND, boxShadow: '0 6px 18px rgba(0,0,0,0.08)' },
                         }}
                       >
                         <Box
@@ -893,8 +901,8 @@ export default function VendorAnalytics({ vendorId }) {
                             borderRadius: '12px',
                             overflow: 'hidden',
                             flexShrink: 0,
-                            bgcolor: '#ffffff',
-                            border: '1px solid #e2e8f0',
+                            bgcolor: surfaceBg,
+                            border: `1px solid ${borderCol}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -908,7 +916,7 @@ export default function VendorAnalytics({ vendorId }) {
                         </Box>
 
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="body2" fontWeight={800} color="#0f172a" noWrap>
+                          <Typography variant="body2" fontWeight={800} color="text.primary" noWrap>
                             {p.proName}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" display="block">
@@ -931,8 +939,8 @@ export default function VendorAnalytics({ vendorId }) {
                             fontSize: 10.5,
                             fontWeight: 800,
                             borderRadius: '6px',
-                            bgcolor: p.approvalStatus === 'Approved' ? '#ecfdf5' : p.approvalStatus === 'Pending' ? '#fffbeb' : '#fef2f2',
-                            color: p.approvalStatus === 'Approved' ? '#059669' : p.approvalStatus === 'Pending' ? '#d97706' : '#dc2626',
+                            bgcolor: p.approvalStatus === 'Approved' ? (isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5') : p.approvalStatus === 'Pending' ? (isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb') : (isDark ? 'rgba(239,68,68,0.16)' : '#fef2f2'),
+                            color: p.approvalStatus === 'Approved' ? (isDark ? '#34d399' : '#059669') : p.approvalStatus === 'Pending' ? (isDark ? '#fbbf24' : '#d97706') : (isDark ? '#f87171' : '#dc2626'),
                           }}
                         />
                       </Box>
@@ -947,9 +955,9 @@ export default function VendorAnalytics({ vendorId }) {
         {/* ── RIGHT COLUMN (34%): Catalog Health, Shortcuts & Store Overview ── */}
         <Grid item xs={12} lg={4}>
           {/* Catalog Approval Status Breakdown */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '22px', mb: 3, bgcolor: surfaceBg, boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+              <Typography variant="subtitle1" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.3 }}>
                 Catalog Health &amp; Approval
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2.5}>
@@ -957,15 +965,15 @@ export default function VendorAnalytics({ vendorId }) {
               </Typography>
 
               {[
-                { label: 'Approved & Live', count: approvedProducts.length, color: '#10b981', bg: '#ecfdf5' },
-                { label: 'Under Review', count: pendingProducts.length, color: '#f59e0b', bg: '#fffbeb' },
-                { label: 'Edits Needed', count: rejectedProducts.length, color: '#ef4444', bg: '#fef2f2' },
+                { label: 'Approved & Live', count: approvedProducts.length, color: '#10b981', bg: isDark ? 'rgba(16,185,129,0.16)' : '#ecfdf5' },
+                { label: 'Under Review', count: pendingProducts.length, color: '#f59e0b', bg: isDark ? 'rgba(245,158,11,0.16)' : '#fffbeb' },
+                { label: 'Edits Needed', count: rejectedProducts.length, color: '#ef4444', bg: isDark ? 'rgba(239,68,68,0.16)' : '#fef2f2' },
               ].map(({ label, count, color, bg }) => (
                 <Box key={label} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box sx={{ width: 8, height: 8, bgcolor: color, borderRadius: '50%' }} />
-                      <Typography variant="body2" fontWeight={700} color="#334155">{label}</Typography>
+                      <Typography variant="body2" fontWeight={700} color="text.primary">{label}</Typography>
                     </Box>
                     <Typography variant="body2" fontWeight={800} color={color}>{count}</Typography>
                   </Box>
@@ -1002,9 +1010,9 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
 
           {/* Quick Operations 2x2 Grid */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '22px', mb: 3, bgcolor: surfaceBg, boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+              <Typography variant="subtitle1" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.3 }}>
                 Store Shortcuts
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2}>
@@ -1023,11 +1031,11 @@ export default function VendorAnalytics({ vendorId }) {
                       px: 1,
                       borderRadius: '16px',
                       textTransform: 'none',
-                      borderColor: '#e2e8f0',
-                      bgcolor: '#f8fafc',
-                      color: '#0f172a',
+                      borderColor: borderCol,
+                      bgcolor: subtleBg,
+                      color: 'text.primary',
                       transition: 'all 0.15s ease',
-                      '&:hover': { bgcolor: BRAND_LIGHT, borderColor: BRAND, color: BRAND, transform: 'translateY(-2px)' },
+                      '&:hover': { bgcolor: brandSoftBg, borderColor: BRAND, color: BRAND, transform: 'translateY(-2px)' },
                     }}
                   >
                     <Inventory2OutlinedIcon sx={{ color: BRAND, fontSize: 26, mb: 0.75 }} />
@@ -1048,11 +1056,11 @@ export default function VendorAnalytics({ vendorId }) {
                       px: 1,
                       borderRadius: '16px',
                       textTransform: 'none',
-                      borderColor: '#e2e8f0',
-                      bgcolor: '#f8fafc',
-                      color: '#0f172a',
+                      borderColor: borderCol,
+                      bgcolor: subtleBg,
+                      color: 'text.primary',
                       transition: 'all 0.15s ease',
-                      '&:hover': { bgcolor: '#fffbeb', borderColor: '#d97706', color: '#d97706', transform: 'translateY(-2px)' },
+                      '&:hover': { bgcolor: isDark ? 'rgba(245,158,11,0.14)' : '#fffbeb', borderColor: '#d97706', color: isDark ? '#fbbf24' : '#d97706', transform: 'translateY(-2px)' },
                     }}
                   >
                     <LocalOfferOutlinedIcon sx={{ color: '#d97706', fontSize: 26, mb: 0.75 }} />
@@ -1073,11 +1081,11 @@ export default function VendorAnalytics({ vendorId }) {
                       px: 1,
                       borderRadius: '16px',
                       textTransform: 'none',
-                      borderColor: '#e2e8f0',
-                      bgcolor: '#f8fafc',
-                      color: '#0f172a',
+                      borderColor: borderCol,
+                      bgcolor: subtleBg,
+                      color: 'text.primary',
                       transition: 'all 0.15s ease',
-                      '&:hover': { bgcolor: '#eff6ff', borderColor: '#2563eb', color: '#2563eb', transform: 'translateY(-2px)' },
+                      '&:hover': { bgcolor: isDark ? 'rgba(59,130,246,0.14)' : '#eff6ff', borderColor: '#2563eb', color: isDark ? '#60a5fa' : '#2563eb', transform: 'translateY(-2px)' },
                     }}
                   >
                     <StorefrontIcon sx={{ color: '#2563eb', fontSize: 26, mb: 0.75 }} />
@@ -1098,11 +1106,11 @@ export default function VendorAnalytics({ vendorId }) {
                       px: 1,
                       borderRadius: '16px',
                       textTransform: 'none',
-                      borderColor: '#e2e8f0',
-                      bgcolor: '#f8fafc',
-                      color: '#0f172a',
+                      borderColor: borderCol,
+                      bgcolor: subtleBg,
+                      color: 'text.primary',
                       transition: 'all 0.15s ease',
-                      '&:hover': { bgcolor: '#fef2f2', borderColor: '#dc2626', color: '#dc2626', transform: 'translateY(-2px)' },
+                      '&:hover': { bgcolor: isDark ? 'rgba(239,68,68,0.14)' : '#fef2f2', borderColor: '#dc2626', color: isDark ? '#f87171' : '#dc2626', transform: 'translateY(-2px)' },
                     }}
                   >
                     <ShieldOutlinedIcon sx={{ color: '#dc2626', fontSize: 26, mb: 0.75 }} />
@@ -1116,10 +1124,10 @@ export default function VendorAnalytics({ vendorId }) {
           </Card>
 
           {/* Store Details Quick Overview */}
-          <Card elevation={0} sx={{ border: '1px solid #e2e8f0', borderRadius: '22px', bgcolor: '#ffffff', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
+          <Card elevation={0} sx={{ border: `1px solid ${borderCol}`, borderRadius: '22px', bgcolor: surfaceBg, boxShadow: '0 2px 12px rgba(0, 0, 0, 0.02)' }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight={900} color="#0f172a" sx={{ letterSpacing: -0.3 }}>
+                <Typography variant="subtitle1" fontWeight={900} color="text.primary" sx={{ letterSpacing: -0.3 }}>
                   Store Information
                 </Typography>
                 <Button
@@ -1135,20 +1143,20 @@ export default function VendorAnalytics({ vendorId }) {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                   <StorefrontIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                   <Typography variant="body2" color="text.secondary">
-                    Business Name: <strong style={{ color: '#0f172a' }}>{businessProfile?.businessName || 'Test Vendor'}</strong>
+                    Business Name: <strong style={{ color: isDark ? '#F1F5F9' : '#0f172a' }}>{businessProfile?.businessName || 'Test Vendor'}</strong>
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                   <FastfoodOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                   <Typography variant="body2" color="text.secondary">
-                    Category: <strong style={{ color: '#0f172a' }}>{businessProfile?.category?.name || 'Restaurant'}</strong>
+                    Category: <strong style={{ color: isDark ? '#F1F5F9' : '#0f172a' }}>{businessProfile?.category?.name || 'Restaurant'}</strong>
                   </Typography>
                 </Box>
                 {businessProfile?.city && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <LocationOnOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="body2" color="text.secondary">
-                      City: <strong style={{ color: '#0f172a' }}>{businessProfile.city}</strong>
+                      City: <strong style={{ color: isDark ? '#F1F5F9' : '#0f172a' }}>{businessProfile.city}</strong>
                     </Typography>
                   </Box>
                 )}
@@ -1156,7 +1164,7 @@ export default function VendorAnalytics({ vendorId }) {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <EmailOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 220 }}>
-                      Email: <strong style={{ color: '#0f172a' }}>{userData.email}</strong>
+                      Email: <strong style={{ color: isDark ? '#F1F5F9' : '#0f172a' }}>{userData.email}</strong>
                     </Typography>
                   </Box>
                 )}

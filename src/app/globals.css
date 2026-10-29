@@ -221,29 +221,63 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Ensure all input fields have proper black text color */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-input[type="number"],
-input[type="url"],
-textarea,
-select {
-  color: #000000 !important;
+/* Ensure all input fields have proper text color in both light and dark themes */
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="email"],
+html:not(.dark) input[type="password"],
+html:not(.dark) input[type="tel"],
+html:not(.dark) input[type="number"],
+html:not(.dark) input[type="url"],
+html:not(.dark) textarea,
+html:not(.dark) select {
+  color: #0f172a;
 }
 
-/* Ensure input placeholders are visible but not too dark */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="tel"],
+html.dark input[type="number"],
+html.dark input[type="url"],
+html.dark textarea,
+html.dark select {
+  color: #f1f5f9;
+}
+
+html.dark input.bg-white:not([class*="dark:bg-"]),
+html.dark textarea.bg-white:not([class*="dark:bg-"]),
+html.dark select.bg-white:not([class*="dark:bg-"]) {
+  color: #0f172a;
+}
+
+/* Ensure input placeholders are visible in both themes */
 input::placeholder,
 textarea::placeholder {
-  color: #6b7280 !important;
+  color: #6b7280;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8;
 }
 
 /* Focus states for better visibility */
-input:focus,
-textarea:focus,
-select:focus {
-  color: #000000 !important;
+html:not(.dark) input:focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+  color: #0f172a;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  color: #ffffff;
+}
+
+html.dark input.bg-white:not([class*="dark:bg-"]):focus,
+html.dark textarea.bg-white:not([class*="dark:bg-"]):focus,
+html.dark select.bg-white:not([class*="dark:bg-"]):focus {
+  color: #0f172a;
 }
 
 /* Enhanced animations for customer dashboard */

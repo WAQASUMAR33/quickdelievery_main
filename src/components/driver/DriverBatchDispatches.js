@@ -71,8 +71,8 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-slate-400 gap-3">
-        <RefreshCw className="h-7 w-7 animate-spin text-emerald-600" />
+      <div className="flex flex-col items-center justify-center p-12 text-slate-500 dark:text-slate-400 gap-3">
+        <RefreshCw className="h-7 w-7 animate-spin text-emerald-500" />
         <p className="text-sm font-medium">Running spatial grid filter & route path sequencing...</p>
       </div>
     )
@@ -80,19 +80,19 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
 
   if (batches.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 mb-3">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F172A] p-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mb-3">
           <Layers className="h-7 w-7" />
         </div>
-        <h4 className="text-base font-bold text-slate-900 dark:text-white">
+        <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
           No Batched Trips Available in Your Zone Right Now
         </h4>
-        <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-4">
           Automated multi-order stacking checks incoming orders every 45s. Orders with kitchen prep diff &le; 7m and detour &le; 3.5km are combined here.
         </p>
         <button
           onClick={fetchBatches}
-          className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition"
+          className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
         >
           Refresh Dispatch Pool
         </button>
@@ -104,17 +104,17 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Layers className="h-5 w-5 text-emerald-600" />
+          <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Layers className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Smart Multi-Order Stacked Trips ({batches.length})
           </h4>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Combined delivery routes with minimal detour distance for maximum rider earnings per hour
           </p>
         </div>
         <button
           onClick={fetchBatches}
-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition"
+          className="rounded-lg p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
@@ -124,7 +124,7 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
         {batches.map((batch, idx) => (
           <div
             key={idx}
-            className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-gradient-to-br from-white via-white to-emerald-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/20 p-5 shadow-lg space-y-4"
+            className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-gradient-to-br from-white via-white to-emerald-50/40 dark:from-[#0F172A] dark:via-[#0F172A] dark:to-emerald-950/20 p-5 shadow-lg space-y-4"
           >
             {/* Header Badge */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -132,11 +132,11 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
                 <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-0.5 text-xs font-black text-emerald-800 dark:text-emerald-200 uppercase">
                   ⚡ 2-Order Stack
                 </span>
-                <span className="text-xs font-semibold text-slate-500">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   Zone: #{batch.geo_cell?.slice(0, 5)}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-600">
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="h-4 w-4" />
                 <span>Double Trip Fare</span>
               </div>
@@ -145,18 +145,18 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
             {/* Quality Metrics */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-2.5 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Detour Distance</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200">{batch.detour_km} km (Limit: &le;3.5km)</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">Detour Distance</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-100">{batch.detour_km} km (Limit: &le;3.5km)</span>
               </div>
               <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-2.5 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Kitchen Prep Gap</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200">{batch.prep_time_diff_min} mins (Limit: &le;7m)</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">Kitchen Prep Gap</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-100">{batch.prep_time_diff_min} mins (Limit: &le;7m)</span>
               </div>
             </div>
 
             {/* 4-Step Route Sequence */}
             <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Optimized Delivery Route Sequence
               </span>
               <div className="space-y-1.5 text-xs">
@@ -175,14 +175,14 @@ export default function DriverBatchDispatches({ driverId, onBatchAccepted }) {
                       >
                         {step.step_index}
                       </span>
-                      <strong className={step.action === 'PICKUP' ? 'text-amber-700' : 'text-emerald-700'}>
+                      <strong className={step.action === 'PICKUP' ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}>
                         {step.action}:
                       </strong>
-                      <span className="text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
+                      <span className="text-slate-800 dark:text-slate-100 truncate max-w-[180px]">
                         {step.location_name}
                       </span>
                     </div>
-                    <span className="font-mono text-[11px] text-slate-400">
+                    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
                       {step.target_order_id}
                     </span>
                   </div>

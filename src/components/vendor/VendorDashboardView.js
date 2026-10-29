@@ -58,7 +58,7 @@ export default function VendorDashboardView() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
         <CircularProgress size={44} sx={{ color: BRAND }} />
         <Typography color="text.secondary" fontWeight={600}>Loading vendor portal...</Typography>
       </Box>
@@ -76,14 +76,14 @@ export default function VendorDashboardView() {
 
   return (
     <DashboardLayout>
-      <Box sx={{ width: '100%', minHeight: '100%', bgcolor: '#f8fafc', pb: 6 }}>
+      <Box sx={{ width: '100%', minHeight: '100%', bgcolor: 'background.default', pb: 6 }}>
         {/* ── Executive Vendor Full-Width Subnav Bar ── */}
         <Paper
           elevation={0}
           sx={{
             width: '100%',
-            bgcolor: '#ffffff',
-            borderBottom: '1px solid #e2e8f0',
+            bgcolor: 'background.paper',
+            borderBottom: '1px solid', borderColor: 'divider',
             px: { xs: 2, sm: 3, md: 4, xl: 5 },
             py: 1.5,
             position: 'sticky',
@@ -119,14 +119,14 @@ export default function VendorDashboardView() {
                       py: 0.9,
                       borderRadius: '12px',
                       whiteSpace: 'nowrap',
-                      color: isActive ? '#ffffff' : '#475569',
+                      color: isActive ? '#ffffff' : 'text.secondary',
                       bgcolor: isActive ? BRAND : 'transparent',
                       background: isActive ? `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)` : 'transparent',
                       boxShadow: isActive ? '0 4px 14px rgba(215, 15, 100, 0.3)' : 'none',
                       transition: 'all 0.15s ease',
                       '&:hover': {
-                        bgcolor: isActive ? BRAND_DARK : '#f1f5f9',
-                        color: isActive ? '#ffffff' : '#0f172a',
+                        bgcolor: isActive ? BRAND_DARK : 'action.hover',
+                        color: isActive ? '#ffffff' : 'text.primary',
                       },
                     }}
                   >
@@ -147,13 +147,14 @@ export default function VendorDashboardView() {
                   py: 0.9,
                   borderRadius: '12px',
                   whiteSpace: 'nowrap',
-                  color: '#0369a1',
-                  bgcolor: '#f0f9ff',
-                  border: '1px solid #bae6fd',
+                  color: (theme) => theme.palette.mode === 'dark' ? '#38bdf8' : '#0369a1',
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(14,165,233,0.14)' : '#f0f9ff',
+                  border: '1px solid',
+                  borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(56,189,248,0.35)' : '#bae6fd',
                   transition: 'all 0.15s ease',
                   '&:hover': {
-                    bgcolor: '#e0f2fe',
-                    borderColor: '#7dd3fc',
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(14,165,233,0.22)' : '#e0f2fe',
+                    borderColor: '#38bdf8',
                   },
                 }}
               >
@@ -173,14 +174,15 @@ export default function VendorDashboardView() {
                     py: 0.9,
                     borderRadius: '12px',
                     whiteSpace: 'nowrap',
-                    color: '#065f46',
-                    bgcolor: '#ecfdf5',
-                    border: '1px solid #a7f3d0',
+                    color: (theme) => theme.palette.mode === 'dark' ? '#34d399' : '#065f46',
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#ecfdf5',
+                    border: '1px solid',
+                    borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(52,211,153,0.35)' : '#a7f3d0',
                     boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)',
                     transition: 'all 0.15s ease',
                     '&:hover': {
-                      bgcolor: '#d1fae5',
-                      borderColor: '#6ee7b7',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(16,185,129,0.24)' : '#d1fae5',
+                      borderColor: '#34d399',
                       transform: 'translateY(-1px)',
                     },
                   }}
@@ -205,14 +207,14 @@ export default function VendorDashboardView() {
                   fontWeight: 700,
                   fontSize: 12,
                   borderRadius: '10px',
-                  borderColor: '#cbd5e1',
-                  color: '#475569',
+                  borderColor: 'divider',
+                  color: 'text.secondary',
                   px: 1.75,
                   py: 0.7,
                   '&:hover': {
-                    borderColor: '#94a3b8',
-                    bgcolor: '#f8fafc',
-                    color: '#0f172a',
+                    borderColor: 'text.secondary',
+                    bgcolor: 'action.hover',
+                    color: 'text.primary',
                   },
                 }}
               >

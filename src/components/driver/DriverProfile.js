@@ -51,14 +51,33 @@ import ReportProblemOutlinedIcon   from '@mui/icons-material/ReportProblemOutlin
 import SendOutlinedIcon            from '@mui/icons-material/SendOutlined'
 
 const BRAND = '#39772A'
+const BRAND_DARK_MODE = '#4ade80'
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
     borderRadius: 0,
-    '&:hover fieldset':       { borderColor: BRAND },
-    '&.Mui-focused fieldset': { borderColor: BRAND },
+    '&:hover fieldset': {
+      borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+    },
+    '&.Mui-disabled': {
+      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+      '& fieldset': {
+        borderColor: 'divider',
+      },
+    },
   },
-  '& label.Mui-focused': { color: BRAND },
+  '& .MuiInputBase-input.Mui-disabled': {
+    WebkitTextFillColor: (theme) => theme.palette.mode === 'dark' ? '#F1F5F9' : '#0F172A',
+  },
+  '& .MuiInputLabel-root.Mui-disabled': {
+    color: 'text.secondary',
+  },
+  '& label.Mui-focused': {
+    color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+  },
 }
 
 const VEHICLE_TYPES = [
@@ -397,10 +416,30 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
     totalEarnings: '$1,280.00'
   }
 
+  const sectionTitleSx = {
+    borderLeft: (theme) => `4px solid ${theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND}`,
+    pl: 1.5,
+  }
+
+  const uploadBtnSx = {
+    borderRadius: 0,
+    textTransform: 'none',
+    borderColor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+    color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+    '&:hover': {
+      borderColor: (theme) => theme.palette.mode === 'dark' ? '#22c55e' : '#2e6022',
+      bgcolor: 'rgba(57, 119, 42, 0.08)',
+    },
+    '&.Mui-disabled': {
+      borderColor: 'divider',
+      color: 'text.disabled',
+    },
+  }
+
   return (
     <Box sx={{ pb: 4 }}>
       {/* ── Driver Header Banner ── */}
-      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, mb: 3 }}>
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, mb: 3, overflow: 'hidden' }}>
         <Box sx={{ p: 3, bgcolor: '#0f1724', color: 'white' }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
@@ -489,8 +528,9 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                   sx={{
                     borderRadius: 0,
                     bgcolor: BRAND,
+                    color: 'white',
                     fontWeight: 700,
-                    '&:hover': { bgcolor: '#b00d52' }
+                    '&:hover': { bgcolor: '#2e6022' }
                   }}
                 >
                   {isEditing ? 'Cancel Edit' : 'Edit Profile'}
@@ -501,7 +541,18 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
         </Box>
 
         {/* Rating & Joined sub-bar */}
-        <Box sx={{ px: 3, py: 1.5, bgcolor: 'grey.100', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{
+          px: 3,
+          py: 1.5,
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.100',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 1
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', fontWeight: 800, fontSize: 14 }}>
               <StarIcon sx={{ fontSize: 18 }} />
@@ -530,13 +581,13 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
           { label: 'Acceptance Rate',      value: stats.acceptanceRate,  color: '#3b82f6', icon: <CheckCircleOutlinedIcon /> },
           { label: 'On-Time Rate',         value: stats.onTimeRate,       color: '#8b5cf6', icon: <AccessTimeOutlinedIcon /> },
           { label: 'Rating',               value: `${stats.rating} ★`,   color: '#f59e0b', icon: <StarIcon /> },
-          { label: 'Total Earnings',       value: stats.totalEarnings,   color: BRAND,     icon: <AccountBalanceOutlinedIcon /> },
+          { label: 'Total Earnings',       value: stats.totalEarnings,   color: '#22c55e', icon: <AccountBalanceOutlinedIcon /> },
         ].map(({ label, value, color, icon }) => (
           <Card key={label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box>
-                  <Typography variant="caption" color="text.disabled" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" letterSpacing={0.5}>
                     {label}
                   </Typography>
                   <Typography variant="h5" fontWeight={800} sx={{ color, mt: 0.5 }}>
@@ -560,9 +611,20 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
           variant="scrollable"
           scrollButtons="auto"
           sx={{
-            '& .MuiTab-root': { textTransform: 'none', fontWeight: 700, fontSize: 13, minHeight: 48 },
-            '& .Mui-selected': { color: BRAND },
-            '& .MuiTabs-indicator': { bgcolor: BRAND, height: 3 },
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 13,
+              minHeight: 48,
+              color: 'text.secondary',
+              '&.Mui-selected': {
+                color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND,
+              height: 3,
+            },
           }}
         >
           <Tab icon={<PersonOutlinedIcon fontSize="small" />} iconPosition="start" label="Personal Info" />
@@ -582,7 +644,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 0 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Personal & Account Details
                   </Typography>
 
@@ -594,7 +656,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                     <TextField
                       label="Email Address"
@@ -603,7 +665,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                     <TextField
                       label="Phone Number"
@@ -612,26 +674,35 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
-                    <Box sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar 
-                            src={localPreviews.profilePhotoUrl || formData.profilePhotoUrl} 
-                            sx={{ width: 48, height: 48, border: '2px solid', borderColor: BRAND, cursor: 'pointer' }} 
-                            onClick={() => handleOpenViewer(localPreviews.profilePhotoUrl || formData.profilePhotoUrl)}
-                          />
-                          <Box>
-                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>Profile Photo *</Typography>
-                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, recent passport-sized picture</Typography>
-                          </Box>
+                    <Box sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      p: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'background.paper',
+                      '&:hover': { borderColor: isEditing ? BRAND : 'divider' }
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar 
+                          src={localPreviews.profilePhotoUrl || formData.profilePhotoUrl} 
+                          sx={{ width: 48, height: 48, border: '2px solid', borderColor: BRAND, cursor: 'pointer' }} 
+                          onClick={() => handleOpenViewer(localPreviews.profilePhotoUrl || formData.profilePhotoUrl)}
+                        />
+                        <Box>
+                          <Typography variant="body2" fontWeight={700} color="text.primary">Profile Photo *</Typography>
+                          <Typography variant="caption" color="text.secondary">Clear, recent passport-sized picture</Typography>
                         </Box>
+                      </Box>
                       <Button
                         component="label"
                         variant="outlined"
                         size="small"
                         disabled={!isEditing}
-                        sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
+                        sx={uploadBtnSx}
                       >
                         Upload
                         <input
@@ -655,13 +726,13 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                   </Box>
 
                   <Divider sx={{ my: 1 }} />
 
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Emergency Contact Information
                   </Typography>
 
@@ -673,7 +744,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                     <TextField
                       label="Emergency Contact Phone"
@@ -682,7 +753,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       disabled={!isEditing}
                       size="small"
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                   </Box>
                 </Box>
@@ -693,7 +764,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 1 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Vehicle & Equipment Details
                   </Typography>
 
@@ -717,9 +788,17 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       </Select>
                     </FormControl>
 
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
                       <Box>
-                        <Typography variant="body2" fontWeight={700}>Compatible Smartphone *</Typography>
+                        <Typography variant="body2" fontWeight={700} color="text.primary">Compatible Smartphone *</Typography>
                         <Typography variant="caption" color="text.secondary">Android 7.0+ or iOS 9.0+</Typography>
                       </Box>
                       <Switch
@@ -737,7 +816,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
 
                   <Divider sx={{ my: 1 }} />
 
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Vehicle Attachments
                   </Typography>
 
@@ -747,7 +826,16 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       { key: 'vehicleRegCertFrontUrl', label: 'Vehicle Registration Certificate (Front)' },
                       { key: 'vehicleRegCertBackUrl', label: 'Vehicle Registration Certificate (Back)' },
                     ].map(doc => (
-                      <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
+                      <Box key={doc.key} sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'background.paper',
+                        '&:hover': { borderColor: isEditing ? BRAND : 'divider' }
+                      }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           {(localPreviews[doc.key] || formData[doc.key]) ? (
                             <Avatar 
@@ -757,13 +845,23 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                               onClick={() => handleOpenViewer(localPreviews[doc.key] || formData[doc.key])}
                             />
                           ) : (
-                            <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
+                            <Box sx={{
+                              width: 40,
+                              height: 40,
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'grey.100',
+                              border: '1px dashed',
+                              borderColor: 'divider',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: 1
+                            }}>
                               <Typography variant="caption" color="text.secondary">No Img</Typography>
                             </Box>
                           )}
                           <Box>
-                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>{doc.label} *</Typography>
-                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, readable picture</Typography>
+                            <Typography variant="body2" fontWeight={700} color="text.primary">{doc.label} *</Typography>
+                            <Typography variant="caption" color="text.secondary">Clear, readable picture</Typography>
                           </Box>
                         </Box>
                         <Button
@@ -771,7 +869,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                           variant="outlined"
                           size="small"
                           disabled={!isEditing}
-                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
+                          sx={uploadBtnSx}
                         >
                           Upload
                           <input
@@ -798,7 +896,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 2 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Identity & Verification Status
                   </Typography>
 
@@ -812,7 +910,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       required
                       fullWidth
                       placeholder="e.g. 35202-1234567-1"
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
 
                     <TextField
@@ -823,7 +921,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       size="small"
                       required
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
                     <TextField
                       label="Home Address Verification *"
@@ -834,14 +932,13 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       required
                       fullWidth
                       placeholder="e.g. 123 Fake Street, Lahore"
-                      sx={{ gridColumn: { md: 'span 2' } }}
-                      {...fieldSx}
+                      sx={{ gridColumn: { md: 'span 2' }, ...fieldSx }}
                     />
                   </Box>
 
                   <Divider sx={{ my: 1 }} />
 
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Document Uploads
                   </Typography>
 
@@ -852,7 +949,16 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       { key: 'licenseFrontUrl', label: 'Driving License (Front)' },
                       { key: 'licenseBackUrl', label: 'Driving License (Back)' },
                     ].map(doc => (
-                      <Box key={doc.key} sx={{ border: '1px solid', borderColor: 'divider', p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.paper', '&:hover': { borderColor: isEditing ? BRAND : 'divider' } }}>
+                      <Box key={doc.key} sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'background.paper',
+                        '&:hover': { borderColor: isEditing ? BRAND : 'divider' }
+                      }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           {(localPreviews[doc.key] || formData[doc.key]) ? (
                             <Avatar 
@@ -862,13 +968,23 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                               onClick={() => handleOpenViewer(localPreviews[doc.key] || formData[doc.key])}
                             />
                           ) : (
-                            <Box sx={{ width: 40, height: 40, bgcolor: 'grey.100', border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1 }}>
+                            <Box sx={{
+                              width: 40,
+                              height: 40,
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'grey.100',
+                              border: '1px dashed',
+                              borderColor: 'divider',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: 1
+                            }}>
                               <Typography variant="caption" color="text.secondary">No Img</Typography>
                             </Box>
                           )}
                           <Box>
-                            <Typography variant="body2" fontWeight={700} sx={{ color: isEditing ? 'text.primary' : 'text.disabled' }}>{doc.label} *</Typography>
-                            <Typography variant="caption" color={isEditing ? 'text.secondary' : 'text.disabled'}>Clear, readable picture</Typography>
+                            <Typography variant="body2" fontWeight={700} color="text.primary">{doc.label} *</Typography>
+                            <Typography variant="caption" color="text.secondary">Clear, readable picture</Typography>
                           </Box>
                         </Box>
                         <Button
@@ -876,7 +992,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                           variant="outlined"
                           size="small"
                           disabled={!isEditing}
-                          sx={{ borderRadius: 0, textTransform: 'none', borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42, 0.04)' } }}
+                          sx={uploadBtnSx}
                         >
                           Upload
                           <input
@@ -903,7 +1019,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 3 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Duty Status & Work Shift Preferences
                   </Typography>
 
@@ -930,12 +1046,21 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       size="small"
                       fullWidth
                       placeholder="e.g. Part-time / Full-time"
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
 
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gridColumn: { md: 'span 2' } }}>
+                    <Box sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gridColumn: { md: 'span 2' }
+                    }}>
                       <Box>
-                        <Typography variant="body2" fontWeight={700}>Equipment Deposit Paid *</Typography>
+                        <Typography variant="body2" fontWeight={700} color="text.primary">Equipment Deposit Paid *</Typography>
                         <Typography variant="caption" color="text.secondary">Paid for delivery bag and shirt (Rs. 1,500 - 2,000)</Typography>
                       </Box>
                       <Switch
@@ -958,7 +1083,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 4 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Financial Account & Payout Information
                   </Typography>
 
@@ -972,7 +1097,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       required
                       fullWidth
                       placeholder="e.g. JazzCash / EasyPaisa / HBL Konnect"
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
 
                     <TextField
@@ -983,7 +1108,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       size="small"
                       required
                       fullWidth
-                      {...fieldSx}
+                      sx={fieldSx}
                     />
 
                     <TextField
@@ -995,8 +1120,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                       required
                       fullWidth
                       placeholder="e.g. 03001234567"
-                      sx={{ gridColumn: { md: 'span 2' } }}
-                      {...fieldSx}
+                      sx={{ gridColumn: { md: 'span 2' }, ...fieldSx }}
                     />
                   </Box>
                 </Box>
@@ -1007,23 +1131,40 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
             {activeTab === 5 && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ borderLeft: `4px solid ${BRAND}`, pl: 1.5 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={sectionTitleSx}>
                     Driver Disputes & Support Claims
                   </Typography>
 
                   {/* Dispute Summary Stat Cards */}
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Box sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50'
+                    }}>
                       <Typography variant="caption" color="text.secondary" fontWeight={700}>TOTAL DISPUTES</Typography>
-                      <Typography variant="h5" fontWeight={800} color={BRAND} mt={0.5}>{disputesList.length}</Typography>
+                      <Typography variant="h5" fontWeight={800} sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND }} mt={0.5}>
+                        {disputesList.length}
+                      </Typography>
                     </Box>
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Box sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50'
+                    }}>
                       <Typography variant="caption" color="text.secondary" fontWeight={700}>PENDING RESOLUTION</Typography>
                       <Typography variant="h5" fontWeight={800} color="#f59e0b" mt={0.5}>
                         {disputesList.filter(d => d.status === 'PENDING').length}
                       </Typography>
                     </Box>
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Box sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'grey.50'
+                    }}>
                       <Typography variant="caption" color="text.secondary" fontWeight={700}>RESOLVED CLAIMS</Typography>
                       <Typography variant="h5" fontWeight={800} color="#10b981" mt={0.5}>
                         {disputesList.filter(d => d.status === 'RESOLVED').length}
@@ -1032,9 +1173,15 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                   </Box>
 
                   {/* Form to submit new dispute */}
-                  <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, bgcolor: 'grey.50', p: 2.5 }}>
+                  <Card elevation={0} sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 0,
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'grey.50',
+                    p: 2.5
+                  }}>
                     <Typography variant="subtitle2" fontWeight={700} mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ReportProblemOutlinedIcon sx={{ color: BRAND, fontSize: 20 }} /> Log a New Dispute or Issue Claim
+                      <ReportProblemOutlinedIcon sx={{ color: (theme) => theme.palette.mode === 'dark' ? BRAND_DARK_MODE : BRAND, fontSize: 20 }} /> Log a New Dispute or Issue Claim
                     </Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
                       <TextField
@@ -1043,7 +1190,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                         onChange={e => setDisputeForm({ ...disputeForm, orderId: e.target.value })}
                         size="small"
                         placeholder="e.g. #ORD-9912"
-                        {...fieldSx}
+                        sx={fieldSx}
                       />
                       <FormControl size="small" fullWidth sx={fieldSx}>
                         <InputLabel>Issue Type</InputLabel>
@@ -1078,7 +1225,7 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                         onClick={handleCreateDispute}
                         startIcon={<SendOutlinedIcon />}
                         size="small"
-                        sx={{ borderRadius: 0, bgcolor: BRAND, fontWeight: 700, '&:hover': { bgcolor: '#b00d52' } }}
+                        sx={{ borderRadius: 0, bgcolor: BRAND, color: 'white', fontWeight: 700, '&:hover': { bgcolor: '#2e6022' } }}
                       >
                         Submit Dispute Claim
                       </Button>
@@ -1089,10 +1236,18 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                   <Typography variant="subtitle2" fontWeight={700}>Dispute History & Claims Log</Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     {disputesList.map(disp => (
-                      <Box key={disp.id} sx={{ p: 2, border: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box key={disp.id} sx={{
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'background.paper',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1
+                      }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Typography variant="body2" fontWeight={700}>{disp.id}</Typography>
+                            <Typography variant="body2" fontWeight={700} color="text.primary">{disp.id}</Typography>
                             <Chip label={disp.orderId} size="small" sx={{ borderRadius: 0, fontSize: 11, fontWeight: 600 }} />
                             <Typography variant="caption" color="text.secondary">{disp.issueType}</Typography>
                           </Box>
@@ -1134,8 +1289,9 @@ function DriverProfileContent({ driverData: initialDriver, onSaveSuccess, readOn
                   sx={{
                     borderRadius: 0,
                     bgcolor: BRAND,
+                    color: 'white',
                     fontWeight: 700,
-                    '&:hover': { bgcolor: '#b00d52' }
+                    '&:hover': { bgcolor: '#2e6022' }
                   }}
                 >
                   {saving ? 'Saving...' : 'Save Profile Changes'}

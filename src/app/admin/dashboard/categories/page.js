@@ -9,6 +9,7 @@ import { checkUserAccess } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
 import { uploadProductImage } from '@/lib/imageUpload'
 
+import { useTheme }     from '@mui/material/styles'
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
 import Card             from '@mui/material/Card'
@@ -43,6 +44,9 @@ const BRAND = '#39772A'
 const tf = { sx: { '& .MuiOutlinedInput-root': { borderRadius: 0 } } }
 
 export default function CategoriesPage() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const brandText = isDark ? '#4ade80' : BRAND
   const { user, userData, loading: authLoading } = useAuth()
   const router = useRouter()
   const [categories, setCategories] = useState([])
@@ -192,7 +196,7 @@ export default function CategoriesPage() {
 
         {/* ── Stats Row ── */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <Chip label={`${categories.length} Total`} size="small" sx={{ bgcolor: '#D8E9D6', color: BRAND, fontWeight: 700, borderRadius: 0 }} />
+          <Chip label={`${categories.length} Total`} size="small" sx={{ bgcolor: isDark ? 'rgba(74,222,128,0.16)' : '#D8E9D6', color: brandText, fontWeight: 700, borderRadius: 0 }} />
           <Chip label={`${filtered.length} Shown`} size="small" variant="outlined" sx={{ borderRadius: 0 }} />
         </Box>
 

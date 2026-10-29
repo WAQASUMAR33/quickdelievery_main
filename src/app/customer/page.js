@@ -175,7 +175,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
     const guest = userData?.role === 'GUEST' || !userData
     const tabDefs = [
       { id: 'products',   label: t('exploreHome') || 'Explore & Home', icon: <HomeOutlinedIcon />, activeIcon: <HomeIcon />, protected: false },
-      { id: 'taxi',       label: '🚖 Taxi & Luggage', icon: <LocalTaxiIcon />, activeIcon: <LocalTaxiIcon />, protected: false },
+      { id: 'taxi',       label: '🚖 RapidRide & Luggage', icon: <LocalTaxiIcon />, activeIcon: <LocalTaxiIcon />, protected: false },
       { id: 'secondhand', label: '♻️ 2nd Hand Deals', icon: <AutorenewIcon />, activeIcon: <AutorenewIcon />, protected: false },
       { id: 'orders',     label: t('myOrders') || 'My Orders',      icon: <ShoppingBagOutlinedIcon />, activeIcon: <ShoppingBagIcon />, protected: true },
       { id: 'favorites',  label: t('favourites') || 'Favourites',     icon: <StarBorderIcon />, activeIcon: <StarIcon />, protected: true },
@@ -690,7 +690,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                 />
               </NextLink>
 
-              {/* InDrive Taxi & Luggage Quick Link */}
+              {/* RapidRide Taxi & Luggage Quick Link */}
               <Box
                 onClick={() => handleTabSwitch('taxi')}
                 sx={{
@@ -704,7 +704,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               >
                 <LocalTaxiIcon sx={{ fontSize: 14 }} />
                 <Typography variant="caption" sx={{ fontSize: 11.5, fontWeight: 800 }}>
-                  InDrive Taxi & Luggage
+                  RapidRide Taxi & Luggage
                 </Typography>
                 <Chip
                   label="OFFER FARE"

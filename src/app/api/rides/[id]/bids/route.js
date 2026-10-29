@@ -120,7 +120,7 @@ export async function PATCH(request, context) {
           driver: {
             select: {
               id: true,
-              name: true,
+              username: true,
               phoneNumber: true,
               image: true,
               driverProfile: true,
@@ -143,8 +143,11 @@ export async function PATCH(request, context) {
 
     return NextResponse.json({
       success: true,
-      data: updatedRide,
-      message: 'Driver accepted! Your ride is confirmed.',
+      data: {
+        ...updatedRide,
+        driver: updatedRide.driver ? { ...updatedRide.driver, name: updatedRide.driver.username } : null,
+      },
+      message: 'Driver accepted! Your RapidRide is confirmed.',
     })
   } catch (error) {
     console.error('Failed to accept driver bid:', error)
