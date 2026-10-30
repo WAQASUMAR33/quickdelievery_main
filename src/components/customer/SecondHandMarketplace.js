@@ -1586,7 +1586,6 @@ export default function SecondHandMarketplace({ user }) {
               })}
             </Box>
           )}
-          )}
         </Box>
       )}
 

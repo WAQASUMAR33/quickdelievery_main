@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { getProductSlug } from '@/lib/productSlug'
 
 export const revalidate = 3600 // Revalidate cache every hour

@@ -30,3 +30,4 @@ export const metadata = {
 export default function SecondHandLayout({ children }) {
   return children
 }
+
