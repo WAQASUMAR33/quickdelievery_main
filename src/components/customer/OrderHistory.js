@@ -31,6 +31,7 @@ import {
 import dynamic from 'next/dynamic'
 const CustomerLiveTracking = dynamic(() => import('@/components/tracking/CustomerLiveTracking'), { ssr: false })
 import OrderChatDrawer from '@/components/chat/OrderChatDrawer'
+import RidesHistoryList from '@/components/customer/RidesHistoryList'
 import { computeServiceCharge, getServiceChargePercent } from '@/lib/serviceCharge'
 import { useRealtimeEvent } from '@/contexts/RealtimeContext'
 
@@ -118,6 +119,7 @@ const OrderHistory = () => {
   const [ratingVal, setRatingVal] = useState(5)
   const [ratingText, setRatingText] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [activeHistoryTab, setActiveHistoryTab] = useState('orders')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -350,6 +352,44 @@ const OrderHistory = () => {
           </button>
         </div>
       </div>
+
+      {/* ── Order vs Ride History Switcher ── */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 w-fit border border-slate-200/60 dark:border-slate-700/60">
+        <button
+          type="button"
+          onClick={() => setActiveHistoryTab('orders')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
+            activeHistoryTab === 'orders'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4 text-purple-600" />
+          <span>Store Orders</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-extrabold">
+            {orders.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveHistoryTab('rides')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
+            activeHistoryTab === 'rides'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Navigation className="w-4 h-4 text-amber-500" />
+          <span>Rides & Taxi Trips</span>
+        </button>
+      </div>
+
+      {activeHistoryTab === 'rides' ? (
+        <RidesHistoryList />
+      ) : (
+        <>
+
 
       {/* ── Segmented Status Filter Tabs ── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100 dark:border-slate-800">
@@ -626,6 +666,9 @@ const OrderHistory = () => {
             )
           })}
         </div>
+      )}
+
+      </>
       )}
 
       {/* ── Order Details Modal ── */}

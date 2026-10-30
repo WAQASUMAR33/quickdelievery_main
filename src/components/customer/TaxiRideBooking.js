@@ -21,6 +21,9 @@ import Tooltip from '@mui/material/Tooltip'
 import GlobalStyles from '@mui/material/GlobalStyles'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Switch from '@mui/material/Switch'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
 import toast from 'react-hot-toast'
 import {
   DEFAULT_RAPIDRIDE_SETTINGS,
@@ -59,6 +62,7 @@ import RemoveIcon from '@mui/icons-material/Remove'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import CloseIcon from '@mui/icons-material/Close'
+import HistoryIcon from '@mui/icons-material/History'
 
 const BRAND = '#39772A'
 const RAPIDRIDE_GREEN = '#00D26A'
@@ -197,6 +201,28 @@ export default function TaxiRideBooking({ onBack }) {
   const activeRideRef = useRef(activeRide)
   activeRideRef.current = activeRide
   const [driverRating, setDriverRating] = useState(5)
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [rideHistory, setRideHistory] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  const fetchRideHistory = useCallback(async () => {
+    setLoadingHistory(true)
+    try {
+      const customerId = userData?.id || user?.uid || user?.id
+      const query = customerId
+        ? `/api/rides/history?role=CUSTOMER&customerId=${encodeURIComponent(customerId)}`
+        : '/api/rides/history?role=CUSTOMER'
+      const res = await fetch(query, { headers: buildAuthHeaders(), credentials: 'include' })
+      const data = await res.json()
+      if (data.success) {
+        setRideHistory(data.data || [])
+      }
+    } catch (e) {
+      console.error('Failed to load ride history:', e)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [userData, user, buildAuthHeaders])
   const [acceptingBidId, setAcceptingBidId] = useState(null)
 
   // Map, Autocomplete & Synchronization refs (prevent stale closures & blur/autocomplete race conditions)
@@ -1116,9 +1142,183 @@ export default function TaxiRideBooking({ onBack }) {
                         ))}
                       </Stack>
                     )}
-                  </Box>
-                )}
+      {/* ── MY RIDES HISTORY DIALOG ── */}
+      <Dialog
+        open={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            bgcolor: isDark ? '#0F172A' : '#FFFFFF',
+            color: isDark ? '#F8FAFC' : '#0F172A',
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: '1px solid', borderColor: isDark ? '#334155' : '#E2E8F0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: '#43046C', color: '#FDB600', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <HistoryIcon sx={{ fontSize: 22 }} />
+            </Box>
+            <div>
+              <Typography variant="h6" fontWeight={900}>
+                My Ride History
+              </Typography>
+              <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B' }}>
+                View your past bookings, completed trips, and re-book routes
+              </Typography>
+            </div>
+          </Box>
+          <IconButton onClick={() => setShowHistoryModal(false)} size="small" sx={{ color: isDark ? '#94A3B8' : '#64748B' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          {loadingHistory ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+              <CircularProgress size={36} sx={{ color: '#43046C' }} />
+              <Typography variant="caption" sx={{ mt: 2, color: '#64748B' }}>
+                Loading ride history...
+              </Typography>
+            </Box>
+          ) : rideHistory.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Box sx={{ width: 64, height: 64, borderRadius: '50%', bgcolor: 'rgba(67, 4, 108, 0.1)', color: '#43046C', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>
+                <LocalTaxiIcon sx={{ fontSize: 32 }} />
+              </Box>
+              <Typography variant="subtitle1" fontWeight={800}>
+                No ride history found
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mt: 0.5 }}>
+                When you book and complete taxi or luggage rides, they will appear here.
+              </Typography>
+            </Box>
+          ) : (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              {rideHistory.map((ride) => {
+                const isCompleted = ride.status === 'COMPLETED'
+                const isCancelled = ride.status === 'CANCELLED'
+                const statusColor = isCompleted ? '#16A34A' : isCancelled ? '#EF4444' : '#2563EB'
+                const statusBg = isCompleted ? 'rgba(22, 163, 74, 0.1)' : isCancelled ? 'rgba(239, 68, 68, 0.1)' : 'rgba(37, 99, 235, 0.1)'
+                const dateStr = ride.createdAt ? new Date(ride.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently'
 
+                return (
+                  <Card
+                    key={ride.id}
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2.5,
+                      borderColor: isDark ? '#334155' : '#E2E8F0',
+                      bgcolor: isDark ? '#1E293B' : '#F8FAFC',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: '#FDB600',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                          label={`Ride #${ride.id}`}
+                          size="small"
+                          sx={{ fontWeight: 800, fontSize: 11, height: 22, bgcolor: isDark ? '#334155' : '#E2E8F0' }}
+                        />
+                        <Chip
+                          label={ride.serviceType === 'LUGGAGE' ? 'Luggage Drop' : 'City Taxi'}
+                          size="small"
+                          sx={{ fontWeight: 800, fontSize: 11, height: 22, bgcolor: ride.serviceType === 'LUGGAGE' ? 'rgba(124, 58, 237, 0.15)' : 'rgba(57, 119, 42, 0.15)', color: ride.serviceType === 'LUGGAGE' ? '#8B5CF6' : '#22C55E' }}
+                        />
+                        <Chip
+                          label={ride.status}
+                          size="small"
+                          sx={{ fontWeight: 800, fontSize: 11, height: 22, bgcolor: statusBg, color: statusColor }}
+                        />
+                      </Box>
+                      <Typography variant="caption" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
+                        {dateStr}
+                      </Typography>
+                    </Box>
+
+                    {/* Route Details */}
+                    <Box sx={{ my: 1.5, p: 1.5, bgcolor: isDark ? '#0F172A' : '#FFFFFF', borderRadius: 2, border: '1px solid', borderColor: isDark ? '#334155' : '#E2E8F0' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
+                        <LocationOnIcon sx={{ color: '#16A34A', fontSize: 18, mt: 0.2 }} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography variant="caption" sx={{ color: '#64748B', display: 'block', fontWeight: 700, fontSize: 10 }}>PICKUP</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 12, lineHeight: 1.3 }}>{ride.pickupAddress}</Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                        <NavigationIcon sx={{ color: '#EF4444', fontSize: 18, mt: 0.2 }} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography variant="caption" sx={{ color: '#64748B', display: 'block', fontWeight: 700, fontSize: 10 }}>DROPOFF</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 12, lineHeight: 1.3 }}>{ride.dropoffAddress}</Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Fare, Driver, and Re-book */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px dashed', borderColor: isDark ? '#334155' : '#E2E8F0', flexWrap: 'wrap', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <div>
+                          <Typography variant="caption" sx={{ color: '#64748B', display: 'block', fontSize: 10 }}>FARE</Typography>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#FDB600', fontSize: 15 }}>
+                            Rs. {Number(ride.finalFare || ride.customerFare || 0).toLocaleString()}
+                          </Typography>
+                        </div>
+                        {ride.driver && (
+                          <div>
+                            <Typography variant="caption" sx={{ color: '#64748B', display: 'block', fontSize: 10 }}>DRIVER</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 800, color: isDark ? '#E2E8F0' : '#1E293B', display: 'block' }}>
+                              {ride.driver.name} {ride.driver.vehicleNumber !== 'N/A' ? `(${ride.driver.vehicleNumber})` : ''}
+                            </Typography>
+                          </div>
+                        )}
+                      </Box>
+
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                          setPickupAddress(ride.pickupAddress || '')
+                          setDropoffAddress(ride.dropoffAddress || '')
+                          if (ride.pickupLat && ride.pickupLng) {
+                            setPickupCoord({ lat: ride.pickupLat, lng: ride.pickupLng })
+                          }
+                          if (ride.dropoffLat && ride.dropoffLng) {
+                            setDropoffCoord({ lat: ride.dropoffLat, lng: ride.dropoffLng })
+                          }
+                          if (ride.serviceType) {
+                            setServiceType(ride.serviceType)
+                          }
+                          setShowHistoryModal(false)
+                          toast.success('Route loaded into booking form!')
+                        }}
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: 11,
+                          color: '#43046C',
+                          borderColor: '#43046C',
+                          '&:hover': { bgcolor: 'rgba(67, 4, 108, 0.08)', borderColor: '#43046C' },
+                        }}
+                      >
+                        Re-book Route
+                      </Button>
+                    </Box>
+                  </Card>
+                )
+              })}
+            </Stack>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Box>
+  )
+}
                 {/* Status: Driver Assigned & Trip Tracker */}
                 {['ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'].includes(activeRide.status) && (
                   <Box>
@@ -1305,6 +1505,23 @@ export default function TaxiRideBooking({ onBack }) {
                       fontWeight: 800,
                       bgcolor: serviceType === 'LUGGAGE' ? '#7C3AED' : 'rgba(255,255,255,0.1)',
                       color: '#fff',
+                      fontSize: '0.75rem',
+                    }}
+                  />
+                  <Chip
+                    icon={<HistoryIcon sx={{ color: '#FDB600 !important', fontSize: 18 }} />}
+                    label="My Rides"
+                    clickable
+                    onClick={() => {
+                      setShowHistoryModal(true)
+                      fetchRideHistory()
+                    }}
+                    sx={{
+                      fontWeight: 800,
+                      bgcolor: 'rgba(255,255,255,0.15)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+                      color: '#FDB600',
+                      border: '1px solid rgba(253, 182, 0, 0.45)',
                       fontSize: '0.75rem',
                     }}
                   />
