@@ -48,6 +48,7 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import ElectricRickshawIcon from '@mui/icons-material/ElectricRickshaw'
 import AirportShuttleIcon from '@mui/icons-material/AirportShuttle'
 import StarIcon from '@mui/icons-material/Star'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LockIcon from '@mui/icons-material/Lock'
 import MyLocationIcon from '@mui/icons-material/MyLocation'
 import SwapVertIcon from '@mui/icons-material/SwapVert'
@@ -193,6 +194,9 @@ export default function TaxiRideBooking({ onBack }) {
   // Ride lifecycle
   const [requestingRide, setRequestingRide] = useState(false)
   const [activeRide, setActiveRide] = useState(null)
+  const activeRideRef = useRef(activeRide)
+  activeRideRef.current = activeRide
+  const [driverRating, setDriverRating] = useState(5)
   const [acceptingBidId, setAcceptingBidId] = useState(null)
 
   // Map, Autocomplete & Synchronization refs (prevent stale closures & blur/autocomplete race conditions)
@@ -648,25 +652,52 @@ export default function TaxiRideBooking({ onBack }) {
   const fetchActiveRide = useCallback(async () => {
     const headers = buildAuthHeaders()
     const customerId = userData?.id || user?.uid || user?.id
-    const customerParam = customerId ? `&customerId=${encodeURIComponent(customerId)}` : ''
+    const currentRide = activeRideRef.current
+    let query = '/api/rides?role=CUSTOMER'
+    if (currentRide?.id) {
+      query += `&rideId=${currentRide.id}`
+    } else if (customerId) {
+      query += `&customerId=${encodeURIComponent(customerId)}`
+    }
+
     try {
-      const res = await fetch(`/api/rides?role=CUSTOMER${customerParam}`, {
+      const res = await fetch(query, {
         headers,
         credentials: 'include',
       })
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
-        const current = data.data.find(r => ['SEARCHING', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'].includes(r.status))
-        if (current) {
-          setActiveRide(current)
-        } else if (data.data.length === 0 || !activeRide) {
-          setActiveRide(null)
+        // 1. If currently tracking a specific ride
+        if (currentRide?.id) {
+          const match = data.data.find(r => r.id === currentRide.id)
+          if (match) {
+            setActiveRide(match)
+            return
+          }
+        }
+
+        // 2. Otherwise find any open in-flight ride
+        const inFlight = data.data.find(r =>
+          ['SEARCHING', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'].includes(r.status)
+        )
+        if (inFlight) {
+          setActiveRide(inFlight)
+        } else if (!currentRide || currentRide.status === 'COMPLETED' || currentRide.status === 'CANCELLED') {
+          // Keep showing completion receipt until dismissed by user
+        } else {
+          // If in-flight ride just transitioned to completed or cancelled
+          const ended = data.data[0]
+          if (ended) {
+            setActiveRide(ended)
+          } else {
+            setActiveRide(null)
+          }
         }
       }
     } catch {
       // Non-blocking
     }
-  }, [userData, user, activeRide])
+  }, [userData, user])
 
   useEffect(() => {
     fetchActiveRide()
@@ -916,26 +947,74 @@ export default function TaxiRideBooking({ onBack }) {
               }}
             >
               {/* Header */}
-              <Box sx={{ p: 2.5, bgcolor: '#0284C7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box
+                sx={{
+                  p: 2.5,
+                  bgcolor: activeRide.status === 'COMPLETED' ? '#16A34A' : '#0284C7',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                  {activeRide.serviceType === 'LUGGAGE' ? <LuggageIcon sx={{ fontSize: 28 }} /> : <LocalTaxiIcon sx={{ fontSize: 28 }} />}
+                  {activeRide.status === 'COMPLETED' ? (
+                    <CheckCircleIcon sx={{ fontSize: 30, color: '#fff' }} />
+                  ) : activeRide.serviceType === 'LUGGAGE' ? (
+                    <LuggageIcon sx={{ fontSize: 28 }} />
+                  ) : (
+                    <LocalTaxiIcon sx={{ fontSize: 28 }} />
+                  )}
                   <div>
                     <Typography variant="subtitle1" fontWeight={900}>
-                      {activeRide.serviceType === 'LUGGAGE' ? 'RapidRide Baggage Delivery' : 'RapidRide City Taxi'}
+                      {activeRide.status === 'COMPLETED'
+                        ? 'Trip Completed Successfully 🎉'
+                        : activeRide.serviceType === 'LUGGAGE'
+                        ? 'RapidRide Baggage Delivery'
+                        : 'RapidRide City Taxi'}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#E0F2FE' }}>
-                      {activeRide.status === 'SEARCHING' ? 'Searching Drivers...' : `Status: ${activeRide.status}`}
+                      {activeRide.status === 'SEARCHING'
+                        ? 'Searching Drivers...'
+                        : activeRide.status === 'COMPLETED'
+                        ? 'Safely Arrived at Destination'
+                        : activeRide.status === 'IN_PROGRESS'
+                        ? 'In Transit to Destination'
+                        : `Status: ${activeRide.status}`}
                     </Typography>
                   </div>
                 </Box>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={handleCancelRide}
-                  sx={{ bgcolor: '#DC2626', color: '#fff', fontWeight: 800, textTransform: 'none', py: 0.6, '&:hover': { bgcolor: '#b91c1c' } }}
-                >
-                  Cancel
-                </Button>
+                {activeRide.status === 'COMPLETED' ? (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => {
+                      setActiveRide(null)
+                      setPickupAddress('')
+                      setDropoffAddress('')
+                      setDirections(null)
+                    }}
+                    sx={{
+                      bgcolor: '#fff',
+                      color: '#16A34A',
+                      fontWeight: 900,
+                      textTransform: 'none',
+                      py: 0.6,
+                      px: 2,
+                      '&:hover': { bgcolor: '#F0FDF4' },
+                    }}
+                  >
+                    Done
+                  </Button>
+                ) : activeRide.status === 'SEARCHING' || activeRide.status === 'ACCEPTED' ? (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleCancelRide}
+                    sx={{ bgcolor: '#DC2626', color: '#fff', fontWeight: 800, textTransform: 'none', py: 0.6, '&:hover': { bgcolor: '#b91c1c' } }}
+                  >
+                    Cancel
+                  </Button>
+                ) : null}
               </Box>
 
               <CardContent sx={{ p: 2.5 }}>
@@ -1090,6 +1169,97 @@ export default function TaxiRideBooking({ onBack }) {
                         </Button>
                       )}
                     </Box>
+                  </Box>
+                )}
+
+                {/* Status: Ride Completed Celebration & Receipt */}
+                {activeRide.status === 'COMPLETED' && (
+                  <Box sx={{ textAlign: 'center', py: 1 }}>
+                    <Box
+                      sx={{
+                        width: 70,
+                        height: 70,
+                        borderRadius: '50%',
+                        bgcolor: 'rgba(34,197,94,0.18)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mx: 'auto',
+                        mb: 2,
+                        border: '2px solid #22C55E',
+                      }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: 44, color: '#22C55E' }} />
+                    </Box>
+                    <Typography variant="h5" fontWeight={900} sx={{ color: '#fff', mb: 0.5 }}>
+                      Trip Completed!
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#94A3B8', mb: 2.5 }}>
+                      Thank you for riding with RapidRide. You reached your destination safely.
+                    </Typography>
+
+                    {/* Receipt Card */}
+                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.06)', mb: 2.5, textAlign: 'left' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>Total Fare (Cash)</Typography>
+                        <Typography variant="subtitle1" fontWeight={900} sx={{ color: '#4ADE80' }}>
+                          Rs. {Number(activeRide.finalFare || activeRide.customerFare).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>Driver</Typography>
+                        <Typography variant="body2" fontWeight={800} sx={{ color: '#fff' }}>
+                          {activeRide.driver?.name || 'RapidRide Driver'}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="caption" sx={{ color: '#94A3B8' }}>Distance</Typography>
+                        <Typography variant="body2" fontWeight={800} sx={{ color: '#fff' }}>
+                          {activeRide.estimatedDistanceKm || 0} km
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Star Rating */}
+                    <Typography variant="caption" fontWeight={800} sx={{ color: '#38BDF8', letterSpacing: 0.5, display: 'block', mb: 1 }}>
+                      RATE YOUR DRIVER
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 3 }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <IconButton
+                          key={star}
+                          onClick={() => {
+                            setDriverRating(star)
+                            toast.success(`Rated driver ${star} stars! Thank you.`)
+                          }}
+                          sx={{ color: star <= driverRating ? '#FBBF24' : '#64748B' }}
+                        >
+                          <StarIcon sx={{ fontSize: 32 }} />
+                        </IconButton>
+                      ))}
+                    </Box>
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => {
+                        setActiveRide(null)
+                        setPickupAddress('')
+                        setDropoffAddress('')
+                        setDirections(null)
+                      }}
+                      sx={{
+                        bgcolor: '#22C55E',
+                        color: '#fff',
+                        fontWeight: 900,
+                        fontSize: '1rem',
+                        py: 1.5,
+                        borderRadius: 2.5,
+                        '&:hover': { bgcolor: '#16a34a' },
+                      }}
+                    >
+                      Done / Book Another Ride
+                    </Button>
                   </Box>
                 )}
               </CardContent>

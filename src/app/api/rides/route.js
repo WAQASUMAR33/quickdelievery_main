@@ -88,6 +88,7 @@ export async function GET(request) {
     }
 
     // ── Customer Mode: Get customer's current active ride or ride history ──
+    const rideIdParam = searchParams.get('rideId')
     let customerId = authUser?.id
     const customerIdParam = searchParams.get('customerId') || searchParams.get('userId')
     if (!customerId && customerIdParam) {
@@ -105,27 +106,39 @@ export async function GET(request) {
       }
     }
 
-    if (!customerId) {
-      // Check most recent active ride in progress/searching
-      const recentActive = await prisma.rideRequest.findFirst({
+    if (!customerId && !rideIdParam) {
+      // 1. Check most recent active ride in progress/searching
+      let recent = await prisma.rideRequest.findFirst({
         where: { status: { in: ['SEARCHING', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'] } },
         orderBy: { updatedAt: 'desc' },
         select: { customerId: true },
       })
-      if (recentActive) {
-        customerId = recentActive.customerId
+      // 2. Fallback to latest updated ride so completion state transitions cleanly
+      if (!recent) {
+        recent = await prisma.rideRequest.findFirst({
+          orderBy: { updatedAt: 'desc' },
+          select: { customerId: true },
+        })
+      }
+      if (recent) {
+        customerId = recent.customerId
       }
     }
 
-    if (!customerId) {
+    if (!customerId && !rideIdParam) {
       return NextResponse.json({ success: true, data: [], settings })
     }
 
+    const whereClause = {}
+    if (rideIdParam) {
+      whereClause.id = Number(rideIdParam)
+    } else {
+      whereClause.customerId = customerId
+      if (statusParam) whereClause.status = statusParam
+    }
+
     const ridesRaw = await prisma.rideRequest.findMany({
-      where: {
-        customerId,
-        ...(statusParam ? { status: statusParam } : {}),
-      },
+      where: whereClause,
       include: {
         driver: {
           select: {
