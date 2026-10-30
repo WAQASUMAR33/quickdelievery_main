@@ -93,20 +93,12 @@ const CustomerFooter = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* Marketplace Brand Info */}
                     <div>
-                        <div className="flex items-center gap-2.5 mb-4">
+                        <div className="mb-4">
                             <img
                                 src="/images/martzona_logo_transparent.png"
                                 alt="MARTZONA"
-                                className="h-10 w-auto object-contain"
+                                className="h-12 sm:h-14 md:h-16 w-auto object-contain"
                             />
-                            <div>
-                                <span className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    MART<span className="text-blue-500">ZONA</span>
-                                </span>
-                                <span className={`block text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                    Multi-Vendor Marketplace
-                                </span>
-                            </div>
                         </div>
                         <p className={`text-xs sm:text-sm mb-4 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                             {t('footerAbout')}

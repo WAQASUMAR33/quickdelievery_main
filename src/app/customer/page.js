@@ -1372,22 +1372,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
           {t('cart') || 'Cart'}
         </Button>
 
-        <Button
-          onClick={() => handleTabSwitch('wishlist')}
-          sx={{
-            flexDirection: 'column',
-            minWidth: 56,
-            p: 0.5,
-            color: effectiveTab === 'wishlist' ? (isDark ? THEME.goldLight : THEME.primary) : (isDark ? '#94A3B8' : 'text.secondary'),
-            textTransform: 'none',
-            fontSize: 10.5,
-            fontWeight: effectiveTab === 'wishlist' ? 800 : 600,
-            borderRadius: 0,
-          }}
-        >
-          {effectiveTab === 'wishlist' ? <FavoriteIcon sx={{ fontSize: 22 }} /> : <FavoriteBorderIcon sx={{ fontSize: 22 }} />}
-          {t('wishlist') || 'Wishlist'}
-        </Button>
+
 
         <Button
           onClick={() => isGuest ? router.push('/login') : handleTabSwitch('profile')}
