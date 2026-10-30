@@ -817,27 +817,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     }}
                   />
                 </Box>
-                <Box sx={{ minWidth: 0, display: { xs: 'none', sm: 'block' } }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    <Chip
-                      label={t('boutiqueMall') || 'BOUTIQUE MALL'}
-                      size="small"
-                      sx={{
-                        height: 18,
-                        fontSize: 9,
-                        fontWeight: 900,
-                        letterSpacing: 0.75,
-                        bgcolor: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(37, 99, 235, 0.08)',
-                        color: isDark ? '#A5B4FC' : '#2563EB',
-                        border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(37, 99, 235, 0.2)',
-                        borderRadius: 0,
-                      }}
-                    />
-                  </Box>
-                  <Typography variant="caption" sx={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600, display: { xs: 'none', xl: 'block' }, whiteSpace: 'nowrap' }}>
-                    {t('curatedMarketplace') || 'Curated Multi-Vendor Marketplace'}
-                  </Typography>
-                </Box>
+                
               </Box>
             </Box>
 
@@ -872,55 +852,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
 
             {/* Right: AI Concierge | User Account | Orders | Wishlist | Cart */}
             <Stack direction="row" alignItems="center" spacing={{ xs: 0.75, sm: 1, md: 1.25, lg: 1.5 }} sx={{ flexShrink: 0 }}>
-              {/* Interactive AI Concierge Button (Shown on desktop >= xl) */}
-              <Button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('openAI'))
-                  }
-                }}
-                size="small"
-                startIcon={<AutoAwesomeIcon sx={{ fontSize: 16, color: THEME.gold, animation: 'pulse 2s infinite' }} />}
-                sx={{
-                  display: { xs: 'none', xl: 'inline-flex' },
-                  color: isDark ? '#FFFFFF' : '#1E293B',
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: 12,
-                  px: 1.75,
-                  py: 0.7,
-                  borderRadius: 0,
-                  background: isDark
-                    ? 'linear-gradient(135deg, rgba(67, 4, 108, 0.45) 0%, rgba(253, 182, 0, 0.20) 100%)'
-                    : 'linear-gradient(135deg, rgba(67, 4, 108, 0.08) 0%, rgba(253, 182, 0, 0.14) 100%)',
-                  border: isDark ? '1px solid rgba(253, 182, 0, 0.50)' : '1px solid rgba(253, 182, 0, 0.45)',
-                  boxShadow: isDark ? '0 0 16px rgba(67, 4, 108, 0.25)' : 'none',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    background: isDark
-                      ? 'linear-gradient(135deg, rgba(67, 4, 108, 0.65) 0%, rgba(253, 182, 0, 0.35) 100%)'
-                      : 'linear-gradient(135deg, rgba(67, 4, 108, 0.16) 0%, rgba(253, 182, 0, 0.25) 100%)',
-                    borderColor: '#FDB600',
-                    transform: 'translateY(-1px)',
-                  },
-                }}
-              >
-                {t('askAI')}
-                <Chip
-                  label="PRO"
-                  size="small"
-                  sx={{
-                    ml: 0.75,
-                    height: 16,
-                    fontSize: 8.5,
-                    fontWeight: 900,
-                    bgcolor: THEME.gold,
-                    color: '#000',
-                    borderRadius: 0,
-                    px: 0.25,
-                  }}
-                />
-              </Button>
+              
 
               {/* Account Dropdown */}
               {isGuest ? (

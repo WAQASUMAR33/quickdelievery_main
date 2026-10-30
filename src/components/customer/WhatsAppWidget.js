@@ -144,22 +144,16 @@ export default function WhatsAppWidget() {
       {/* Floating Launcher Button */}
       <motion.button
         type="button"
-        whileHover={{ scale: 1.04, y: -2 }}
-        whileTap={{ scale: 0.96 }}
+        whileHover={{ scale: 1.1, y: -2 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="floating-pill-btn group relative flex items-center justify-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-full bg-gradient-to-r from-[#30034E] via-[#43046C] to-[#55087F] hover:from-[#3B0460] hover:via-[#520682] hover:to-[#670B9A] text-white font-extrabold text-xs shadow-xl shadow-[#43046C]/40 hover:shadow-2xl hover:shadow-[#43046C]/60 border border-[#FDB600]/40 hover:border-[#25D366] transition-all cursor-pointer backdrop-blur-md"
+        className="floating-icon-circle group relative w-12 h-12 rounded-full bg-gradient-to-br from-[#30034E] via-[#43046C] to-[#55087F] hover:from-[#3B0460] hover:via-[#520682] hover:to-[#670B9A] text-white flex items-center justify-center shadow-lg shadow-[#43046C]/45 hover:shadow-xl hover:shadow-[#43046C]/65 border-2 border-[#FDB600]/60 hover:border-[#25D366] transition-all cursor-pointer backdrop-blur-md"
         aria-label="Open WhatsApp Chat Support"
+        title="WhatsApp Support"
       >
-        <span className="floating-icon-circle relative w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-md shadow-emerald-500/40 flex-shrink-0">
-          <MessageCircle className="w-4 h-4 fill-white text-white" />
-          <span className="floating-icon-circle absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#FDB600] border-2 border-[#43046C] animate-pulse" />
-        </span>
-        <span className="hidden sm:inline-block font-black tracking-tight text-white drop-shadow-xs">
-          WhatsApp Support
-        </span>
-        <span className="floating-pill-badge hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[9.5px] font-black text-emerald-300">
-          <span className="floating-icon-circle w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-          Live
+        <MessageCircle className="w-6 h-6 text-[#25D366] fill-[#25D366]/30 group-hover:scale-110 transition-transform duration-300" />
+        <span className="floating-icon-circle absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#25D366] border-2 border-[#30034E] shadow-sm flex items-center justify-center">
+          <span className="floating-icon-circle w-full h-full rounded-full bg-emerald-300 animate-ping opacity-75" />
         </span>
       </motion.button>
     </div>

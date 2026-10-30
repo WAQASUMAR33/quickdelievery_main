@@ -126,23 +126,19 @@ export default function AIAssistantWidget() {
   return (
     <>
       {/* Floating Launcher Button */}
-      <div className={`fixed bottom-32 md:bottom-20 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} z-40`}>
+      <div className={`fixed bottom-20 md:bottom-20 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} z-40`}>
         <motion.button
           type="button"
-          whileHover={{ scale: 1.04, y: -2 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.1, y: -2 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => setIsOpen(true)}
-          className="floating-pill-btn group relative flex items-center justify-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-full bg-gradient-to-r from-[#43046C] via-[#5B1380] to-[#791F8A] hover:from-[#4E057D] hover:via-[#6A1794] hover:to-[#8B269E] text-white font-black text-xs shadow-xl shadow-[#43046C]/40 hover:shadow-2xl hover:shadow-[#43046C]/60 border border-[#FDB600]/45 hover:border-[#FDB600] transition-all cursor-pointer backdrop-blur-md"
+          className="floating-icon-circle group relative w-12 h-12 rounded-full bg-gradient-to-br from-[#43046C] via-[#5B1380] to-[#791F8A] hover:from-[#4E057D] hover:via-[#6A1794] hover:to-[#8B269E] text-white flex items-center justify-center shadow-lg shadow-[#43046C]/45 hover:shadow-xl hover:shadow-[#43046C]/65 border-2 border-[#FDB600]/60 hover:border-[#FDB600] transition-all cursor-pointer backdrop-blur-md"
           aria-label="Open AI Shopping Concierge"
+          title="QuickAI Concierge"
         >
-          <span className="floating-icon-circle w-7 h-7 rounded-full bg-white/15 flex items-center justify-center border border-white/20 shadow-xs flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-[#FDB600] fill-[#FDB600]/40 animate-pulse" />
-          </span>
-          <span className="hidden sm:inline-block font-black tracking-tight text-white drop-shadow-xs">
-            ✦ QuickAI Concierge
-          </span>
-          <span className="floating-pill-badge hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#FDB600] text-[#43046C] font-black text-[9px] uppercase tracking-wider shadow-xs">
-            PRO
+          <Sparkles className="w-5 h-5 text-[#FDB600] fill-[#FDB600]/40 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
+          <span className="floating-icon-circle absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FDB600] text-[#43046C] font-black text-[9px] flex items-center justify-center border border-[#43046C] shadow-xs">
+            ✦
           </span>
         </motion.button>
       </div>
