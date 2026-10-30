@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
 
     const item = await prisma.secondHandItem.findUnique({
       where: { id: itemId },
-      select: { title: true, description: true, price: true, images: true, city: true, category: true },
+      select: { title: true, description: true, price: true, images: true, city: true, category: true, condition: true },
     })
 
     if (!item) return { title: 'Item Not Found | MARTZONA 2nd Hand' }
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }) {
     }
 
     const title = `${item.title} — Rs. ${Number(item.price).toLocaleString()} | Martzona Pre-Loved`
-    const description = item.description?.slice(0, 160) || `Buy ${item.title} in ${item.city || 'Pakistan'} at Rs. ${item.price} on Martzona Pre-Loved Marketplace.`
+    const description = item.description?.slice(0, 160) || `Buy ${item.title} in ${item.city || 'Pakistan'} at Rs. ${Number(item.price).toLocaleString()} on Martzona Pre-Loved Marketplace.`
     const url = `${BASE_URL}/second-hand/${itemId}`
     const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : `${BASE_URL}/images/martzona_logo_transparent.png`
 
@@ -52,8 +52,12 @@ export async function generateMetadata({ params }) {
       robots: {
         index: true,
         follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+        },
       },
     }
   } catch {
@@ -107,30 +111,51 @@ export default async function SecondHandItemPage({ params }) {
       images = []
     }
 
+    const conditionMap = {
+      BRAND_NEW: 'https://schema.org/NewCondition',
+      LIKE_NEW: 'https://schema.org/UsedCondition',
+      EXCELLENT: 'https://schema.org/UsedCondition',
+      GOOD: 'https://schema.org/UsedCondition',
+      FAIR: 'https://schema.org/UsedCondition',
+    }
+    const schemaCondition = conditionMap[item.condition] || 'https://schema.org/UsedCondition'
+
+    // Price valid for 1 year from creation or today
+    const validUntilDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
     jsonLd = {
       '@context': 'https://schema.org',
       '@graph': [
         {
           '@type': 'Product',
+          '@id': `${BASE_URL}/second-hand/${itemId}#product`,
           name: item.title,
-          image: images,
+          image: images.length > 0 ? images : [`${BASE_URL}/images/martzona_logo_transparent.png`],
           description: item.description || item.title,
           category: item.category,
+          sku: `MZ-2ND-${itemId}`,
+          itemCondition: schemaCondition,
+          brand: {
+            '@type': 'Brand',
+            name: item.category || 'Martzona Classifieds',
+          },
           offers: {
             '@type': 'Offer',
             url: `${BASE_URL}/second-hand/${itemId}`,
             priceCurrency: 'PKR',
-            price: item.price,
-            itemCondition: 'https://schema.org/UsedCondition',
+            price: Number(item.price),
+            priceValidUntil: validUntilDate,
+            itemCondition: schemaCondition,
             availability: item.status === 'AVAILABLE' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
             seller: {
-              '@type': 'Person',
-              name: item.seller?.name || 'Verified Martzona Member',
+              '@type': item.sellerType === 'MERCHANT' ? 'Organization' : 'Person',
+              name: item.seller?.name || 'Verified Martzona Seller',
             },
           },
         },
         {
           '@type': 'BreadcrumbList',
+          '@id': `${BASE_URL}/second-hand/${itemId}#breadcrumb`,
           itemListElement: [
             {
               '@type': 'ListItem',
