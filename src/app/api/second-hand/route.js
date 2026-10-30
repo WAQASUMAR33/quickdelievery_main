@@ -12,13 +12,22 @@ export async function GET(request) {
     const query = searchParams.get('q')
     const sellerId = searchParams.get('sellerId')
     const status = searchParams.get('status') || 'AVAILABLE'
+    const minPrice = searchParams.get('minPrice')
+    const maxPrice = searchParams.get('maxPrice')
+    const sort = searchParams.get('sort') || 'newest'
     const page = Math.max(1, Number(searchParams.get('page')) || 1)
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get('limit')) || 24))
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 30))
     const skip = (page - 1) * limit
+
+    let orderBy = { createdAt: 'desc' }
+    if (sort === 'price_low') orderBy = { price: 'asc' }
+    else if (sort === 'price_high') orderBy = { price: 'desc' }
+    else if (sort === 'popular') orderBy = { viewsCount: 'desc' }
+    else if (sort === 'oldest') orderBy = { createdAt: 'asc' }
 
     const where = {
       ...(status !== 'ALL' && { status }),
-      ...(category && category !== 'ALL' && { category }),
+      ...(category && category !== 'ALL' && category !== 'All Categories' && { category }),
       ...(condition && condition !== 'ALL' && { condition }),
       ...(city && city !== 'ALL' && { city }),
       ...(sellerId && { sellerId: Number(sellerId) }),
@@ -29,6 +38,12 @@ export async function GET(request) {
           { category: { contains: query } },
           { location: { contains: query } },
         ],
+      }),
+      ...((minPrice || maxPrice) && {
+        price: {
+          ...(minPrice && { gte: Number(minPrice) }),
+          ...(maxPrice && { lte: Number(maxPrice) }),
+        },
       }),
     }
 
@@ -50,7 +65,7 @@ export async function GET(request) {
             select: { offers: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

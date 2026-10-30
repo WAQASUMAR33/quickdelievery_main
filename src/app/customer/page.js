@@ -472,7 +472,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
         )
       case 'secondhand':
         return (
-          <Box sx={{ width: '100%', py: { xs: 2, sm: 3 } }}>
+          <Box sx={{ width: '100%', py: 0 }}>
             <SecondHandMarketplace user={userData || user} />
           </Box>
         )
