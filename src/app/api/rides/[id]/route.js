@@ -66,15 +66,11 @@ export async function GET(request, context) {
 // PATCH: Update ride status (Cancel by customer, Arrived by driver, Start trip with OTP, Complete trip)
 export async function PATCH(request, context) {
   try {
-    const authUser = await getAuthUser(request)
-    if (!authUser) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
+    let authUser = await getAuthUser(request)
     const { id } = await context.params
     const rideId = Number(id)
     const body = await request.json()
-    const { action, enteredOtp, proofPhotoUrl } = body
+    const { action, enteredOtp, proofPhotoUrl, driverId: bodyDriverId } = body
 
     const existingRide = await prisma.rideRequest.findUnique({
       where: { id: rideId },
@@ -83,6 +79,8 @@ export async function PATCH(request, context) {
     if (!existingRide) {
       return NextResponse.json({ success: false, error: 'Ride not found' }, { status: 404 })
     }
+
+    const driverId = authUser?.id || (bodyDriverId ? Number(bodyDriverId) : existingRide.driverId)
 
     // ── CANCEL ──
     if (action === 'CANCEL') {
@@ -99,7 +97,7 @@ export async function PATCH(request, context) {
 
     // ── DRIVER ARRIVED ──
     if (action === 'DRIVER_ARRIVED') {
-      if (existingRide.driverId !== authUser.id && authUser.role !== 'ADMIN') {
+      if (existingRide.driverId && driverId && existingRide.driverId !== driverId && authUser?.role !== 'ADMIN') {
         return NextResponse.json({ success: false, error: 'Only the assigned driver can update arrival' }, { status: 403 })
       }
 
@@ -112,7 +110,7 @@ export async function PATCH(request, context) {
 
     // ── START TRIP (WITH OTP VALIDATION) ──
     if (action === 'START_TRIP') {
-      if (existingRide.driverId !== authUser.id && authUser.role !== 'ADMIN') {
+      if (existingRide.driverId && driverId && existingRide.driverId !== driverId && authUser?.role !== 'ADMIN') {
         return NextResponse.json({ success: false, error: 'Only the assigned driver can start the trip' }, { status: 403 })
       }
 
@@ -130,7 +128,7 @@ export async function PATCH(request, context) {
 
     // ── COMPLETE TRIP ──
     if (action === 'COMPLETE_TRIP') {
-      if (existingRide.driverId !== authUser.id && authUser.role !== 'ADMIN') {
+      if (existingRide.driverId && driverId && existingRide.driverId !== driverId && authUser?.role !== 'ADMIN') {
         return NextResponse.json({ success: false, error: 'Only the assigned driver can complete this trip' }, { status: 403 })
       }
 

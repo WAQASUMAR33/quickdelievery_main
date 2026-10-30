@@ -137,8 +137,11 @@ const VEHICLE_CATEGORIES = [
 function buildAuthHeaders(includeJson = false) {
   const headers = includeJson ? { 'Content-Type': 'application/json' } : {}
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken')
-    if (token && token !== 'GUEST_SESSION') {
+    const token =
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('authToken')
+    if (token && token !== 'GUEST_SESSION' && token !== 'null' && token !== 'undefined') {
       headers.Authorization = `Bearer ${token}`
     }
   }
@@ -644,26 +647,26 @@ export default function TaxiRideBooking({ onBack }) {
   // Fetch customer's active ride
   const fetchActiveRide = useCallback(async () => {
     const headers = buildAuthHeaders()
-    if (isGuest && !headers.Authorization) {
-      setActiveRide(null)
-      return
-    }
+    const customerId = userData?.id || user?.uid || user?.id
+    const customerParam = customerId ? `&customerId=${encodeURIComponent(customerId)}` : ''
     try {
-      const res = await fetch('/api/rides?role=CUSTOMER', {
+      const res = await fetch(`/api/rides?role=CUSTOMER${customerParam}`, {
         headers,
         credentials: 'include',
       })
       const data = await res.json()
-      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+      if (data.success && Array.isArray(data.data)) {
         const current = data.data.find(r => ['SEARCHING', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'].includes(r.status))
-        setActiveRide(current || null)
-      } else {
-        setActiveRide(null)
+        if (current) {
+          setActiveRide(current)
+        } else if (data.data.length === 0 || !activeRide) {
+          setActiveRide(null)
+        }
       }
     } catch {
       // Non-blocking
     }
-  }, [isGuest])
+  }, [userData, user, activeRide])
 
   useEffect(() => {
     fetchActiveRide()
@@ -723,6 +726,10 @@ export default function TaxiRideBooking({ onBack }) {
         headers,
         credentials: 'include',
         body: JSON.stringify({
+          customerId: userData?.id || user?.uid || user?.id,
+          userId: userData?.id || user?.uid || user?.id,
+          customerName: userData?.username || user?.displayName,
+          customerPhone: userData?.phoneNumber || user?.phoneNumber,
           serviceType,
           rideCategory: serviceType === 'LUGGAGE' ? 'LUGGAGE_VAN' : selectedVehicle,
           pickupAddress,
