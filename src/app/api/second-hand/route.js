@@ -39,7 +39,7 @@ export async function GET(request) {
           seller: {
             select: {
               id: true,
-              name: true,
+              username: true,
               phoneNumber: true,
               image: true,
               role: true,
@@ -57,9 +57,14 @@ export async function GET(request) {
       prisma.secondHandItem.count({ where }),
     ])
 
+    const formattedItems = items.map(item => ({
+      ...item,
+      seller: item.seller ? { ...item.seller, name: item.seller.username } : null,
+    }))
+
     return NextResponse.json({
       success: true,
-      data: items,
+      data: formattedItems,
       meta: {
         page,
         limit,
@@ -133,7 +138,7 @@ export async function POST(request) {
         seller: {
           select: {
             id: true,
-            name: true,
+            username: true,
             phoneNumber: true,
             image: true,
             role: true,
@@ -144,7 +149,10 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      data: item,
+      data: {
+        ...item,
+        seller: item.seller ? { ...item.seller, name: item.seller.username } : null,
+      },
       message: 'Your 2nd hand item is live for buyers and offers!',
     }, { status: 201 })
   } catch (error) {

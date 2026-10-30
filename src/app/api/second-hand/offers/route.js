@@ -22,14 +22,23 @@ export async function GET(request) {
           item: {
             include: {
               seller: {
-                select: { id: true, name: true, phoneNumber: true, image: true },
+                select: { id: true, username: true, phoneNumber: true, image: true },
               },
             },
           },
         },
         orderBy: { createdAt: 'desc' },
       })
-      return NextResponse.json({ success: true, data: offers })
+      const formatted = offers.map(o => ({
+        ...o,
+        item: o.item
+          ? {
+              ...o.item,
+              seller: o.item.seller ? { ...o.item.seller, name: o.item.seller.username } : null,
+            }
+          : null,
+      }))
+      return NextResponse.json({ success: true, data: formatted })
     }
 
     // Default: received offers on user's listed items
@@ -41,14 +50,19 @@ export async function GET(request) {
       },
       include: {
         buyer: {
-          select: { id: true, name: true, phoneNumber: true, image: true },
+          select: { id: true, username: true, phoneNumber: true, image: true },
         },
         item: true,
       },
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({ success: true, data: offers })
+    const formatted = offers.map(o => ({
+      ...o,
+      buyer: o.buyer ? { ...o.buyer, name: o.buyer.username } : null,
+    }))
+
+    return NextResponse.json({ success: true, data: formatted })
   } catch (error) {
     console.error('Failed to get offers:', error)
     return NextResponse.json({ success: false, error: error.message || 'Failed to fetch offers' }, { status: 500 })
@@ -108,14 +122,17 @@ export async function POST(request) {
       include: {
         item: true,
         buyer: {
-          select: { id: true, name: true, phoneNumber: true, image: true },
+          select: { id: true, username: true, phoneNumber: true, image: true },
         },
       },
     })
 
     return NextResponse.json({
       success: true,
-      data: offer,
+      data: {
+        ...offer,
+        buyer: offer.buyer ? { ...offer.buyer, name: offer.buyer.username } : null,
+      },
       message: 'Your offer has been submitted! The seller will be notified to review.',
     }, { status: 201 })
   } catch (error) {

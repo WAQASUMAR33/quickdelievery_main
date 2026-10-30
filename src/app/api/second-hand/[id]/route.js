@@ -17,7 +17,7 @@ export async function GET(request, context) {
         seller: {
           select: {
             id: true,
-            name: true,
+            username: true,
             phoneNumber: true,
             image: true,
             role: true,
@@ -27,7 +27,7 @@ export async function GET(request, context) {
         offers: {
           include: {
             buyer: {
-              select: { id: true, name: true, image: true },
+              select: { id: true, username: true, image: true },
             },
           },
           orderBy: { createdAt: 'desc' },
@@ -45,7 +45,17 @@ export async function GET(request, context) {
       data: { viewsCount: { increment: 1 } },
     }).catch(() => {})
 
-    return NextResponse.json({ success: true, data: item })
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...item,
+        seller: item.seller ? { ...item.seller, name: item.seller.username } : null,
+        offers: (item.offers || []).map(o => ({
+          ...o,
+          buyer: o.buyer ? { ...o.buyer, name: o.buyer.username } : null,
+        })),
+      },
+    })
   } catch (error) {
     console.error('Failed to get 2nd hand item:', error)
     return NextResponse.json({ success: false, error: error.message || 'Failed to fetch item' }, { status: 500 })

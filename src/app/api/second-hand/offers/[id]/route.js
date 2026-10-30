@@ -19,7 +19,7 @@ export async function PATCH(request, context) {
       where: { id: offerId },
       include: {
         item: true,
-        buyer: { select: { id: true, name: true, phoneNumber: true } },
+        buyer: { select: { id: true, username: true, phoneNumber: true } },
       },
     })
 
