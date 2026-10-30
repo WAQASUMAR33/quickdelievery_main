@@ -92,10 +92,10 @@ export default async function sitemap() {
     })
 
     secondHandRoutes = items.map((item) => ({
-      url: `${BASE_URL}/second-hand#item-${item.id}`,
+      url: `${BASE_URL}/second-hand/${item.id}`,
       lastModified: item.updatedAt || new Date(),
       changeFrequency: 'daily',
-      priority: 0.75,
+      priority: 0.8,
     }))
   } catch (err) {
     console.warn('Sitemap second hand fetch error:', err.message)

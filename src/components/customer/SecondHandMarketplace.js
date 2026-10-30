@@ -159,7 +159,7 @@ export default function SecondHandMarketplace({ user }) {
   // Navigation & View
   const [activeTab, setActiveTab] = useState(0) // 0: Browse Marketplace, 1: My Hub (Listings & Offers)
   const [hubSubTab, setHubSubTab] = useState(0) // 0: Offers Received, 1: Offers Sent, 2: My Listings
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('list') // 'list' (default OLX list view) or 'grid'
 
   // Items State
   const [items, setItems] = useState([])
@@ -880,21 +880,49 @@ export default function SecondHandMarketplace({ user }) {
                   </Select>
                 </FormControl>
 
-                <Box sx={{ display: { xs: 'none', sm: 'flex' }, bgcolor: '#F1F5F9', borderRadius: 1.5, p: 0.3 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => setViewMode('grid')}
-                    sx={{ bgcolor: viewMode === 'grid' ? '#FFFFFF' : 'transparent', borderRadius: 1, boxShadow: viewMode === 'grid' ? 1 : 0 }}
-                  >
-                    <GridViewIcon fontSize="small" sx={{ color: viewMode === 'grid' ? THEME.primary : '#64748B' }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => setViewMode('list')}
-                    sx={{ bgcolor: viewMode === 'list' ? '#FFFFFF' : 'transparent', borderRadius: 1, boxShadow: viewMode === 'list' ? 1 : 0 }}
-                  >
-                    <ViewListIcon fontSize="small" sx={{ color: viewMode === 'list' ? THEME.primary : '#64748B' }} />
-                  </IconButton>
+                <Box sx={{ display: 'flex', bgcolor: '#F1F5F9', borderRadius: 1.5, p: 0.3, border: '1px solid #E2E8F0' }}>
+                  <Tooltip title="OLX List View">
+                    <Button
+                      size="small"
+                      onClick={() => setViewMode('list')}
+                      startIcon={<ViewListIcon sx={{ fontSize: 16 }} />}
+                      sx={{
+                        bgcolor: viewMode === 'list' ? '#FFFFFF' : 'transparent',
+                        color: viewMode === 'list' ? THEME.primary : '#64748B',
+                        fontWeight: viewMode === 'list' ? 800 : 600,
+                        fontSize: '0.75rem',
+                        py: 0.4,
+                        px: 1,
+                        minWidth: 0,
+                        borderRadius: 1,
+                        boxShadow: viewMode === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 0,
+                        textTransform: 'none',
+                      }}
+                    >
+                      List
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="OLX Grid View">
+                    <Button
+                      size="small"
+                      onClick={() => setViewMode('grid')}
+                      startIcon={<GridViewIcon sx={{ fontSize: 16 }} />}
+                      sx={{
+                        bgcolor: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
+                        color: viewMode === 'grid' ? THEME.primary : '#64748B',
+                        fontWeight: viewMode === 'grid' ? 800 : 600,
+                        fontSize: '0.75rem',
+                        py: 0.4,
+                        px: 1,
+                        minWidth: 0,
+                        borderRadius: 1,
+                        boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.1)' : 0,
+                        textTransform: 'none',
+                      }}
+                    >
+                      Grid
+                    </Button>
+                  </Tooltip>
                 </Box>
               </Grid>
             </Grid>
@@ -964,8 +992,11 @@ export default function SecondHandMarketplace({ user }) {
                 + List Your 2nd Hand Item Now
               </Button>
             </Card>
-          ) : (
-            <Grid container spacing={2.5}>
+          ) : viewMode === 'list' ? (
+            /* ═════════════════════════════════════════════════════════════════════════
+               OLX ITEMS LIST VIEW (AUTHENTIC HORIZONTAL CARD LIST)
+            ═════════════════════════════════════════════════════════════════════════ */
+            <Stack spacing={2} sx={{ width: '100%', maxWidth: 1100, mx: 'auto' }}>
               {items.map(item => {
                 let parsedImages = []
                 try {
@@ -982,288 +1013,579 @@ export default function SecondHandMarketplace({ user }) {
                 const discountPct = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0
 
                 return (
-                  <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={item.id}>
-                    <Card
+                  <Card
+                    key={item.id}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      borderRadius: '4px',
+                      border: '1px solid #E2E8F0',
+                      overflow: 'hidden',
+                      bgcolor: '#FFFFFF',
+                      transition: 'all 0.18s ease-in-out',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                      '&:hover': {
+                        boxShadow: '0 6px 20px rgba(0,47,52,0.12)',
+                        borderColor: '#94A3B8',
+                      },
+                    }}
+                  >
+                    {/* Left Thumbnail (OLX standard 240px wide on desktop) */}
+                    <Box
+                      component={Link}
+                      href={`/second-hand/${item.id}`}
+                      target="_blank"
                       sx={{
-                        borderRadius: '6px',
-                        border: '1px solid #E2E8F0',
+                        position: 'relative',
+                        width: { xs: '100%', sm: 240, md: 260 },
+                        minWidth: { sm: 240, md: 260 },
+                        height: { xs: 200, sm: 175 },
+                        bgcolor: '#F8FAFC',
+                        flexShrink: 0,
                         overflow: 'hidden',
-                        bgcolor: '#FFFFFF',
-                        height: '100%',
+                        display: 'block',
+                      }}
+                    >
+                      <img
+                        src={firstImage}
+                        alt={item.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+
+                      {/* Featured Ribbon / Condition Badge */}
+                      {item.sellerType === 'MERCHANT' ? (
+                        <Chip
+                          label="FEATURED"
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            bgcolor: '#FDB600',
+                            color: '#002F34',
+                            fontWeight: 900,
+                            fontSize: '0.62rem',
+                            height: 20,
+                            borderRadius: '3px',
+                          }}
+                        />
+                      ) : (
+                        <Chip
+                          label={conditionObj?.label || item.condition}
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            bgcolor: 'rgba(0,47,52,0.85)',
+                            color: '#FFFFFF',
+                            fontWeight: 800,
+                            fontSize: '0.62rem',
+                            height: 20,
+                            borderRadius: '3px',
+                            backdropFilter: 'blur(4px)',
+                          }}
+                        />
+                      )}
+
+                      {/* Photo Count */}
+                      {parsedImages.length > 1 && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 8,
+                            left: 8,
+                            bgcolor: 'rgba(0,0,0,0.65)',
+                            color: '#fff',
+                            px: 1,
+                            py: 0.2,
+                            borderRadius: '3px',
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          📷 {parsedImages.length}
+                        </Box>
+                      )}
+
+                      {/* Discount % */}
+                      {discountPct > 0 && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 8,
+                            right: 8,
+                            bgcolor: '#10B981',
+                            color: '#fff',
+                            px: 0.8,
+                            py: 0.2,
+                            borderRadius: '3px',
+                            fontSize: '0.65rem',
+                            fontWeight: 900,
+                          }}
+                        >
+                          -{discountPct}%
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Right Content Area */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: { xs: 2, sm: 2.2 },
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        transition: 'all 0.18s ease-in-out',
-                        position: 'relative',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                        '&:hover': {
-                          boxShadow: '0 8px 24px rgba(0,47,52,0.12)',
-                          borderColor: '#94A3B8',
-                        },
                       }}
                     >
-                      {/* Top Clickable Area Linking to Dedicated Item Page in New Tab */}
                       <Box
                         component={Link}
                         href={`/second-hand/${item.id}`}
                         target="_blank"
                         sx={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                       >
-                        {/* Image Container (OLX 4:3 Ratio) */}
-                        <Box
-                          sx={{
-                            position: 'relative',
-                            width: '100%',
-                            aspectRatio: '4/3',
-                            bgcolor: '#F8FAFC',
-                            overflow: 'hidden',
-                            borderBottom: '1px solid #F1F5F9',
-                          }}
-                        >
-                          <img
-                            src={firstImage}
-                            alt={item.title}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              transition: 'transform 0.25s ease',
+                        {/* Price & Original Strikethrough */}
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.5 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{
+                              fontWeight: 900,
+                              color: '#002F34',
+                              fontSize: { xs: '1.25rem', sm: '1.35rem' },
+                              letterSpacing: -0.3,
                             }}
-                          />
-
-                          {/* Featured Ribbon (OLX Signature) */}
-                          {item.sellerType === 'MERCHANT' ? (
-                            <Chip
-                              label="FEATURED"
-                              size="small"
-                              sx={{
-                                position: 'absolute',
-                                top: 8,
-                                left: 8,
-                                bgcolor: '#FDB600',
-                                color: '#002F34',
-                                fontWeight: 900,
-                                fontSize: '0.62rem',
-                                height: 20,
-                                borderRadius: '3px',
-                              }}
-                            />
-                          ) : (
-                            <Chip
-                              label={conditionObj?.label || item.condition}
-                              size="small"
-                              sx={{
-                                position: 'absolute',
-                                top: 8,
-                                left: 8,
-                                bgcolor: 'rgba(0,47,52,0.85)',
-                                color: '#FFFFFF',
-                                fontWeight: 800,
-                                fontSize: '0.62rem',
-                                height: 20,
-                                borderRadius: '3px',
-                                backdropFilter: 'blur(4px)',
-                              }}
-                            />
-                          )}
-
-                          {/* Photo Count Pill (OLX bottom-left: 📷 3) */}
-                          {parsedImages.length > 1 && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                bottom: 8,
-                                left: 8,
-                                bgcolor: 'rgba(0,0,0,0.65)',
-                                color: '#fff',
-                                px: 1,
-                                py: 0.2,
-                                borderRadius: '3px',
-                                fontSize: '0.68rem',
-                                fontWeight: 700,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.5,
-                              }}
-                            >
-                              📷 {parsedImages.length}
-                            </Box>
-                          )}
-
-                          {/* Savings % Tag */}
-                          {discountPct > 0 && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                bottom: 8,
-                                right: 8,
-                                bgcolor: '#10B981',
-                                color: '#fff',
-                                px: 0.8,
-                                py: 0.2,
-                                borderRadius: '3px',
-                                fontSize: '0.65rem',
-                                fontWeight: 900,
-                              }}
-                            >
-                              -{discountPct}%
-                            </Box>
+                          >
+                            Rs {Number(item.price).toLocaleString()}
+                          </Typography>
+                          {orig > curr && (
+                            <Typography variant="body2" sx={{ textDecoration: 'line-through', color: '#94A3B8', fontWeight: 600 }}>
+                              Rs {orig.toLocaleString()}
+                            </Typography>
                           )}
                         </Box>
 
-                        {/* OLX Card Body */}
-                        <CardContent sx={{ p: '12px 14px 8px 14px' }}>
-                          {/* Price (OLX bold prominent typography) */}
-                          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.6 }}>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontWeight: 900,
-                                color: '#002F34',
-                                fontSize: '1.18rem',
-                                letterSpacing: -0.2,
-                                lineHeight: 1.2,
-                              }}
-                            >
-                              Rs {Number(item.price).toLocaleString()}
-                            </Typography>
-                            {orig > curr && (
-                              <Typography
-                                variant="caption"
-                                sx={{ textDecoration: 'line-through', color: '#94A3B8', fontWeight: 600 }}
-                              >
-                                Rs {orig.toLocaleString()}
-                              </Typography>
-                            )}
-                          </Box>
+                        {/* Title */}
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            color: '#002F34',
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            lineHeight: 1.35,
+                            mb: 0.6,
+                            '&:hover': { color: THEME.primary },
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
 
-                          {/* Title (OLX 2-line title) */}
+                        {/* Category & Condition */}
+                        <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mb: 0.8, fontSize: '0.8rem' }}>
+                          {item.category} • {conditionObj?.label} {item.sellerType === 'MERCHANT' ? '• Verified Merchant' : ''}
+                        </Typography>
+
+                        {/* Description Snippet */}
+                        {item.description && (
                           <Typography
                             variant="body2"
                             sx={{
-                              color: '#002F34',
-                              fontWeight: 500,
-                              fontSize: '0.88rem',
-                              lineHeight: 1.35,
+                              color: '#64748B',
+                              fontSize: '0.82rem',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               display: '-webkit-box',
-                              WebkitLineClamp: 2,
+                              WebkitLineClamp: 1,
                               WebkitBoxOrient: 'vertical',
-                              minHeight: 38,
-                              mb: 1.2,
+                              mb: 1,
                             }}
-                            title={item.title}
                           >
-                            {item.title}
+                            {item.description}
                           </Typography>
+                        )}
+                      </Box>
 
-                          {/* Category & Condition indicator */}
+                      {/* Footer: Location & Time Ago on left, Actions on right */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: 1,
+                          pt: 1,
+                          borderTop: '1px solid #F1F5F9',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: '#64748B', fontSize: '0.78rem' }}>
+                          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600 }}>
+                            📍 {item.location ? `${item.location}, ` : ''}{item.city}
+                          </Typography>
+                          <span>•</span>
+                          <Typography variant="caption" sx={{ color: '#64748B' }}>
+                            {timeAgo(item.createdAt)}
+                          </Typography>
+                        </Box>
+
+                        {/* Actions */}
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            component={Link}
+                            href={`/second-hand/${item.id}`}
+                            target="_blank"
+                            size="small"
+                            variant="outlined"
+                            endIcon={<OpenInNewIcon sx={{ fontSize: 13 }} />}
+                            sx={{
+                              borderColor: '#CBD5E1',
+                              color: '#002F34',
+                              fontWeight: 800,
+                              textTransform: 'none',
+                              fontSize: '0.75rem',
+                              px: 1.8,
+                              py: 0.5,
+                              borderRadius: '4px',
+                              '&:hover': { borderColor: '#002F34', bgcolor: 'rgba(0,47,52,0.04)' },
+                            }}
+                          >
+                            Details
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            startIcon={<WhatsAppIcon sx={{ fontSize: 15 }} />}
+                            onClick={() => openWhatsAppChat(item.contactPhone || item.seller?.phoneNumber, item.title, item.price)}
+                            sx={{
+                              bgcolor: '#25D366',
+                              color: '#fff',
+                              fontWeight: 800,
+                              textTransform: 'none',
+                              fontSize: '0.75rem',
+                              px: 1.8,
+                              py: 0.5,
+                              borderRadius: '4px',
+                              '&:hover': { bgcolor: '#20BA56' },
+                            }}
+                          >
+                            Chat
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Card>
+                )
+              })}
+            </Stack>
+          ) : (
+            /* ═════════════════════════════════════════════════════════════════════════
+               OLX COMPACT GRID VIEW (CONSTRAINED CARD WIDTH: 260px - 310px)
+            ═════════════════════════════════════════════════════════════════════════ */
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 300px))',
+                gap: 2.5,
+                justifyContent: 'start',
+              }}
+            >
+              {items.map(item => {
+                let parsedImages = []
+                try {
+                  parsedImages = JSON.parse(item.images || '[]')
+                } catch {
+                  parsedImages = []
+                }
+                const firstImage = parsedImages[0] || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600'
+                const conditionObj = CONDITIONS.find(c => c.id === item.condition)
+
+                // Calculate savings
+                const orig = Number(item.originalPrice || 0)
+                const curr = Number(item.price || 0)
+                const discountPct = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0
+
+                return (
+                  <Card
+                    key={item.id}
+                    sx={{
+                      borderRadius: '4px',
+                      border: '1px solid #E2E8F0',
+                      overflow: 'hidden',
+                      bgcolor: '#FFFFFF',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.18s ease-in-out',
+                      position: 'relative',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                      '&:hover': {
+                        boxShadow: '0 8px 24px rgba(0,47,52,0.12)',
+                        borderColor: '#94A3B8',
+                      },
+                    }}
+                  >
+                    {/* Top Clickable Area Linking to Dedicated Item Page in New Tab */}
+                    <Box
+                      component={Link}
+                      href={`/second-hand/${item.id}`}
+                      target="_blank"
+                      sx={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                    >
+                      {/* Image Container (OLX 4:3 Ratio) */}
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          width: '100%',
+                          aspectRatio: '4/3',
+                          bgcolor: '#F8FAFC',
+                          overflow: 'hidden',
+                          borderBottom: '1px solid #F1F5F9',
+                        }}
+                      >
+                        <img
+                          src={firstImage}
+                          alt={item.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.25s ease',
+                          }}
+                        />
+
+                        {/* Featured Ribbon (OLX Signature) */}
+                        {item.sellerType === 'MERCHANT' ? (
+                          <Chip
+                            label="FEATURED"
+                            size="small"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              left: 8,
+                              bgcolor: '#FDB600',
+                              color: '#002F34',
+                              fontWeight: 900,
+                              fontSize: '0.62rem',
+                              height: 20,
+                              borderRadius: '3px',
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            label={conditionObj?.label || item.condition}
+                            size="small"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              left: 8,
+                              bgcolor: 'rgba(0,47,52,0.85)',
+                              color: '#FFFFFF',
+                              fontWeight: 800,
+                              fontSize: '0.62rem',
+                              height: 20,
+                              borderRadius: '3px',
+                              backdropFilter: 'blur(4px)',
+                            }}
+                          />
+                        )}
+
+                        {/* Photo Count Pill (OLX bottom-left: 📷 3) */}
+                        {parsedImages.length > 1 && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              bottom: 8,
+                              left: 8,
+                              bgcolor: 'rgba(0,0,0,0.65)',
+                              color: '#fff',
+                              px: 1,
+                              py: 0.2,
+                              borderRadius: '3px',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
+                            📷 {parsedImages.length}
+                          </Box>
+                        )}
+
+                        {/* Savings % Tag */}
+                        {discountPct > 0 && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              bottom: 8,
+                              right: 8,
+                              bgcolor: '#10B981',
+                              color: '#fff',
+                              px: 0.8,
+                              py: 0.2,
+                              borderRadius: '3px',
+                              fontSize: '0.65rem',
+                              fontWeight: 900,
+                            }}
+                          >
+                            -{discountPct}%
+                          </Box>
+                        )}
+                      </Box>
+
+                      {/* OLX Card Body */}
+                      <CardContent sx={{ p: '12px 14px 8px 14px' }}>
+                        {/* Price (OLX bold prominent typography) */}
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.6 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 900,
+                              color: '#002F34',
+                              fontSize: '1.18rem',
+                              letterSpacing: -0.2,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Rs {Number(item.price).toLocaleString()}
+                          </Typography>
+                          {orig > curr && (
+                            <Typography
+                              variant="caption"
+                              sx={{ textDecoration: 'line-through', color: '#94A3B8', fontWeight: 600 }}
+                            >
+                              Rs {orig.toLocaleString()}
+                            </Typography>
+                          )}
+                        </Box>
+
+                        {/* Title (OLX 2-line title) */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#002F34',
+                            fontWeight: 500,
+                            fontSize: '0.88rem',
+                            lineHeight: 1.35,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            minHeight: 38,
+                            mb: 1.2,
+                          }}
+                          title={item.title}
+                        >
+                          {item.title}
+                        </Typography>
+
+                        {/* Category & Condition indicator */}
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#64748B',
+                            fontSize: '0.72rem',
+                            display: 'block',
+                            mb: 1.2,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {item.category} • {conditionObj?.label}
+                        </Typography>
+
+                        {/* OLX Classic Footer: Location on Left, Time on Right */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            color: '#64748B',
+                            fontSize: '0.72rem',
+                            pt: 1,
+                            borderTop: '1px solid #F1F5F9',
+                          }}
+                        >
                           <Typography
                             variant="caption"
                             sx={{
-                              color: '#64748B',
                               fontSize: '0.72rem',
-                              display: 'block',
-                              mb: 1.2,
+                              color: '#64748B',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
+                              maxWidth: '65%',
                             }}
                           >
-                            {item.category} • {conditionObj?.label}
+                            {item.location ? `${item.location}, ` : ''}{item.city}
                           </Typography>
 
-                          {/* OLX Classic Footer: Location on Left, Time on Right */}
-                          <Box
+                          <Typography variant="caption" sx={{ fontSize: '0.72rem', color: '#64748B', whiteSpace: 'nowrap' }}>
+                            {timeAgo(item.createdAt)}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Box>
+
+                    {/* Quick Action Buttons (OLX View Ad & WhatsApp Chat) */}
+                    <Box sx={{ px: 1.5, pb: 1.5, pt: 0 }}>
+                      <Grid container spacing={1}>
+                        <Grid item xs={6}>
+                          <Button
+                            component={Link}
+                            href={`/second-hand/${item.id}`}
+                            target="_blank"
+                            variant="outlined"
+                            fullWidth
+                            size="small"
+                            endIcon={<OpenInNewIcon sx={{ fontSize: 13 }} />}
                             sx={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              color: '#64748B',
-                              fontSize: '0.72rem',
-                              pt: 1,
-                              borderTop: '1px solid #F1F5F9',
+                              borderColor: '#CBD5E1',
+                              color: '#002F34',
+                              fontWeight: 800,
+                              textTransform: 'none',
+                              py: 0.6,
+                              borderRadius: '4px',
+                              fontSize: '0.74rem',
+                              '&:hover': { borderColor: '#002F34', bgcolor: 'rgba(0,47,52,0.04)' },
                             }}
                           >
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontSize: '0.72rem',
-                                color: '#64748B',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '65%',
-                              }}
-                            >
-                              {item.location ? `${item.location}, ` : ''}{item.city}
-                            </Typography>
-
-                            <Typography variant="caption" sx={{ fontSize: '0.72rem', color: '#64748B', whiteSpace: 'nowrap' }}>
-                              {timeAgo(item.createdAt)}
-                            </Typography>
-                          </Box>
-                        </CardContent>
-                      </Box>
-
-                      {/* Quick Action Buttons (OLX View Ad & WhatsApp Chat) */}
-                      <Box sx={{ px: 1.5, pb: 1.5, pt: 0 }}>
-                        <Grid container spacing={1}>
-                          <Grid item xs={6}>
-                            <Button
-                              component={Link}
-                              href={`/second-hand/${item.id}`}
-                              target="_blank"
-                              variant="outlined"
-                              fullWidth
-                              size="small"
-                              endIcon={<OpenInNewIcon sx={{ fontSize: 13 }} />}
-                              sx={{
-                                borderColor: '#CBD5E1',
-                                color: '#002F34',
-                                fontWeight: 800,
-                                textTransform: 'none',
-                                py: 0.6,
-                                borderRadius: '4px',
-                                fontSize: '0.74rem',
-                                '&:hover': { borderColor: '#002F34', bgcolor: 'rgba(0,47,52,0.04)' },
-                              }}
-                            >
-                              Details
-                            </Button>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Button
-                              variant="contained"
-                              fullWidth
-                              size="small"
-                              startIcon={<WhatsAppIcon sx={{ fontSize: 14 }} />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openWhatsAppChat(item.contactPhone || item.seller?.phoneNumber, item.title, item.price);
-                              }}
-                              sx={{
-                                bgcolor: '#25D366',
-                                color: '#fff',
-                                fontWeight: 800,
-                                textTransform: 'none',
-                                py: 0.6,
-                                borderRadius: '4px',
-                                fontSize: '0.74rem',
-                                '&:hover': { bgcolor: '#20BA56' },
-                              }}
-                            >
-                              Chat
-                            </Button>
-                          </Grid>
+                            Details
+                          </Button>
                         </Grid>
-                      </Box>
-                    </Card>
-                  </Grid>
+                        <Grid item xs={6}>
+                          <Button
+                            variant="contained"
+                            fullWidth
+                            size="small"
+                            startIcon={<WhatsAppIcon sx={{ fontSize: 14 }} />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openWhatsAppChat(item.contactPhone || item.seller?.phoneNumber, item.title, item.price);
+                            }}
+                            sx={{
+                              bgcolor: '#25D366',
+                              color: '#fff',
+                              fontWeight: 800,
+                              textTransform: 'none',
+                              py: 0.6,
+                              borderRadius: '4px',
+                              fontSize: '0.74rem',
+                              '&:hover': { bgcolor: '#20BA56' },
+                            }}
+                          >
+                            Chat
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Card>
                 )
               })}
-            </Grid>
+            </Box>
+          )}
           )}
         </Box>
       )}

@@ -36,7 +36,18 @@ async function generate() {
       take: 2000,
     });
   } catch (err) {
-    console.warn('Prisma error:', err.message);
+    console.warn('Prisma product error:', err.message);
+  }
+
+  let secondHandItems = [];
+  try {
+    secondHandItems = await prisma.secondHandItem.findMany({
+      where: { status: 'AVAILABLE' },
+      select: { id: true, title: true, updatedAt: true },
+      take: 1000,
+    });
+  } catch (err) {
+    console.warn('Prisma secondHandItem error:', err.message);
   }
 
   const now = new Date().toISOString().split('T')[0];
@@ -65,10 +76,21 @@ async function generate() {
     xml += '  </url>\n';
   }
 
+  for (const item of secondHandItems) {
+    const url = `${baseUrl}/second-hand/${item.id}`;
+    const lastmod = item.updatedAt ? item.updatedAt.toISOString().split('T')[0] : now;
+    xml += '  <url>\n';
+    xml += `    <loc>${url}</loc>\n`;
+    xml += `    <lastmod>${lastmod}</lastmod>\n`;
+    xml += `    <changefreq>daily</changefreq>\n`;
+    xml += `    <priority>0.85</priority>\n`;
+    xml += '  </url>\n';
+  }
+
   xml += '</urlset>\n';
 
   fs.writeFileSync('public/sitemap.xml', xml, 'utf8');
-  console.log(`Generated public/sitemap.xml with ${staticUrls.length + products.length} URLs`);
+  console.log(`Generated public/sitemap.xml with ${staticUrls.length + products.length + secondHandItems.length} URLs (including ${secondHandItems.length} 2nd hand listings)`);
 
   const robots = 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /driver/\nDisallow: /vendor/\n\nSitemap: https://martzona.com/sitemap.xml\n';
   fs.writeFileSync('public/robots.txt', robots, 'utf8');

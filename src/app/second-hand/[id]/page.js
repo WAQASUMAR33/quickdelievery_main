@@ -1,6 +1,8 @@
 import SingleSecondHandView from '@/components/customer/SingleSecondHandView'
 import { prisma } from '@/lib/prisma'
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://martzona.com'
+
 export async function generateMetadata({ params }) {
   try {
     const { id } = await params
@@ -9,7 +11,7 @@ export async function generateMetadata({ params }) {
 
     const item = await prisma.secondHandItem.findUnique({
       where: { id: itemId },
-      select: { title: true, description: true, price: true, images: true, city: true },
+      select: { title: true, description: true, price: true, images: true, city: true, category: true },
     })
 
     if (!item) return { title: 'Item Not Found | MARTZONA 2nd Hand' }
@@ -21,13 +23,37 @@ export async function generateMetadata({ params }) {
       images = []
     }
 
+    const title = `${item.title} — Rs. ${Number(item.price).toLocaleString()} | Martzona Pre-Loved`
+    const description = item.description?.slice(0, 160) || `Buy ${item.title} in ${item.city || 'Pakistan'} at Rs. ${item.price} on Martzona Pre-Loved Marketplace.`
+    const url = `${BASE_URL}/second-hand/${itemId}`
+    const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : `${BASE_URL}/images/martzona_logo_transparent.png`
+
     return {
-      title: `${item.title} — Rs. ${Number(item.price).toLocaleString()} | Martzona Pre-Loved`,
-      description: item.description?.slice(0, 160) || `Buy ${item.title} at Rs. ${item.price} on Martzona Pre-Loved Marketplace.`,
+      title,
+      description,
+      alternates: {
+        canonical: url,
+      },
       openGraph: {
-        title: item.title,
-        description: item.description?.slice(0, 160),
-        images: Array.isArray(images) && images.length > 0 ? [images[0]] : [],
+        title,
+        description,
+        url,
+        siteName: 'Martzona Pakistan',
+        images: [{ url: imageUrl, width: 800, height: 600, alt: item.title }],
+        locale: 'en_PK',
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [imageUrl],
+      },
+      robots: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
     }
   } catch {
@@ -71,5 +97,80 @@ export default async function SecondHandItemPage({ params }) {
     }
   }
 
-  return <SingleSecondHandView itemId={id} initialData={item} />
+  // Schema.org JSON-LD Structured Data for Google Rich Snippets
+  let jsonLd = null
+  if (item) {
+    let images = []
+    try {
+      images = typeof item.images === 'string' ? JSON.parse(item.images) : item.images
+    } catch {
+      images = []
+    }
+
+    jsonLd = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Product',
+          name: item.title,
+          image: images,
+          description: item.description || item.title,
+          category: item.category,
+          offers: {
+            '@type': 'Offer',
+            url: `${BASE_URL}/second-hand/${itemId}`,
+            priceCurrency: 'PKR',
+            price: item.price,
+            itemCondition: 'https://schema.org/UsedCondition',
+            availability: item.status === 'AVAILABLE' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            seller: {
+              '@type': 'Person',
+              name: item.seller?.name || 'Verified Martzona Member',
+            },
+          },
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: BASE_URL,
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: '2nd Hand Marketplace',
+              item: `${BASE_URL}/second-hand`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: item.category || 'Items',
+              item: `${BASE_URL}/second-hand?category=${encodeURIComponent(item.category || '')}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: item.title,
+              item: `${BASE_URL}/second-hand/${itemId}`,
+            },
+          ],
+        },
+      ],
+    }
+  }
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <SingleSecondHandView itemId={id} initialData={item} />
+    </>
+  )
 }

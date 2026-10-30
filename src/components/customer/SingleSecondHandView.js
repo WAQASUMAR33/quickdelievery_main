@@ -962,3 +962,4 @@ export default function SingleSecondHandView({ itemId, initialData = null }) {
     </Box>
   )
 }
+
