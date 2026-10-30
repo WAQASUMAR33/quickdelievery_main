@@ -375,7 +375,7 @@ const SidebarContent = () => {
               component="img"
               src="/images/martzona_logo_transparent.png"
               alt="MARTZONA"
-              sx={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }}
+              sx={{ height: 32, width: 'auto', maxWidth: 130, objectFit: 'contain', flexShrink: 0 }}
             />
             <Box>
               <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 14, lineHeight: 1.2, letterSpacing: 0.5 }}>

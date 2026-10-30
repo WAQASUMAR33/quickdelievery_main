@@ -800,7 +800,7 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
               >
                 <Box
                   sx={{
-                    height: { xs: 36, sm: 38, md: 40 },
+                    height: { xs: 36, sm: 40, md: 44 },
                     display: 'flex',
                     alignItems: 'center',
                     flexShrink: 0,
@@ -811,28 +811,14 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                     src="/images/martzona_logo_transparent.png"
                     alt="MARTZONA"
                     sx={{
-                      height: { xs: 34, sm: 36, md: 38 },
+                      height: { xs: 36, sm: 40, md: 44 },
                       width: 'auto',
                       objectFit: 'contain',
                     }}
                   />
                 </Box>
-                <Box sx={{ minWidth: 0 }}>
+                <Box sx={{ minWidth: 0, display: { xs: 'none', sm: 'block' } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={900}
-                      sx={{
-                        color: isDark ? '#FFFFFF' : '#0F172A',
-                        letterSpacing: -0.6,
-                        fontSize: { xs: '1.15rem', sm: '1.3rem', lg: '1.45rem' },
-                        lineHeight: 1,
-                        whiteSpace: 'nowrap',
-                        fontFamily: 'var(--font-jakarta)',
-                      }}
-                    >
-                      MART<Box component="span" sx={{ color: isDark ? THEME.primaryLight : THEME.primary }}>ZONA</Box>
-                    </Typography>
                     <Chip
                       label={t('boutiqueMall') || 'BOUTIQUE MALL'}
                       size="small"
@@ -845,7 +831,6 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                         color: isDark ? '#A5B4FC' : '#2563EB',
                         border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(37, 99, 235, 0.2)',
                         borderRadius: 0,
-                        display: { xs: 'none', lg: 'inline-flex' },
                       }}
                     />
                   </Box>
