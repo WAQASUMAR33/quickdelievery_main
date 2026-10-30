@@ -891,16 +891,16 @@ export default function CustomerDashboard({ initialTab = 'products' }) {
                   py: 0.7,
                   borderRadius: 0,
                   background: isDark
-                    ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(245, 158, 11, 0.22) 100%)'
-                    : 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.12) 100%)',
-                  border: isDark ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(245, 158, 11, 0.4)',
-                  boxShadow: isDark ? '0 0 16px rgba(245, 158, 11, 0.15)' : 'none',
+                    ? 'linear-gradient(135deg, rgba(67, 4, 108, 0.45) 0%, rgba(253, 182, 0, 0.20) 100%)'
+                    : 'linear-gradient(135deg, rgba(67, 4, 108, 0.08) 0%, rgba(253, 182, 0, 0.14) 100%)',
+                  border: isDark ? '1px solid rgba(253, 182, 0, 0.50)' : '1px solid rgba(253, 182, 0, 0.45)',
+                  boxShadow: isDark ? '0 0 16px rgba(67, 4, 108, 0.25)' : 'none',
                   transition: 'all 0.2s ease',
                   '&:hover': {
                     background: isDark
-                      ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.45) 0%, rgba(245, 158, 11, 0.35) 100%)'
-                      : 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(245, 158, 11, 0.2) 100%)',
-                    borderColor: THEME.gold,
+                      ? 'linear-gradient(135deg, rgba(67, 4, 108, 0.65) 0%, rgba(253, 182, 0, 0.35) 100%)'
+                      : 'linear-gradient(135deg, rgba(67, 4, 108, 0.16) 0%, rgba(253, 182, 0, 0.25) 100%)',
+                    borderColor: '#FDB600',
                     transform: 'translateY(-1px)',
                   },
                 }}

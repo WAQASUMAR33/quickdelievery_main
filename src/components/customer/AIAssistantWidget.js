@@ -129,15 +129,20 @@ export default function AIAssistantWidget() {
       <div className={`fixed bottom-32 md:bottom-20 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} z-40`}>
         <motion.button
           type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setIsOpen(true)}
-          className="group flex items-center justify-center gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-none bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500 hover:from-blue-700 hover:to-amber-600 text-white font-black text-xs shadow-xl shadow-indigo-600/25 border border-white/20 cursor-pointer"
+          className="floating-pill-btn group relative flex items-center justify-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-full bg-gradient-to-r from-[#43046C] via-[#5B1380] to-[#791F8A] hover:from-[#4E057D] hover:via-[#6A1794] hover:to-[#8B269E] text-white font-black text-xs shadow-xl shadow-[#43046C]/40 hover:shadow-2xl hover:shadow-[#43046C]/60 border border-[#FDB600]/45 hover:border-[#FDB600] transition-all cursor-pointer backdrop-blur-md"
           aria-label="Open AI Shopping Concierge"
         >
-          <Sparkles className="w-5 h-5 text-amber-200 fill-amber-300 animate-pulse" />
-          <span className="hidden sm:inline-block tracking-tight">
+          <span className="floating-icon-circle w-7 h-7 rounded-full bg-white/15 flex items-center justify-center border border-white/20 shadow-xs flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-[#FDB600] fill-[#FDB600]/40 animate-pulse" />
+          </span>
+          <span className="hidden sm:inline-block font-black tracking-tight text-white drop-shadow-xs">
             ✦ QuickAI Concierge
+          </span>
+          <span className="floating-pill-badge hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#FDB600] text-[#43046C] font-black text-[9px] uppercase tracking-wider shadow-xs">
+            PRO
           </span>
         </motion.button>
       </div>
@@ -151,25 +156,25 @@ export default function AIAssistantWidget() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col text-left"
+              className="floating-widget-dialog relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col text-left"
               dir={isRTL ? 'rtl' : 'ltr'}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-4 sm:p-5 text-white border-b border-indigo-500/20 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-[#43046C] via-[#350257] to-[#1E0230] p-4 sm:p-5 text-white border-b border-[#FDB600]/25 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
-                    <Sparkles className="w-6 h-6 text-amber-300" />
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FDB600] to-[#E09400] p-2 flex items-center justify-center text-[#43046C] shadow-md shadow-[#FDB600]/30 flex-shrink-0">
+                    <Sparkles className="w-6 h-6 text-[#43046C]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-black tracking-tight text-white">
                         QuickAI Shopping Concierge
                       </h2>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-[10px] font-black text-amber-300 uppercase">
+                      <span className="px-2 py-0.5 rounded-full bg-[#FDB600]/20 border border-[#FDB600]/40 text-[10px] font-black text-[#FDB600] uppercase">
                         AI 2.0
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 font-medium">
+                    <p className="text-xs text-purple-200 font-medium">
                       Smart product search, bundle creator & personalized meal kits
                     </p>
                   </div>
@@ -195,7 +200,7 @@ export default function AIAssistantWidget() {
                     }`}
                   >
                     {msg.sender === 'ai' && (
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#43046C] to-[#6B21A8] text-[#FDB600] flex items-center justify-center flex-shrink-0 shadow-sm border border-[#FDB600]/30">
                         <Bot className="w-4 h-4" />
                       </div>
                     )}
@@ -203,7 +208,7 @@ export default function AIAssistantWidget() {
                     <div
                       className={`max-w-[85%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed ${
                         msg.sender === 'user'
-                          ? 'bg-blue-600 text-white font-medium rounded-tr-none shadow-md shadow-blue-600/20'
+                          ? 'bg-gradient-to-r from-[#43046C] to-[#581C87] text-white font-medium rounded-tr-none shadow-md shadow-[#43046C]/20 border border-[#FDB600]/25'
                           : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-none border border-slate-200/80 dark:border-slate-700 shadow-sm'
                       }`}
                     >
@@ -354,7 +359,7 @@ export default function AIAssistantWidget() {
                   type="button"
                   disabled={loading || !inputPrompt.trim()}
                   onClick={() => handleSendPrompt()}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-md shadow-blue-500/25 disabled:opacity-50 flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#43046C] to-[#6B21A8] hover:from-[#581C87] hover:to-[#7C3AED] border border-[#FDB600]/40 text-white font-black text-xs shadow-md shadow-[#43046C]/30 disabled:opacity-50 flex items-center gap-1.5 transition-all"
                 >
                   <span>Search</span>
                   <Send className="w-3.5 h-3.5" />

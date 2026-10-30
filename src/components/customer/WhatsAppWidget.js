@@ -36,11 +36,11 @@ export default function WhatsAppWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="mb-4 w-[360px] max-w-[calc(100vw-32px)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden text-left"
+            className="floating-widget-dialog mb-4 w-[360px] max-w-[calc(100vw-32px)] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden text-left"
             dir={isRTL ? 'rtl' : 'ltr'}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 p-4 text-white relative">
+            <div className="bg-gradient-to-r from-[#43046C] via-[#581C87] to-[#30034E] p-4 text-white relative border-b border-[#FDB600]/25">
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
@@ -52,20 +52,20 @@ export default function WhatsAppWidget() {
 
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md p-1 border border-white/30 flex items-center justify-center">
-                    <MessageCircle className="w-7 h-7 text-white fill-white/20" />
+                  <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md p-1 border border-white/25 flex items-center justify-center">
+                    <MessageCircle className="w-7 h-7 text-emerald-300 fill-emerald-300/30" />
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-300 border-2 border-emerald-600 animate-pulse" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#FDB600] border-2 border-[#43046C] animate-pulse" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-black text-sm text-white tracking-tight">
                       MARTZONA Support
                     </h3>
-                    <ShieldCheck className="w-4 h-4 text-emerald-200 fill-emerald-100" />
+                    <ShieldCheck className="w-4 h-4 text-[#FDB600] fill-[#FDB600]/20" />
                   </div>
-                  <p className="text-[11px] text-emerald-100 flex items-center gap-1 font-medium">
-                    <Clock className="w-3 h-3" /> Replies typically in &lt; 2 minutes
+                  <p className="text-[11px] text-purple-200 flex items-center gap-1 font-medium">
+                    <Clock className="w-3 h-3 text-[#FDB600]" /> Replies typically in &lt; 2 minutes
                   </p>
                 </div>
               </div>
@@ -75,7 +75,7 @@ export default function WhatsAppWidget() {
             <div className="p-4 bg-slate-50/70 dark:bg-slate-950/60 max-h-[300px] overflow-y-auto space-y-3 text-xs">
               {/* Automated Greeting Bubble */}
               <div className="flex items-start gap-2">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white font-black text-[10px] flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-[#43046C] border border-[#FDB600]/40 flex items-center justify-center text-[#FDB600] font-black text-[10px] flex-shrink-0">
                   MZ
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-200/80 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-100 leading-relaxed">
@@ -103,7 +103,7 @@ export default function WhatsAppWidget() {
                       key={i}
                       type="button"
                       onClick={() => handleSend(prompt)}
-                      className="text-left w-full p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-emerald-500 dark:hover:border-emerald-500 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 transition-all flex items-center justify-between group shadow-2xs"
+                      className="text-left w-full p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-[#43046C] dark:hover:border-[#FDB600] text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-[#43046C] dark:hover:text-[#FDB600] transition-all flex items-center justify-between group shadow-2xs"
                     >
                       <span>{prompt}</span>
                       <Send className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 transition-colors" />
@@ -144,18 +144,22 @@ export default function WhatsAppWidget() {
       {/* Floating Launcher Button */}
       <motion.button
         type="button"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.04, y: -2 }}
+        whileTap={{ scale: 0.96 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center justify-center gap-2 p-2.5 sm:px-3.5 sm:py-2.5 rounded-none bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-xl shadow-emerald-500/25 border border-emerald-400/40 cursor-pointer"
+        className="floating-pill-btn group relative flex items-center justify-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-full bg-gradient-to-r from-[#30034E] via-[#43046C] to-[#55087F] hover:from-[#3B0460] hover:via-[#520682] hover:to-[#670B9A] text-white font-extrabold text-xs shadow-xl shadow-[#43046C]/40 hover:shadow-2xl hover:shadow-[#43046C]/60 border border-[#FDB600]/40 hover:border-[#25D366] transition-all cursor-pointer backdrop-blur-md"
         aria-label="Open WhatsApp Chat Support"
       >
-        <span className="relative flex items-center justify-center">
-          <MessageCircle className="w-5 h-5 fill-white/20" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-none bg-emerald-300 animate-ping" />
+        <span className="floating-icon-circle relative w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-md shadow-emerald-500/40 flex-shrink-0">
+          <MessageCircle className="w-4 h-4 fill-white text-white" />
+          <span className="floating-icon-circle absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#FDB600] border-2 border-[#43046C] animate-pulse" />
         </span>
-        <span className="hidden sm:inline-block font-black tracking-tight">
+        <span className="hidden sm:inline-block font-black tracking-tight text-white drop-shadow-xs">
           WhatsApp Support
+        </span>
+        <span className="floating-pill-badge hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[9.5px] font-black text-emerald-300">
+          <span className="floating-icon-circle w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+          Live
         </span>
       </motion.button>
     </div>
