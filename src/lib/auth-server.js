@@ -21,23 +21,61 @@ export function checkUserVerification(user, userData) {
   return { isVerified: false, reason: 'Email not verified' }
 }
 
+function extractRequestToken(req) {
+  const authHeader = req?.headers?.get?.('authorization') || req?.headers?.get?.('Authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const bearer = authHeader.slice(7).trim()
+    if (bearer && bearer !== 'GUEST_SESSION' && bearer !== 'null' && bearer !== 'undefined') {
+      return bearer
+    }
+  }
+
+  // Fallback 1: NextRequest cookies API
+  const cookieToken =
+    req?.cookies?.get?.('authToken')?.value ||
+    req?.cookies?.get?.('token')?.value ||
+    req?.cookies?.get?.('auth_token')?.value
+  if (cookieToken && cookieToken !== 'GUEST_SESSION') {
+    return decodeURIComponent(cookieToken)
+  }
+
+  // Fallback 2: Raw Cookie header
+  const cookieHeader = req?.headers?.get?.('cookie') || ''
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)(?:authToken|token|auth_token)=([^;]+)/)
+    if (match?.[1] && match[1] !== 'GUEST_SESSION') {
+      return decodeURIComponent(match[1].trim())
+    }
+  }
+
+  return null
+}
+
 // Middleware to authenticate requests
 export async function authenticateRequest(req) {
-  const authHeader = req.headers.get('authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = extractRequestToken(req)
+  if (!token) {
     throw new Error('No token provided')
   }
 
-  const token = authHeader.split('Bearer ')[1]
   const decoded = verifyToken(token)
-  
-  if (!decoded || !decoded.userId) {
+  const rawUserId = decoded?.userId ?? decoded?.id
+
+  if (!decoded || (!rawUserId && !decoded.email)) {
     throw new Error('Invalid token')
   }
 
-  const user = await prisma.users.findUnique({
-    where: { id: decoded.userId }
-  })
+  let user = null
+  if (rawUserId !== undefined && rawUserId !== null && /^\d+$/.test(String(rawUserId))) {
+    user = await prisma.users.findUnique({
+      where: { id: Number(rawUserId) }
+    })
+  }
+  if (!user && decoded.email) {
+    user = await prisma.users.findFirst({
+      where: { email: String(decoded.email).toLowerCase().trim() }
+    })
+  }
 
   if (!user) {
     throw new Error('User not found')

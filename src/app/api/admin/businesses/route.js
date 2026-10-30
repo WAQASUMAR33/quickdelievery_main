@@ -1,24 +1,40 @@
 import { prisma } from '@/lib/prisma'
 
-// GET /api/admin/businesses?email=...  OR  ?id=...
+// GET /api/admin/businesses?all=true  OR  ?email=...  OR  ?id=...
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
+    const all   = searchParams.get('all')
     const email = searchParams.get('email')
     const id    = searchParams.get('id')
 
-    if (!email && !id) {
-      return Response.json({ success: false, error: 'email or id query param required' }, { status: 400 })
+    const includeRelations = {
+      category: true,
+      businessType: true,
+      businessCategory: true,
     }
 
-    const where = email ? { email } : { id: parseInt(id) }
+    if (all === 'true') {
+      const businesses = await prisma.business.findMany({
+        include: includeRelations,
+        orderBy: { createdAt: 'desc' },
+      })
+      return Response.json({ success: true, data: businesses })
+    }
 
-    const business = await prisma.business.findUnique({
-      where,
-      include: {
-        category: true,
-      },
-    })
+    if (!email && !id) {
+      return Response.json({ success: false, error: 'email, id, or all=true query param required' }, { status: 400 })
+    }
+
+    const business = email
+      ? await prisma.business.findFirst({
+          where: { email: { equals: email.trim() } },
+          include: includeRelations,
+        })
+      : await prisma.business.findUnique({
+          where: { id: parseInt(id, 10) },
+          include: includeRelations,
+        })
 
     // Return success:true even when no record exists so the UI can
     // distinguish "no profile yet" (data: null) from a server error.
@@ -29,10 +45,10 @@ export async function GET(request) {
   }
 }
 
-// PUT /api/admin/businesses  { id, verificationStatus, categoryId }
+// PUT /api/admin/businesses  { id, verificationStatus, categoryId, latitude, longitude }
 export async function PUT(request) {
   try {
-    const { id, verificationStatus, categoryId } = await request.json()
+    const { id, verificationStatus, categoryId, latitude, longitude } = await request.json()
 
     if (!id) {
       return Response.json({ success: false, error: 'Business id is required' }, { status: 400 })
@@ -48,14 +64,24 @@ export async function PUT(request) {
     }
 
     if (categoryId !== undefined) {
-      data.categoryId = categoryId ? parseInt(categoryId) : null
+      data.categoryId = categoryId ? parseInt(categoryId, 10) : null
+    }
+
+    if (latitude !== undefined) {
+      data.latitude = latitude !== null && latitude !== '' ? parseFloat(latitude) : null
+    }
+
+    if (longitude !== undefined) {
+      data.longitude = longitude !== null && longitude !== '' ? parseFloat(longitude) : null
     }
 
     const business = await prisma.business.update({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id, 10) },
       data,
       include: {
         category: true,
+        businessType: true,
+        businessCategory: true,
       },
     })
 

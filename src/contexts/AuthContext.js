@@ -8,6 +8,15 @@ const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
 
+function syncAuthCookie(token) {
+  if (typeof document === 'undefined') return
+  if (token && token !== 'GUEST_SESSION') {
+    document.cookie = `authToken=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+  } else {
+    document.cookie = 'authToken=; path=/; max-age=0; SameSite=Lax'
+  }
+}
+
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [userData, setUserData] = useState(null)
@@ -38,6 +47,7 @@ export default function AuthProvider({ children }) {
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('authToken')
     if (!token) {
+      syncAuthCookie(null)
       // No token — start as guest by default
       const { guestUser, guestUserData } = buildGuestSession()
       setUser(guestUser)
@@ -48,6 +58,7 @@ export default function AuthProvider({ children }) {
 
     // Handle Guest Session
     if (token === 'GUEST_SESSION') {
+      syncAuthCookie(null)
       const guestUser = {
         uid: 'guest_' + Date.now(),
         email: 'guest@quickdelivery.com',
@@ -80,6 +91,7 @@ export default function AuthProvider({ children }) {
 
       if (result.success) {
         const dbUser = result.user
+        syncAuthCookie(token)
 
         // Construct a Firebase-like user object for compatibility
         const firebaseLikeUser = {
@@ -96,6 +108,7 @@ export default function AuthProvider({ children }) {
         setUserData(dbUser)
       } else {
         localStorage.removeItem('authToken')
+        syncAuthCookie(null)
         // Fall back to guest session so pages don't hang indefinitely
         const { guestUser, guestUserData } = buildGuestSession()
         setUser(guestUser)
@@ -104,6 +117,7 @@ export default function AuthProvider({ children }) {
     } catch (error) {
       console.error('Error loading user:', error)
       localStorage.removeItem('authToken')
+      syncAuthCookie(null)
       // Fall back to guest session so pages don't hang indefinitely
       const { guestUser, guestUserData } = buildGuestSession()
       setUser(guestUser)
@@ -137,6 +151,7 @@ export default function AuthProvider({ children }) {
       const { user: dbUser, token } = result
 
       localStorage.setItem('authToken', token)
+      syncAuthCookie(token)
 
       const firebaseLikeUser = {
         uid: dbUser.uid,
@@ -182,6 +197,7 @@ export default function AuthProvider({ children }) {
       const { user: dbUser, token } = result
 
       localStorage.setItem('authToken', token)
+      syncAuthCookie(token)
 
       const firebaseLikeUser = {
         uid: dbUser.uid,
@@ -211,6 +227,7 @@ export default function AuthProvider({ children }) {
     try {
       const token = 'GUEST_SESSION'
       localStorage.setItem('authToken', token)
+      syncAuthCookie(null)
 
       const guestUser = {
         uid: 'guest_' + Date.now(),
@@ -246,6 +263,7 @@ export default function AuthProvider({ children }) {
   const logout = async () => {
     try {
       localStorage.removeItem('authToken')
+      syncAuthCookie(null)
       const { guestUser, guestUserData } = buildGuestSession()
       setUser(guestUser)
       setUserData(guestUserData)

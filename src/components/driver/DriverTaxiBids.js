@@ -38,6 +38,17 @@ import PinIcon from '@mui/icons-material/Pin'
 const BRAND = '#39772A'
 const BRAND_DARK_MODE = '#4ade80'
 
+function buildAuthHeaders(includeJson = false) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {}
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('authToken')
+    if (token && token !== 'GUEST_SESSION') {
+      headers.Authorization = `Bearer ${token}`
+    }
+  }
+  return headers
+}
+
 export default function DriverTaxiBids({ driverId }) {
   const [activeTrip, setActiveTrip] = useState(null)
   const [availableRides, setAvailableRides] = useState([])
@@ -56,7 +67,10 @@ export default function DriverTaxiBids({ driverId }) {
   const fetchRides = useCallback(async () => {
     try {
       const url = `/api/rides?role=DRIVER${driverId ? `&driverId=${driverId}` : ''}${serviceFilter !== 'ALL' ? `&serviceType=${serviceFilter}` : ''}`
-      const res = await fetch(url)
+      const res = await fetch(url, {
+        headers: buildAuthHeaders(),
+        credentials: 'include',
+      })
       const data = await res.json()
       if (data.success) {
         setActiveTrip(data.activeTrip)
@@ -84,7 +98,8 @@ export default function DriverTaxiBids({ driverId }) {
       setSubmittingBid(true)
       const res = await fetch(`/api/rides/${ride.id}/bids`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({
           bidAmount: ride.customerFare,
           etaMinutes: 5,
@@ -123,7 +138,8 @@ export default function DriverTaxiBids({ driverId }) {
       setSubmittingBid(true)
       const res = await fetch(`/api/rides/${bidModalRide.id}/bids`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({
           bidAmount: Number(counterAmount),
           etaMinutes: Number(etaMinutes) || 5,
@@ -151,7 +167,8 @@ export default function DriverTaxiBids({ driverId }) {
       setVerifyingOtp(true)
       const res = await fetch(`/api/rides/${activeTrip.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({ action, ...extraData }),
       })
       const data = await res.json()

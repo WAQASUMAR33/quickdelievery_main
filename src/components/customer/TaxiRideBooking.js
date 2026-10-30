@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -132,7 +134,26 @@ const VEHICLE_CATEGORIES = [
   },
 ]
 
+function buildAuthHeaders(includeJson = false) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {}
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('authToken')
+    if (token && token !== 'GUEST_SESSION') {
+      headers.Authorization = `Bearer ${token}`
+    }
+  }
+  return headers
+}
+
 export default function TaxiRideBooking({ onBack }) {
+  const router = useRouter()
+  const { user, userData } = useAuth()
+  const isGuest = useMemo(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+    if (token && token !== 'GUEST_SESSION') return false
+    return !userData || userData.role === 'GUEST' || userData.id === 'guest' || String(userData.id) === 'guest'
+  }, [userData])
+
   // Service mode: TAXI or LUGGAGE
   const [serviceType, setServiceType] = useState('TAXI')
   const [selectedVehicle, setSelectedVehicle] = useState('CAR_AC')
@@ -622,8 +643,16 @@ export default function TaxiRideBooking({ onBack }) {
 
   // Fetch customer's active ride
   const fetchActiveRide = useCallback(async () => {
+    const headers = buildAuthHeaders()
+    if (isGuest && !headers.Authorization) {
+      setActiveRide(null)
+      return
+    }
     try {
-      const res = await fetch('/api/rides?role=CUSTOMER')
+      const res = await fetch('/api/rides?role=CUSTOMER', {
+        headers,
+        credentials: 'include',
+      })
       const data = await res.json()
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
         const current = data.data.find(r => ['SEARCHING', 'ACCEPTED', 'DRIVER_ARRIVED', 'IN_PROGRESS'].includes(r.status))
@@ -634,7 +663,7 @@ export default function TaxiRideBooking({ onBack }) {
     } catch {
       // Non-blocking
     }
-  }, [])
+  }, [isGuest])
 
   useEffect(() => {
     fetchActiveRide()
@@ -665,6 +694,13 @@ export default function TaxiRideBooking({ onBack }) {
 
   // Submit Ride Request
   const handleRequestRide = async () => {
+    const headers = buildAuthHeaders(true)
+    if (isGuest && !headers.Authorization) {
+      toast.error('Please sign in to book a RapidRide')
+      router.push('/login')
+      return
+    }
+
     if (!pickupAddress.trim() || !dropoffAddress.trim()) {
       toast.error('Please enter pickup and dropoff locations')
       return
@@ -684,7 +720,8 @@ export default function TaxiRideBooking({ onBack }) {
       setRequestingRide(true)
       const res = await fetch('/api/rides', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           serviceType,
           rideCategory: serviceType === 'LUGGAGE' ? 'LUGGAGE_VAN' : selectedVehicle,
@@ -729,7 +766,8 @@ export default function TaxiRideBooking({ onBack }) {
       setAcceptingBidId(bidId)
       const res = await fetch(`/api/rides/${activeRide.id}/bids`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({ bidId }),
       })
       const data = await res.json()
@@ -753,7 +791,8 @@ export default function TaxiRideBooking({ onBack }) {
     try {
       const res = await fetch(`/api/rides/${activeRide.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({ action: 'CANCEL' }),
       })
       const data = await res.json()

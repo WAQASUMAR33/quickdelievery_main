@@ -12,15 +12,28 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const driverIdParam = searchParams.get('driverId')
+    const emailParam = searchParams.get('email')
 
-    if (!driverIdParam) {
+    if (!driverIdParam && !emailParam) {
       return Response.json(
-        { success: false, error: 'driverId parameter is required' },
+        { success: false, error: 'driverId or email parameter is required' },
         { status: 400 }
       )
     }
 
-    const driverId = parseInt(driverIdParam, 10)
+    let driverId = /^\d+$/.test(String(driverIdParam || '').trim())
+      ? parseInt(String(driverIdParam).trim(), 10)
+      : null
+
+    if (driverId === null) {
+      const resolvedUser = await prisma.users.findFirst({
+        where: emailParam
+          ? { email: emailParam.toLowerCase().trim() }
+          : { uid: String(driverIdParam) },
+        select: { id: true },
+      })
+      driverId = resolvedUser?.id ?? -1
+    }
     const settings = await getRapidRideSettings()
     const codRemittanceLimit = settings.platformFee.codRemittanceLimit || 15000
     const defaultDeliveryBaseFee = settings.platformFee.deliveryOrderBaseFee || 150

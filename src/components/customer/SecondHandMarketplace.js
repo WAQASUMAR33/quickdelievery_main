@@ -65,6 +65,17 @@ const CONDITIONS = [
   { id: 'FAIR', label: 'Fair (Functional)', color: '#64748B' },
 ]
 
+function buildAuthHeaders(includeJson = false) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {}
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('authToken')
+    if (token && token !== 'GUEST_SESSION') {
+      headers.Authorization = `Bearer ${token}`
+    }
+  }
+  return headers
+}
+
 export default function SecondHandMarketplace({ user }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -133,8 +144,8 @@ export default function SecondHandMarketplace({ user }) {
     try {
       setLoadingOffers(true)
       const [resReceived, resSent] = await Promise.all([
-        fetch('/api/second-hand/offers?type=received'),
-        fetch('/api/second-hand/offers?type=sent'),
+        fetch('/api/second-hand/offers?type=received', { headers: buildAuthHeaders(), credentials: 'include' }),
+        fetch('/api/second-hand/offers?type=sent', { headers: buildAuthHeaders(), credentials: 'include' }),
       ])
       const dataReceived = await resReceived.json()
       const dataSent = await resSent.json()
@@ -183,7 +194,8 @@ export default function SecondHandMarketplace({ user }) {
       setSavingItem(true)
       const res = await fetch('/api/second-hand', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify(sellForm),
       })
       const data = await res.json()
@@ -238,7 +250,8 @@ export default function SecondHandMarketplace({ user }) {
       setSubmittingOffer(true)
       const res = await fetch('/api/second-hand/offers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({
           itemId: offerItem.id,
           offerPrice: Number(offerPrice),
@@ -264,7 +277,8 @@ export default function SecondHandMarketplace({ user }) {
     try {
       const res = await fetch(`/api/second-hand/offers/${offerId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({ action, ...extra }),
       })
       const data = await res.json()

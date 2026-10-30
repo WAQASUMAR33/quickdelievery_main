@@ -49,6 +49,17 @@ const VEHICLE_ICONS = {
   CAR_AC: <LocalTaxiOutlinedIcon sx={{ fontSize: 20 }} />,
 }
 
+function buildAuthHeaders(includeJson = false) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {}
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('authToken')
+    if (token && token !== 'GUEST_SESSION') {
+      headers.Authorization = `Bearer ${token}`
+    }
+  }
+  return headers
+}
+
 export default function DriverFareSettings({ embedded = false }) {
   const { user, userData } = useAuth()
   const [settings, setSettings] = useState(() => normalizeRapidRideSettings(DEFAULT_RAPIDRIDE_SETTINGS))
@@ -120,7 +131,8 @@ export default function DriverFareSettings({ embedded = false }) {
       const normalized = normalizeRapidRideSettings(settings)
       const res = await fetch('/api/admin/driver-settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({
           ...normalized,
           updatedBy: userData?.username || user?.displayName || user?.email || 'Admin',
@@ -149,7 +161,8 @@ export default function DriverFareSettings({ embedded = false }) {
       setSaving(true)
       const res = await fetch('/api/admin/driver-settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(true),
+        credentials: 'include',
         body: JSON.stringify({
           resetToDefaults: true,
           updatedBy: userData?.username || user?.email || 'Admin',

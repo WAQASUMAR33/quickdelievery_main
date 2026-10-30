@@ -35,11 +35,16 @@ export async function POST(request) {
     // Return user without password
     const { password: _, ...userWithoutPassword } = user
 
-    return Response.json({
+    const response = Response.json({
       success: true,
       user: userWithoutPassword,
       token
     })
+    response.headers.append(
+      'Set-Cookie',
+      `authToken=${encodeURIComponent(token)}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax`
+    )
+    return response
 
   } catch (error) {
     console.error('Login error:', error)
