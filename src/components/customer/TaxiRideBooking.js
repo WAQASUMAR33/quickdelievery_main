@@ -1278,10 +1278,7 @@ export default function TaxiRideBooking({ onBack }) {
               <Box sx={{ p: 2.5, bgcolor: '#0F172A', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <Typography variant="h6" fontWeight={900}>
-                    RapidRide & Dispatch
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#94A3B8' }}>
-                    Set your pickup, dropoff, and propose your fare.
+                    Book a Ride
                   </Typography>
                 </div>
 
