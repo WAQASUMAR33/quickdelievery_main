@@ -2064,77 +2064,93 @@ const ProductCatalog = ({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          2. DEPARTMENT SQUIRCLES / QUICK JUMP BAR
+          2. SHOP BY DEPARTMENT (Circular Modern Carousel)
       ══════════════════════════════════════════════════════════════════ */}
       {categories.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="font-black text-slate-900 dark:text-slate-100 text-sm sm:text-base uppercase tracking-tight flex items-center gap-2">
-              <Store className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {t('exploreDepartments')}
-            </h3>
-            <div className="flex gap-1">
-              <button
-                onClick={() => scrollCarousel(departmentStripRef, -200)}
-                className="p-1 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => scrollCarousel(departmentStripRef, 200)}
-                className="p-1 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          {/* Header */}
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4 px-1">
+            {t('shopByDepartment') || 'Shop by Department'}
+          </h2>
 
-          <div
-            ref={departmentStripRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
-          >
-            {categories.map((cat) => {
-              const isSelected = selectedCategory === cat.id
-              const count = products.filter(p => idsEqual(p.catId ?? p.category?.id, cat.id)).length
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(isSelected ? null : cat.id)}
-                  aria-label={cat.name || "Browse category"}
-                  className="flex flex-col items-center flex-shrink-0 group focus:outline-none"
-                >
-                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden p-1 border-2 transition-all duration-200 shadow-sm bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${
-                    isSelected ? 'border-blue-600 dark:border-blue-500 scale-105 shadow-blue-500/20 shadow-md' : 'border-slate-200 dark:border-slate-700 group-hover:border-blue-400'
-                  }`}>
-                    {cat.image ? (
-                      <Image
-                        src={normalizeImageUrl(cat.image)}
-                        alt={cat.name || 'Category'}
-                        width={80}
-                        height={80}
-                        sizes="80px"
-                        loading="lazy"
-                        className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <span className="text-blue-600 dark:text-blue-400 font-black text-xl">
-                        {cat.name?.charAt(0)?.toUpperCase() || 'C'}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`mt-2 text-xs font-black text-center truncate max-w-[90px] ${
-                    isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400'
-                  }`}>
-                    {t(cat.name) || cat.name}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold">
-                    {count} {t('items') || 'items'}
-                  </span>
-                </button>
-              )
-            })}
+          <div className="relative group/dept px-1">
+            {/* Left Scroll Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollCarousel(departmentStripRef, -260)}
+              className="absolute -left-2 sm:-left-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+              aria-label="Previous departments"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            {/* Circular Department Items Row */}
+            <div
+              ref={departmentStripRef}
+              className="flex gap-5 sm:gap-8 overflow-x-auto pb-2 pt-1 px-2 scrollbar-hide scroll-smooth items-start"
+            >
+              {categories.map((cat) => {
+                const isSelected = selectedCategory === cat.id
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(isSelected ? null : cat.id)
+                      setSelectedSubcategory(null)
+                    }}
+                    aria-label={cat.name || 'Browse category'}
+                    className="flex flex-col items-center flex-shrink-0 group/item focus:outline-none cursor-pointer"
+                  >
+                    {/* Circular Avatar Container with Soft Background */}
+                    <div
+                      className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden p-2.5 transition-all duration-300 flex items-center justify-center bg-slate-100/90 dark:bg-slate-800/90 ${
+                        isSelected
+                          ? 'ring-3 ring-blue-600 ring-offset-2 dark:ring-offset-slate-900 scale-105 shadow-md shadow-blue-500/25 bg-blue-50/60 dark:bg-blue-950/50'
+                          : 'group-hover/item:scale-105 group-hover/item:shadow-sm'
+                      }`}
+                    >
+                      {cat.image ? (
+                        <Image
+                          src={normalizeImageUrl(cat.image)}
+                          alt={cat.name || 'Category'}
+                          width={112}
+                          height={112}
+                          sizes="(max-width: 640px) 96px, 112px"
+                          loading="lazy"
+                          className="w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/item:scale-110"
+                        />
+                      ) : (
+                        <span className="text-slate-700 dark:text-slate-300 font-black text-2xl">
+                          {cat.name?.charAt(0)?.toUpperCase() || 'C'}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Clean Category Label Centered Underneath */}
+                    <span
+                      className={`mt-2.5 text-xs sm:text-sm font-medium text-center max-w-[100px] sm:max-w-[120px] line-clamp-2 leading-snug transition-colors ${
+                        isSelected
+                          ? 'text-blue-600 dark:text-blue-400 font-bold'
+                          : 'text-slate-800 dark:text-slate-200 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                      }`}
+                    >
+                      {t(cat.name) || cat.name}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Right Scroll Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollCarousel(departmentStripRef, 260)}
+              className="absolute -right-2 sm:-right-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+              aria-label="Next departments"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       )}
@@ -2504,8 +2520,8 @@ const ProductCatalog = ({
 
           {/* Product Cards Responsive Container (Grid or List View) */}
           {loading && sortedProducts.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4" aria-busy="true" aria-label="Loading products">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-3 sm:gap-3.5" aria-busy="true" aria-label="Loading products">
+              {Array.from({ length: 12 }).map((_, i) => (
                 <ShimmerBlock key={i} className="h-[340px] rounded-xl" />
               ))}
             </div>
@@ -2526,7 +2542,7 @@ const ProductCatalog = ({
             </div>
           ) : viewMode === 'grid' ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-3 sm:gap-3.5">
                 {displayedProducts.map((product, index) => renderProductCard(product, index))}
               </div>
               {visibleCount < sortedProducts.length && (
