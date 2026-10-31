@@ -131,6 +131,7 @@ export default function WhatsAppWidget() {
               <button
                 type="button"
                 onClick={() => handleSend()}
+                aria-label="Send via WhatsApp"
                 className="p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/30 transition-transform active:scale-95"
                 title="Send via WhatsApp"
               >

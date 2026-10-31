@@ -7,8 +7,12 @@
  */
 export function normalizeImageUrl(url) {
   if (!url || typeof url !== 'string') return ''
-  const trimmed = url.trim()
+  let trimmed = url.trim()
   if (!trimmed) return ''
+
+  if (trimmed.startsWith('//')) {
+    trimmed = 'https:' + trimmed
+  }
 
   // Convert raw S3 URLs pointing to rapidtechpro bucket to CloudFront CDN
   if (

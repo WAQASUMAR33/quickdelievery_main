@@ -353,6 +353,7 @@ export default function AIAssistantWidget() {
                 />
                 <button
                   type="button"
+                  aria-label="Send query to QuickAI Concierge"
                   disabled={loading || !inputPrompt.trim()}
                   onClick={() => handleSendPrompt()}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#43046C] to-[#6B21A8] hover:from-[#581C87] hover:to-[#7C3AED] border border-[#FDB600]/40 text-white font-black text-xs shadow-md shadow-[#43046C]/30 disabled:opacity-50 flex items-center gap-1.5 transition-all"

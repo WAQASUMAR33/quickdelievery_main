@@ -63,6 +63,7 @@ export function RealtimeProvider({ children }) {
     if (typeof window === 'undefined') return
 
     let isSubscribed = true
+    let failCount = 0
 
     const connectSSE = () => {
       if (!isSubscribed) return
@@ -77,6 +78,7 @@ export function RealtimeProvider({ children }) {
         eventSourceRef.current = es
 
         es.addEventListener('connected', () => {
+          failCount = 0
           if (isSubscribed) setIsConnected(true)
         })
 
@@ -101,19 +103,20 @@ export function RealtimeProvider({ children }) {
           if (isSubscribed) {
             setIsConnected(false)
             es.close()
-            // Reconnect with 4-second backoff
+            failCount++
+            // Exponential backoff up to 60s to prevent spamming server and avoid console flood
+            const backoff = failCount > 3 ? 60000 : Math.min(failCount * 6000, 30000)
             if (!reconnectTimeoutRef.current) {
               reconnectTimeoutRef.current = setTimeout(() => {
                 reconnectTimeoutRef.current = null
                 connectSSE()
-              }, 4000)
+              }, backoff)
             }
           }
         }
       } catch (err) {
-        console.error('Failed to create EventSource:', err)
         if (isSubscribed) {
-          reconnectTimeoutRef.current = setTimeout(connectSSE, 5000)
+          reconnectTimeoutRef.current = setTimeout(connectSSE, 10000)
         }
       }
     }

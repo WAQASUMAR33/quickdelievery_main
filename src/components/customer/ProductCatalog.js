@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getProductUrl } from '@/lib/productSlug'
 import { normalizeImageUrl } from '@/lib/imageUtils'
@@ -934,17 +935,13 @@ const ProductCatalog = ({
         {/* Card Header Media & Badges */}
         <div className="relative aspect-square w-full bg-slate-50/70 dark:bg-slate-950/70 overflow-hidden flex items-center justify-center p-3">
           {coverImg ? (
-            <img
-              src={coverImg}
+            <Image
+              src={normalizeImageUrl(coverImg)}
               alt={product.proName || 'Product'}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 260px"
               loading="lazy"
-              onError={(e) => {
-                const s = e.currentTarget.src
-                if (s && s.includes('rapidtechpro.s3')) {
-                  e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
-                }
-              }}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-2"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-400">
@@ -990,8 +987,9 @@ const ProductCatalog = ({
                 toast.success('Added to wishlist!')
               }
             }}
+            aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             title="Wishlist"
-            className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-full hover:bg-white dark:hover:bg-slate-700 hover:scale-110 transition-all shadow-sm z-10 text-slate-400 hover:text-rose-500 border border-slate-100 dark:border-slate-700"
+            className="absolute top-2 right-2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-full hover:bg-white dark:hover:bg-slate-700 hover:scale-110 transition-all shadow-sm z-10 text-slate-400 hover:text-rose-500 border border-slate-100 dark:border-slate-700"
           >
             <Heart className={`w-4 h-4 ${inWishlist ? 'text-rose-500 fill-current' : 'text-slate-400'}`} />
           </button>
@@ -1075,7 +1073,8 @@ const ProductCatalog = ({
                 toast.success('Added to basket!')
               }}
               className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:scale-105 border border-blue-100 dark:border-blue-900 hover:border-transparent cursor-pointer"
-              title={t('addToCart')}
+              aria-label={t('addToCart') || 'Add to basket'}
+            title={t('addToCart')}
             >
               <ShoppingBag className="w-4 h-4" />
             </button>
@@ -1138,17 +1137,13 @@ const ProductCatalog = ({
         {/* Left: Product Thumbnail */}
         <div className="relative sm:w-52 w-full aspect-square sm:aspect-auto bg-slate-50/70 dark:bg-slate-950/70 flex-shrink-0 flex items-center justify-center p-3">
           {coverImg ? (
-            <img
-              src={coverImg}
-              alt={product.proName}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            <Image
+              src={normalizeImageUrl(coverImg)}
+              alt={product.proName || 'Product'}
+              fill
+              sizes="(max-width: 640px) 100vw, 208px"
               loading="lazy"
-              onError={(e) => {
-                const s = e.currentTarget.src
-                if (s && s.includes('rapidtechpro.s3')) {
-                  e.currentTarget.src = s.replace(/https:\/\/[^/]*s3[^/]*\/(rapidtechpro\/)?/, 'https://d1nvnelpyr43e7.cloudfront.net/')
-                }
-              }}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-2"
             />
           ) : (
             <Package className="w-12 h-12 text-slate-400 stroke-[1.25]" />
@@ -1845,9 +1840,12 @@ const ProductCatalog = ({
                   isActive ? 'opacity-100 pointer-events-auto z-0' : 'opacity-0 pointer-events-none -z-10'
                 }`}
               >
-                <img
-                  src={slide.image}
+                <Image
+                  src={normalizeImageUrl(slide.image)}
                   alt={slide.title || 'Promotional Banner'}
+                  fill
+                  priority={isActive && index === 0}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
@@ -2035,7 +2033,7 @@ const ProductCatalog = ({
                             title={shop.businessName}
                           >
                             {shop.urlLogo ? (
-                              <img src={shop.urlLogo} alt={shop.businessName} className="h-full w-full object-cover" />
+                              <Image src={normalizeImageUrl(shop.urlLogo)} alt={shop.businessName || 'Brand'} width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
                             ) : (
                               <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-emerald-300">
                                 {(shop.businessName || 'S').charAt(0)}
@@ -2116,15 +2114,20 @@ const ProductCatalog = ({
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(isSelected ? null : cat.id)}
+                  aria-label={cat.name || "Browse category"}
                   className="flex flex-col items-center flex-shrink-0 group focus:outline-none"
                 >
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden p-1 border-2 transition-all duration-200 shadow-sm bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${
                     isSelected ? 'border-blue-600 dark:border-blue-500 scale-105 shadow-blue-500/20 shadow-md' : 'border-slate-200 dark:border-slate-700 group-hover:border-blue-400'
                   }`}>
                     {cat.image ? (
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
+                      <Image
+                        src={normalizeImageUrl(cat.image)}
+                        alt={cat.name || 'Category'}
+                        width={80}
+                        height={80}
+                        sizes="80px"
+                        loading="lazy"
                         className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
@@ -2280,9 +2283,13 @@ const ProductCatalog = ({
                   <div className="flex items-center gap-3 mb-2.5">
                     <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 flex-shrink-0">
                       {logo ? (
-                        <img
-                          src={logo}
+                        <Image
+                          src={normalizeImageUrl(logo)}
                           alt={shop.businessName || 'Store'}
+                          width={48}
+                          height={48}
+                          sizes="48px"
+                          loading="lazy"
                           className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform"
                         />
                       ) : (
@@ -2433,7 +2440,7 @@ const ProductCatalog = ({
               <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode('grid')} aria-label="Switch to grid view"
                   title="Grid View (Amazon / Daraz Cards)"
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                     viewMode === 'grid'
@@ -2445,7 +2452,7 @@ const ProductCatalog = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode('list')} aria-label="Switch to list view"
                   title="List View (Spec & Comparison Rich)"
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                     viewMode === 'list'
@@ -2461,6 +2468,8 @@ const ProductCatalog = ({
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">{t('sortBy') || 'Sort:'}</span>
                 <select
+                  id="catalog-sort-select"
+                  aria-label="Sort products by"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 py-1.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-blue-500 cursor-pointer"
