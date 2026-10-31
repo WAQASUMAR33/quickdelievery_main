@@ -152,6 +152,12 @@ const ProductCatalog = ({
   const [dynamicSlides, setDynamicSlides] = useState([])
   const [promoWidgets, setPromoWidgets] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
+  const [visibleCount, setVisibleCount] = useState(24)
+
+  // Reset visibleCount on filter change
+  useEffect(() => {
+    setVisibleCount(24)
+  }, [searchQuery, selectedCategory, selectedSubcategory, selectedVendor, selectedBrands, selectedColors, priceRange, onlyFreeDelivery, onlyDeals, onlyHighRating])
 
   // Listen for AI Search and Faceted Filter Events from Global Header
   useEffect(() => {
@@ -850,6 +856,11 @@ const ProductCatalog = ({
     }
   }, [filteredProducts, sortBy])
 
+  // Sliced products for instant initial render
+  const displayedProducts = useMemo(() => {
+    return sortedProducts.slice(0, visibleCount)
+  }, [sortedProducts, visibleCount])
+
   const handleClearFilters = () => {
     setSelectedCategory(null)
     setSelectedSubcategory(null)
@@ -915,7 +926,7 @@ const ProductCatalog = ({
     })()
 
     return (
-      <motion.div
+      <div
         key={product.proId || index}
         role="button"
         tabIndex={0}
@@ -926,11 +937,7 @@ const ProductCatalog = ({
             setDetailProduct(product)
           }
         }}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
-        whileHover={{ y: -4 }}
-        className="group relative flex flex-col h-full min-h-[340px] rounded-none bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-200 overflow-hidden cursor-pointer text-left"
+        className="group relative flex flex-col h-full min-h-[340px] rounded-none bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer text-left"
       >
         {/* Card Header Media & Badges */}
         <div className="relative aspect-square w-full bg-slate-50/70 dark:bg-slate-950/70 overflow-hidden flex items-center justify-center p-3">
@@ -1080,7 +1087,7 @@ const ProductCatalog = ({
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
@@ -1124,15 +1131,12 @@ const ProductCatalog = ({
     })()
 
     return (
-      <motion.div
+      <div
         key={product.proId || index}
         role="button"
         tabIndex={0}
         onClick={() => setDetailProduct(product)}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
-        className="group relative flex flex-col sm:flex-row items-stretch rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer text-left"
+        className="group relative flex flex-col sm:flex-row items-stretch rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer text-left"
       >
         {/* Left: Product Thumbnail */}
         <div className="relative sm:w-52 w-full aspect-square sm:aspect-auto bg-slate-50/70 dark:bg-slate-950/70 flex-shrink-0 flex items-center justify-center p-3">
@@ -1288,7 +1292,7 @@ const ProductCatalog = ({
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
@@ -1818,7 +1822,7 @@ const ProductCatalog = ({
       ══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Main Banner Slider (8 Cols on Desktop - Pure Banner Image Style) */}
-        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg min-h-[240px] sm:min-h-[290px] md:min-h-[330px] lg:min-h-[350px] flex flex-col justify-end text-white bg-slate-900 group">
+        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg h-[260px] sm:h-[310px] md:h-[350px] lg:h-[380px] flex flex-col justify-end text-white bg-slate-900 group">
           {/* Active Banner Slide (Image Fills the Container) */}
           {heroSlides.map((slide, idx) => {
             const isActive = (activeSlideIndex % heroSlides.length) === idx
@@ -2504,13 +2508,45 @@ const ProductCatalog = ({
               </button>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3.5 sm:gap-4">
-              {sortedProducts.map((product, index) => renderProductCard(product, index))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3.5 sm:gap-4">
+                {displayedProducts.map((product, index) => renderProductCard(product, index))}
+              </div>
+              {visibleCount < sortedProducts.length && (
+                <div className="flex flex-col items-center justify-center mt-10 pt-6 border-t border-slate-200/80 dark:border-slate-800">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-3">
+                    Showing {displayedProducts.length} of {sortedProducts.length} items
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(prev => prev + 24)}
+                    className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  >
+                    Load More Products ({sortedProducts.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="space-y-3.5">
-              {sortedProducts.map((product, index) => renderProductListCard(product, index))}
-            </div>
+            <>
+              <div className="space-y-3.5">
+                {displayedProducts.map((product, index) => renderProductListCard(product, index))}
+              </div>
+              {visibleCount < sortedProducts.length && (
+                <div className="flex flex-col items-center justify-center mt-10 pt-6 border-t border-slate-200/80 dark:border-slate-800">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-3">
+                    Showing {displayedProducts.length} of {sortedProducts.length} items
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(prev => prev + 24)}
+                    className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  >
+                    Load More Products ({sortedProducts.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
