@@ -85,13 +85,35 @@ dialog {
   border-radius: 9999px !important;
 }
 
-/* Department Circular Avatars & Shop by Department Carousel */
+/* Department Circular Avatars & Shop by Departments Carousel */
 .dept-circle,
-.dept-circle *,
+.dept-circle div,
+.dept-inner-circle,
 .dept-circle img,
-.dept-circle-img,
+img.dept-circle-img {
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
+  clip-path: circle(50% at 50% 50%) !important;
+  -webkit-clip-path: circle(50% at 50% 50%) !important;
+  overflow: hidden !important;
+}
+
+.dept-circle img,
+img.dept-circle-img {
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
+  clip-path: circle(50% at 50% 50%) !important;
+  -webkit-clip-path: circle(50% at 50% 50%) !important;
+  object-fit: cover !important;
+  aspect-ratio: 1 / 1 !important;
+  display: block !important;
+}
+
 .dept-nav-btn {
   border-radius: 9999px !important;
+  -webkit-border-radius: 9999px !important;
+  clip-path: circle(50% at 50% 50%) !important;
+  -webkit-clip-path: circle(50% at 50% 50%) !important;
 }
 .floating-widget-dialog {
   border-radius: 24px !important;

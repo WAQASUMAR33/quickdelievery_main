@@ -65,8 +65,9 @@ const translations = {
     viewBoutiques: 'View Boutiques →',
 
     // Departments section
-    shopByDepartment: 'Shop by Department',
-    exploreDepartments: 'Explore Departments',
+    shopByDepartment: 'Shop by Departments',
+    shopByDepartments: 'Shop by Departments',
+    exploreDepartments: 'Shop by Departments',
     items: 'items',
 
     // Flash sale
@@ -96,6 +97,7 @@ const translations = {
 
     // Catalog grid
     catalogResults: 'Catalog Results',
+    allProducts: 'All Products',
     showing: 'Showing',
     of: 'of',
     sortBy: 'Sort by:',
@@ -327,7 +329,9 @@ const translations = {
     authenticSubtitle: 'متاجر موثقة: ElectroZone و Apex Computers و Metro Fresh وأشهر المطابخ العالمية.',
     easyReturns: 'إرجاع سهل ومضمون خلال 7 أيام',
     viewBoutiques: 'عرض المتاجر والمطاعم ←',
-    exploreDepartments: 'استكشف الأقسام الرئيسية',
+    shopByDepartment: 'تسوق حسب الأقسام',
+    shopByDepartments: 'تسوق حسب الأقسام',
+    exploreDepartments: 'تسوق حسب الأقسام',
     endsIn: 'ينتهي في:',
     exploreAllDrops: 'عرض كل التخفيضات ←',
     verifiedBoutiques: 'المتاجر والمطاعم المميزة',
@@ -732,6 +736,8 @@ const translations = {
     viewBoutiques: 'Voir Boutiques →',
 
     // Departments section
+    shopByDepartment: 'Acheter par départements',
+    shopByDepartments: 'Acheter par départements',
     exploreDepartments: 'Explorer les Rayons',
     items: 'articles',
 
@@ -762,6 +768,7 @@ const translations = {
 
     // Catalog grid
     catalogResults: 'Résultats Catalogue',
+    allProducts: 'Tous les produits',
     showing: 'Affichage de',
     of: 'sur',
     sortBy: 'Trier par :',
@@ -868,6 +875,8 @@ const translations = {
     viewBoutiques: 'Vedi Boutique →',
 
     // Departments section
+    shopByDepartment: 'Acquista per reparti',
+    shopByDepartments: 'Acquista per reparti',
     exploreDepartments: 'Esplora Reparti',
     items: 'articoli',
 
@@ -898,6 +907,7 @@ const translations = {
 
     // Catalog grid
     catalogResults: 'Risultati Catalogo',
+    allProducts: 'Tutti i prodotti',
     showing: 'Mostrati',
     of: 'di',
     sortBy: 'Ordina per:',

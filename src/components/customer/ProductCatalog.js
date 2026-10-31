@@ -2070,7 +2070,11 @@ const ProductCatalog = ({
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
           {/* Header */}
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4 px-1">
-            {t('shopByDepartment') && t('shopByDepartment') !== 'shopByDepartment' ? t('shopByDepartment') : 'Shop by Department'}
+            {t('shopByDepartments') && t('shopByDepartments') !== 'shopByDepartments'
+              ? t('shopByDepartments')
+              : (t('shopByDepartment') && t('shopByDepartment') !== 'shopByDepartment'
+                ? t('shopByDepartment')
+                : 'Shop by Departments')}
           </h2>
 
           <div className="relative group/dept px-1">
@@ -2078,7 +2082,7 @@ const ProductCatalog = ({
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, -260)}
-              style={{ borderRadius: '9999px' }}
+              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
               className="dept-nav-btn absolute -left-2 sm:-left-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
               aria-label="Previous departments"
             >
@@ -2106,32 +2110,49 @@ const ProductCatalog = ({
                     {/* Circular Avatar Container with Soft Background */}
                     <div
                       style={{
-                        borderRadius: '9999px',
-                        outline: isSelected ? '3px solid #2563EB' : 'none',
-                        outlineOffset: '3px',
+                        borderRadius: '50%',
+                        clipPath: 'circle(50% at 50% 50%)',
+                        WebkitClipPath: 'circle(50% at 50% 50%)',
+                        aspectRatio: '1 / 1',
                       }}
-                      className={`dept-circle w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden p-2.5 transition-all duration-300 flex items-center justify-center bg-slate-100/90 dark:bg-slate-800/90 ${
+                      className={`dept-circle relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden p-1 transition-all duration-300 flex items-center justify-center bg-slate-100 dark:bg-slate-800 ${
                         isSelected
-                          ? 'scale-105 shadow-md shadow-blue-500/25 bg-blue-50/60 dark:bg-blue-950/50'
+                          ? 'scale-105 shadow-md shadow-blue-500/25 ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 bg-blue-50/60 dark:bg-blue-950/50'
                           : 'group-hover/item:scale-105 group-hover/item:shadow-sm'
                       }`}
                     >
-                      {cat.image ? (
-                        <Image
-                          src={normalizeImageUrl(cat.image)}
-                          alt={cat.name || 'Category'}
-                          width={112}
-                          height={112}
-                          sizes="(max-width: 640px) 96px, 112px"
-                          loading="lazy"
-                          style={{ borderRadius: '9999px' }}
-                          className="dept-circle-img w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/item:scale-110"
-                        />
-                      ) : (
-                        <span className="text-slate-700 dark:text-slate-300 font-black text-2xl">
-                          {cat.name?.charAt(0)?.toUpperCase() || 'C'}
-                        </span>
-                      )}
+                      <div
+                        style={{
+                          borderRadius: '50%',
+                          clipPath: 'circle(50% at 50% 50%)',
+                          WebkitClipPath: 'circle(50% at 50% 50%)',
+                          aspectRatio: '1 / 1',
+                        }}
+                        className="dept-inner-circle w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white dark:bg-slate-900"
+                      >
+                        {cat.image ? (
+                          <Image
+                            src={normalizeImageUrl(cat.image)}
+                            alt={cat.name || 'Category'}
+                            width={112}
+                            height={112}
+                            sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 112px"
+                            loading="lazy"
+                            style={{
+                              borderRadius: '50%',
+                              clipPath: 'circle(50% at 50% 50%)',
+                              WebkitClipPath: 'circle(50% at 50% 50%)',
+                              aspectRatio: '1 / 1',
+                              objectFit: 'cover',
+                            }}
+                            className="dept-circle-img w-full h-full object-cover rounded-full transition-transform duration-300 group-hover/item:scale-110"
+                          />
+                        ) : (
+                          <span className="text-slate-700 dark:text-slate-300 font-black text-2xl">
+                            {cat.name?.charAt(0)?.toUpperCase() || 'C'}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Clean Category Label Centered Underneath */}
@@ -2153,7 +2174,7 @@ const ProductCatalog = ({
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, 260)}
-              style={{ borderRadius: '9999px' }}
+              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
               className="dept-nav-btn absolute -right-2 sm:-right-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
               aria-label="Next departments"
             >
@@ -2430,7 +2451,11 @@ const ProductCatalog = ({
 
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
-                  {activeStore ? `${activeStore.businessName || 'Store'}` : (t('allProducts') || 'All Products')}
+                  {activeStore
+                    ? `${activeStore.businessName || 'Store'}`
+                    : (t('allProducts') && t('allProducts') !== 'allProducts'
+                      ? t('allProducts')
+                      : 'All Products')}
                 </h2>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   {t('showing') || 'Showing'} <strong>{sortedProducts.length}</strong> {t('of') || 'of'} {products.length} {t('productsCount') || 'products'}
