@@ -22,7 +22,8 @@ const EDGE_CACHE_HEADER = {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const isAdminView = searchParams.get('admin') === 'true' || searchParams.get('all') === 'true'
+    const isNoCache = searchParams.get('nocache') === '1' || searchParams.has('t') || request.headers.get('cache-control')?.includes('no-cache')
+    const isAdminView = searchParams.get('admin') === 'true' || searchParams.get('all') === 'true' || isNoCache
 
     if (!isAdminView && slidersCache && (Date.now() - slidersCacheTime < SLIDERS_TTL)) {
       return NextResponse.json({
@@ -40,8 +41,8 @@ export async function GET(request) {
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
     })
 
-    // Auto-seed default initial slides if database is empty so storefront and admin are never blank
-    if (slides.length === 0) {
+    // Auto-seed default initial slides ONLY if database is empty on public storefront view (never in admin view)
+    if (slides.length === 0 && !isAdminView) {
       const existingCount = await prisma.heroSlide.count()
       if (existingCount === 0) {
         for (const defaultSlide of DEFAULT_SLIDES) {
@@ -63,7 +64,9 @@ export async function GET(request) {
       success: true,
       data: slides,
     }, {
-      headers: !isAdminView ? EDGE_CACHE_HEADER : undefined
+      headers: !isAdminView
+        ? EDGE_CACHE_HEADER
+        : { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' }
     })
   } catch (error) {
     console.error('Failed to fetch hero slides:', error)
@@ -178,7 +181,9 @@ export async function PUT(request) {
       },
     })
 
-    return NextResponse.json({ success: true, data: updatedSlide })
+    return NextResponse.json({ success: true, data: updatedSlide }, {
+      headers: { 'Cache-Control': 'no-store' }
+    })
   } catch (error) {
     console.error('Failed to update hero slide:', error)
     return NextResponse.json(
@@ -207,12 +212,20 @@ export async function DELETE(request) {
       return NextResponse.json({ success: false, error: 'Slide ID is required' }, { status: 400 })
     }
 
-    await prisma.heroSlide.delete({
-      where: { id: parseInt(id, 10) },
-    })
+    try {
+      await prisma.heroSlide.delete({
+        where: { id: parseInt(id, 10) },
+      })
+    } catch (delErr) {
+      // Ignore if already deleted / doesn't exist
+      if (delErr.code !== 'P2025') throw delErr
+    }
     invalidateSlidersCache()
 
-    return NextResponse.json({ success: true, message: 'Slide deleted successfully' })
+    return NextResponse.json(
+      { success: true, message: 'Slide deleted successfully' },
+      { headers: { 'Cache-Control': 'no-store' } }
+    )
   } catch (error) {
     console.error('Failed to delete hero slide:', error)
     return NextResponse.json(

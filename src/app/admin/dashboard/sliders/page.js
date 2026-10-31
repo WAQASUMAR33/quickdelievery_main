@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess } from '@/lib/authHelpers'
 import { authFetch } from '@/lib/apiClient'
-import { fileToBase64DataUrl, uploadBase64Image } from '@/lib/imageUpload'
+import { uploadProductImage } from '@/lib/imageUpload'
 
 import { useTheme } from '@mui/material/styles'
 import Box from '@mui/material/Box'
@@ -185,7 +185,10 @@ export default function SlidersManagementPage() {
   const fetchSlides = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/sliders?admin=true')
+      const res = await fetch(`/api/sliders?admin=true&t=${Date.now()}&nocache=1`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      })
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
         setSlides(data.data)
@@ -201,7 +204,9 @@ export default function SlidersManagementPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/products?type=categories')
+      const res = await fetch(`/api/products?type=categories&t=${Date.now()}&nocache=1`, {
+        cache: 'no-store',
+      })
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
         setCategories(data.data)
@@ -238,23 +243,28 @@ export default function SlidersManagementPage() {
     if (!file) return
     try {
       setUploadingImage(true)
-      const base64 = await fileToBase64DataUrl(file)
-      const res = await uploadBase64Image(base64, file.name, 'sliders')
+      const res = await uploadProductImage(file, 'sliders')
       if (res.success && res.url) {
         setForm(prev => ({ ...prev, image: res.url }))
-        toast.success('Banner image uploaded!')
+        toast.success('Banner image uploaded successfully!')
       } else {
         toast.error(res.error || 'Failed to upload image')
       }
     } catch (err) {
-      toast.error('Image upload failed: ' + err.message)
+      toast.error('Image upload failed: ' + (err?.message || 'Upload error'))
     } finally {
       setUploadingImage(false)
+      e.target.value = ''
     }
   }
 
   const handleSave = async () => {
-    if (!form.image.trim()) {
+    if (uploadingImage) {
+      toast.error('Please wait for image upload to complete')
+      return
+    }
+    const trimmedImage = (form.image || '').trim()
+    if (!trimmedImage) {
       toast.error('Please upload or enter a banner image URL')
       return
     }
@@ -263,9 +273,9 @@ export default function SlidersManagementPage() {
     try {
       const payload = {
         title: form.title.trim() || 'Storefront Banner',
-        image: form.image.trim(),
+        image: trimmedImage,
         ctaLink: form.ctaLink ? form.ctaLink.trim() : '/customer',
-        deptId: form.deptId ? Number(form.deptId) : null,
+        deptId: form.deptId && Number(form.deptId) > 0 ? Number(form.deptId) : null,
         order: Number(form.order) || 0,
         status: form.status,
       }
@@ -303,6 +313,9 @@ export default function SlidersManagementPage() {
   const handleDelete = async (slide) => {
     if (!window.confirm(`Delete this banner?`)) return
     try {
+      // Optimistically remove immediately from local view
+      setSlides(prev => prev.filter(s => s.id !== slide.id))
+
       const res = await authFetch(`/api/sliders?id=${slide.id}`, {
         method: 'DELETE',
       })
@@ -312,9 +325,11 @@ export default function SlidersManagementPage() {
         fetchSlides()
       } else {
         toast.error(data.error || 'Failed to delete banner')
+        fetchSlides()
       }
     } catch {
       toast.error('Error deleting banner')
+      fetchSlides()
     }
   }
 
@@ -1305,7 +1320,7 @@ export default function SlidersManagementPage() {
                         '&:hover': { bgcolor: '#2d5e21' },
                       }}
                     >
-                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                      {uploadingImage ? 'Uploading...' : form.image ? 'Replace / Upload Image' : 'Upload Image'}
                       <input type="file" accept="image/*" hidden onChange={handleImageFileChange} />
                     </Button>
                   </Grid>
