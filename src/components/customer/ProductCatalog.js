@@ -1840,14 +1840,16 @@ const ProductCatalog = ({
                   isActive ? 'opacity-100 pointer-events-auto z-0' : 'opacity-0 pointer-events-none -z-10'
                 }`}
               >
-                <Image
-                  src={normalizeImageUrl(slide.image)}
-                  alt={slide.title || 'Promotional Banner'}
-                  fill
-                  priority={isActive && index === 0}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
+                {slide.image ? (
+                  <Image
+                    src={normalizeImageUrl(slide.image)}
+                    alt={slide.title || 'Promotional Banner'}
+                    fill
+                    priority={isActive && idx === 0}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : null}
 
                 {/* Subtle soft gradient at the bottom so controls always stay readable */}
                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
