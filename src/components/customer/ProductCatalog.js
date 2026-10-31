@@ -1800,9 +1800,9 @@ const ProductCatalog = ({
       {/* ══════════════════════════════════════════════════════════════════
           1. FULL-WIDTH HERO SHOWCASE & BENTO PROMO HUB (Amazon / Daraz Hub)
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         {/* Main Banner Slider (8 Cols on Desktop - Pure Banner Image Style) */}
-        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg h-[260px] sm:h-[310px] md:h-[350px] lg:h-[380px] flex flex-col justify-end text-white bg-slate-900 group">
+        <div className="lg:col-span-8 relative rounded-2xl overflow-hidden shadow-lg h-[260px] sm:h-[310px] md:h-[350px] lg:h-full min-h-[260px] sm:min-h-[310px] md:min-h-[350px] lg:min-h-[420px] flex flex-col justify-end text-white bg-slate-900 group">
           {/* Active Banner Slide (Image Fills the Container) */}
           {heroSlides.map((slide, idx) => {
             const isActive = (activeSlideIndex % heroSlides.length) === idx
@@ -1908,7 +1908,7 @@ const ProductCatalog = ({
           }
 
           return (
-            <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4">
+            <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4 h-full">
               {/* Bento Card 1: Live Flash Drops Countdown (Electric Violet & Obsidian Glow) */}
               <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#0c0f1d] via-[#1a1438] to-[#2d124d] border border-violet-500/30 p-5 text-white shadow-xl shadow-purple-950/20 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 hover:border-violet-400/60 hover:-translate-y-0.5">
                 {/* Ambient Glow & Watermark Flame */}
