@@ -2070,7 +2070,7 @@ const ProductCatalog = ({
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
           {/* Header */}
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4 px-1">
-            {t('shopByDepartment') || 'Shop by Department'}
+            {t('shopByDepartment') && t('shopByDepartment') !== 'shopByDepartment' ? t('shopByDepartment') : 'Shop by Department'}
           </h2>
 
           <div className="relative group/dept px-1">
@@ -2078,7 +2078,8 @@ const ProductCatalog = ({
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, -260)}
-              className="absolute -left-2 sm:-left-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+              style={{ borderRadius: '9999px' }}
+              className="dept-nav-btn absolute -left-2 sm:-left-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
               aria-label="Previous departments"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -2100,13 +2101,18 @@ const ProductCatalog = ({
                       setSelectedSubcategory(null)
                     }}
                     aria-label={cat.name || 'Browse category'}
-                    className="flex flex-col items-center flex-shrink-0 group/item focus:outline-none cursor-pointer"
+                    className="flex flex-col items-center flex-shrink-0 group/item focus:outline-none outline-none cursor-pointer"
                   >
                     {/* Circular Avatar Container with Soft Background */}
                     <div
-                      className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden p-2.5 transition-all duration-300 flex items-center justify-center bg-slate-100/90 dark:bg-slate-800/90 ${
+                      style={{
+                        borderRadius: '9999px',
+                        outline: isSelected ? '3px solid #2563EB' : 'none',
+                        outlineOffset: '3px',
+                      }}
+                      className={`dept-circle w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden p-2.5 transition-all duration-300 flex items-center justify-center bg-slate-100/90 dark:bg-slate-800/90 ${
                         isSelected
-                          ? 'ring-3 ring-blue-600 ring-offset-2 dark:ring-offset-slate-900 scale-105 shadow-md shadow-blue-500/25 bg-blue-50/60 dark:bg-blue-950/50'
+                          ? 'scale-105 shadow-md shadow-blue-500/25 bg-blue-50/60 dark:bg-blue-950/50'
                           : 'group-hover/item:scale-105 group-hover/item:shadow-sm'
                       }`}
                     >
@@ -2118,7 +2124,8 @@ const ProductCatalog = ({
                           height={112}
                           sizes="(max-width: 640px) 96px, 112px"
                           loading="lazy"
-                          className="w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/item:scale-110"
+                          style={{ borderRadius: '9999px' }}
+                          className="dept-circle-img w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/item:scale-110"
                         />
                       ) : (
                         <span className="text-slate-700 dark:text-slate-300 font-black text-2xl">
@@ -2146,7 +2153,8 @@ const ProductCatalog = ({
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, 260)}
-              className="absolute -right-2 sm:-right-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+              style={{ borderRadius: '9999px' }}
+              className="dept-nav-btn absolute -right-2 sm:-right-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
               aria-label="Next departments"
             >
               <ChevronRight className="w-5 h-5" />

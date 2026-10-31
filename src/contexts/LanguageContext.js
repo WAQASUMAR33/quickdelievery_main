@@ -65,6 +65,7 @@ const translations = {
     viewBoutiques: 'View Boutiques →',
 
     // Departments section
+    shopByDepartment: 'Shop by Department',
     exploreDepartments: 'Explore Departments',
     items: 'items',
 
