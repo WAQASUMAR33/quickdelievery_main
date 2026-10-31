@@ -102,7 +102,8 @@ export async function GET(request) {
     }
 
     if (type === 'categories') {
-      if (!vertical && categoriesCache && (Date.now() - categoriesCacheTime < CACHE_TTL_TAXONOMY)) {
+      const isNoCache = searchParams.get('nocache') === '1' || searchParams.has('t') || request.headers.get('cache-control')?.includes('no-cache')
+      if (!isNoCache && !vertical && categoriesCache && (Date.now() - categoriesCacheTime < CACHE_TTL_TAXONOMY)) {
         return Response.json({ success: true, data: categoriesCache }, { headers: EDGE_CACHE_HEADER })
       }
 
@@ -122,7 +123,7 @@ export async function GET(request) {
         orderBy: { createdAt: 'desc' }
       })
 
-      if (!vertical) {
+      if (!vertical && !isNoCache) {
         categoriesCache = categories
         categoriesCacheTime = Date.now()
       }
@@ -131,7 +132,7 @@ export async function GET(request) {
         success: true,
         data: categories
       }, {
-        headers: !vertical ? EDGE_CACHE_HEADER : undefined
+        headers: (!vertical && !isNoCache) ? EDGE_CACHE_HEADER : { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' }
       })
     }
 

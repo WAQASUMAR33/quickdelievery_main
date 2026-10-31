@@ -8,6 +8,67 @@ export const fileToBase64DataUrl = (file) =>
   })
 
 /**
+ * Client-side image compression to prevent 413 Payload Too Large errors
+ * on serverless platforms (e.g. AWS Amplify / Lambda 4.5MB ceiling).
+ */
+export const compressImageFile = async (file, { maxWidth = 1200, maxHeight = 1200, quality = 0.85 } = {}) => {
+  if (typeof window === 'undefined' || !file || !file.type || !file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+    return file
+  }
+  // If file is already under 400KB, keep as-is
+  if (file.size <= 400 * 1024) return file
+
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new window.Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width <= maxWidth && height <= maxHeight && file.size <= 800 * 1024) {
+          resolve(file)
+          return
+        }
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height)
+            height = maxHeight
+          }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file)
+              return
+            }
+            const compressed = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            })
+            resolve(compressed)
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target.result
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
+/**
  * Uploads a base64 image data string to the backend upload API
  */
 export const uploadBase64Image = async (base64Image, fileName = null, folder = 'uploads') => {
@@ -67,10 +128,18 @@ export const uploadProductImage = async (file, folder = 'uploads') => {
       return { success: false, error: 'No file provided' }
     }
 
+    // Auto-compress high-resolution camera / phone images client-side
+    let uploadFile = file
+    try {
+      uploadFile = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.82 })
+    } catch (compressErr) {
+      console.warn('Image auto-compression skipped:', compressErr)
+    }
+
     // Try FormData upload first for efficiency with larger files
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', uploadFile)
       formData.append('folder', folder)
 
       const response = await fetch('/api/upload-image', {
@@ -93,8 +162,8 @@ export const uploadProductImage = async (file, folder = 'uploads') => {
     }
 
     // Fallback: convert to base64 data URL
-    const base64 = await fileToBase64DataUrl(file)
-    return await uploadBase64Image(base64, file.name, folder)
+    const base64 = await fileToBase64DataUrl(uploadFile)
+    return await uploadBase64Image(base64, uploadFile.name || file.name, folder)
   } catch (error) {
     console.error('Error in uploadProductImage:', error)
     return { success: false, error: error.message }

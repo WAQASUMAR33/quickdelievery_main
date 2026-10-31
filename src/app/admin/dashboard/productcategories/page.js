@@ -72,8 +72,8 @@ export default function ProductCategoriesPage() {
   const fetchData = async () => {
     try {
       const [pcRes, catRes] = await Promise.all([
-        fetch('/api/products?type=productcategories'),
-        fetch('/api/products?type=categories')
+        fetch(`/api/products?type=productcategories&t=${Date.now()}&nocache=1`, { cache: 'no-store' }),
+        fetch(`/api/products?type=categories&t=${Date.now()}&nocache=1`, { cache: 'no-store' })
       ])
       const pcData = await pcRes.json()
       const catData = await catRes.json()
@@ -319,19 +319,25 @@ export default function ProductCategoriesPage() {
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1, fontWeight: 600 }}>
                   Product Category Image *
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Image URL"
+                  value={form.image}
+                  onChange={e => setForm({ ...form, image: e.target.value })}
+                  placeholder="https://... or click Upload / Replace Image below"
+                  sx={{ mb: 1.5, ...tf.sx }}
+                />
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   {form.image ? (
-                    <Box sx={{ position: 'relative', width: 60, height: 60, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ position: 'relative', width: 64, height: 64, border: '1px solid', borderColor: 'divider', overflow: 'hidden', bgcolor: 'background.default' }}>
                       <img src={form.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <IconButton
-                        size="small"
-                        onClick={() => setForm({ ...form, image: '' })}
-                        sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'error.main', color: 'white', '&:hover': { bgcolor: 'error.dark' }, p: 0.25 }}
-                      >
-                        <CloseIcon sx={{ fontSize: 12 }} />
-                      </IconButton>
                     </Box>
-                  ) : (
+                  ) : null}
+
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Button
                       variant="outlined"
                       component="label"
@@ -340,32 +346,46 @@ export default function ProductCategoriesPage() {
                       sx={{ borderColor: BRAND, color: BRAND, '&:hover': { borderColor: '#b00d52', bgcolor: 'rgba(57, 119, 42,0.04)' }, borderRadius: 0 }}
                     >
                       {uploadingImage ? <CircularProgress size={16} sx={{ mr: 1, color: BRAND }} /> : null}
-                      {uploadingImage ? 'Uploading…' : 'Upload Image'}
+                      {uploadingImage ? 'Uploading…' : form.image ? 'Replace / Upload New Image' : 'Upload Image File'}
                       <input
                         type="file"
                         hidden
                         accept="image/*"
                         onChange={async (e) => {
-                          if (e.target.files?.[0]) {
+                          const file = e.target.files?.[0]
+                          if (file) {
                             setUploadingImage(true)
                             try {
-                              const res = await uploadProductImage(e.target.files[0])
-                              if (res.success) {
+                              const res = await uploadProductImage(file, 'product-categories')
+                              if (res.success && res.url) {
                                 setForm(prev => ({ ...prev, image: res.url }))
                                 toast.success('Image uploaded successfully')
                               } else {
                                 toast.error(res.error || 'Upload failed')
                               }
-                            } catch {
-                              toast.error('Upload error')
+                            } catch (err) {
+                              toast.error(err?.message || 'Upload error')
                             } finally {
                               setUploadingImage(false)
+                              e.target.value = ''
                             }
                           }
                         }}
                       />
                     </Button>
-                  )}
+
+                    {form.image ? (
+                      <Button
+                        variant="text"
+                        size="small"
+                        color="error"
+                        onClick={() => setForm({ ...form, image: '' })}
+                        sx={{ borderRadius: 0 }}
+                      >
+                        Clear Image
+                      </Button>
+                    ) : null}
+                  </Box>
                 </Box>
               </Box>
             </Box>
