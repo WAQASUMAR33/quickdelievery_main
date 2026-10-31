@@ -4,7 +4,7 @@ import nextDynamic from 'next/dynamic'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 
-const CustomerDashboard = nextDynamic(() => import('@/app/customer/page'), {
+const CustomerDashboard = nextDynamic(() => import('@/components/customer/CustomerDashboard'), {
   ssr: false,
   loading: () => (
     <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#0b1120' }}>

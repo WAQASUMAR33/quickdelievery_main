@@ -15,9 +15,10 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import MaterialUIProvider from "@/providers/MaterialUIProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
 import NotificationSystem from "@/components/NotificationSystem";
-import WhatsAppWidget from "@/components/customer/WhatsAppWidget";
-import AIAssistantWidget from "@/components/customer/AIAssistantWidget";
+
+import FloatingWidgets from "@/components/customer/FloatingWidgets";
 
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
@@ -40,25 +41,36 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
       <head>
-        {/* Google tag (gtag.js) */}
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+        {/* Google tag (gtag.js) + Google Tag Manager
+            The dataLayer/gtag config stays inline in <head> (so the tag is detected),
+            but the heavy third-party scripts (~480 KB) are injected only after the
+            page has finished loading and the browser is idle. This keeps them off
+            the critical path and out of Total Blocking Time on mobile. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${gaId}');`,
-          }}
-        />
-
-        {/* Google Tag Manager */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${gtmId}');`,
+gtag('config', '${gaId}');
+window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+(function(){
+  var loaded = false;
+  function inject(src){var s=document.createElement('script');s.async=true;s.src=src;document.head.appendChild(s);}
+  function loadTags(){
+    if (loaded) return; loaded = true;
+    inject('https://www.googletagmanager.com/gtag/js?id=${gaId}');
+    inject('https://www.googletagmanager.com/gtm.js?id=${gtmId}');
+  }
+  function schedule(){
+    if ('requestIdleCallback' in window) requestIdleCallback(loadTags, { timeout: 4000 });
+    else setTimeout(loadTags, 2000);
+  }
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(e){
+    window.addEventListener(e, loadTags, { once: true, passive: true });
+  });
+})();`,
           }}
         />
       </head>
@@ -84,8 +96,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <CartProvider>
                       <WishlistProvider>
                         {children}
-                        <WhatsAppWidget />
-                        <AIAssistantWidget />
+                        <FloatingWidgets />
                         <NotificationSystem />
                         <Toaster
                           position="top-right"

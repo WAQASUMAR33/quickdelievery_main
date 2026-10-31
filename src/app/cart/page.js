@@ -1,6 +1,6 @@
 'use client'
 
-import CustomerDashboard from '@/app/customer/page'
+import CustomerDashboard from '@/components/customer/CustomerDashboard'
 
 export default function CartPageRoute() {
   return <CustomerDashboard initialTab="cart" />

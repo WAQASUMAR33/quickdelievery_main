@@ -2,8 +2,22 @@ import path from 'path'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compress: true,
+  poweredByHeader: false,
   async headers() {
     return [
+      {
+        source: '/images/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/icons/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
       {
         source: "/api/:path*",
         headers: [
@@ -69,35 +83,10 @@ const nextConfig = {
       }
     }
 
-    // Aggressive splitChunks breaks Next dev HMR (undefined `.call` in module factories).
-    // Keep custom chunking for production client only.
-    if (!isServer && !dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-            },
-            mui: {
-              test: /[\\/]node_modules[\\/]@mui[\\/]/,
-              name: 'mui',
-              chunks: 'all',
-              priority: 10,
-            },
-            framer: {
-              test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-              name: 'framer-motion',
-              chunks: 'all',
-              priority: 10,
-            },
-          },
-        },
-      }
-    }
+    // NOTE: A custom splitChunks config used to force *all* node_modules into one
+    // ~1 MB 'vendors' chunk that every page downloaded and executed (67% unused,
+    // ~6 s of main-thread scripting on mobile). Next.js' built-in granular
+    // chunking only ships the libraries each route actually uses, so we rely on it.
 
     return config
   },

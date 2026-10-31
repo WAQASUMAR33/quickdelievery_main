@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getProductUrl } from '@/lib/productSlug'
 import { normalizeImageUrl } from '@/lib/imageUtils'
+import { BentoCountdown, PillCountdown } from '@/components/customer/FlashCountdown'
+import { DEFAULT_HERO_SLIDES } from '@/lib/heroSlideDefaults'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
@@ -110,6 +112,7 @@ const ProductCatalog = ({
   heroFirstName = '',
   externalSubcategory = null,
   externalFilter = null,
+  initialSlides = null,
 }) => {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
@@ -149,7 +152,18 @@ const ProductCatalog = ({
   const [brandSearch, setBrandSearch] = useState('')
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
-  const [dynamicSlides, setDynamicSlides] = useState([])
+  // Seed with server-provided slides (or static defaults) so the very first
+  // render — including SSR — already contains the final LCP hero image.
+  const [dynamicSlides, setDynamicSlides] = useState(() =>
+    Array.isArray(initialSlides) && initialSlides.length > 0 ? initialSlides : DEFAULT_HERO_SLIDES
+  )
+  // Only mount non-active slide images after the page has settled, so they
+  // don't compete with the LCP image for bandwidth on slow mobile networks.
+  const [heroWarm, setHeroWarm] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setHeroWarm(true), 3500)
+    return () => clearTimeout(id)
+  }, [])
   const [promoWidgets, setPromoWidgets] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
   const [visibleCount, setVisibleCount] = useState(24)
@@ -201,7 +215,6 @@ const ProductCatalog = ({
   }, [])
 
   // Countdown timer state for Flash Sale (ticks every second)
-  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 28, seconds: 15 })
 
   // Modal detail states
   const [detailProduct, setDetailProduct] = useState(null)
@@ -226,18 +239,8 @@ const ProductCatalog = ({
   const topShopsScrollRef = useRef(null)
   const orderAgainScrollRef = useRef(null)
 
-  // Live Flash Sale countdown ticker
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 }
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 }
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        return { hours: 8, minutes: 0, seconds: 0 }
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+  // Live Flash Sale countdown now lives in <BentoCountdown/> / <PillCountdown/>
+  // so the 1s tick no longer re-renders this entire component.
 
   // Dynamic Hero Slides derived from database hero_slides or fallback to categories
   const heroSlides = useMemo(() => {
@@ -1296,33 +1299,10 @@ const ProductCatalog = ({
     )
   }
 
-  // Loading skeleton placeholder
-  if (loading) {
-    return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-4 animate-pulse">
-        <div className="h-72 w-full rounded-2xl bg-slate-200 mb-6" />
-        <div className="flex gap-4 overflow-hidden mb-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="min-w-[120px] text-center">
-              <ShimmerBlock className="h-20 w-20 rounded-full mx-auto mb-2" />
-              <ShimmerBlock className="h-3 w-16 mx-auto" />
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-6">
-          <div className="hidden lg:block w-64 space-y-4">
-            <ShimmerBlock className="h-64 w-full rounded-xl" />
-            <ShimmerBlock className="h-80 w-full rounded-xl" />
-          </div>
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <ShimmerBlock key={i} className="h-64 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // NOTE: We intentionally do NOT return a full-page skeleton while `loading`.
+  // The hero, promo cards and layout are rendered immediately (and server-side),
+  // so the LCP hero image is discoverable in the initial HTML and the layout does
+  // not jump when products arrive. Only the product grid shows a skeleton.
 
   // Left Sidebar Filter Component Body
   const SidebarFilterPanel = (
@@ -1844,13 +1824,14 @@ const ProductCatalog = ({
                   isActive ? 'opacity-100 pointer-events-auto z-0' : 'opacity-0 pointer-events-none -z-10'
                 }`}
               >
-                {slide.image ? (
+                {slide.image && (isActive || heroWarm) ? (
                   <Image
                     src={normalizeImageUrl(slide.image)}
                     alt={slide.title || 'Promotional Banner'}
                     fill
-                    priority={isActive && idx === 0}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                    priority={idx === 0}
+                    quality={70}
+                    sizes="(max-width: 1024px) 100vw, 66vw"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : null}
@@ -1949,36 +1930,7 @@ const ProductCatalog = ({
                   </div>
 
                   {/* Digital Countdown Timer Blocks with Micro Labels */}
-                  {w1.showTimer !== false && (
-                    <div className="flex items-center gap-2 my-2.5">
-                      <div className="flex flex-col items-center">
-                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
-                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
-                            {String(timeLeft.hours).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">HRS</span>
-                      </div>
-                      <span className="font-black text-violet-400 text-sm mb-2.5">:</span>
-                      <div className="flex flex-col items-center">
-                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
-                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
-                            {String(timeLeft.minutes).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">MIN</span>
-                      </div>
-                      <span className="font-black text-violet-400 text-sm mb-2.5">:</span>
-                      <div className="flex flex-col items-center">
-                        <div className="px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md text-center min-w-[38px] shadow-inner">
-                          <span className="text-sm font-black font-mono text-cyan-300 tracking-wider">
-                            {String(timeLeft.seconds).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">SEC</span>
-                      </div>
-                    </div>
-                  )}
+                  {w1.showTimer !== false && <BentoCountdown />}
 
                   <h4 className="font-black text-base text-white leading-tight mb-1">
                     {w1.title || 'Curated Drop Discounts'}
@@ -2173,20 +2125,7 @@ const ProductCatalog = ({
               </div>
 
               {/* Ticking Timer Countdown Pill */}
-              <div className="flex items-center gap-1 text-xs font-extrabold text-slate-700 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-full">
-                <span className="text-[11px] text-rose-700 font-bold uppercase">{t('endsIn') || 'Ends in:'}</span>
-                <span className="font-mono bg-rose-600 text-white px-1.5 py-0.5 rounded text-[11px]">
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </span>
-                <span>:</span>
-                <span className="font-mono bg-rose-600 text-white px-1.5 py-0.5 rounded text-[11px]">
-                  {String(timeLeft.minutes).padStart(2, '0')}
-                </span>
-                <span>:</span>
-                <span className="font-mono bg-rose-600 text-white px-1.5 py-0.5 rounded text-[11px]">
-                  {String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
+              <PillCountdown label={t('endsIn') || 'Ends in:'} />
             </div>
 
             <div className="flex items-center gap-3">
@@ -2492,7 +2431,13 @@ const ProductCatalog = ({
           </div>
 
           {/* Product Cards Responsive Container (Grid or List View) */}
-          {sortedProducts.length === 0 ? (
+          {loading && sortedProducts.length === 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4" aria-busy="true" aria-label="Loading products">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ShimmerBlock key={i} className="h-[340px] rounded-xl" />
+              ))}
+            </div>
+          ) : sortedProducts.length === 0 ? (
             <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
               <Package className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
               <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 mb-1">{t('noProductsFound') || 'No products found'}</h3>

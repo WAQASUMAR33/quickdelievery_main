@@ -1,7 +1,11 @@
-'use client'
+import CustomerDashboard from '@/components/customer/CustomerDashboard'
+import { getActiveHeroSlides } from '@/lib/heroSlides.server'
 
-import CustomerDashboard from '@/app/customer/page'
+// Re-generate the static storefront shell every 5 minutes (ISR) so admin
+// slider changes propagate without a redeploy.
+export const revalidate = 300
 
-export default function Home() {
-  return <CustomerDashboard />
+export default async function Home() {
+  const initialSlides = await getActiveHeroSlides()
+  return <CustomerDashboard initialSlides={initialSlides} />
 }

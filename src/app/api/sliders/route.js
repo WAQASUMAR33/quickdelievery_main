@@ -2,60 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRole, ADMIN_ROLES } from '@/lib/auth-server'
 
-const DEFAULT_SLIDES = [
-  {
-    badge: 'TECH & NEXT-GEN MOBILITY',
-    title: 'Power Up with Official Mobile Gear',
-    subtitle: 'GaN 100W Fast Chargers, Braided Type-C Cables, ANC Earbuds & Smartwatch Bands',
-    ctaText: 'Explore Mobile Tech',
-    ctaLink: '/customer',
-    discount: 'UP TO 20% OFF',
-    bgGradient: 'from-[#0B0F19] via-[#1E1B4B] to-[#312E81]',
-    accentColor: '#818CF8',
-    image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80',
-    order: 1,
-    status: 'ACTIVE',
-  },
-  {
-    badge: 'FARM DIRECT & ORGANIC PANTRY',
-    title: 'Everyday Fresh Groceries at Fair Prices',
-    subtitle: 'Farm-fresh organic produce, dairy essentials, cold-pressed oils & pantry staples',
-    ctaText: 'Shop Fresh Groceries',
-    ctaLink: '/customer',
-    discount: 'UP TO 30% OFF',
-    bgGradient: 'from-[#061A14] via-[#064E3B] to-[#042F2C]',
-    accentColor: '#10B981',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
-    order: 2,
-    status: 'ACTIVE',
-  },
-  {
-    badge: 'ARTISAN PATISSERIE & DESSERTS',
-    title: 'Freshly Baked Pastries, Cakes & Delights',
-    subtitle: 'Authentic French butter croissants, celebration cakes, chocolate treats & sweet pastries',
-    ctaText: 'Taste Bakery Specials',
-    ctaLink: '/customer',
-    discount: 'DAILY SPECIALS',
-    bgGradient: 'from-[#1F1300] via-[#78350F] to-[#451A03]',
-    accentColor: '#F59E0B',
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80',
-    order: 3,
-    status: 'ACTIVE',
-  },
-  {
-    badge: 'GOURMET DINING & RESTAURANTS',
-    title: 'Handcrafted Burgers, Artisan Pizza & Chef Specials',
-    subtitle: 'Sizzling burgers, wood-fired pizzas, gourmet cuisine & chef-prepared meals delivered hot',
-    ctaText: 'Explore Restaurant',
-    ctaLink: '/customer',
-    discount: 'VERIFIED MENUS',
-    bgGradient: 'from-[#1A0B16] via-[#4C0519] to-[#3B0764]',
-    accentColor: '#F43F5E',
-    image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80',
-    order: 4,
-    status: 'ACTIVE',
-  },
-]
+import { DEFAULT_HERO_SLIDES } from '@/lib/heroSlideDefaults'
+
+const DEFAULT_SLIDES = DEFAULT_HERO_SLIDES
 
 let slidersCache = null
 let slidersCacheTime = 0
