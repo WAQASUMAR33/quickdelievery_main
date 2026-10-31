@@ -69,10 +69,18 @@ function idsEqual(a, b) {
 function productMatchesShop(product, shop) {
   if (!product || !shop) return false
   const pVendor = String(product.vendorId ?? '').trim().toLowerCase()
-  if (!pVendor) return false
-  if (shop.uid && pVendor === String(shop.uid).trim().toLowerCase()) return true
-  if (shop.email && pVendor === String(shop.email).trim().toLowerCase()) return true
-  if (shop.id && pVendor === String(shop.id).trim().toLowerCase()) return true
+  const pEmail = String(product.vendor?.email ?? '').trim().toLowerCase()
+  const pBizName = String(product.vendor?.businessName ?? '').trim().toLowerCase()
+  const sBizName = String(shop.businessName ?? '').trim().toLowerCase()
+  const sEmail = String(shop.email ?? '').trim().toLowerCase()
+  const sUid = String(shop.uid ?? '').trim().toLowerCase()
+  const sId = String(shop.id ?? '').trim().toLowerCase()
+
+  if (sUid && pVendor && pVendor === sUid) return true
+  if (sEmail && pEmail && sEmail === pEmail) return true
+  if (sEmail && pVendor && sEmail === pVendor) return true
+  if (sId && pVendor && sId === pVendor) return true
+  if (sBizName && pBizName && sBizName === pBizName) return true
   return false
 }
 
@@ -238,6 +246,22 @@ const ProductCatalog = ({
   const flashDealsScrollRef = useRef(null)
   const topShopsScrollRef = useRef(null)
   const orderAgainScrollRef = useRef(null)
+  const catalogMainRef = useRef(null)
+
+  // Dedicated store selection handler that clears conflicting filters and scrolls directly to products
+  const handleStoreClick = (sId) => {
+    if (String(selectedVendor) === String(sId)) {
+      setSelectedVendor('')
+    } else {
+      setSelectedVendor(String(sId))
+      setSelectedCategory(null)
+      setSelectedSubcategory(null)
+      setOnlyDeals(false)
+      setTimeout(() => {
+        catalogMainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 60)
+    }
+  }
 
   // Live Flash Sale countdown now lives in <BentoCountdown/> / <PillCountdown/>
   // so the 1s tick no longer re-renders this entire component.
@@ -864,6 +888,12 @@ const ProductCatalog = ({
     return sortedProducts.slice(0, visibleCount)
   }, [sortedProducts, visibleCount])
 
+  // Active selected store entity
+  const activeStore = useMemo(() => {
+    if (!selectedVendor) return null
+    return topShops.find(s => String(s.id) === String(selectedVendor) || String(s.uid) === String(selectedVendor)) || null
+  }, [selectedVendor, topShops])
+
   const handleClearFilters = () => {
     setSelectedCategory(null)
     setSelectedSubcategory(null)
@@ -1450,7 +1480,7 @@ const ProductCatalog = ({
                     <input
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => setSelectedVendor(isChecked ? '' : sId)}
+                      onChange={() => handleStoreClick(sId)}
                       className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 accent-blue-600 cursor-pointer"
                     />
                     <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
@@ -2218,7 +2248,7 @@ const ProductCatalog = ({
                 <button
                   key={shop.id || idx}
                   type="button"
-                  onClick={() => setSelectedVendor(isSelected ? '' : sId)}
+                  onClick={() => handleStoreClick(sId)}
                   className={`flex-shrink-0 w-48 sm:w-56 rounded-2xl border p-4 text-left shadow-sm hover:shadow-md transition-all group ${
                     isSelected
                       ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 dark:border-blue-500'
@@ -2276,7 +2306,7 @@ const ProductCatalog = ({
       {/* ══════════════════════════════════════════════════════════════════
           5. MAIN PRODUCT CATALOG (Full-Width Amazon / Daraz Grid)
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex gap-6 items-start pt-2">
+      <div ref={catalogMainRef} className="flex gap-6 items-start pt-2 scroll-mt-28">
         {/* Left Sticky Sidebar (Desktop Filter Panel) */}
         <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0 sticky top-28 rounded-2xl bg-white dark:bg-slate-900 p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
           {SidebarFilterPanel}
@@ -2284,6 +2314,48 @@ const ProductCatalog = ({
 
         {/* Right Main Product Grid Area */}
         <main className="flex-1 min-w-0 space-y-4">
+          {/* Active Storefront Showcase Banner (Displayed when Viewing Store) */}
+          {activeStore && (
+            <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-blue-500/5 dark:from-blue-950/60 dark:via-indigo-950/40 dark:to-slate-900 border border-blue-500/30 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center overflow-hidden border border-blue-200 dark:border-blue-900 shadow-sm flex-shrink-0">
+                  {activeStore.urlLogo || activeStore.urlCoverPhoto ? (
+                    <Image
+                      src={normalizeImageUrl(activeStore.urlLogo || activeStore.urlCoverPhoto)}
+                      alt={activeStore.businessName || 'Store'}
+                      width={56}
+                      height={56}
+                      sizes="56px"
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  ) : (
+                    <Store className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 leading-tight">
+                      {activeStore.businessName || activeStore.username}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 text-[11px] font-black border border-emerald-300 dark:border-emerald-800">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {t('verifiedStore') || 'Verified Store'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    {activeStore.city ? `${activeStore.city} • ` : ''}{sortedProducts.length} {t('productsInStore') || 'Products Available in Store'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedVendor('')}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 self-start sm:self-auto border border-slate-200 dark:border-slate-700"
+              >
+                <X className="w-3.5 h-3.5" /> {t('viewAllStores') || 'View All Stores'}
+              </button>
+            </div>
+          )}
+
           {/* AI Vector & NLP Intent Banner (When AI Search is active) */}
           {aiSearchPayload && (
             <div className="rounded-none border border-blue-500/40 bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/80 p-4 text-white shadow-xl flex flex-wrap items-center justify-between gap-3">
@@ -2334,7 +2406,7 @@ const ProductCatalog = ({
 
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
-                  {t('allProducts') || 'All Products'}
+                  {activeStore ? `${activeStore.businessName || 'Store'}` : (t('allProducts') || 'All Products')}
                 </h2>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   {t('showing') || 'Showing'} <strong>{sortedProducts.length}</strong> {t('of') || 'of'} {products.length} {t('productsCount') || 'products'}
