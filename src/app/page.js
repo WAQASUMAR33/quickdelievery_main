@@ -7,5 +7,10 @@ export const revalidate = 300
 
 export default async function Home() {
   const initialSlides = await getActiveHeroSlides()
-  return <CustomerDashboard initialSlides={initialSlides} />
+  return (
+    <>
+      <h1 className="sr-only">MartZona — Fast Online Marketplace & Delivery</h1>
+      <CustomerDashboard initialSlides={initialSlides} />
+    </>
+  )
 }

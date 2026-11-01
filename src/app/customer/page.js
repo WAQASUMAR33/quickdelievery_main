@@ -5,8 +5,20 @@ import { getActiveHeroSlides } from '@/lib/heroSlides.server'
 // slider changes propagate without a redeploy.
 export const revalidate = 300
 
-export default async function CustomerPage() {
-  const initialSlides = await getActiveHeroSlides()
-  return <CustomerDashboard initialSlides={initialSlides} />
+export const metadata = {
+  title: "Shop All Products & Stores | MARTZONA",
+  description: "Browse thousands of products across electronics, fresh groceries, supermarket items, and gourmet dining on MartZona.",
+  alternates: {
+    canonical: "https://martzona.com/customer",
+  },
 }
 
+export default async function CustomerPage() {
+  const initialSlides = await getActiveHeroSlides()
+  return (
+    <>
+      <h1 className="sr-only">MartZona Storefront — Browse All Products & Stores</h1>
+      <CustomerDashboard initialSlides={initialSlides} />
+    </>
+  )
+}

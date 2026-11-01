@@ -22,30 +22,126 @@ import FloatingWidgets from "@/components/customer/FloatingWidgets";
 
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#080C16" },
+  ],
+};
+
 export const metadata = {
-  title: "MARTZONA — Bespoke Multi-Vendor Marketplace & AI Concierge",
-  description: "Explore electronics, laptops, supermarket groceries, and gourmet dining delivered fast on MARTZONA.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://martzona.com"),
+  title: {
+    default: "MARTZONA — Fast Multi-Vendor Marketplace & Delivery",
+    template: "%s | MARTZONA",
+  },
+  description:
+    "Shop electronics, fresh groceries, fashion, restaurant food, and daily essentials delivered fast across MartZona.",
+  alternates: {
+    canonical: "https://martzona.com",
+    languages: {
+      "en": "https://martzona.com",
+      "en-US": "https://martzona.com",
+      "x-default": "https://martzona.com",
+    },
+  },
+  openGraph: {
+    title: "MARTZONA — Fast Multi-Vendor Marketplace & Delivery",
+    description:
+      "Shop electronics, fresh groceries, fashion, restaurant food, and daily essentials delivered fast across MartZona.",
+    url: "https://martzona.com",
+    siteName: "MartZona",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "MartZona Multi-Vendor Marketplace",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MARTZONA — Fast Multi-Vendor Marketplace & Delivery",
+    description:
+      "Shop electronics, fresh groceries, fashion, restaurant food, and daily essentials delivered fast across MartZona.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon.png', type: 'image/png' },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
     ],
-    apple: '/icon-192.png',
+    apple: "/icon-192.png",
   },
 };
 
+const schemaOrgData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://martzona.com/#website",
+      "url": "https://martzona.com",
+      "name": "MartZona",
+      "description":
+        "Shop electronics, fresh groceries, fashion, restaurant food, and daily essentials delivered fast across MartZona.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://martzona.com/customer?search={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
+      "inLanguage": "en",
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://martzona.com/#organization",
+      "name": "MartZona",
+      "url": "https://martzona.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://martzona.com/assets/images/martzona_logo.png",
+        "caption": "MartZona Logo",
+      },
+      "sameAs": ["https://martzona.com"],
+    },
+  ],
+};
+
 export default function RootLayout({ children }) {
-  const gtmId = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-MFG72CD5';
-  const gaId = process.env.NEXT_PUBLIC_GA_ID || 'G-7D49W9L31L';
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-MFG72CD5";
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-7D49W9L31L";
 
   return (
     <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
       <head>
-        {/* Google tag (gtag.js) + Google Tag Manager
-            The dataLayer/gtag config stays inline in <head> (so the tag is detected),
-            but the heavy third-party scripts (~480 KB) are injected only after the
-            page has finished loading and the browser is idle. This keeps them off
-            the critical path and out of Total Blocking Time on mobile. */}
+        <link rel="canonical" href="https://martzona.com" />
+        <link rel="alternate" hrefLang="en" href="https://martzona.com" />
+        <link rel="alternate" hrefLang="x-default" href="https://martzona.com" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgData) }}
+        />
+        {/* Google tag (gtag.js) + Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
@@ -103,11 +199,11 @@ window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
                           toastOptions={{
                             duration: 4000,
                             style: {
-                              background: 'rgba(10, 15, 29, 0.92)',
-                              color: '#fff',
-                              backdropFilter: 'blur(12px)',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              borderRadius: '16px',
+                              background: "rgba(10, 15, 29, 0.92)",
+                              color: "#fff",
+                              backdropFilter: "blur(12px)",
+                              border: "1px solid rgba(255, 255, 255, 0.15)",
+                              borderRadius: "16px",
                             },
                           }}
                         />
