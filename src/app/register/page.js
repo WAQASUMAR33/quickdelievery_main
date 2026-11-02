@@ -141,31 +141,19 @@ function BrandPanel() {
 
       {/* Top: Brand Header */}
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <NextLink href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                background: GRADIENT,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 25px rgba(37, 99, 235, 0.45)',
-                borderRadius: 0,
-              }}
-            >
-              <ShoppingBagIcon sx={{ color: '#fff', fontSize: 22 }} />
-            </Box>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: -0.5, lineHeight: 1 }}>
-                Quick<Box component="span" sx={{ color: '#60A5FA' }}>Delivery</Box>
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>
-                Boutique Marketplace
-              </Typography>
-            </Box>
-          </Stack>
+        <NextLink href="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          <Box
+            component="img"
+            src="/images/martzona_logo_transparent.png"
+            alt="MARTZONA"
+            sx={{
+              height: { xs: 40, sm: 46, md: 52 },
+              width: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+              filter: 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45))',
+            }}
+          />
         </NextLink>
       </Box>
 
@@ -212,7 +200,7 @@ function BrandPanel() {
           </Typography>
 
           <Typography variant="body1" sx={{ color: '#94A3B8', maxWidth: 440, mb: 4, fontSize: 14.5, lineHeight: 1.6 }}>
-            Whether you are ordering dinner, growing your restaurant revenue, or delivering with our fleet — QuickDelivery is engineered for speed.
+            Whether you are ordering dinner, growing your restaurant revenue, or delivering with our fleet — MartZona is engineered for speed.
           </Typography>
 
           {/* Highlights List */}
@@ -657,23 +645,13 @@ export default function RegisterPage() {
           }}
         >
           {/* Mobile Brand Logo */}
-          <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1 }}>
+          <Box component={NextLink} href="/" sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', textDecoration: 'none' }}>
             <Box
-              sx={{
-                width: 32,
-                height: 32,
-                background: GRADIENT,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 0,
-              }}
-            >
-              <ShoppingBagIcon sx={{ color: '#fff', fontSize: 18 }} />
-            </Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: isDark ? '#FFFFFF' : '#0F172A' }}>
-              Quick<Box component="span" sx={{ color: SAPPHIRE }}>Delivery</Box>
-            </Typography>
+              component="img"
+              src="/images/martzona_logo_transparent.png"
+              alt="MARTZONA"
+              sx={{ height: 34, width: 'auto', objectFit: 'contain' }}
+            />
           </Box>
 
           {/* Desktop Left: Home navigation link */}
@@ -771,7 +749,7 @@ export default function RegisterPage() {
                       Create your account
                     </Typography>
                     <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13.5 }}>
-                      Select the account profile that matches how you plan to use QuickDelivery.
+                      Select the account profile that matches how you plan to use MartZona.
                     </Typography>
                   </Box>
 
@@ -1524,7 +1502,7 @@ export default function RegisterPage() {
           }}
         >
           <Typography variant="caption" sx={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 11 }}>
-            By registering you agree to QuickDelivery&apos;s{' '}
+            By registering you agree to MartZona&apos;s{' '}
             <Box component="span" sx={{ textDecoration: 'underline', cursor: 'pointer', color: isDark ? '#94A3B8' : '#64748B' }}>
               Terms of Service
             </Box>

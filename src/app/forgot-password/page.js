@@ -415,7 +415,7 @@ export default function ForgotPasswordPage() {
                   Reset Password
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Enter the email address associated with your Quick Delivery account to receive a 6-digit code.
+                  Enter the email address associated with your MartZona account to receive a 6-digit code.
                 </Typography>
               </Box>
 

@@ -569,21 +569,13 @@ function BusinessRegisterInner() {
           px: { xs: 2, sm: 3 }, justifyContent: 'space-between',
         }}>
           {/* Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{
-              width: 38, height: 38, bgcolor: BRAND, borderRadius: 2,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Inventory2OutlinedIcon sx={{ color: '#fff', fontSize: 22 }} />
-            </Box>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} color={BRAND} lineHeight={1.2}>
-                QuickDelivery
-              </Typography>
-              <Typography variant="caption" color="text.secondary" lineHeight={1}>
-                Business Registration
-              </Typography>
-            </Box>
+          <Box component={NextLink} href="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Box
+              component="img"
+              src="/images/martzona_logo_transparent.png"
+              alt="MARTZONA"
+              sx={{ height: 36, width: 'auto', objectFit: 'contain' }}
+            />
           </Box>
 
           {/* Sign-in link */}
