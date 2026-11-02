@@ -489,7 +489,13 @@ export default function RegisterPage() {
   }
 
   const continueToForm = () => {
-    if (formData.role) setPhase('form')
+    if (!formData.role) return
+    // Drivers use the dedicated 6-step onboarding wizard (documents, vehicle & live selfie)
+    if (formData.role === 'DRIVER') {
+      router.push('/driver/register')
+      return
+    }
+    setPhase('form')
   }
 
   // Step 2: Validate form & send Hostinger OTP verification email

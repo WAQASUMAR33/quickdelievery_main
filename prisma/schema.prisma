@@ -384,6 +384,14 @@ model DriverProfile {
   preferredZone         String?    @map("preferred_zone") @db.VarChar(150)
   shiftSchedule         String?    @map("shift_schedule") @db.VarChar(100)
 
+  // ── ONBOARDING WIZARD FIELDS ──
+  city                  String?    @db.VarChar(100)
+  dateOfBirth           String?    @map("date_of_birth") @db.VarChar(20)
+  contactNo2            String?    @map("contact_no_2") @db.VarChar(20)
+  vehicleNumber         String?    @map("vehicle_number") @db.VarChar(50)
+  vehicleImages         Json?      @map("vehicle_images")
+  selfieUrl             String?    @map("selfie_url") @db.VarChar(500)
+
   // State
   dutyStatus            DutyStatus @default(OFF_DUTY) @map("duty_status")
   createdAt             DateTime   @default(now()) @map("created_at")
