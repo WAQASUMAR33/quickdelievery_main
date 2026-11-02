@@ -55,7 +55,7 @@ function BrandPanel() {
         position: 'sticky',
         top: 0,
         height: '100vh',
-        background: 'linear-gradient(155deg, #060A14 0%, #0A0F1D 45%, #101935 75%, #1E1B4B 100%)',
+        background: 'linear-gradient(155deg, #070E20 0%, #0C1A38 35%, #152C69 70%, #1E3A8A 100%)',
         borderRight: '1px solid rgba(255,255,255,0.08)',
         overflow: 'hidden',
         color: '#FFFFFF',
@@ -71,7 +71,7 @@ function BrandPanel() {
             width: 420,
             height: 420,
             borderRadius: '50%',
-            bgcolor: 'rgba(37, 99, 235, 0.22)',
+            bgcolor: 'rgba(37, 99, 235, 0.35)',
             filter: 'blur(90px)',
           }}
         />
@@ -83,7 +83,7 @@ function BrandPanel() {
             width: 480,
             height: 480,
             borderRadius: '50%',
-            bgcolor: 'rgba(124, 58, 237, 0.18)',
+            bgcolor: 'rgba(124, 58, 237, 0.25)',
             filter: 'blur(100px)',
           }}
         />
@@ -95,7 +95,7 @@ function BrandPanel() {
             width: 260,
             height: 260,
             borderRadius: '50%',
-            bgcolor: 'rgba(245, 158, 11, 0.12)',
+            bgcolor: 'rgba(245, 158, 11, 0.2)',
             filter: 'blur(80px)',
           }}
         />
@@ -105,17 +105,31 @@ function BrandPanel() {
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <NextLink href="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
           <Box
-            component="img"
-            src="/images/martzona_logo_transparent.png"
-            alt="MARTZONA"
             sx={{
-              height: { xs: 40, sm: 46, md: 52 },
-              width: 'auto',
-              objectFit: 'contain',
-              display: 'block',
-              filter: 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45))',
+              bgcolor: '#FFFFFF',
+              px: 2.2,
+              py: 1,
+              borderRadius: '16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.85)',
+              transition: 'transform 0.2s ease',
+              '&:hover': { transform: 'scale(1.02)' },
             }}
-          />
+          >
+            <Box
+              component="img"
+              src="/images/martzona_logo_transparent.png"
+              alt="MARTZONA"
+              sx={{
+                height: { xs: 34, sm: 38, md: 42 },
+                width: 'auto',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
+          </Box>
         </NextLink>
       </Box>
 
@@ -127,8 +141,8 @@ function BrandPanel() {
           transition={{ duration: 0.6 }}
         >
           <Chip
-            icon={<StarIcon sx={{ fontSize: '13px !important', color: GOLD }} />}
-            label="MARTZONA MULTI-VENDOR PLATFORM"
+            icon={<StarIcon sx={{ fontSize: '13px !important', color: '#FBBF24' }} />}
+            label="MARTZONA SUPER-APP & MARKETPLACE"
             size="small"
             sx={{
               mb: 2.5,
@@ -136,9 +150,9 @@ function BrandPanel() {
               fontWeight: 800,
               fontSize: 10,
               letterSpacing: 1,
-              bgcolor: 'rgba(245, 158, 11, 0.12)',
-              color: GOLD,
-              border: '1px solid rgba(245, 158, 11, 0.3)',
+              bgcolor: 'rgba(245, 158, 11, 0.15)',
+              color: '#FBBF24',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
             }}
           />
 
@@ -149,33 +163,33 @@ function BrandPanel() {
               letterSpacing: -1,
               lineHeight: 1.15,
               mb: 2,
-              fontSize: { lg: '2.1rem', xl: '2.6rem' },
+              fontSize: { lg: '2.1rem', xl: '2.5rem' },
             }}
           >
-            Welcome back to the{' '}
+            Everything you need,{' '}
             <Box
               component="span"
               sx={{
-                background: 'linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F59E0B 100%)',
+                background: 'linear-gradient(135deg, #60A5FA 0%, #FBBF24 50%, #F59E0B 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              future of express dining
-            </Box>{' '}
-            & luxury commerce.
+              delivered in minutes
+            </Box>
+            .
           </Typography>
 
           <Typography variant="body1" sx={{ color: '#94A3B8', maxWidth: 440, mb: 4, fontSize: 14.5, lineHeight: 1.6 }}>
-            Access curated merchant boutiques, track gourmet orders in real-time, and experience bespoke delivery.
+            Explore top-rated restaurants, supermarket essentials, tech gadgets & daily groceries with live order tracking across MartZona.
           </Typography>
 
           {/* Pillars List */}
           <Stack spacing={1.5} sx={{ maxWidth: 460 }}>
             {[
-              { icon: <FastfoodOutlinedIcon sx={{ color: '#F59E0B', fontSize: 18 }} />, label: 'Artisan Dining & Chef Menus', sub: 'Handcrafted double smash burgers, Neapolitan pizzas & French bakeries' },
-              { icon: <StorefrontOutlinedIcon sx={{ color: '#06B6D4', fontSize: 18 }} />, label: 'High-End Tech & Groceries', sub: 'Flagship electronics, workstation peripherals & organic pantry produce' },
-              { icon: <LocalShippingOutlinedIcon sx={{ color: '#10B981', fontSize: 18 }} />, label: '30-45 Min Express Fleet', sub: 'Temperature-controlled rapid dispatch across Pakistan' },
+              { icon: <FastfoodOutlinedIcon sx={{ color: '#F59E0B', fontSize: 18 }} />, label: 'Food, Dining & Chef Menus', sub: 'Handcrafted meals, double smash burgers, pizza & artisan bakeries delivered hot' },
+              { icon: <StorefrontOutlinedIcon sx={{ color: '#06B6D4', fontSize: 18 }} />, label: 'Supermarkets & High-End Tech', sub: 'Fresh organic pantry produce, mobile electronics & workstation gear' },
+              { icon: <LocalShippingOutlinedIcon sx={{ color: '#10B981', fontSize: 18 }} />, label: 'Under 45-Min Express Delivery', sub: 'Smart multi-order logistics, live GPS tracking & Cash on Delivery' },
             ].map((p, idx) => (
               <Box
                 key={idx}
@@ -184,10 +198,12 @@ function BrandPanel() {
                   alignItems: 'flex-start',
                   gap: 1.75,
                   p: 1.75,
-                  bgcolor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  bgcolor: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 0,
                   backdropFilter: 'blur(8px)',
+                  transition: 'border-color 0.2s',
+                  '&:hover': { borderColor: 'rgba(37, 99, 235, 0.4)' },
                 }}
               >
                 <Box sx={{ mt: 0.25 }}>{p.icon}</Box>
@@ -206,11 +222,11 @@ function BrandPanel() {
       </Box>
 
       {/* Bottom Security Note */}
-      <Box sx={{ position: 'relative', zIndex: 1, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <Box sx={{ position: 'relative', zIndex: 1, pt: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <ShieldOutlinedIcon sx={{ fontSize: 16, color: '#10B981' }} />
           <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 11, fontWeight: 600 }}>
-            Enterprise 256-bit SSL encryption • Verified secure customer portal
+            Enterprise 256-bit SSL encryption • Verified secure checkout & delivery
           </Typography>
         </Stack>
       </Box>
@@ -342,11 +358,24 @@ export default function LoginPage() {
           {/* Mobile Brand Logo */}
           <Box component={NextLink} href="/" sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', textDecoration: 'none' }}>
             <Box
-              component="img"
-              src="/images/martzona_logo_transparent.png"
-              alt="MARTZONA"
-              sx={{ height: 34, width: 'auto', objectFit: 'contain' }}
-            />
+              sx={{
+                bgcolor: '#FFFFFF',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(0,0,0,0.06)',
+              }}
+            >
+              <Box
+                component="img"
+                src="/images/martzona_logo_transparent.png"
+                alt="MARTZONA"
+                sx={{ height: 28, width: 'auto', objectFit: 'contain' }}
+              />
+            </Box>
           </Box>
 
           {/* Desktop Left: Home navigation link */}
