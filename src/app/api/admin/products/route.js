@@ -87,11 +87,16 @@ export async function GET(request) {
       where: whereClause,
       include: {
         category: true,
+        subCategory: true,
+        productCategory: true,
+        skuVariants: true,
         vendor: {
           select: {
             id: true,
+            uid: true,
             username: true,
             email: true,
+            phoneNumber: true,
             role: true
           }
         }
@@ -99,6 +104,25 @@ export async function GET(request) {
       orderBy,
       skip: (page - 1) * limit,
       take: limit
+    })
+
+    // Fetch associated businesses for vendor store info
+    const vendorEmails = [...new Set(products.map(p => p.vendor?.email).filter(Boolean))]
+    const businesses = vendorEmails.length > 0 ? await prisma.business.findMany({
+      where: { email: { in: vendorEmails } },
+      select: {
+        email: true,
+        businessName: true,
+        city: true,
+        state: true,
+        phoneNumber1: true,
+        urlLogo: true,
+      }
+    }) : []
+
+    const businessMap = {}
+    businesses.forEach(b => {
+      if (b.email) businessMap[b.email.toLowerCase()] = b
     })
 
     // Get total count
@@ -111,22 +135,54 @@ export async function GET(request) {
     const rejectedProducts = await prisma.product.count({ where: { approvalStatus: 'Rejected' } })
     const activeProducts = await prisma.product.count({ where: { status: true } })
 
-    // Parse JSON fields back to arrays/objects
+    // Helper functions for safe JSON parsing
+    const safeArray = (val) => {
+      if (!val) return []
+      if (Array.isArray(val)) return val
+      if (typeof val === 'string') {
+        try {
+          const parsed = JSON.parse(val)
+          return Array.isArray(parsed) ? parsed : [parsed]
+        } catch {
+          return [val]
+        }
+      }
+      return [val]
+    }
+
+    const safeParse = (val) => {
+      if (!val) return null
+      if (typeof val === 'object') return val
+      if (typeof val === 'string') {
+        try {
+          return JSON.parse(val)
+        } catch {
+          return val
+        }
+      }
+      return val
+    }
+
+    // Parse JSON fields back to arrays/objects and attach vendor business details
     const processedProducts = products.map(product => {
-      try {
-        return {
-          ...product,
-          proImages: product.proImages ? JSON.parse(product.proImages) : null,
-          keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
-          variations: product.variations ? JSON.parse(product.variations) : null,
-        }
-      } catch (e) {
-        return {
-          ...product,
-          proImages: null,
-          keyFeatures: null,
-          variations: null
-        }
+      const biz = product.vendor?.email ? businessMap[product.vendor.email.toLowerCase()] : null
+      const enrichedVendor = product.vendor ? {
+        ...product.vendor,
+        businessName: biz?.businessName || product.vendor.username,
+        city: biz?.city,
+        state: biz?.state,
+        phone: biz?.phoneNumber1 || product.vendor.phoneNumber,
+        urlLogo: biz?.urlLogo,
+      } : null
+
+      return {
+        ...product,
+        vendor: enrichedVendor,
+        proImages: safeArray(product.proImages),
+        keyFeatures: safeArray(product.keyFeatures),
+        variations: safeParse(product.variations),
+        modifiers: safeParse(product.modifiersJson),
+        fitGuide: safeParse(product.fitGuideJson),
       }
     })
 

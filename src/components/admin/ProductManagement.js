@@ -49,6 +49,19 @@ import SearchIcon               from '@mui/icons-material/Search'
 import StarOutlineIcon          from '@mui/icons-material/StarOutline'
 import VerifiedOutlinedIcon     from '@mui/icons-material/VerifiedOutlined'
 import VisibilityOutlinedIcon   from '@mui/icons-material/VisibilityOutlined'
+import LaunchOutlinedIcon       from '@mui/icons-material/LaunchOutlined'
+import StorefrontOutlinedIcon   from '@mui/icons-material/StorefrontOutlined'
+import LocalOfferOutlinedIcon   from '@mui/icons-material/LocalOfferOutlined'
+import CategoryOutlinedIcon     from '@mui/icons-material/CategoryOutlined'
+import RestaurantOutlinedIcon   from '@mui/icons-material/RestaurantOutlined'
+import LocalPharmacyOutlinedIcon from '@mui/icons-material/LocalPharmacyOutlined'
+import InfoOutlinedIcon         from '@mui/icons-material/InfoOutlined'
+import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined'
+import TuneOutlinedIcon         from '@mui/icons-material/TuneOutlined'
+import StraightenOutlinedIcon   from '@mui/icons-material/StraightenOutlined'
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined'
+import HistoryOutlinedIcon      from '@mui/icons-material/HistoryOutlined'
+import CheckOutlinedIcon        from '@mui/icons-material/CheckOutlined'
 
 const BRAND      = '#39772A'
 const DROP_MIN_W = 300
@@ -566,19 +579,67 @@ const ProductManagement = () => {
       <Dialog
         open={showModal}
         onClose={handleClose}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 0, height: '90vh', display: 'flex', flexDirection: 'column' } }}
+        PaperProps={{ sx: { borderRadius: 0, height: '92vh', display: 'flex', flexDirection: 'column' } }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', py: 1.5 }}>
-          <Typography variant="subtitle1" fontWeight={700}>
-            Product Details & Approval Status (Read-Only)
-          </Typography>
-          <IconButton size="small" onClick={handleClose}>
-            <CloseOutlinedIcon fontSize="small" />
-          </IconButton>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', py: 1.5, px: 3, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: -0.2 }}>
+              Product Details & Approval Status
+            </Typography>
+            {editingProduct?.proId && (
+              <Chip
+                label={`ID: #${editingProduct.proId}`}
+                size="small"
+                sx={{ fontWeight: 800, fontSize: 11, bgcolor: 'grey.100', color: 'text.secondary', borderRadius: 0 }}
+              />
+            )}
+            {editingProduct?.vertical && (
+              <Chip
+                label={editingProduct.vertical}
+                size="small"
+                color={editingProduct.vertical === 'FOOD' ? 'warning' : 'primary'}
+                variant="outlined"
+                sx={{ fontWeight: 700, fontSize: 10, borderRadius: 0, height: 22 }}
+              />
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {editingProduct?.proId && (
+              <>
+                <Button
+                  component="a"
+                  href={`/admin/dashboard/products/${editingProduct.proId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<LaunchOutlinedIcon fontSize="small" />}
+                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: 0, borderColor: 'divider', color: 'text.secondary' }}
+                >
+                  Full Editor
+                </Button>
+                <Button
+                  component="a"
+                  href={`/product/${editingProduct.proId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<StorefrontOutlinedIcon fontSize="small" />}
+                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: 0, borderColor: 'divider', color: 'text.secondary' }}
+                >
+                  Storefront View
+                </Button>
+              </>
+            )}
+            <IconButton size="small" onClick={handleClose}>
+              <CloseOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </DialogTitle>
-        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: 3 }}>
+        <DialogContent sx={{ flex: '1 1 auto', overflow: 'auto', minHeight: 0, p: { xs: 2, sm: 3 } }}>
           <ProductForm
             product={editingProduct}
             categories={categories}
@@ -593,109 +654,570 @@ const ProductManagement = () => {
   )
 }
 
+// Detailed Section Card Helper
+function DetailSection({ icon, title, subtitle, count, children }) {
+  return (
+    <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+      <Box sx={{ px: 2.5, py: 1.5, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          {icon}
+          <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+            {title}
+          </Typography>
+          {count !== undefined && (
+            <Chip label={count} size="small" sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: 'grey.200', borderRadius: 0 }} />
+          )}
+        </Box>
+        {subtitle && (
+          <Typography variant="caption" color="text.secondary">
+            {subtitle}
+          </Typography>
+        )}
+      </Box>
+      <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+        {children}
+      </CardContent>
+    </Card>
+  )
+}
+
+// Styled Read-Only Field Helper
+function ReadOnlyField({ label, value, helper, mono = false, color, fullWidth = true }) {
+  const displayVal = (value !== undefined && value !== null && value !== '') ? String(value) : '—'
+  return (
+    <TextField
+      size="small"
+      label={label}
+      value={displayVal}
+      helperText={helper}
+      fullWidth={fullWidth}
+      InputProps={{
+        readOnly: true,
+      }}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 0,
+          bgcolor: 'grey.50',
+          fontFamily: mono ? 'monospace' : 'inherit',
+          color: color || 'text.primary',
+          fontWeight: 600,
+        },
+        '& .MuiInputLabel-root': {
+          fontWeight: 600,
+          color: 'text.secondary',
+        },
+      }}
+    />
+  )
+}
+
 const ProductForm = ({ product, categories, vendors, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    proName:        product?.proName        || '',
-    description:    product?.description    || '',
-    price:          product?.price          || '',
-    salePrice:      product?.salePrice      || '',
-    sku:            product?.sku            || '',
-    barcode:        product?.barcode        || '',
-    stock:          product?.stock          || '',
-    catId:          product?.catId          || '',
-    subCatId:       product?.subCatId       || '',
-    vendorId:       product?.vendorId       || '',
-    proImages:      product?.proImages      || [],
     status:         product?.status !== undefined ? product.status : true,
     approvalStatus: product?.approvalStatus || 'Pending',
   })
+  const [activeImagePreview, setActiveImagePreview] = useState(null)
 
   const set = (key, val) => setFormData(prev => ({ ...prev, [key]: val }))
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave(formData)
+    onSave({
+      ...product,
+      status: formData.status,
+      approvalStatus: formData.approvalStatus,
+    })
   }
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files)
-    const urls  = files.map(f => URL.createObjectURL(f))
-    set('proImages', [...formData.proImages, ...urls])
-  }
+  // Safe image array
+  const rawImages = product?.proImages || []
+  const images = Array.isArray(rawImages)
+    ? rawImages
+    : (typeof rawImages === 'string' ? [rawImages] : [])
 
-  const removeImage = (index) => {
-    set('proImages', formData.proImages.filter((_, i) => i !== index))
-  }
+  // Safe key features
+  const rawFeatures = product?.keyFeatures || []
+  const keyFeatures = Array.isArray(rawFeatures)
+    ? rawFeatures
+    : (typeof rawFeatures === 'string' ? [rawFeatures] : [])
+
+  // Modifiers
+  const modifiers = product?.modifiers || (typeof product?.modifiersJson === 'string' ? (() => {
+    try { return JSON.parse(product.modifiersJson) } catch { return null }
+  })() : null)
+
+  // Dietary badges & Allergens
+  const dietaryBadges = product?.dietaryBadges
+    ? product.dietaryBadges.split(',').map(s => s.trim()).filter(Boolean)
+    : []
+
+  const allergens = product?.allergens
+    ? product.allergens.split(',').map(s => s.trim()).filter(Boolean)
+    : []
+
+  // Safe category names
+  const categoryName = product?.category?.name || categories.find(c => c.id === product?.catId)?.name || 'N/A'
+  const subCategoryName = product?.subCategory?.subCatName || product?.subCatId || 'N/A'
+  const productCategoryName = product?.productCategory?.name || 'N/A'
+
+  // Safe vendor info
+  const vendorName = product?.vendor?.businessName || product?.vendor?.username || product?.vendorId || 'N/A'
+  const vendorEmail = product?.vendor?.email || 'N/A'
+  const vendorPhone = product?.vendor?.phone || product?.vendor?.phoneNumber || 'N/A'
+  const vendorCity = product?.vendor?.city || product?.vendor?.state ? [product?.vendor?.city, product?.vendor?.state].filter(Boolean).join(', ') : 'N/A'
+
+  // Format helper
+  const currency = product?.currency || 'USD'
+  const formatMoney = (val) => (val !== undefined && val !== null && val !== '') ? `${currency} ${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'
+  const formatDate = (val) => val ? new Date(val).toLocaleString() : '—'
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <TextField size="small" label="Product Name" disabled value={formData.proName} {...tf} />
-        <TextField size="small" label="SKU" disabled value={formData.sku} {...tf} />
-        <TextField size="small" label="Price" disabled value={formData.price} {...tf} />
-        <TextField size="small" label="Sale Price" disabled value={formData.salePrice} {...tf} />
 
-        <TextField size="small" label="Category" disabled value={categories.find(c => c.id === formData.catId)?.name || 'N/A'} {...tf} />
-        <TextField size="small" label="Vendor" disabled value={product?.vendor?.businessName || product?.vendor?.username || product?.vendorId || 'N/A'} {...tf} />
+      {/* ─── 0. TOP SUMMARY BANNER ─── */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, bgcolor: 'grey.50' }}>
+        <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="h6" fontWeight={800} color="text.primary">
+                {product?.proName || 'Untitled Product'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                SKU: <strong style={{ color: '#0F172A' }}>{product?.sku || 'N/A'}</strong>
+                {product?.barcode && <> &bull; Barcode: <strong>{product.barcode}</strong></>}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+              <Chip
+                label={formData.status ? 'Status: Active' : 'Status: Inactive'}
+                color={formData.status ? 'success' : 'default'}
+                size="small"
+                variant="outlined"
+                sx={{ borderRadius: 0, fontWeight: 700 }}
+              />
+              <ApprovalChip status={formData.approvalStatus} />
+              <Chip
+                label={`Vertical: ${product?.vertical || 'FOOD'}`}
+                size="small"
+                sx={{ borderRadius: 0, bgcolor: 'primary.50', color: 'primary.main', fontWeight: 700 }}
+              />
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
-        <TextField size="small" label="Stock" disabled value={formData.stock} {...tf} />
-        <TextField size="small" label="Barcode" disabled value={formData.barcode} {...tf} />
-      </Box>
+      {/* ─── 1. CORE IDENTIFICATION & TAXONOMY ─── */}
+      <DetailSection
+        icon={<CategoryOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="1. Core Identifiers & Taxonomy"
+        subtitle="Department, category classification, barcodes, and vital taxonomy"
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+          <ReadOnlyField label="Product Name" value={product?.proName} />
+          <ReadOnlyField label="SKU (Stock Keeping Unit)" value={product?.sku} mono />
+          <ReadOnlyField label="Barcode (UPC / EAN / GTIN)" value={product?.barcode} mono />
 
-      <TextField size="small" label="Description" disabled multiline rows={4} value={formData.description} {...tf} fullWidth />
+          <ReadOnlyField label="Department / Vertical" value={product?.vertical || 'FOOD'} />
+          <ReadOnlyField label="Main Category" value={categoryName} />
+          <ReadOnlyField label="Subcategory" value={subCategoryName} />
 
-      {/* Images */}
-      <Box>
-        <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
-          Product Images (Read-Only)
-        </Typography>
-        {formData.proImages.length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
-            {formData.proImages.map((img, i) => (
-              <Box key={i} sx={{ position: 'relative' }}>
-                <img src={img} alt={`Product ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 4, border: '1px solid', borderColor: 'divider' }} />
+          <ReadOnlyField label="Product Category" value={productCategoryName} />
+          <ReadOnlyField label="Product Type / Subtype" value={product?.productType || 'Standard Retail Item'} />
+          <ReadOnlyField label="Condition" value={product?.conditionType || 'New'} />
+        </Box>
+      </DetailSection>
+
+      {/* ─── 2. PRICING, MARGINS & INVENTORY ─── */}
+      <DetailSection
+        icon={<LocalOfferOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="2. Pricing, Margins & Inventory"
+        subtitle="Wholesale cost, retail pricing, discounts, stock count, and sale schedule"
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+          <ReadOnlyField label="Currency" value={currency} />
+          <ReadOnlyField label="Retail Selling Price" value={formatMoney(product?.price)} color="primary.main" />
+          <ReadOnlyField label="Vendor Cost (Wholesale)" value={formatMoney(product?.cost)} />
+          <ReadOnlyField label="Sale Price" value={product?.salePrice ? formatMoney(product?.salePrice) : 'No Sale Price'} color="success.main" />
+
+          <ReadOnlyField label="Discount Rate" value={product?.discount ? `${product.discount}%` : '0%'} />
+          <ReadOnlyField label="Current Stock" value={product?.stock ?? 0} />
+          <ReadOnlyField label="Total Order Units (Qnty)" value={product?.qnty ?? 0} />
+          <ReadOnlyField
+            label="Sale Schedule"
+            value={product?.saleStartDate || product?.saleEndDate ? `${product.saleStartDate ? new Date(product.saleStartDate).toLocaleDateString() : '—'} to ${product.saleEndDate ? new Date(product.saleEndDate).toLocaleDateString() : '—'}` : 'Not on timed sale'}
+          />
+        </Box>
+      </DetailSection>
+
+      {/* ─── 3. BRAND & SPECIFICATIONS ─── */}
+      <DetailSection
+        icon={<StraightenOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="3. Brand & Physical Specifications"
+        subtitle="Brand names, manufacturer, dimensions, color, size, and warranty"
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+          <ReadOnlyField label="Brand Name" value={product?.brandName || 'Unbranded / Store House Brand'} />
+          <ReadOnlyField label="Manufacturer / Producer" value={product?.manufacturer} />
+          <ReadOnlyField label="Model Number" value={product?.modelNumber} mono />
+          <ReadOnlyField label="Warranty Terms" value={product?.warranty} />
+
+          <ReadOnlyField label="Color" value={product?.color} />
+          <ReadOnlyField label="Size / Portion" value={product?.size || product?.sizeName} />
+          <ReadOnlyField label="Package Weight" value={product?.packageWeight} />
+          <ReadOnlyField label="Product Dimensions (L x W x H)" value={product?.productDimensions} />
+        </Box>
+      </DetailSection>
+
+      {/* ─── 4. DESCRIPTION & KEY HIGHLIGHTS ─── */}
+      <DetailSection
+        icon={<InfoOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="4. Description & Key Features"
+        subtitle="Narrative description copy and bulleted highlights"
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            size="small"
+            label="Full Product Description"
+            multiline
+            rows={4}
+            value={product?.description || 'No detailed description provided.'}
+            fullWidth
+            InputProps={{ readOnly: true }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 0,
+                bgcolor: 'grey.50',
+                lineHeight: 1.6,
+              },
+              '& .MuiInputLabel-root': { fontWeight: 600 },
+            }}
+          />
+
+          {keyFeatures.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+                Key Features / Bullet Points ({keyFeatures.length})
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                {keyFeatures.map((feat, idx) => (
+                  <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, p: 1.25, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+                    <CheckOutlinedIcon fontSize="small" sx={{ color: BRAND, mt: 0.2 }} />
+                    <Typography variant="body2" color="text.primary">
+                      {feat}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
-            ))}
+            </Box>
+          )}
+        </Box>
+      </DetailSection>
+
+      {/* ─── 5. FOOD, RESTAURANT & DIETARY COMPLIANCE (If Applicable) ─── */}
+      {(product?.vertical === 'FOOD' || dietaryBadges.length > 0 || allergens.length > 0 || product?.ingredients || product?.prepTimeMinutes) && (
+        <DetailSection
+          icon={<RestaurantOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+          title="5. Food, Dining & Dietary Attributes"
+          subtitle="Kitchen preparation time, ingredient breakdown, allergens, and dietary certifications"
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+              <ReadOnlyField
+                label="Kitchen Preparation Time"
+                value={product?.prepTimeMinutes ? `${product.prepTimeMinutes} minutes` : '20 minutes (Standard)'}
+              />
+              <Box sx={{ p: 1.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" display="block" mb={0.75}>
+                  Dietary Badges
+                </Typography>
+                {dietaryBadges.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                    {dietaryBadges.map((badge, i) => (
+                      <Chip key={i} label={badge} size="small" color="success" variant="outlined" sx={{ borderRadius: 0, fontWeight: 700, fontSize: 11 }} />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="caption" color="text.disabled">No dietary badges declared</Typography>
+                )}
+              </Box>
+            </Box>
+
+            <Box sx={{ p: 1.5, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" display="block" mb={0.75}>
+                Allergen Warnings
+              </Typography>
+              {allergens.length > 0 ? (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                  {allergens.map((alg, i) => (
+                    <Chip key={i} label={`Contains: ${alg}`} size="small" color="error" variant="outlined" sx={{ borderRadius: 0, fontWeight: 700, fontSize: 11 }} />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="caption" color="text.disabled">No allergen warnings declared</Typography>
+              )}
+            </Box>
+
+            {product?.ingredients && (
+              <TextField
+                size="small"
+                label="Complete Ingredients Listing"
+                multiline
+                rows={2}
+                value={product.ingredients}
+                fullWidth
+                InputProps={{ readOnly: true }}
+                sx={{
+                  '& .MuiOutlinedInput-root': { borderRadius: 0, bgcolor: 'grey.50' },
+                  '& .MuiInputLabel-root': { fontWeight: 600 },
+                }}
+              />
+            )}
+          </Box>
+        </DetailSection>
+      )}
+
+      {/* ─── 6. PHARMACY & HEALTHCARE ATTRIBUTES (If Applicable) ─── */}
+      {(product?.vertical === 'PHARMACY' || product?.isPrescriptionRequired || product?.dosageForm || product?.activeIngredients) && (
+        <DetailSection
+          icon={<LocalPharmacyOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+          title="6. Pharmacy & Healthcare Compliance"
+          subtitle="Prescription status, dosage form, and active pharmaceutical ingredients"
+        >
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
+            <ReadOnlyField
+              label="Prescription Required"
+              value={product?.isPrescriptionRequired ? '⚠️ Yes (Doctor Prescription Required)' : 'No (Over-The-Counter)'}
+              color={product?.isPrescriptionRequired ? 'error.main' : 'success.main'}
+            />
+            <ReadOnlyField label="Dosage Form" value={product?.dosageForm || 'N/A'} />
+            <ReadOnlyField label="Active Pharmaceutical Ingredients" value={product?.activeIngredients || 'N/A'} />
+          </Box>
+        </DetailSection>
+      )}
+
+      {/* ─── 7. SKU VARIANTS & CUSTOMIZATIONS (If Applicable) ─── */}
+      {(product?.skuVariants?.length > 0 || product?.variations || modifiers) && (
+        <DetailSection
+          icon={<TuneOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+          title="7. Variants & Add-on Modifiers"
+          subtitle="Inventory variants, sizes/colors, and restaurant add-on modifier groups"
+        >
+          {product?.skuVariants?.length > 0 ? (
+            <TableContainer sx={{ border: '1px solid', borderColor: 'divider' }}>
+              <Table size="small">
+                <TableHead sx={{ bgcolor: 'grey.100' }}>
+                  <TableRow>
+                    <TH>Variant Title</TH>
+                    <TH>SKU</TH>
+                    <TH>Barcode</TH>
+                    <TH>Price</TH>
+                    <TH>Stock</TH>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {product.skuVariants.map((v, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Typography variant="body2" fontWeight={600}>{v.title || v.name || `Variant ${i + 1}`}</Typography></TableCell>
+                      <TableCell><Typography variant="caption" sx={{ fontFamily: 'monospace' }}>{v.sku || '—'}</Typography></TableCell>
+                      <TableCell><Typography variant="caption">{v.barcode || '—'}</Typography></TableCell>
+                      <TableCell><Typography variant="body2" fontWeight={700}>{formatMoney(v.price)}</Typography></TableCell>
+                      <TableCell><Typography variant="body2">{v.stock ?? '—'}</Typography></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Variations JSON: {typeof product?.variations === 'string' ? product.variations : JSON.stringify(product?.variations)}
+            </Typography>
+          )}
+        </DetailSection>
+      )}
+
+      {/* ─── 8. PRODUCT IMAGES GALLERY ─── */}
+      <DetailSection
+        icon={<PhotoLibraryOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="8. Product Media Assets"
+        subtitle="All high-resolution gallery and showcase images"
+        count={images.length}
+      >
+        {images.length > 0 ? (
+          <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.5 }}>
+              {images.map((img, i) => (
+                <Box
+                  key={i}
+                  onClick={() => setActiveImagePreview(img)}
+                  sx={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    borderRadius: 0,
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'grey.100',
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.9, borderColor: BRAND },
+                  }}
+                >
+                  <img src={img} alt={`Product ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {i === 0 && (
+                    <Chip
+                      label="Primary"
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 4,
+                        left: 4,
+                        height: 18,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        bgcolor: 'rgba(0,0,0,0.75)',
+                        color: 'white',
+                        borderRadius: 0,
+                      }}
+                    />
+                  )}
+                </Box>
+              ))}
+            </Box>
+
+            {/* Active Preview Modal Dialog */}
+            {activeImagePreview && (
+              <Dialog open={!!activeImagePreview} onClose={() => setActiveImagePreview(null)} maxWidth="md">
+                <Box sx={{ position: 'relative', bgcolor: '#000', p: 1 }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => setActiveImagePreview(null)}
+                    sx={{ position: 'absolute', top: 8, right: 8, color: '#fff', bgcolor: 'rgba(0,0,0,0.5)' }}
+                  >
+                    <CloseOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <img src={activeImagePreview} alt="Full resolution preview" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+                </Box>
+              </Dialog>
+            )}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', mt: 1 }}>No images provided</Typography>
+          <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+            No images uploaded for this product
+          </Typography>
         )}
-      </Box>
+      </DetailSection>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-        <FormControlLabel
-          control={<Switch checked={formData.status} onChange={e => set('status', e.target.checked)} sx={{ '& .MuiSwitch-thumb': { borderRadius: 0 }, '& .MuiSwitch-track': { borderRadius: 0 } }} />}
-          label={<Typography variant="body2">Active Status</Typography>}
-        />
+      {/* ─── 9. VENDOR & STORE INFORMATION ─── */}
+      <DetailSection
+        icon={<PersonOutlineOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="9. Merchant & Store Information"
+        subtitle="Vendor store identity, contact info, and business location"
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+          <ReadOnlyField label="Store / Business Name" value={vendorName} />
+          <ReadOnlyField label="Vendor Username" value={product?.vendor?.username} />
+          <ReadOnlyField label="Vendor Email" value={vendorEmail} />
 
-        <FormControl size="small" sx={{ minWidth: DROP_MIN_W }}>
-          <InputLabel>Approval Status</InputLabel>
-          <Select value={formData.approvalStatus} label="Approval Status" onChange={e => set('approvalStatus', e.target.value)} sx={{ borderRadius: 0 }}>
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Rejected">Rejected</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+          <ReadOnlyField label="Vendor Phone" value={vendorPhone} />
+          <ReadOnlyField label="Store Location (City/State)" value={vendorCity} />
+          <ReadOnlyField label="Vendor User ID" value={product?.vendorId || product?.vendor?.uid} mono />
+        </Box>
+      </DetailSection>
 
-      <Box sx={{ display: 'flex', gap: 1.5, pt: 1 }}>
-        <Button
-          type="submit"
-          variant="contained"
-          startIcon={<SaveOutlinedIcon />}
-          sx={{ flex: 1, bgcolor: BRAND, borderRadius: 0, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#b00d52' } }}
-        >
-          Update Product Status
-        </Button>
-        <Button
-          type="button"
-          variant="outlined"
-          onClick={onCancel}
-          sx={{ flex: 1, borderRadius: 0, textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
-        >
-          Cancel
-        </Button>
-      </Box>
+      {/* ─── 10. SYSTEM AUDIT METADATA ─── */}
+      <DetailSection
+        icon={<HistoryOutlinedIcon fontSize="small" sx={{ color: BRAND }} />}
+        title="10. System Audit & Timestamps"
+        subtitle="System registration date, last modification timestamp, and catalog approver"
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
+          <ReadOnlyField label="Product Creation Date" value={formatDate(product?.createdAt)} />
+          <ReadOnlyField label="Last Updated Date" value={formatDate(product?.updatedAt)} />
+          <ReadOnlyField label="Approver / Created By" value={product?.approver?.username || product?.approveById || product?.createdById || 'Self-Registered by Merchant'} />
+        </Box>
+      </DetailSection>
+
+      {/* ─── 11. APPROVAL & STATUS CONTROLS ─── */}
+      <Card elevation={0} sx={{ border: '2px solid', borderColor: BRAND, borderRadius: 0, bgcolor: 'rgba(57, 119, 42, 0.04)' }}>
+        <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+          <Typography variant="subtitle2" fontWeight={800} color="text.primary" sx={{ mb: 1.5 }}>
+            Approval Status & Live Visibility Controls
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.status}
+                  onChange={e => set('status', e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': { color: BRAND },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: BRAND },
+                    '& .MuiSwitch-thumb': { borderRadius: 0 },
+                    '& .MuiSwitch-track': { borderRadius: 0 },
+                  }}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" fontWeight={700}>
+                    {formData.status ? 'Product is Active' : 'Product is Inactive'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {formData.status ? 'Visible on marketplace customer catalog' : 'Hidden from customer store search'}
+                  </Typography>
+                </Box>
+              }
+            />
+
+            <FormControl size="small" sx={{ minWidth: 260 }}>
+              <InputLabel>Approval Status</InputLabel>
+              <Select
+                value={formData.approvalStatus}
+                label="Approval Status"
+                onChange={e => set('approvalStatus', e.target.value)}
+                sx={{ borderRadius: 0, bgcolor: 'background.paper', fontWeight: 700 }}
+              >
+                <MenuItem value="Pending">⏳ Pending Approval</MenuItem>
+                <MenuItem value="Approved">✅ Approved (Ready for Sale)</MenuItem>
+                <MenuItem value="Rejected">❌ Rejected (Needs Vendor Revision)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<SaveOutlinedIcon />}
+              sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' }, bgcolor: BRAND, borderRadius: 0, textTransform: 'none', fontWeight: 700, px: 3, py: 1.25, '&:hover': { bgcolor: '#2e6121' } }}
+            >
+              Update Product Status
+            </Button>
+            {product?.proId && (
+              <Button
+                component="a"
+                href={`/admin/dashboard/products/${product.proId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outlined"
+                startIcon={<LaunchOutlinedIcon />}
+                sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' }, borderRadius: 0, textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
+              >
+                Edit Full Product Page
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={onCancel}
+              sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, borderRadius: 0, textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary', px: 3 }}
+            >
+              Close
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
 
     </Box>
   )
