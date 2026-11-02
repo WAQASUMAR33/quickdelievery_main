@@ -35,8 +35,12 @@ import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternate
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural'
 import ReplayIcon from '@mui/icons-material/Replay'
 
-const BLUE = '#2563EB'
-const GOLD = '#F59E0B'
+// ── MartZona Brand Logo Colors ───────────────────────────────────────────────
+const BRAND_PURPLE = '#43046C'
+const BRAND_PURPLE_LIGHT = '#6B12A8'
+const BRAND_PURPLE_HOVER = '#370359'
+const BRAND_GOLD = '#FDB600'
+const BRAND_GOLD_DARK = '#D99B00'
 const MIN_VEHICLE_IMAGES = 4
 
 const CITIES = [
@@ -104,7 +108,7 @@ function ImageUploadBox({ label, value, onChange, folder, isDark, round = false,
           height: round ? 120 : height,
           mx: round ? 'auto' : 0,
           borderRadius: round ? '50%' : '14px',
-          border: `2px dashed ${value ? BLUE : isDark ? 'rgba(255,255,255,0.18)' : '#CBD5E1'}`,
+          border: `2px dashed ${value ? BRAND_PURPLE : isDark ? 'rgba(255,255,255,0.18)' : '#CBD5E1'}`,
           bgcolor: isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
           overflow: 'hidden',
           cursor: 'pointer',
@@ -112,16 +116,16 @@ function ImageUploadBox({ label, value, onChange, folder, isDark, round = false,
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'border-color .2s',
-          '&:hover': { borderColor: BLUE },
+          '&:hover': { borderColor: BRAND_PURPLE },
         }}
       >
         {value ? (
           <Box component="img" src={value} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : uploading ? (
-          <CircularProgress size={26} sx={{ color: BLUE }} />
+          <CircularProgress size={26} sx={{ color: BRAND_PURPLE }} />
         ) : (
           <Stack alignItems="center" spacing={0.5} sx={{ color: isDark ? '#64748B' : '#94A3B8', px: 1 }}>
-            {round ? <CameraAltOutlinedIcon /> : <CloudUploadOutlinedIcon />}
+            {round ? <CameraAltOutlinedIcon sx={{ color: BRAND_PURPLE }} /> : <CloudUploadOutlinedIcon sx={{ color: BRAND_PURPLE }} />}
             <Typography sx={{ fontSize: 11.5, fontWeight: 600 }}>{round ? 'Add photo' : 'Click to upload'}</Typography>
           </Stack>
         )}
@@ -177,7 +181,7 @@ function VehicleImagesUploader({ images, onChange, isDark }) {
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: isDark ? '#E2E8F0' : '#0F172A' }}>
           Vehicle Images (minimum {MIN_VEHICLE_IMAGES})
         </Typography>
-        <Typography sx={{ fontSize: 12, fontWeight: 700, color: images.length >= MIN_VEHICLE_IMAGES ? '#16A34A' : GOLD }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 700, color: images.length >= MIN_VEHICLE_IMAGES ? '#16A34A' : BRAND_GOLD }}>
           {images.length}/{MIN_VEHICLE_IMAGES} {images.length >= MIN_VEHICLE_IMAGES ? '✓' : ''}
         </Typography>
       </Stack>
@@ -199,7 +203,7 @@ function VehicleImagesUploader({ images, onChange, isDark }) {
         ))}
         {Array.from({ length: uploadingCount }).map((_, i) => (
           <Box key={`u${i}`} sx={{ position: 'relative', pt: '100%', borderRadius: '12px', bgcolor: isDark ? 'rgba(255,255,255,.04)' : '#F1F5F9' }}>
-            <CircularProgress size={22} sx={{ position: 'absolute', top: 'calc(50% - 11px)', left: 'calc(50% - 11px)', color: BLUE }} />
+            <CircularProgress size={22} sx={{ position: 'absolute', top: 'calc(50% - 11px)', left: 'calc(50% - 11px)', color: BRAND_PURPLE }} />
           </Box>
         ))}
         {images.length < 10 && (
@@ -208,11 +212,11 @@ function VehicleImagesUploader({ images, onChange, isDark }) {
             sx={{
               position: 'relative', pt: '100%', borderRadius: '12px', cursor: 'pointer',
               border: `2px dashed ${isDark ? 'rgba(255,255,255,.18)' : '#CBD5E1'}`,
-              '&:hover': { borderColor: BLUE },
+              '&:hover': { borderColor: BRAND_PURPLE },
             }}
           >
             <Stack alignItems="center" justifyContent="center" spacing={0.25} sx={{ position: 'absolute', inset: 0, color: isDark ? '#64748B' : '#94A3B8' }}>
-              <AddPhotoAlternateOutlinedIcon />
+              <AddPhotoAlternateOutlinedIcon sx={{ color: BRAND_PURPLE }} />
               <Typography sx={{ fontSize: 11, fontWeight: 600 }}>Add</Typography>
             </Stack>
           </Box>
@@ -283,8 +287,8 @@ function LiveSelfieCapture({ value, onChange, isDark }) {
 
   const frame = {
     width: 240, height: 240, mx: 'auto', borderRadius: '50%', overflow: 'hidden',
-    border: `4px solid ${value ? '#16A34A' : BLUE}`,
-    boxShadow: `0 0 0 6px ${value ? 'rgba(22,163,74,.15)' : 'rgba(37,99,235,.15)'}`,
+    border: `4px solid ${value ? BRAND_GOLD : BRAND_PURPLE}`,
+    boxShadow: `0 0 0 6px ${value ? 'rgba(253, 182, 0, 0.25)' : 'rgba(67, 4, 108, 0.2)'}`,
     bgcolor: isDark ? '#0F172A' : '#F1F5F9',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }
@@ -295,7 +299,7 @@ function LiveSelfieCapture({ value, onChange, isDark }) {
         {cameraOn ? (
           <Box component="video" ref={videoRef} playsInline muted sx={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
         ) : uploading ? (
-          <CircularProgress sx={{ color: BLUE }} />
+          <CircularProgress sx={{ color: BRAND_PURPLE }} />
         ) : value ? (
           <Box component="img" src={value} alt="Live selfie" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -310,7 +314,18 @@ function LiveSelfieCapture({ value, onChange, isDark }) {
       {cameraOn ? (
         <Stack direction="row" spacing={1.5} justifyContent="center">
           <Button variant="outlined" onClick={stopCamera} sx={{ textTransform: 'none', borderRadius: '12px' }}>Cancel</Button>
-          <Button variant="contained" startIcon={<CameraAltOutlinedIcon />} onClick={capture} sx={{ textTransform: 'none', borderRadius: '12px', bgcolor: BLUE, fontWeight: 700 }}>
+          <Button
+            variant="contained"
+            startIcon={<CameraAltOutlinedIcon />}
+            onClick={capture}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '12px',
+              background: `linear-gradient(135deg, ${BRAND_PURPLE} 0%, ${BRAND_PURPLE_LIGHT} 100%)`,
+              color: '#FFFFFF',
+              fontWeight: 800,
+            }}
+          >
             Capture Selfie
           </Button>
         </Stack>
@@ -320,7 +335,18 @@ function LiveSelfieCapture({ value, onChange, isDark }) {
           startIcon={value ? <ReplayIcon /> : <CameraAltOutlinedIcon />}
           onClick={startCamera}
           disabled={uploading}
-          sx={{ textTransform: 'none', borderRadius: '12px', fontWeight: 700, ...(value ? {} : { bgcolor: BLUE }) }}
+          sx={{
+            textTransform: 'none',
+            borderRadius: '12px',
+            fontWeight: 800,
+            ...(value
+              ? { borderColor: BRAND_PURPLE, color: BRAND_PURPLE }
+              : {
+                  background: `linear-gradient(135deg, ${BRAND_PURPLE} 0%, ${BRAND_PURPLE_LIGHT} 100%)`,
+                  color: '#FFFFFF',
+                  boxShadow: '0 4px 14px rgba(67, 4, 108, 0.35)',
+                }),
+          }}
         >
           {value ? 'Retake Selfie' : 'Open Camera'}
         </Button>
@@ -462,22 +488,33 @@ export default function DriverRegisterPage() {
   }
 
   const fieldSx = {
-    '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF' },
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      bgcolor: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: BRAND_PURPLE,
+        borderWidth: 2,
+      },
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+      color: BRAND_PURPLE,
+      fontWeight: 700,
+    },
   }
   const textColor = isDark ? '#F1F5F9' : '#0F172A'
   const subColor = isDark ? '#94A3B8' : '#64748B'
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: isDark ? '#060A14' : '#F1F5F9', py: { xs: 2, md: 5 }, px: 2 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: isDark ? '#060A14' : '#F8FAFC', py: { xs: 2, md: 5 }, px: 2 }}>
       <Box sx={{ maxWidth: 640, mx: 'auto' }}>
         {/* Header */}
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
           <NextLink href="/" style={{ display: 'inline-flex' }}>
-            <Box sx={{ bgcolor: '#FFFFFF', px: 1.6, py: 0.6, borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,.08)', display: 'inline-flex' }}>
-              <Box component="img" src="/images/martzona_logo_transparent.png" alt="MartZona" sx={{ height: 32 }} />
+            <Box sx={{ bgcolor: '#FFFFFF', px: 1.8, py: 0.8, borderRadius: '14px', boxShadow: '0 4px 14px rgba(67, 4, 108, 0.12)', border: '1px solid rgba(67, 4, 108, 0.15)', display: 'inline-flex' }}>
+              <Box component="img" src="/images/martzona_logo_transparent.png" alt="MartZona" sx={{ height: 34 }} />
             </Box>
           </NextLink>
-          <Button component={NextLink} href="/login" size="small" sx={{ textTransform: 'none', fontWeight: 700, color: BLUE }}>
+          <Button component={NextLink} href="/login" size="small" sx={{ textTransform: 'none', fontWeight: 800, color: BRAND_PURPLE }}>
             Already a driver? Sign in
           </Button>
         </Stack>
@@ -488,36 +525,37 @@ export default function DriverRegisterPage() {
             bgcolor: isDark ? '#0B1222' : '#FFFFFF',
             borderRadius: '24px',
             border: `1px solid ${isDark ? 'rgba(255,255,255,.08)' : '#E2E8F0'}`,
-            boxShadow: isDark ? '0 20px 50px rgba(0,0,0,.4)' : '0 20px 50px rgba(15,23,42,.08)',
+            boxShadow: isDark ? '0 20px 50px rgba(0,0,0,.4)' : '0 20px 50px rgba(67,4,108,.08)',
             overflow: 'hidden',
           }}
         >
-          {/* Progress */}
-          <Box sx={{ p: { xs: 2.5, sm: 3.5 }, pb: 2.5, background: 'linear-gradient(135deg, #0C1A38 0%, #1E3A8A 100%)', color: '#fff' }}>
+          {/* Progress: MartZona Royal Purple & Violet Gradient */}
+          <Box sx={{ p: { xs: 2.5, sm: 3.5 }, pb: 2.5, background: 'linear-gradient(135deg, #24023A 0%, #43046C 55%, #5B0692 100%)', color: '#fff' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="baseline">
-              <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, sm: 24 } }}>Driver Registration</Typography>
-              <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: '#FBBF24' }}>Step {step + 1} of {STEPS.length}</Typography>
+              <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, sm: 24 }, letterSpacing: -0.4 }}>Driver Registration</Typography>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: BRAND_GOLD }}>Step {step + 1} of {STEPS.length}</Typography>
             </Stack>
-            <Typography sx={{ fontSize: 13, color: '#BFDBFE', mt: 0.5 }}>{STEPS[step].subtitle}</Typography>
+            <Typography sx={{ fontSize: 13, color: '#F3E8FF', mt: 0.5 }}>{STEPS[step].subtitle}</Typography>
             <LinearProgress
               variant="determinate"
               value={((step + 1) / STEPS.length) * 100}
-              sx={{ mt: 2, height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,.15)', '& .MuiLinearProgress-bar': { bgcolor: '#FBBF24', borderRadius: 3 } }}
+              sx={{ mt: 2, height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,.18)', '& .MuiLinearProgress-bar': { bgcolor: BRAND_GOLD, borderRadius: 3 } }}
             />
             <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
               {STEPS.map((s, i) => (
                 <Stack key={s.title} alignItems="center" spacing={0.5} sx={{ flex: 1 }}>
                   <Box
                     sx={{
-                      width: 28, height: 28, borderRadius: '50%', fontSize: 12, fontWeight: 800,
+                      width: 28, height: 28, borderRadius: '50%', fontSize: 12, fontWeight: 900,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      bgcolor: i < step ? '#16A34A' : i === step ? '#FBBF24' : 'rgba(255,255,255,.12)',
-                      color: i === step ? '#0C1A38' : '#fff',
+                      bgcolor: i < step ? '#16A34A' : i === step ? BRAND_GOLD : 'rgba(255,255,255,.14)',
+                      color: i === step ? BRAND_PURPLE : '#fff',
+                      boxShadow: i === step ? '0 0 0 3px rgba(253, 182, 0, 0.35)' : 'none',
                     }}
                   >
                     {i < step ? <CheckIcon sx={{ fontSize: 16 }} /> : i + 1}
                   </Box>
-                  <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: i <= step ? '#fff' : '#93C5FD', display: { xs: 'none', sm: 'block' } }}>
+                  <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: i <= step ? '#fff' : '#E9D5FF', display: { xs: 'none', sm: 'block' } }}>
                     {s.title}
                   </Typography>
                 </Stack>
@@ -628,13 +666,13 @@ export default function DriverRegisterPage() {
                               onClick={() => set('vehicleType')(value)}
                               sx={{
                                 cursor: 'pointer', textAlign: 'center', py: 1.6, px: 0.5, borderRadius: '14px',
-                                border: `2px solid ${active ? BLUE : isDark ? 'rgba(255,255,255,.1)' : '#E2E8F0'}`,
-                                bgcolor: active ? (isDark ? 'rgba(37,99,235,.15)' : '#EFF6FF') : 'transparent',
+                                border: `2px solid ${active ? BRAND_PURPLE : isDark ? 'rgba(255,255,255,.1)' : '#E2E8F0'}`,
+                                bgcolor: active ? (isDark ? 'rgba(67, 4, 108, 0.3)' : '#FAF5FF') : 'transparent',
                                 transition: 'all .15s',
                               }}
                             >
-                              <Icon sx={{ fontSize: 28, color: active ? BLUE : subColor }} />
-                              <Typography sx={{ fontSize: 11.5, fontWeight: 700, mt: 0.5, color: active ? BLUE : textColor }}>{label}</Typography>
+                              <Icon sx={{ fontSize: 28, color: active ? BRAND_PURPLE : subColor }} />
+                              <Typography sx={{ fontSize: 11.5, fontWeight: 700, mt: 0.5, color: active ? BRAND_PURPLE : textColor }}>{label}</Typography>
                             </Box>
                           )
                         })}
@@ -679,14 +717,26 @@ export default function DriverRegisterPage() {
 
             {error && <Alert severity="error" sx={{ mt: 2.5, borderRadius: '12px' }}>{error}</Alert>}
 
-            {/* Actions */}
+            {/* Actions: MartZona Brand Buttons */}
             <Stack direction="row" spacing={1.5} sx={{ mt: 3 }}>
               <Button
                 variant="outlined"
                 startIcon={<ArrowBackIcon />}
                 onClick={back}
                 disabled={submitting}
-                sx={{ flex: 1, py: 1.4, borderRadius: '12px', textTransform: 'none', fontWeight: 700 }}
+                sx={{
+                  flex: 1,
+                  py: 1.4,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  borderColor: isDark ? 'rgba(255,255,255,0.18)' : '#CBD5E1',
+                  color: isDark ? '#E2E8F0' : '#475569',
+                  '&:hover': {
+                    borderColor: BRAND_PURPLE,
+                    color: BRAND_PURPLE,
+                  },
+                }}
               >
                 Back
               </Button>
@@ -695,9 +745,39 @@ export default function DriverRegisterPage() {
                 endIcon={submitting ? null : step === STEPS.length - 1 ? <CheckIcon /> : <ArrowForwardIcon />}
                 onClick={step === STEPS.length - 1 ? submit : next}
                 disabled={submitting}
-                sx={{ flex: 2, py: 1.4, borderRadius: '12px', textTransform: 'none', fontWeight: 800, bgcolor: BLUE, '&:hover': { bgcolor: '#1D4ED8' } }}
+                sx={{
+                  flex: 2,
+                  py: 1.4,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: 15,
+                  ...(step === STEPS.length - 1
+                    ? {
+                        background: `linear-gradient(135deg, ${BRAND_GOLD} 0%, #F59E0B 100%)`,
+                        color: BRAND_PURPLE,
+                        boxShadow: '0 4px 18px rgba(253, 182, 0, 0.45)',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${BRAND_GOLD_DARK} 0%, #D97706 100%)`,
+                        },
+                      }
+                    : {
+                        background: `linear-gradient(135deg, ${BRAND_PURPLE} 0%, ${BRAND_PURPLE_LIGHT} 100%)`,
+                        color: '#FFFFFF',
+                        boxShadow: '0 4px 18px rgba(67, 4, 108, 0.35)',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${BRAND_PURPLE_HOVER} 0%, #58088E 100%)`,
+                        },
+                      }),
+                }}
               >
-                {submitting ? <CircularProgress size={22} sx={{ color: '#fff' }} /> : step === STEPS.length - 1 ? 'Create Profile' : `Continue to Step ${step + 2}`}
+                {submitting ? (
+                  <CircularProgress size={22} sx={{ color: step === STEPS.length - 1 ? BRAND_PURPLE : '#fff' }} />
+                ) : step === STEPS.length - 1 ? (
+                  'Create Profile'
+                ) : (
+                  `Continue to Step ${step + 2}`
+                )}
               </Button>
             </Stack>
           </Box>
