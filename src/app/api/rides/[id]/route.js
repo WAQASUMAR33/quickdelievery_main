@@ -95,6 +95,25 @@ export async function PATCH(request, context) {
       return NextResponse.json({ success: true, data: updated, message: 'Ride cancelled' })
     }
 
+    // ── UPDATE FARE (IN-DRIVE INSTANT OFFER BOOST) ──
+    if (action === 'UPDATE_FARE' || action === 'RAISE_FARE') {
+      if (existingRide.status !== 'SEARCHING') {
+        return NextResponse.json({ success: false, error: 'Can only update fare while searching for drivers' }, { status: 400 })
+      }
+      const newFare = Number(body.newFare || body.fare)
+      if (!newFare || newFare <= 0) {
+        return NextResponse.json({ success: false, error: 'Invalid fare amount' }, { status: 400 })
+      }
+      const updated = await prisma.rideRequest.update({
+        where: { id: rideId },
+        data: {
+          customerFare: newFare,
+          finalFare: newFare,
+        },
+      })
+      return NextResponse.json({ success: true, data: updated, message: 'Fare updated successfully' })
+    }
+
     // ── DRIVER ARRIVED ──
     if (action === 'DRIVER_ARRIVED') {
       if (existingRide.driverId && driverId && existingRide.driverId !== driverId && authUser?.role !== 'ADMIN') {
