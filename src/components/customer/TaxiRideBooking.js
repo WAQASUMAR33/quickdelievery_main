@@ -225,6 +225,14 @@ export default function TaxiRideBooking({ onBack }) {
   }, [userData, user, buildAuthHeaders])
   const [acceptingBidId, setAcceptingBidId] = useState(null)
 
+  // Real-time server-side Places Autocomplete & Pakistan hub suggestions
+  const [pickupSuggestions, setPickupSuggestions] = useState([])
+  const [dropoffSuggestions, setDropoffSuggestions] = useState([])
+  const [showPickupDropdown, setShowPickupDropdown] = useState(false)
+  const [showDropoffDropdown, setShowDropoffDropdown] = useState(false)
+  const pickupSuggestTimerRef = useRef(null)
+  const dropoffSuggestTimerRef = useRef(null)
+
   // Map, Autocomplete & Synchronization refs (prevent stale closures & blur/autocomplete race conditions)
   const mapRef = useRef(null)
   const pickupAutoRef = useRef(null)
@@ -532,14 +540,104 @@ export default function TaxiRideBooking({ onBack }) {
     }, 260)
   }, [geocodeAddress])
 
+  const fetchPlacesSuggestions = async (input, isPickup) => {
+    if (!input || input.trim().length < 2) {
+      if (isPickup) {
+        setPickupSuggestions([])
+        setShowPickupDropdown(false)
+      } else {
+        setDropoffSuggestions([])
+        setShowDropoffDropdown(false)
+      }
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(input.trim())}`)
+      const data = await res.json()
+      if (data.success && Array.isArray(data.predictions) && data.predictions.length > 0) {
+        if (isPickup) {
+          setPickupSuggestions(data.predictions)
+          setShowPickupDropdown(true)
+        } else {
+          setDropoffSuggestions(data.predictions)
+          setShowDropoffDropdown(true)
+        }
+      } else {
+        if (isPickup) {
+          setPickupSuggestions([])
+        } else {
+          setDropoffSuggestions([])
+        }
+      }
+    } catch (err) {
+      console.warn('[Places API] autocomplete fetch error:', err)
+    }
+  }
+
   const handlePickupInputChange = (val) => {
     pickupTextRef.current = val
     setPickupAddress(val)
+    if (pickupSuggestTimerRef.current) clearTimeout(pickupSuggestTimerRef.current)
+    pickupSuggestTimerRef.current = setTimeout(() => {
+      fetchPlacesSuggestions(val, true)
+    }, 180)
   }
 
   const handleDropoffInputChange = (val) => {
     dropoffTextRef.current = val
     setDropoffAddress(val)
+    if (dropoffSuggestTimerRef.current) clearTimeout(dropoffSuggestTimerRef.current)
+    dropoffSuggestTimerRef.current = setTimeout(() => {
+      fetchPlacesSuggestions(val, false)
+    }, 180)
+  }
+
+  const handleSelectSuggestion = (item, isPickup) => {
+    const address = item.description || `${item.mainText}, ${item.secondaryText}`
+    if (isPickup) {
+      if (pickupBlurTimerRef.current) clearTimeout(pickupBlurTimerRef.current)
+      pickupTextRef.current = address
+      pickupResolvedTextRef.current = address
+      setPickupAddress(address)
+      setShowPickupDropdown(false)
+      setPickupSuggestions([])
+
+      if (item.lat && item.lng) {
+        const coord = { lat: parseFloat(item.lat), lng: parseFloat(item.lng) }
+        pickupCoordRef.current = coord
+        setPickupCoord(coord)
+        if (dropoffCoordRef.current) {
+          calculateRoute(coord, dropoffCoordRef.current)
+        } else if (mapRef.current) {
+          mapRef.current.panTo(coord)
+          mapRef.current.setZoom(14)
+        }
+      } else {
+        geocodeAddress(address, true)
+      }
+    } else {
+      if (dropoffBlurTimerRef.current) clearTimeout(dropoffBlurTimerRef.current)
+      dropoffTextRef.current = address
+      dropoffResolvedTextRef.current = address
+      setDropoffAddress(address)
+      setShowDropoffDropdown(false)
+      setDropoffSuggestions([])
+
+      if (item.lat && item.lng) {
+        const coord = { lat: parseFloat(item.lat), lng: parseFloat(item.lng) }
+        dropoffCoordRef.current = coord
+        setDropoffCoord(coord)
+        if (pickupCoordRef.current) {
+          calculateRoute(pickupCoordRef.current, coord)
+        } else if (mapRef.current) {
+          mapRef.current.panTo(coord)
+          mapRef.current.setZoom(14)
+        }
+      } else {
+        geocodeAddress(address, false)
+      }
+    }
   }
 
   // Handle Autocomplete place selection for Pickup
@@ -1558,7 +1656,11 @@ export default function TaxiRideBooking({ onBack }) {
                               placeholder="Search Pickup Address or Landmark (Pakistan)..."
                               value={pickupAddress}
                               onChange={e => handlePickupInputChange(e.target.value)}
-                              onBlur={() => scheduleManualGeocode(true)}
+                              onFocus={() => { if (pickupSuggestions.length > 0) setShowPickupDropdown(true) }}
+                              onBlur={() => {
+                                scheduleManualGeocode(true)
+                                setTimeout(() => setShowPickupDropdown(false), 220)
+                              }}
                               onKeyDown={e => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault()
@@ -1595,7 +1697,11 @@ export default function TaxiRideBooking({ onBack }) {
                             placeholder="Enter Pickup Address or Landmark (Pakistan)..."
                             value={pickupAddress}
                             onChange={e => handlePickupInputChange(e.target.value)}
-                            onBlur={() => scheduleManualGeocode(true)}
+                            onFocus={() => { if (pickupSuggestions.length > 0) setShowPickupDropdown(true) }}
+                            onBlur={() => {
+                              scheduleManualGeocode(true)
+                              setTimeout(() => setShowPickupDropdown(false), 220)
+                            }}
                             onKeyDown={e => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
@@ -1625,6 +1731,58 @@ export default function TaxiRideBooking({ onBack }) {
                             }}
                           />
                         )}
+
+                        {/* Real-time Pakistan & Google Places Dropdown */}
+                        {showPickupDropdown && pickupSuggestions.length > 0 && (
+                          <Paper
+                            elevation={10}
+                            sx={{
+                              position: 'absolute',
+                              top: 'calc(100% + 4px)',
+                              left: 0,
+                              right: 0,
+                              zIndex: 999999,
+                              maxHeight: 280,
+                              overflowY: 'auto',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(226, 232, 240, 0.95)',
+                              bgcolor: '#ffffff',
+                              boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.25)',
+                              p: 0.5,
+                            }}
+                          >
+                            {pickupSuggestions.map((item, idx) => (
+                              <Box
+                                key={item.placeId || idx}
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  handleSelectSuggestion(item, true)
+                                }}
+                                sx={{
+                                  px: 1.5,
+                                  py: 1.2,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1.5,
+                                  cursor: 'pointer',
+                                  borderRadius: '8px',
+                                  transition: 'all 0.15s ease',
+                                  '&:hover': { bgcolor: '#F0FDF4' },
+                                }}
+                              >
+                                <LocationOnIcon sx={{ color: '#22C55E', fontSize: 20, flexShrink: 0 }} />
+                                <Box sx={{ overflow: 'hidden' }}>
+                                  <Typography variant="body2" fontWeight={800} color="#0F172A" noWrap>
+                                    {item.mainText}
+                                  </Typography>
+                                  <Typography variant="caption" color="#64748B" noWrap display="block">
+                                    {item.secondaryText}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ))}
+                          </Paper>
+                        )}
                       </Box>
 
                       {/* Dropoff Input with Autocomplete & Geocoding Fallback */}
@@ -1641,7 +1799,11 @@ export default function TaxiRideBooking({ onBack }) {
                               placeholder="Where to? (Enter Dropoff Destination in Pakistan)..."
                               value={dropoffAddress}
                               onChange={e => handleDropoffInputChange(e.target.value)}
-                              onBlur={() => scheduleManualGeocode(false)}
+                              onFocus={() => { if (dropoffSuggestions.length > 0) setShowDropoffDropdown(true) }}
+                              onBlur={() => {
+                                scheduleManualGeocode(false)
+                                setTimeout(() => setShowDropoffDropdown(false), 220)
+                              }}
                               onKeyDown={e => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault()
@@ -1664,12 +1826,79 @@ export default function TaxiRideBooking({ onBack }) {
                             placeholder="Where to? (Enter Dropoff Destination in Pakistan)..."
                             value={dropoffAddress}
                             onChange={e => handleDropoffInputChange(e.target.value)}
-                            onBlur={() => scheduleManualGeocode(false)}
+                            onFocus={() => { if (dropoffSuggestions.length > 0) setShowDropoffDropdown(true) }}
+                            onBlur={() => {
+                              scheduleManualGeocode(false)
+                              setTimeout(() => setShowDropoffDropdown(false), 220)
+                            }}
                             onKeyDown={e => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
                                 geocodeAddress(dropoffTextRef.current, false)
                               }
+                            }}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <NavigationIcon sx={{ color: '#EF4444' }} />
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
+
+                        {/* Real-time Pakistan & Google Places Dropdown */}
+                        {showDropoffDropdown && dropoffSuggestions.length > 0 && (
+                          <Paper
+                            elevation={10}
+                            sx={{
+                              position: 'absolute',
+                              top: 'calc(100% + 4px)',
+                              left: 0,
+                              right: 0,
+                              zIndex: 999999,
+                              maxHeight: 280,
+                              overflowY: 'auto',
+                              borderRadius: '12px',
+                              border: '1px solid rgba(226, 232, 240, 0.95)',
+                              bgcolor: '#ffffff',
+                              boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.25)',
+                              p: 0.5,
+                            }}
+                          >
+                            {dropoffSuggestions.map((item, idx) => (
+                              <Box
+                                key={item.placeId || idx}
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  handleSelectSuggestion(item, false)
+                                }}
+                                sx={{
+                                  px: 1.5,
+                                  py: 1.2,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1.5,
+                                  cursor: 'pointer',
+                                  borderRadius: '8px',
+                                  transition: 'all 0.15s ease',
+                                  '&:hover': { bgcolor: '#FEF2F2' },
+                                }}
+                              >
+                                <NavigationIcon sx={{ color: '#EF4444', fontSize: 18, flexShrink: 0 }} />
+                                <Box sx={{ overflow: 'hidden' }}>
+                                  <Typography variant="body2" fontWeight={800} color="#0F172A" noWrap>
+                                    {item.mainText}
+                                  </Typography>
+                                  <Typography variant="caption" color="#64748B" noWrap display="block">
+                                    {item.secondaryText}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ))}
+                          </Paper>
+                        )}
+                      </Box>
                             }}
                             InputProps={{
                               startAdornment: (
