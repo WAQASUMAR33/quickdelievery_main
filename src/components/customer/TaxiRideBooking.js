@@ -1899,17 +1899,6 @@ export default function TaxiRideBooking({ onBack }) {
                           </Paper>
                         )}
                       </Box>
-                            }}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <NavigationIcon sx={{ color: '#EF4444' }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Box>
                     </Stack>
 
                     {/* Route Distance & Duration Chip */}
