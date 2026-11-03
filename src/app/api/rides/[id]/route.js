@@ -51,6 +51,7 @@ export async function GET(request, context) {
       ...ride,
       customer: ride.customer ? { ...ride.customer, name: ride.customer.username } : null,
       driver: ride.driver ? { ...ride.driver, name: ride.driver.username } : null,
+      packageImages: ride.proofPhotoUrl ? ride.proofPhotoUrl.split(',').filter(Boolean) : [],
       driverBids: (ride.driverBids || []).map(b => ({
         ...b,
         driver: b.driver ? { ...b.driver, name: b.driver.username } : null,

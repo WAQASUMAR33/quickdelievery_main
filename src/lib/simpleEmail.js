@@ -35,7 +35,7 @@ export const sendTestEmail = async (toEmail, subject, text) => {
   try {
     const { transporter, senderEmail } = getMailTransporter()
     const mailOptions = {
-      from: `"Quick Delivery" <${senderEmail}>`,
+      from: `"MARTZONA" <${senderEmail}>`,
       to: toEmail,
       subject: subject,
       text: text,
@@ -70,11 +70,11 @@ export const sendOtpEmail = async (toEmail, otp) => {
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #eef0f3;">
               <!-- Header -->
               <tr>
-                <td align="center" style="background: linear-gradient(135deg, #39772A 0%, #2f6323 100%); padding: 36px 20px 30px;">
+                <td align="center" style="background: linear-gradient(135deg, #3B0764 0%, #1E1B4B 100%); padding: 36px 20px 30px;">
                   <div style="background: #ffffff; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; line-height: 56px; font-size: 28px; text-align: center;">
                     🔐
                   </div>
-                  <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">Quick Delivery</h1>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">MARTZONA</h1>
                   <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 14px;">Password Reset Verification</p>
                 </td>
               </tr>
@@ -84,12 +84,12 @@ export const sendOtpEmail = async (toEmail, otp) => {
                 <td style="padding: 32px 30px 24px;">
                   <p style="color: #2D3748; font-size: 16px; font-weight: 600; margin: 0 0 10px;">Hello,</p>
                   <p style="color: #4A5568; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
-                    We received a request to reset the password for your Quick Delivery account. Use the 6-digit verification code below to complete the reset:
+                    We received a request to reset the password for your MARTZONA account. Use the 6-digit verification code below to complete the reset:
                   </p>
 
                   <!-- OTP Box -->
-                  <div style="background-color: #f0fdf4; border: 2px dashed #39772A; border-radius: 12px; padding: 20px; text-align: center; margin: 0 0 24px;">
-                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #39772A; display: inline-block;">
+                  <div style="background-color: #faf5ff; border: 2px dashed #3B0764; border-radius: 12px; padding: 20px; text-align: center; margin: 0 0 24px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #3B0764; display: inline-block;">
                       ${otp}
                     </span>
                   </div>
@@ -111,7 +111,7 @@ export const sendOtpEmail = async (toEmail, otp) => {
               <tr>
                 <td style="background-color: #fafbfc; border-top: 1px solid #eef0f3; padding: 20px 30px; text-align: center;">
                   <p style="color: #a0aec0; font-size: 12px; margin: 0;">
-                    &copy; ${new Date().getFullYear()} Quick Delivery. All rights reserved.
+                    &copy; ${new Date().getFullYear()} MARTZONA. All rights reserved.
                   </p>
                 </td>
               </tr>
@@ -124,10 +124,10 @@ export const sendOtpEmail = async (toEmail, otp) => {
     `
 
     const mailOptions = {
-      from: `"Quick Delivery" <${senderEmail}>`,
+      from: `"MARTZONA" <${senderEmail}>`,
       to: toEmail,
-      subject: `Your Quick Delivery Verification Code: ${otp}`,
-      text: `Your Quick Delivery password reset code is ${otp}. This code is valid for 5 minutes.`,
+      subject: `Your MARTZONA Verification Code: ${otp}`,
+      text: `Your MARTZONA password reset code is ${otp}. This code is valid for 5 minutes.`,
       html: htmlContent,
     }
 
@@ -186,12 +186,12 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
               
               <!-- Header Gradient -->
               <tr>
-                <td align="center" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); padding: 36px 24px 30px;">
-                  <div style="background: #39772A; width: 52px; height: 52px; border-radius: 12px; display: inline-block; line-height: 52px; font-size: 26px; text-align: center; color: #ffffff; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(57,119,42,0.35);">
+                <td align="center" style="background: linear-gradient(135deg, #3B0764 0%, #1E1B4B 50%, #0F172A 100%); padding: 36px 24px 30px;">
+                  <div style="background: #FCB400; width: 52px; height: 52px; border-radius: 12px; display: inline-block; line-height: 52px; font-size: 26px; text-align: center; color: #1E1B4B; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(252,180,0,0.35);">
                     ✉️
                   </div>
-                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Quick Delivery</h1>
-                  <p style="color: #94a3b8; margin: 6px 0 0; font-size: 14px; font-weight: 500;">Email Verification Required</p>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">MARTZONA</h1>
+                  <p style="color: #cbd5e1; margin: 6px 0 0; font-size: 14px; font-weight: 500;">Email Verification Required</p>
                 </td>
               </tr>
 
@@ -214,14 +214,14 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
               <!-- Body Content -->
               <tr>
                 <td style="padding: 32px 30px 24px;">
-                  <p style="color: #0f172a; font-size: 16px; font-weight: 700; margin: 0 0 10px;">Welcome to Quick Delivery,</p>
+                  <p style="color: #0f172a; font-size: 16px; font-weight: 700; margin: 0 0 10px;">Welcome to MARTZONA,</p>
                   <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
                     Thank you for signing up! To complete your registration and unlock your profile creation, please verify your email address using the 6-digit confirmation code below:
                   </p>
 
                   <!-- OTP Display Box -->
-                  <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #39772A; border-radius: 12px; padding: 22px; text-align: center; margin: 0 0 24px;">
-                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 12px; color: #39772A; display: inline-block;">
+                  <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #3B0764; border-radius: 12px; padding: 22px; text-align: center; margin: 0 0 24px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 12px; color: #3B0764; display: inline-block;">
                       ${otp}
                     </span>
                     <p style="margin: 8px 0 0; font-size: 12px; color: #64748b; font-weight: 600;">
@@ -230,8 +230,8 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
                   </div>
 
                   <!-- Expiration Note -->
-                  <div style="background-color: #f0fdf4; border-left: 4px solid #39772A; padding: 12px 16px; border-radius: 6px; margin: 0 0 20px;">
-                    <p style="color: #166534; font-size: 13px; font-weight: 600; margin: 0;">
+                  <div style="background-color: #f0fdf4; border-left: 4px solid #3B0764; padding: 12px 16px; border-radius: 6px; margin: 0 0 20px;">
+                    <p style="color: #3B0764; font-size: 13px; font-weight: 600; margin: 0;">
                       ⏱️ This code expires in <strong>10 minutes</strong>.
                     </p>
                   </div>
@@ -246,7 +246,7 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
               <tr>
                 <td style="background-color: #fafbfc; border-top: 1px solid #eef0f3; padding: 20px 30px; text-align: center;">
                   <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0 0 4px;">
-                    Quick Delivery Marketplace & Logistics Fleet
+                    MARTZONA Marketplace & Logistics Fleet
                   </p>
                   <p style="color: #94a3b8; font-size: 11px; margin: 0;">
                     Automated transactional message sent via Hostinger Secure Mail.
@@ -262,10 +262,10 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
     `
 
     const mailOptions = {
-      from: `"Quick Delivery" <${senderEmail}>`,
+      from: `"MARTZONA" <${senderEmail}>`,
       to: toEmail,
-      subject: `Verify Your Email: ${otp} — Quick Delivery`,
-      text: `Your Quick Delivery verification code is ${otp}. This code is valid for 10 minutes.`,
+      subject: `Verify Your Email: ${otp} — MARTZONA`,
+      text: `Your MARTZONA verification code is ${otp}. This code is valid for 10 minutes.`,
       html: htmlContent,
     }
 
@@ -277,4 +277,3 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
     return { success: false, error: error.message }
   }
 }
-

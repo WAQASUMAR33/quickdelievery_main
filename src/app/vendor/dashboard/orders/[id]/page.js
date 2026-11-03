@@ -131,7 +131,7 @@ export default function VendorOrderDetailsPage() {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h5" fontWeight={800} sx={{ color: BRAND, letterSpacing: -0.5 }}>
-                QUICK DELIVERY
+                MARTZONA
               </Typography>
               <Typography variant="caption" color="text.secondary">Fast & Fresh Delivery System</Typography>
             </Box>

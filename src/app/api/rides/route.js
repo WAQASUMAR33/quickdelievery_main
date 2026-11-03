@@ -47,6 +47,7 @@ export async function GET(request) {
               customer: activeTrip.customer
                 ? { ...activeTrip.customer, name: activeTrip.customer.username }
                 : null,
+              packageImages: activeTrip.proofPhotoUrl ? activeTrip.proofPhotoUrl.split(',').filter(Boolean) : [],
             },
             availableRides: [],
             settings,
@@ -77,6 +78,7 @@ export async function GET(request) {
       const availableRides = availableRidesRaw.map(r => ({
         ...r,
         customer: r.customer ? { ...r.customer, name: r.customer.username } : null,
+        packageImages: r.proofPhotoUrl ? r.proofPhotoUrl.split(',').filter(Boolean) : [],
       }))
 
       return NextResponse.json({
@@ -171,6 +173,7 @@ export async function GET(request) {
     const rides = ridesRaw.map(r => ({
       ...r,
       driver: r.driver ? { ...r.driver, name: r.driver.username } : null,
+      packageImages: r.proofPhotoUrl ? r.proofPhotoUrl.split(',').filter(Boolean) : [],
       driverBids: (r.driverBids || []).map(b => ({
         ...b,
         driver: b.driver ? { ...b.driver, name: b.driver.username } : null,
@@ -210,6 +213,9 @@ export async function POST(request) {
       packageDescription,
       packageWeight,
       isFragile,
+      proofPhotoUrl,
+      packagePhotoUrl,
+      packageImages,
       // User identifiers from client
       customerId: bodyCustomerId,
       userId: bodyUserId,
@@ -326,6 +332,7 @@ export async function POST(request) {
         packageDescription: packageDescription ? packageDescription.trim() : null,
         packageWeight: packageWeight ? String(packageWeight).trim() : null,
         isFragile: Boolean(isFragile),
+        proofPhotoUrl: proofPhotoUrl || packagePhotoUrl || (Array.isArray(packageImages) ? packageImages.join(',') : (packageImages || null)),
       },
       include: {
         customer: {
@@ -337,6 +344,7 @@ export async function POST(request) {
     const ride = {
       ...rideRaw,
       customer: rideRaw.customer ? { ...rideRaw.customer, name: rideRaw.customer.username } : null,
+      packageImages: rideRaw.proofPhotoUrl ? rideRaw.proofPhotoUrl.split(',').filter(Boolean) : [],
       fareBreakdown: fareCalc,
     }
 

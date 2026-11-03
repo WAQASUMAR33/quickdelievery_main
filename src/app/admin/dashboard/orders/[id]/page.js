@@ -127,7 +127,7 @@ export default function OrderDetailsPage() {
                 </Typography>
               </Box>
               <Box textAlign="right">
-                <Typography variant="h6" fontWeight={700}>Quick Delivery</Typography>
+                <Typography variant="h6" fontWeight={700}>MARTZONA</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>123 Delivery Street</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>City, State, ZIP</Typography>
               </Box>
@@ -250,7 +250,7 @@ export default function OrderDetailsPage() {
             <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">Thank you for your business!</Typography>
               <Typography variant="caption" color="text.disabled">
-                For questions, contact support@quickdelivery.com
+                For questions, contact support@martzona.com
               </Typography>
             </Box>
 
