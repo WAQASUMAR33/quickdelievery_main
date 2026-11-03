@@ -277,3 +277,152 @@ export const sendVerificationOtpEmail = async (toEmail, otp, role = 'CUSTOMER') 
     return { success: false, error: error.message }
   }
 }
+
+/**
+ * Sends Driver Onboarding & Authorization Confirmation Email
+ */
+export const sendDriverAuthorizationEmail = async (toEmail, driverData = {}) => {
+  try {
+    const { transporter, senderEmail } = getMailTransporter()
+
+    const name = driverData.name || 'Captain'
+    const vehicleType = driverData.vehicleType || 'Motorcycle'
+    const vehicleNumber = driverData.vehicleNumber || 'Registered'
+    const city = driverData.city || 'Pakistan'
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Driver Account Authorized - MARTZONA</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f8fafc; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0;">
+              
+              <!-- Header Gradient -->
+              <tr>
+                <td align="center" style="background: linear-gradient(135deg, #43046C 0%, #24023A 50%, #0F172A 100%); padding: 36px 24px 30px;">
+                  <div style="background: #FDB600; width: 56px; height: 56px; border-radius: 14px; display: inline-block; line-height: 56px; font-size: 28px; text-align: center; color: #24023A; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(253,182,0,0.4);">
+                    🚗
+                  </div>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;">MARTZONA FLEET</h1>
+                  <p style="color: #cbd5e1; margin: 6px 0 0; font-size: 14px; font-weight: 500;">Captain Onboarding & Authorization</p>
+                </td>
+              </tr>
+
+              <!-- Status Banner -->
+              <tr>
+                <td style="padding: 16px 28px; background-color: #ecfdf5; border-bottom: 1px solid #a7f3d0;">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                      <td>
+                        <span style="display: inline-block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; color: #059669;">
+                          ✅ ACCOUNT AUTHORIZED & ACTIVE
+                        </span>
+                        <p style="margin: 2px 0 0; font-size: 13px; color: #065f46; font-weight: 600;">
+                          Your Driver Profile is 100% verified and authorized for deliveries & RapidRide.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Body Content -->
+              <tr>
+                <td style="padding: 32px 30px 24px;">
+                  <p style="color: #0f172a; font-size: 17px; font-weight: 800; margin: 0 0 10px;">
+                    Assalam-o-Alaikum, Captain ${name}!
+                  </p>
+                  <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+                    Welcome to the <strong>MARTZONA Fleet Network</strong>. Your driver account and vehicle verification documents have been verified and authorized. You are now eligible to accept rides, courier requests, and deliveries.
+                  </p>
+
+                  <!-- Driver Details Table -->
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 0 0 24px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13px;">
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Captain Name:</td>
+                        <td style="color: #0f172a; padding: 6px 0; font-weight: 800; text-align: right;">${name}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Registered Email:</td>
+                        <td style="color: #0f172a; padding: 6px 0; font-weight: 800; text-align: right;">${toEmail}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Vehicle Class:</td>
+                        <td style="color: #0f172a; padding: 6px 0; font-weight: 800; text-align: right;">${vehicleType}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Vehicle Plate:</td>
+                        <td style="color: #0f172a; padding: 6px 0; font-weight: 800; text-align: right;">${vehicleNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Operating City:</td>
+                        <td style="color: #0f172a; padding: 6px 0; font-weight: 800; text-align: right;">${city}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; padding: 6px 0; font-weight: 600;">Verification Status:</td>
+                        <td style="color: #059669; padding: 6px 0; font-weight: 800; text-align: right;">Verified & Authorized</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Quick Start Steps -->
+                  <div style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 18px; margin: 0 0 24px;">
+                    <h4 style="color: #43046C; font-size: 14px; font-weight: 800; margin: 0 0 10px;">
+                      🚀 Next Steps to Start Earning:
+                    </h4>
+                    <ol style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 13px; line-height: 1.6;">
+                      <li>Open the <strong>MartZona Driver App</strong>.</li>
+                      <li>Sign in with your email (<code>${toEmail}</code>) and your password.</li>
+                      <li>Switch your Duty toggle to <strong>ON DUTY</strong> to receive instant trip offers and RapidRide orders.</li>
+                    </ol>
+                  </div>
+
+                  <p style="color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 0;">
+                    If you have questions or need support, contact our 24/7 Captain Support team at support@martzona.com.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #fafbfc; border-top: 1px solid #eef0f3; padding: 20px 30px; text-align: center;">
+                  <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0 0 4px;">
+                    MARTZONA Marketplace & Logistics Fleet
+                  </p>
+                  <p style="color: #94a3b8; font-size: 11px; margin: 0;">
+                    Automated transactional message sent via Hostinger Secure Mail.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    `
+
+    const mailOptions = {
+      from: `"MARTZONA Fleet" <${senderEmail}>`,
+      to: toEmail,
+      subject: `Captain Profile Verified & Authorized — Welcome to MARTZONA Fleet`,
+      text: `Assalam-o-Alaikum, Captain ${name}! Your driver profile is verified and authorized on MartZona Fleet. Vehicle: ${vehicleType} (${vehicleNumber}), City: ${city}. Sign in to the Driver App and switch ON DUTY to start earning.`,
+      html: htmlContent,
+    }
+
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Driver authorization email sent successfully to:', toEmail, 'Message ID:', result.messageId)
+    return { success: true, messageId: result.messageId }
+  } catch (error) {
+    console.error('Error sending driver authorization email:', error)
+    return { success: false, error: error.message }
+  }
+}

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { hashPassword, signToken } from '@/lib/auth'
+import { sendVerificationOtpEmail } from '@/lib/simpleEmail'
 import crypto from 'crypto'
 
 export async function POST(request) {
@@ -13,45 +14,57 @@ export async function POST(request) {
     const cleanEmail = email.toLowerCase().trim()
     const cleanOtp = String(otp || '').trim()
 
-    // 1. Enforce 6-digit OTP email verification
-    if (!cleanOtp || cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
-      return Response.json(
-        { success: false, error: 'A valid 6-digit email verification code is required.' },
-        { status: 400 }
-      )
+    // 1. Process 6-digit OTP email verification
+    if (cleanOtp && cleanOtp.length === 6 && /^\d{6}$/.test(cleanOtp)) {
+      // Verify OTP against database
+      const otpRecord = await prisma.passwordResetOtp.findFirst({
+        where: {
+          email: cleanEmail,
+          otp: cleanOtp,
+          used: false,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+
+      if (!otpRecord) {
+        return Response.json(
+          { success: false, error: 'Invalid verification code. Please check your email or request a new code.' },
+          { status: 400 }
+        )
+      }
+
+      if (new Date() > new Date(otpRecord.expiresAt)) {
+        return Response.json(
+          { success: false, error: 'Verification code has expired. Please request a new code.' },
+          { status: 400 }
+        )
+      }
+
+      // Mark OTP as used
+      await prisma.passwordResetOtp.update({
+        where: { id: otpRecord.id },
+        data: { used: true },
+      })
+    } else {
+      // Mobile app or direct registration without pre-OTP screen:
+      // Generate OTP, store it, and dispatch verification email automatically
+      const generatedOtp = crypto.randomInt(100000, 999999).toString()
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+      await prisma.passwordResetOtp.create({
+        data: {
+          email: cleanEmail,
+          otp: generatedOtp,
+          expiresAt,
+          used: false,
+        },
+      }).catch(() => {})
+
+      sendVerificationOtpEmail(cleanEmail, generatedOtp, role).catch((err) => {
+        console.warn('[AUTH REGISTER] Could not send verification OTP email:', err.message)
+      })
     }
-
-    // Verify OTP against database
-    const otpRecord = await prisma.passwordResetOtp.findFirst({
-      where: {
-        email: cleanEmail,
-        otp: cleanOtp,
-        used: false,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
-
-    if (!otpRecord) {
-      return Response.json(
-        { success: false, error: 'Invalid verification code. Please check your email or request a new code.' },
-        { status: 400 }
-      )
-    }
-
-    if (new Date() > new Date(otpRecord.expiresAt)) {
-      return Response.json(
-        { success: false, error: 'Verification code has expired. Please request a new code.' },
-        { status: 400 }
-      )
-    }
-
-    // Mark OTP as used
-    await prisma.passwordResetOtp.update({
-      where: { id: otpRecord.id },
-      data: { used: true },
-    })
 
     // 2. Check if user already exists
     const existingUser = await prisma.users.findUnique({

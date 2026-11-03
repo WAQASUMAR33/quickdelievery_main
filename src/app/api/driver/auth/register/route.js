@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { hashPassword, signToken } from '@/lib/auth'
+import { sendDriverAuthorizationEmail } from '@/lib/simpleEmail'
 import crypto from 'crypto'
 import fs from 'fs/promises'
 import path from 'path'
@@ -210,11 +211,21 @@ export async function POST(request) {
     const token = signToken({ userId: result.user.id, email: result.user.email, role: result.user.role })
     const { password: _, ...userWithoutPassword } = result.user
 
+    // Send Driver Authorization & Verification Email via Hostinger SMTP
+    sendDriverAuthorizationEmail(email, {
+      name: displayName,
+      vehicleType,
+      vehicleNumber,
+      city,
+    }).catch((mailErr) => {
+      console.warn('[DRIVER REGISTER] Non-blocking email dispatch warning:', mailErr.message)
+    })
+
     return Response.json({
       success: true,
       user: { ...userWithoutPassword, driverProfile: result.driverProfile },
       token,
-      message: 'Driver registration successful',
+      message: 'Driver registration successful. Verification and authorization email dispatched.',
     })
   } catch (error) {
     console.error('Driver registration error:', error)
