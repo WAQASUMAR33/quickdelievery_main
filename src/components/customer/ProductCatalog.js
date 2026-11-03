@@ -10,6 +10,8 @@ import { BentoCountdown, PillCountdown } from '@/components/customer/FlashCountd
 import { DEFAULT_HERO_SLIDES } from '@/lib/heroSlideDefaults'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+import StoreProfileView from './StoreProfileView'
+import AllStoresView from './AllStoresView'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -27,6 +29,7 @@ import {
   X,
   Clock,
   Store,
+  ExternalLink,
   RotateCcw,
   Minus,
   Plus,
@@ -175,6 +178,8 @@ const ProductCatalog = ({
   const [promoWidgets, setPromoWidgets] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
   const [visibleCount, setVisibleCount] = useState(24)
+  const [activeStoreProfile, setActiveStoreProfile] = useState(null)
+  const [showAllStores, setShowAllStores] = useState(false)
 
   // Reset visibleCount on filter change
   useEffect(() => {
@@ -248,10 +253,12 @@ const ProductCatalog = ({
   const orderAgainScrollRef = useRef(null)
   const catalogMainRef = useRef(null)
 
-  // Dedicated store selection handler that clears conflicting filters and scrolls directly to products
+  // Dedicated store selection handler that opens dedicated store profile view
   const handleStoreClick = (sId) => {
-    if (String(selectedVendor) === String(sId)) {
-      setSelectedVendor('')
+    const targetShop = topShops.find(s => String(s.id) === String(sId) || String(s.uid) === String(sId))
+    if (targetShop) {
+      setActiveStoreProfile(targetShop)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       setSelectedVendor(String(sId))
       setSelectedCategory(null)
@@ -542,7 +549,9 @@ const ProductCatalog = ({
       setSelectedVendor('')
     } else if (selectedDepartment === 'stores') {
       setSelectedVendor('')
-      topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+      setShowAllStores(true)
+      setActiveStoreProfile(null)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       setOnlyDeals(false)
       // 1. Direct ID or Code match from database
@@ -1434,15 +1443,27 @@ const ProductCatalog = ({
             <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center gap-1.5">
               <Store className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques')}
             </h4>
-            {selectedVendor && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedVendor('')}
-                className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
+                onClick={() => {
+                  setShowAllStores(true)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="text-[11px] font-black text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               >
-                Clear
+                View All
               </button>
-            )}
+              {selectedVendor && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedVendor('')}
+                  className="text-[11px] font-bold text-slate-400 hover:text-red-500 cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Store Inline Search Box */}
@@ -1472,23 +1493,40 @@ const ProductCatalog = ({
               const isChecked = selectedVendor === sId
               const vendorCount = products.filter(p => productMatchesShop(p, shop)).length
               return (
-                <label
+                <div
                   key={shop.id}
-                  className="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
+                  className="flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs group"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => handleStoreClick(sId)}
+                      onChange={() => {
+                        if (isChecked) setSelectedVendor('')
+                        else setSelectedVendor(sId)
+                      }}
                       className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 accent-blue-600 cursor-pointer"
                     />
                     <span className={`truncate text-xs ${isChecked ? 'font-black text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
                       {shop.businessName || shop.username}
                     </span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setActiveStoreProfile(shop)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      title="Open Full Store Profile"
+                      className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                    <span className="text-[10px] text-slate-400">({vendorCount})</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 ml-1">({vendorCount})</span>
-                </label>
+                </div>
               )
             })}
             {filteredSidebarShops.length === 0 && (
@@ -1776,7 +1814,37 @@ const ProductCatalog = ({
   )
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3 space-y-6">
+    <div className="w-full">
+      {activeStoreProfile ? (
+        <StoreProfileView
+          shop={activeStoreProfile}
+          products={products}
+          allShops={topShops}
+          onBack={() => setActiveStoreProfile(null)}
+          onSelectStore={(shop) => {
+            setActiveStoreProfile(shop)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          onSelectProduct={(product) => setDetailProduct(product)}
+          addToCart={addToCart}
+          isInWishlist={isInWishlist}
+          addToWishlist={addToWishlist}
+          removeFromWishlist={removeFromWishlist}
+          t={t}
+        />
+      ) : showAllStores ? (
+        <AllStoresView
+          shops={topShops}
+          products={products}
+          onBack={() => setShowAllStores(false)}
+          onSelectStore={(shop) => {
+            setActiveStoreProfile(shop)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          t={t}
+        />
+      ) : (
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3 space-y-6">
 
       {/* ══════════════════════════════════════════════════════════════════
           0. SUPER-APP QUICK SERVICES BAR (RapidRide Taxi, Luggage, 2nd Hand, Deals)
@@ -2261,21 +2329,38 @@ const ProductCatalog = ({
               </p>
             </div>
 
-            <div className="flex gap-1.5">
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => scrollCarousel(topShopsScrollRef, -240)}
-                className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm"
-                aria-label="Scroll stores left"
+                type="button"
+                onClick={() => {
+                  setShowAllStores(true)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs font-black transition-colors shadow-sm cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                <span>View All Stores</span>
+                <span className="text-[10px] bg-blue-600 text-white dark:bg-blue-500 px-1.5 py-0.2 rounded-full font-bold">
+                  {topShops.length}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
-              <button
-                onClick={() => scrollCarousel(topShopsScrollRef, 240)}
-                className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm"
-                aria-label="Scroll stores right"
-              >
-                <ChevronRight className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-              </button>
+
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => scrollCarousel(topShopsScrollRef, -240)}
+                  className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
+                  aria-label="Scroll stores left"
+                >
+                  <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                </button>
+                <button
+                  onClick={() => scrollCarousel(topShopsScrollRef, 240)}
+                  className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
+                  aria-label="Scroll stores right"
+                >
+                  <ChevronRight className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2663,6 +2748,8 @@ const ProductCatalog = ({
           </motion.div>
         )}
       </AnimatePresence>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════
           7. FULL PRODUCT DETAIL MODAL (Neo-Marketplace Detail View)

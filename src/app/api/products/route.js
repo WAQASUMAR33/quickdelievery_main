@@ -57,6 +57,8 @@ export async function GET(request) {
         where: vendorWhere,
         include: {
           category: true,
+          businessCategory: true,
+          businessType: true,
         },
       })
 
