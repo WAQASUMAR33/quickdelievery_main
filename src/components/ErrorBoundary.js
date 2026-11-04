@@ -56,12 +56,12 @@ class ErrorBoundary extends React.Component {
               </button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left">
-                <h3 className="font-medium text-gray-800 mb-2">Error Details:</h3>
-                <pre className="text-xs text-gray-600 overflow-auto">
+            {this.state.error && (
+              <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-900 rounded-lg text-left max-h-56 overflow-auto border border-red-200 dark:border-red-900/40">
+                <h3 className="font-semibold text-red-700 dark:text-red-400 mb-1 text-xs uppercase tracking-wider">Error Details:</h3>
+                <pre className="text-xs text-red-600 dark:text-red-300 font-mono whitespace-pre-wrap break-all">
                   {this.state.error.toString()}
-                  {this.state.errorInfo.componentStack}
+                  {this.state.errorInfo?.componentStack}
                 </pre>
               </div>
             )}

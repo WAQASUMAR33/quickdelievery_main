@@ -986,7 +986,7 @@ export default function RegisterPage() {
                       },
                     }}
                   >
-                    Sign Up with Google (${formData.role === 'VENDOR' ? 'Vendor' : formData.role === 'DRIVER' ? 'Driver' : 'Customer'})
+                    {loading ? 'Connecting Google Account…' : `Sign Up with Google ${formData.role === 'VENDOR' ? '(as Vendor)' : formData.role === 'DRIVER' ? '(as Driver)' : '(as Customer)'}`}
                   </Button>
                 </motion.div>
               )}
@@ -1059,6 +1059,40 @@ export default function RegisterPage() {
                       {error}
                     </Alert>
                   )}
+
+                  {/* Fast-Track with Google */}
+                  <Box sx={{ mb: 2.5 }}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      size="large"
+                      disabled={loading}
+                      onClick={handleGoogleSignUp}
+                      startIcon={<GoogleIcon />}
+                      sx={{
+                        py: 1.35,
+                        fontWeight: 800,
+                        fontSize: 13.5,
+                        textTransform: 'none',
+                        borderRadius: 0,
+                        borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1',
+                        color: isDark ? '#FFFFFF' : '#0F172A',
+                        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        '&:hover': {
+                          bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F8FAFC',
+                          borderColor: isDark ? '#FFFFFF' : '#94A3B8',
+                        },
+                      }}
+                    >
+                      {loading ? 'Connecting Google Account…' : `Fast-Track with Google ${formData.role === 'VENDOR' ? '(as Vendor)' : formData.role === 'DRIVER' ? '(as Driver)' : '(as Customer)'}`}
+                    </Button>
+                    <Divider sx={{ my: 2.5, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0' }}>
+                      <Typography variant="caption" sx={{ color: isDark ? '#64748B' : '#94A3B8', px: 1, fontWeight: 700, fontSize: 11 }}>
+                        OR ENTER DETAILS MANUALLY
+                      </Typography>
+                    </Divider>
+                  </Box>
 
                   {/* Details Form */}
                   <Box component="form" onSubmit={handleRequestOtp}>
@@ -1261,8 +1295,8 @@ export default function RegisterPage() {
                         type="tel"
                         value={nationalPhone}
                         onChange={handlePhoneChange}
-                        placeholder={selectedCountry.placeholder}
-                        helperText={`Format: ${selectedCountry.dialCode} ${selectedCountry.phoneMask}`}
+                        placeholder={selectedCountry?.placeholder || '300 1234567'}
+                        helperText={`Format: ${selectedCountry?.dialCode || '+92'} ${selectedCountry?.phoneMask || '### #######'}`}
                         required
                         sx={fieldStyles}
                         InputProps={{
@@ -1279,8 +1313,8 @@ export default function RegisterPage() {
                                 <Box
                                   component="img"
                                   loading="lazy"
-                                  src={getCountryFlagUrl(selectedCountry.code)}
-                                  alt={selectedCountry.name}
+                                  src={getCountryFlagUrl(selectedCountry?.code || 'PK')}
+                                  alt={selectedCountry?.name || 'Country'}
                                   sx={{
                                     width: 20,
                                     height: 14,
@@ -1291,7 +1325,7 @@ export default function RegisterPage() {
                                   }}
                                 />
                                 <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#F1F5F9' : '#0F172A' }}>
-                                  {selectedCountry.dialCode}
+                                  {selectedCountry?.dialCode || '+92'}
                                 </Typography>
                               </Box>
                             </InputAdornment>
