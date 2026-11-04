@@ -586,99 +586,6 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            {/* Account Role Persona Switcher */}
-            <Box sx={{ mb: 2.5 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: isDark ? '#94A3B8' : '#64748B',
-                  fontWeight: 800,
-                  mb: 1,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.8,
-                  fontSize: 11,
-                }}
-              >
-                1. Select Account Persona
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                {[
-                  { role: 'CUSTOMER', label: 'Customer', icon: '🛍️' },
-                  { role: 'VENDOR',   label: 'Vendor',   icon: '🏪' },
-                  { role: 'DRIVER',   label: 'Driver',   icon: '🚖' },
-                ].map((r) => {
-                  const active = selectedRole === r.role
-                  return (
-                    <Button
-                      key={r.role}
-                      type="button"
-                      size="small"
-                      onClick={() => setSelectedRole(r.role)}
-                      sx={{
-                        flex: 1,
-                        py: 0.9,
-                        borderRadius: 0,
-                        textTransform: 'none',
-                        fontSize: 12.5,
-                        fontWeight: active ? 800 : 600,
-                        color: active ? '#FFFFFF' : isDark ? '#94A3B8' : '#475569',
-                        bgcolor: active ? SAPPHIRE : isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
-                        border: active ? `1.5px solid ${SAPPHIRE}` : isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #CBD5E1',
-                        transition: 'all 0.15s ease',
-                        '&:hover': {
-                          bgcolor: active ? SAPPHIRE_DARK : isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                        },
-                      }}
-                    >
-                      <Box component="span" sx={{ mr: 0.75 }}>{r.icon}</Box>
-                      {r.label}
-                    </Button>
-                  )
-                })}
-              </Stack>
-            </Box>
-
-            {/* Google One-Click Sign In Button */}
-            <Button
-              type="button"
-              fullWidth
-              variant="outlined"
-              size="large"
-              disabled={loading || googleLoading}
-              onClick={handleGoogleSignIn}
-              startIcon={googleLoading ? <CircularProgress size={18} color="inherit" /> : <GoogleIcon />}
-              sx={{
-                py: 1.35,
-                mb: 2.5,
-                fontWeight: 800,
-                fontSize: 13.5,
-                textTransform: 'none',
-                borderRadius: 0,
-                borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1',
-                color: isDark ? '#FFFFFF' : '#0F172A',
-                bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F8FAFC',
-                  borderColor: isDark ? '#FFFFFF' : '#94A3B8',
-                  transform: 'translateY(-1px)',
-                },
-              }}
-            >
-              {googleLoading
-                ? 'Connecting to Google…'
-                : `Continue with Google (${selectedRole === 'CUSTOMER' ? 'Customer' : selectedRole === 'VENDOR' ? 'Vendor' : 'Driver'})`}
-            </Button>
-
-            {/* Divider with OR WITH EMAIL */}
-            <Divider sx={{ mb: 3, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0' }}>
-              <Typography variant="caption" sx={{ color: isDark ? '#64748B' : '#94A3B8', px: 1, fontWeight: 700, fontSize: 11 }}>
-                OR SIGN IN WITH EMAIL & PASSWORD
-              </Typography>
-            </Divider>
-
             {/* Login Form */}
             <Box component="form" onSubmit={handleSubmit}>
               <Stack spacing={2.5}>
@@ -781,6 +688,36 @@ export default function LoginPage() {
                   }}
                 >
                   {loading ? 'Authenticating…' : 'Sign In to Account'}
+                </Button>
+
+                {/* Google Sign In Button - Below Sign In to Account Button */}
+                <Button
+                  type="button"
+                  fullWidth
+                  variant="outlined"
+                  size="large"
+                  disabled={loading || googleLoading}
+                  onClick={handleGoogleSignIn}
+                  startIcon={googleLoading ? <CircularProgress size={18} color="inherit" /> : <GoogleIcon />}
+                  sx={{
+                    py: 1.3,
+                    fontWeight: 800,
+                    fontSize: 13.5,
+                    textTransform: 'none',
+                    borderRadius: 0,
+                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1',
+                    color: isDark ? '#FFFFFF' : '#0F172A',
+                    bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#F8FAFC',
+                      borderColor: isDark ? '#FFFFFF' : '#94A3B8',
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                >
+                  {googleLoading ? 'Connecting to Google…' : 'Continue with Google'}
                 </Button>
 
                 {/* Divider */}
@@ -886,7 +823,7 @@ export default function LoginPage() {
             </DialogTitle>
             <DialogContent sx={{ pt: 1 }}>
               <Typography variant="body2" sx={{ color: isDark ? '#94A3B8' : '#64748B', mb: 2, fontSize: 13 }}>
-                Sign in instantly using your Google or Gmail account credentials as a <strong>{selectedRole}</strong>.
+                Sign in instantly using your Google or Gmail account credentials .
               </Typography>
               <Stack spacing={2}>
                 <TextField
