@@ -16,7 +16,7 @@ export async function POST(request) {
     // Use Firebase REST API to verify the email verification code
     let firebaseUser
     try {
-      const apiKey = process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Zwg3QRf2qmsv56WHdqI5MbnX6owH1ZY"
+      const apiKey = process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDbZC6BzYCxpE697lvI_f9PZarsUi21T3w"
 
       // Using Firebase API Key
 

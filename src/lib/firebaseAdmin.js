@@ -16,7 +16,7 @@ function initFirebaseAdmin() {
     const projectId =
       process.env.FIREBASE_PROJECT_ID ||
       process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-      'quickdelievery-a86be'
+      'martzona-ab93a'
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
     const privateKey = formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY)
 
