@@ -321,7 +321,7 @@ const DashboardLayout = ({ children }) => {
         </AppBar>
 
         {/* ── Main content ── */}
-        <Box component="main" sx={{ flex: 1, bgcolor: 'background.default' }}>
+        <Box component="main" sx={{ flex: 1, width: '100%', minWidth: 0, bgcolor: 'background.default' }}>
           {children}
         </Box>
 

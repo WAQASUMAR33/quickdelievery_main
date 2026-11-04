@@ -20,7 +20,6 @@ import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
-import Grid from '@mui/material/Grid'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
@@ -800,8 +799,8 @@ export default function AdminVendorDetailView({ vendorId }) {
         </Stack>
       }
     >
-      <Grid container spacing={2.5}>
-        <Grid item xs={12} lg={4}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '380px 1fr' }, gap: 2.5, width: '100%' }}>
+        <Box sx={{ width: '100%' }}>
           <Stack spacing={2}>
             {hasSavedCoords ? (
               <Alert severity="success" sx={{ borderRadius: 2 }}>
@@ -868,9 +867,9 @@ export default function AdminVendorDetailView({ vendorId }) {
               </Button>
             )}
           </Stack>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} lg={8}>
+        <Box sx={{ width: '100%', minWidth: 0 }}>
           <Box
             sx={{
               width: '100%',
@@ -939,8 +938,8 @@ export default function AdminVendorDetailView({ vendorId }) {
               </Box>
             )}
           </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </SectionCard>
   )
 
@@ -952,44 +951,36 @@ export default function AdminVendorDetailView({ vendorId }) {
         title="Official KYC Documents & Brand Identity Assets"
         subtitle="Click any document or image to inspect in full-screen high resolution"
       >
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} sm={6} md={3}>
-            <DocumentPreviewCard
-              title="CNIC Front Side"
-              subtitle={business?.cnicNo ? `CNIC: ${business.cnicNo}` : 'Owner National ID (Front)'}
-              imageUrl={business?.urlCnicFront}
-              badgeLabel="KYC Doc"
-              onOpenLightbox={() => openMediaByUrl(business?.urlCnicFront, 'CNIC Front Side')}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <DocumentPreviewCard
-              title="CNIC Back Side"
-              subtitle={business?.cnicNo ? `CNIC: ${business.cnicNo}` : 'Owner National ID (Back)'}
-              imageUrl={business?.urlCnicBack}
-              badgeLabel="KYC Doc"
-              onOpenLightbox={() => openMediaByUrl(business?.urlCnicBack, 'CNIC Back Side')}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <DocumentPreviewCard
-              title="Business Logo"
-              subtitle="Official Storefront Avatar"
-              imageUrl={business?.urlLogo || vendor?.image}
-              badgeLabel="Brand Logo"
-              onOpenLightbox={() => openMediaByUrl(business?.urlLogo || vendor?.image, 'Business Logo')}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <DocumentPreviewCard
-              title="Storefront Cover Banner"
-              subtitle="Storefront Header Image"
-              imageUrl={business?.urlCoverPhoto}
-              badgeLabel="Banner"
-              onOpenLightbox={() => openMediaByUrl(business?.urlCoverPhoto, 'Storefront Cover Banner')}
-            />
-          </Grid>
-        </Grid>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2.5, width: '100%' }}>
+          <DocumentPreviewCard
+            title="CNIC Front Side"
+            subtitle={business?.cnicNo ? `CNIC: ${business.cnicNo}` : 'Owner National ID (Front)'}
+            imageUrl={business?.urlCnicFront}
+            badgeLabel="KYC Doc"
+            onOpenLightbox={() => openMediaByUrl(business?.urlCnicFront, 'CNIC Front Side')}
+          />
+          <DocumentPreviewCard
+            title="CNIC Back Side"
+            subtitle={business?.cnicNo ? `CNIC: ${business.cnicNo}` : 'Owner National ID (Back)'}
+            imageUrl={business?.urlCnicBack}
+            badgeLabel="KYC Doc"
+            onOpenLightbox={() => openMediaByUrl(business?.urlCnicBack, 'CNIC Back Side')}
+          />
+          <DocumentPreviewCard
+            title="Business Logo"
+            subtitle="Official Storefront Avatar"
+            imageUrl={business?.urlLogo || vendor?.image}
+            badgeLabel="Brand Logo"
+            onOpenLightbox={() => openMediaByUrl(business?.urlLogo || vendor?.image, 'Business Logo')}
+          />
+          <DocumentPreviewCard
+            title="Storefront Cover Banner"
+            subtitle="Storefront Header Image"
+            imageUrl={business?.urlCoverPhoto}
+            badgeLabel="Banner"
+            onOpenLightbox={() => openMediaByUrl(business?.urlCoverPhoto, 'Storefront Cover Banner')}
+          />
+        </Box>
       </SectionCard>
 
       <SectionCard
@@ -1015,19 +1006,18 @@ export default function AdminVendorDetailView({ vendorId }) {
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={2.5}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2.5, width: '100%' }}>
             {restaurantImages.map((imgUrl, idx) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={`${imgUrl}-${idx}`}>
-                <DocumentPreviewCard
-                  title={`Gallery Photo #${idx + 1}`}
-                  subtitle={business?.businessName || 'Storefront Premises'}
-                  imageUrl={imgUrl}
-                  badgeLabel={`#${idx + 1}`}
-                  onOpenLightbox={() => openMediaByUrl(imgUrl, `Gallery Photo #${idx + 1}`)}
-                />
-              </Grid>
+              <DocumentPreviewCard
+                key={`${imgUrl}-${idx}`}
+                title={`Gallery Photo #${idx + 1}`}
+                subtitle={business?.businessName || 'Storefront Premises'}
+                imageUrl={imgUrl}
+                badgeLabel={`#${idx + 1}`}
+                onOpenLightbox={() => openMediaByUrl(imgUrl, `Gallery Photo #${idx + 1}`)}
+              />
             ))}
-          </Grid>
+          </Box>
         )}
       </SectionCard>
     </Stack>
@@ -1036,7 +1026,7 @@ export default function AdminVendorDetailView({ vendorId }) {
   const currentMedia = allMediaItems[lightbox.index] || null
 
   return (
-    <Box sx={{ pb: 6 }}>
+    <Box sx={{ width: '100%', minWidth: 0, pb: 6 }}>
       {/* ── Top Navigation & Breadcrumb Bar ── */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -1479,111 +1469,103 @@ export default function AdminVendorDetailView({ vendorId }) {
       {activeTab === 0 && (
         <Stack spacing={3}>
           {/* Row 1: Business Legal Info + Owner & Account Info */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={6}>
-              <SectionCard
-                icon={<BusinessOutlinedIcon />}
-                title="Business & Commercial Registration"
-                subtitle="Legal storefront classification, tax registration & platform vertical"
-              >
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
-                  <InfoField label="Business / Storefront Name" value={business?.businessName} copyable fullWidth />
-                  <InfoField
-                    label="Business Category"
-                    value={business?.businessCategory?.categoryTitle}
-                  />
-                  <InfoField
-                    label="Business Type / Cuisine"
-                    value={business?.businessType?.typeTitle}
-                  />
-                  <InfoField
-                    label="Storefront Root Category"
-                    value={business?.category?.name || 'Unassigned'}
-                  />
-                  <InfoField label="Platform Vertical" value={business?.vertical || vendor?.type || 'FOOD'} />
-                  <InfoField label="NTN (Tax Number)" value={business?.ntnNo || 'Not provided'} mono copyable />
-                  <InfoField label="Business Record ID" value={business?.id ? `#${business.id}` : '—'} mono />
-                  <InfoField label="Business Registered" value={formatDateTime(business?.createdAt)} />
-                  <InfoField label="Last Profile Update" value={formatDateTime(business?.updatedAt)} />
-                </Box>
-              </SectionCard>
-            </Grid>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3, width: '100%' }}>
+            <SectionCard
+              icon={<BusinessOutlinedIcon />}
+              title="Business & Commercial Registration"
+              subtitle="Legal storefront classification, tax registration & platform vertical"
+            >
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
+                <InfoField label="Business / Storefront Name" value={business?.businessName} copyable fullWidth />
+                <InfoField
+                  label="Business Category"
+                  value={business?.businessCategory?.categoryTitle}
+                />
+                <InfoField
+                  label="Business Type / Cuisine"
+                  value={business?.businessType?.typeTitle}
+                />
+                <InfoField
+                  label="Storefront Root Category"
+                  value={business?.category?.name || 'Unassigned'}
+                />
+                <InfoField label="Platform Vertical" value={business?.vertical || vendor?.type || 'FOOD'} />
+                <InfoField label="NTN (Tax Number)" value={business?.ntnNo || 'Not provided'} mono copyable />
+                <InfoField label="Business Record ID" value={business?.id ? `#${business.id}` : '—'} mono />
+                <InfoField label="Business Registered" value={formatDateTime(business?.createdAt)} />
+                <InfoField label="Last Profile Update" value={formatDateTime(business?.updatedAt)} />
+              </Box>
+            </SectionCard>
 
-            <Grid item xs={12} lg={6}>
-              <SectionCard
-                icon={<PersonOutlineIcon />}
-                title="Proprietor Identity & Platform Account"
-                subtitle="Owner National ID (CNIC), contact numbers & login account credentials"
-              >
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
-                  <InfoField label="Owner First Name" value={business?.firstName} />
-                  <InfoField label="Owner Last Name" value={business?.lastName} />
-                  <InfoField label="Owner CNIC Number" value={business?.cnicNo} mono copyable />
-                  <InfoField label="Account Username" value={vendor?.username} copyable />
-                  <InfoField label="Primary Phone" value={business?.phoneNumber1 || vendor?.phoneNumber} copyable />
-                  <InfoField label="Secondary Phone" value={business?.phoneNumber2 || 'None'} copyable={!!business?.phoneNumber2} />
-                  <InfoField label="Registered Email" value={business?.email || vendor?.email} copyable fullWidth />
-                  <InfoField label="Platform Vendor UID" value={vendor?.uid} mono copyable fullWidth />
-                </Box>
-              </SectionCard>
-            </Grid>
-          </Grid>
+            <SectionCard
+              icon={<PersonOutlineIcon />}
+              title="Proprietor Identity & Platform Account"
+              subtitle="Owner National ID (CNIC), contact numbers & login account credentials"
+            >
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
+                <InfoField label="Owner First Name" value={business?.firstName} />
+                <InfoField label="Owner Last Name" value={business?.lastName} />
+                <InfoField label="Owner CNIC Number" value={business?.cnicNo} mono copyable />
+                <InfoField label="Account Username" value={vendor?.username} copyable />
+                <InfoField label="Primary Phone" value={business?.phoneNumber1 || vendor?.phoneNumber} copyable />
+                <InfoField label="Secondary Phone" value={business?.phoneNumber2 || 'None'} copyable={!!business?.phoneNumber2} />
+                <InfoField label="Registered Email" value={business?.email || vendor?.email} copyable fullWidth />
+                <InfoField label="Platform Vendor UID" value={vendor?.uid} mono copyable fullWidth />
+              </Box>
+            </SectionCard>
+          </Box>
 
           {/* Row 2: Physical Address + Bank & Settlement */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={6}>
-              <SectionCard
-                icon={<LocationOnOutlinedIcon />}
-                title="Physical Storefront & Billing Address"
-                subtitle="Registered street premises, market building & postal details"
-              >
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
-                  <InfoField label="Street Address" value={business?.streetAddress} copyable fullWidth />
-                  <InfoField label="Building / Market / Plaza" value={business?.buildingPlaceName} />
-                  <InfoField label="Shop / House Number" value={business?.houseNumber} />
-                  <InfoField label="City" value={business?.city} />
-                  <InfoField label="State / Province" value={business?.state} />
-                  <InfoField label="Postal / ZIP Code" value={business?.postalCode} mono />
-                  <InfoField
-                    label="Country"
-                    value={business ? `${countryInfo.flag} ${business.country || 'Pakistan'}` : '—'}
-                  />
-                  <InfoField label="Official Billing Address" value={business?.billingAddress} copyable fullWidth />
-                </Box>
-              </SectionCard>
-            </Grid>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3, width: '100%' }}>
+            <SectionCard
+              icon={<LocationOnOutlinedIcon />}
+              title="Physical Storefront & Billing Address"
+              subtitle="Registered street premises, market building & postal details"
+            >
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
+                <InfoField label="Street Address" value={business?.streetAddress} copyable fullWidth />
+                <InfoField label="Building / Market / Plaza" value={business?.buildingPlaceName} />
+                <InfoField label="Shop / House Number" value={business?.houseNumber} />
+                <InfoField label="City" value={business?.city} />
+                <InfoField label="State / Province" value={business?.state} />
+                <InfoField label="Postal / ZIP Code" value={business?.postalCode} mono />
+                <InfoField
+                  label="Country"
+                  value={business ? `${countryInfo.flag} ${business.country || 'Pakistan'}` : '—'}
+                />
+                <InfoField label="Official Billing Address" value={business?.billingAddress} copyable fullWidth />
+              </Box>
+            </SectionCard>
 
-            <Grid item xs={12} lg={6}>
-              <SectionCard
-                icon={<AccountBalanceOutlinedIcon />}
-                title="Financial Settlement & Bank Payout Account"
-                subtitle="Verified bank IBAN & settlement wallet for vendor payouts"
-              >
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
-                  <InfoField label="Bank Name" value={business?.bankName} copyable />
-                  <InfoField label="Account Holder Title" value={business?.bankAccountTitle} copyable />
-                  <InfoField label="IBAN / Account Number" value={business?.bankIbanNo} mono copyable fullWidth />
-                  <InfoField label="Billing Address" value={business?.billingAddress} fullWidth />
-                  <InfoField
-                    label="Platform Wallet Balance"
-                    value={
-                      vendor?.wallet
-                        ? `${vendor.wallet.currency} ${vendor.wallet.balance.toLocaleString()}`
-                        : 'Rs. 0'
-                    }
-                  />
-                  <InfoField
-                    label="Escrow / Pending Clearance"
-                    value={
-                      vendor?.wallet
-                        ? `${vendor.wallet.currency} ${vendor.wallet.escrowBalance.toLocaleString()}`
-                        : 'Rs. 0'
-                    }
-                  />
-                </Box>
-              </SectionCard>
-            </Grid>
-          </Grid>
+            <SectionCard
+              icon={<AccountBalanceOutlinedIcon />}
+              title="Financial Settlement & Bank Payout Account"
+              subtitle="Verified bank IBAN & settlement wallet for vendor payouts"
+            >
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.75 }}>
+                <InfoField label="Bank Name" value={business?.bankName} copyable />
+                <InfoField label="Account Holder Title" value={business?.bankAccountTitle} copyable />
+                <InfoField label="IBAN / Account Number" value={business?.bankIbanNo} mono copyable fullWidth />
+                <InfoField label="Billing Address" value={business?.billingAddress} fullWidth />
+                <InfoField
+                  label="Platform Wallet Balance"
+                  value={
+                    vendor?.wallet
+                      ? `${vendor.wallet.currency} ${vendor.wallet.balance.toLocaleString()}`
+                      : 'Rs. 0'
+                  }
+                />
+                <InfoField
+                  label="Escrow / Pending Clearance"
+                  value={
+                    vendor?.wallet
+                      ? `${vendor.wallet.currency} ${vendor.wallet.escrowBalance.toLocaleString()}`
+                      : 'Rs. 0'
+                  }
+                />
+              </Box>
+            </SectionCard>
+          </Box>
 
           {/* Row 3: Interactive Map Location */}
           {renderMapSection(400)}

@@ -47,7 +47,7 @@ export default function AdminVendorProfilePage() {
 
   return (
     <DashboardLayout>
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
         <Suspense
           fallback={
             <Box sx={{ py: 10, display: 'flex', justifyContent: 'center' }}>
