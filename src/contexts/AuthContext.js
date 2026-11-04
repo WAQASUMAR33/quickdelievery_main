@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import { getFirebaseAuth, getGoogleAuthProvider, signInWithPopup } from '@/lib/firebase'
 
 const AuthContext = createContext({})
 
@@ -222,6 +223,85 @@ export default function AuthProvider({ children }) {
     }
   }
 
+  const loginWithGoogleData = async ({ email, displayName, photoURL, uid, role = 'CUSTOMER' }) => {
+    try {
+      setLoading(true)
+      const cleanEmail = email ? email.toLowerCase().trim() : ''
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          displayName: displayName || cleanEmail.split('@')[0],
+          photoURL: photoURL || null,
+          uid: uid || null,
+          role: role || 'CUSTOMER',
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Google authentication failed')
+      }
+
+      const { user: dbUser, token } = result
+      localStorage.setItem('authToken', token)
+      syncAuthCookie(token)
+
+      const sessionUser = {
+        uid: dbUser.uid,
+        email: dbUser.email,
+        displayName: dbUser.username,
+        emailVerified: dbUser.emailVerification,
+        phoneNumber: dbUser.phoneNumber,
+        photoURL: dbUser.image || photoURL || null,
+        getIdToken: async () => token,
+      }
+
+      setUser(sessionUser)
+      setUserData(dbUser)
+      toast.success(`Welcome, ${dbUser.username}!`)
+      return { success: true, user: sessionUser, userData: dbUser }
+    } catch (error) {
+      console.error('Google login error:', error)
+      toast.error(error.message || 'Google login failed')
+      return { success: false, error: error.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signInWithGoogle = async (role = 'CUSTOMER') => {
+    try {
+      setLoading(true)
+      const auth = getFirebaseAuth()
+      if (!auth) {
+        throw new Error('Google authentication service is unavailable')
+      }
+
+      const provider = getGoogleAuthProvider()
+      const userCredential = await signInWithPopup(auth, provider)
+      const firebaseUser = userCredential.user
+
+      return await loginWithGoogleData({
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        photoURL: firebaseUser.photoURL,
+        uid: firebaseUser.uid,
+        role,
+      })
+    } catch (error) {
+      console.error('Sign in with Google error:', error)
+      if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+        return { success: false, cancelled: true }
+      }
+      toast.error(error.message || 'Google sign-in could not be completed')
+      return { success: false, error: error.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const loginAsGuest = async () => {
     setLoading(true)
     try {
@@ -290,6 +370,8 @@ export default function AuthProvider({ children }) {
     userDataLoadingTimeout,
     signUp,
     signIn,
+    signInWithGoogle,
+    loginWithGoogleData,
     loginAsGuest,
     logout,
     resendVerification,

@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging'
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyCTYv79PliKT8Kw8hvebzENiI3b4aYfIXw",
@@ -14,6 +15,20 @@ const firebaseConfig = {
 // Initialize or reuse Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
 
+// Auth helper
+export const getFirebaseAuth = () => {
+  if (typeof window !== 'undefined') {
+    return getAuth(app)
+  }
+  return null
+}
+
+export const getGoogleAuthProvider = () => {
+  const provider = new GoogleAuthProvider()
+  provider.setCustomParameters({ prompt: 'select_account' })
+  return provider
+}
+
 // Messaging helper (client-side only)
 export const getClientMessaging = async () => {
   if (typeof window !== 'undefined') {
@@ -25,4 +40,5 @@ export const getClientMessaging = async () => {
   return null
 }
 
-export { app, firebaseConfig }
+export { app, firebaseConfig, signInWithPopup }
+
