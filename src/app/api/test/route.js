@@ -10,6 +10,8 @@ export async function GET() {
         NODE_ENV: process.env.NODE_ENV,
         FIREBASE_PROJECT_ID: !!process.env.FIREBASE_PROJECT_ID,
         NEXT_PUBLIC_FIREBASE_API_KEY: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+        GOOGLE_GEOCODING_API_KEY: !!process.env.GOOGLE_GEOCODING_API_KEY,
         DATABASE_URL: !!process.env.DATABASE_URL
       }
     })
