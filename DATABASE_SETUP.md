@@ -44,7 +44,7 @@ Create `.env` file in your project root:
 DATABASE_URL="your_database_connection_string_here"
 
 # Firebase Configuration
-NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyA6Zwg3QRf2qmsv56WHdqI5MbnX6owH1ZY"
+NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-api-key"
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="quick-delivery-fe107.firebaseapp.com"
 NEXT_PUBLIC_FIREBASE_PROJECT_ID="quick-delivery-fe107"
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="quick-delivery-fe107.firebasestorage.app"

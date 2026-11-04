@@ -31,8 +31,7 @@ export async function GET(request) {
 
     const apiKey =
       process.env.GOOGLE_GEOCODING_API_KEY ||
-      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
-      'AIzaSyAcrb8vKlJwdIpLc3BJUeUxgjwL79P3xfc'
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
     if (apiKey && !placeId.startsWith('osm_') && !placeId.startsWith('hub_')) {
       try {

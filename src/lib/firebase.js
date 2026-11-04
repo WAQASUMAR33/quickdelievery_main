@@ -1,25 +1,27 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from 'firebase/messaging'
+import { getMessaging, isSupported as isMessagingSupported } from 'firebase/messaging'
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { getAnalytics, isSupported as isAnalyticsSupported } from 'firebase/analytics'
 
-// Production Firebase Configuration for MartZona
+// Production Firebase Configuration for MartZona (strictly loaded from .env)
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDbZC6BzYCxpE697lvI_f9PZarsUi21T3w",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "martzona-ab93a.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "martzona-ab93a",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "martzona-ab93a.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "469654137216",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:469654137216:web:7111c08bd58e3a964bf965",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-ED09TC80WL"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
 // Initialize or reuse Firebase App
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+const app = getApps().length > 0 
+  ? getApp() 
+  : (firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null)
 
-// Initialize Analytics (Safe for SSR / client-side only)
+// Initialize Analytics (SSR-safe browser check)
 let analytics = null
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && app) {
   isAnalyticsSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app)
@@ -29,7 +31,7 @@ if (typeof window !== 'undefined') {
 
 // Analytics helper
 export const getFirebaseAnalytics = async () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && app) {
     if (analytics) return analytics
     const supported = await isAnalyticsSupported().catch(() => false)
     if (supported) {
@@ -42,7 +44,7 @@ export const getFirebaseAnalytics = async () => {
 
 // Auth helper
 export const getFirebaseAuth = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && app) {
     return getAuth(app)
   }
   return null
@@ -56,7 +58,7 @@ export const getGoogleAuthProvider = () => {
 
 // Messaging helper (client-side only)
 export const getClientMessaging = async () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && app) {
     const supported = await isMessagingSupported().catch(() => false)
     if (supported) {
       return getMessaging(app)
