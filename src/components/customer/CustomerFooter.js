@@ -1,15 +1,38 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { Facebook, Instagram, Twitter, Youtube, Mail, Clock, ShieldCheck, Truck, Headphones, RotateCcw } from 'lucide-react'
+import { Mail, Clock, ShieldCheck, Truck, Headphones, RotateCcw } from 'lucide-react'
+import SocialIcon from '@/components/common/SocialIcon'
+
+const DEFAULT_FOOTER_SOCIAL = [
+    { id: 1, title: 'Facebook', link: 'https://facebook.com', icon: 'facebook' },
+    { id: 2, title: 'Instagram', link: 'https://instagram.com', icon: 'instagram' },
+    { id: 3, title: 'Twitter / X', link: 'https://twitter.com', icon: 'twitter' },
+    { id: 4, title: 'YouTube', link: 'https://youtube.com', icon: 'youtube' },
+]
 
 const CustomerFooter = () => {
     const { t } = useLanguage()
     const { isDark } = useTheme()
     const currentYear = new Date().getFullYear()
+    const [socialLinks, setSocialLinks] = useState(DEFAULT_FOOTER_SOCIAL)
+
+    useEffect(() => {
+        let mounted = true
+        fetch('/api/social-links')
+            .then(res => res.json())
+            .then(data => {
+                if (mounted && data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+                    setSocialLinks(data.data)
+                }
+            })
+            .catch(err => console.error('Failed to load footer social links:', err))
+        return () => { mounted = false }
+    }, [])
 
     return (
         <footer className={`mt-12 w-full transition-colors duration-300 border-t ${
@@ -103,63 +126,25 @@ const CustomerFooter = () => {
                         <p className={`text-xs sm:text-sm mb-4 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                             {t('footerAbout')}
                         </p>
-                        <div className="flex gap-2.5">
-                            <motion.a
-                                whileHover={{ scale: 1.08 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="https://facebook.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                                    isDark 
-                                        ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700' 
-                                        : 'bg-white hover:bg-blue-600 text-slate-600 hover:text-white border border-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <Facebook className="w-4 h-4" />
-                            </motion.a>
-                            <motion.a
-                                whileHover={{ scale: 1.08 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="https://instagram.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                                    isDark 
-                                        ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700' 
-                                        : 'bg-white hover:bg-blue-600 text-slate-600 hover:text-white border border-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <Instagram className="w-4 h-4" />
-                            </motion.a>
-                            <motion.a
-                                whileHover={{ scale: 1.08 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="https://twitter.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                                    isDark 
-                                        ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700' 
-                                        : 'bg-white hover:bg-blue-600 text-slate-600 hover:text-white border border-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <Twitter className="w-4 h-4" />
-                            </motion.a>
-                            <motion.a
-                                whileHover={{ scale: 1.08 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="https://youtube.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                                    isDark 
-                                        ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700' 
-                                        : 'bg-white hover:bg-blue-600 text-slate-600 hover:text-white border border-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <Youtube className="w-4 h-4" />
-                            </motion.a>
+                        <div className="flex flex-wrap gap-2.5">
+                            {socialLinks.map((item) => (
+                                <motion.a
+                                    key={item.id || item.link}
+                                    whileHover={{ scale: 1.08 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={item.title}
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                                        isDark 
+                                            ? 'bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white border border-slate-700' 
+                                            : 'bg-white hover:bg-blue-600 text-slate-600 hover:text-white border border-slate-200 shadow-sm'
+                                    }`}
+                                >
+                                    <SocialIcon icon={item.icon} size={16} />
+                                </motion.a>
+                            ))}
                         </div>
                     </div>
 

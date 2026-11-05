@@ -81,7 +81,15 @@ const ADMIN_ITEMS = [
 
   { id: 'employees', label: 'Employees', icon: HowToRegOutlinedIcon,    path: '/admin/dashboard/employees' },
   { id: 'disputes',  label: 'Disputes',  icon: WarningAmberOutlinedIcon, path: '/admin/dashboard/disputes' },
-  { id: 'settings',  label: 'Settings',  icon: SettingsOutlinedIcon,    path: '/admin/dashboard/settings' },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: SettingsOutlinedIcon,
+    children: [
+      { id: 'general-settings', label: 'General & Fare Settings', path: '/admin/dashboard/settings' },
+      { id: 'social-settings',  label: 'Social Media Management', path: '/admin/dashboard/settings/social' },
+    ],
+  },
 ]
 
 const VENDOR_ITEMS = [

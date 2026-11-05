@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { checkUserVerification } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import DriverFareSettings from '@/components/admin/DriverFareSettings'
+import SocialMediaSettings from '@/components/admin/SocialMediaSettings'
 
 import Box              from '@mui/material/Box'
 import Button           from '@mui/material/Button'
@@ -29,6 +30,7 @@ import BellOutlinedIcon     from '@mui/icons-material/NotificationsOutlined'
 import LocalTaxiOutlinedIcon from '@mui/icons-material/LocalTaxiOutlined'
 import PersonOutlinedIcon   from '@mui/icons-material/PersonOutlined'
 import SaveOutlinedIcon     from '@mui/icons-material/SaveOutlined'
+import ShareOutlinedIcon    from '@mui/icons-material/ShareOutlined'
 import ShieldOutlinedIcon   from '@mui/icons-material/ShieldOutlined'
 import VisibilityIcon       from '@mui/icons-material/Visibility'
 import VisibilityOffIcon    from '@mui/icons-material/VisibilityOff'
@@ -53,6 +55,18 @@ export default function SettingsPage() {
     notifications: { email: true, push: true, sms: false },
     privacy:       { profileVisibility: 'public', dataSharing: false },
   })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab === 'social' || tab === '2') {
+        setActiveTab(2)
+      } else if (tab === 'fare' || tab === '1') {
+        setActiveTab(1)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading) {
@@ -132,12 +146,15 @@ export default function SettingsPage() {
             >
               <Tab icon={<PersonOutlinedIcon fontSize="small" />} iconPosition="start" label="Account & Preferences" />
               <Tab icon={<LocalTaxiOutlinedIcon fontSize="small" />} iconPosition="start" label="Driver & RapidRide Fare Settings" />
+              <Tab icon={<ShareOutlinedIcon fontSize="small" />} iconPosition="start" label="Social Media Management" />
             </Tabs>
           </Box>
         )}
 
         {isAdmin && activeTab === 1 ? (
           <DriverFareSettings embedded />
+        ) : isAdmin && activeTab === 2 ? (
+          <SocialMediaSettings />
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, alignItems: 'start' }}>
 

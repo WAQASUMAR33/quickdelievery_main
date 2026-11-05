@@ -995,3 +995,16 @@ model PlatformSetting {
 
   @@map("platform_settings")
 }
+
+model SocialLink {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(100)
+  link      String   @db.VarChar(500)
+  icon      String   @db.VarChar(255)
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("social_links")
+}
