@@ -112,6 +112,51 @@ function ShimmerBlock({ className = '' }) {
   )
 }
 
+const DEFAULT_CIRCULAR_DEPARTMENTS = [
+  {
+    id: 5,
+    name: 'Electronics & Tech',
+    code: 'ELECTRONICS_TECH',
+    image: 'https://d1nvnelpyr43e7.cloudfront.net/uploads/1793463322205-martzona_electronics_256.png',
+  },
+  {
+    id: 4,
+    name: 'Bakery & Desserts',
+    code: 'BAKERY_DESSERTS',
+    image: 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469923429-rustic-bakery-assortment-with-celebration-cake.jpg',
+  },
+  {
+    id: 3,
+    name: 'Fresh Groceries',
+    code: 'GROCERY_PRODUCE',
+    image: 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469782535-martzona_grocery_optimized_256px.png',
+  },
+  {
+    id: 2,
+    name: 'Restaurant',
+    code: 'RESTAURANT_DINING',
+    image: 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469765505-martzona_restaurant_256.png',
+  },
+]
+
+function resolveCategoryImage(cat) {
+  if (cat?.image && String(cat.image).trim().length > 0) return cat.image
+  const s = `${cat?.name || ''} ${cat?.code || ''}`.toLowerCase()
+  if (s.includes('tech') || s.includes('electron') || s.includes('gadget') || s.includes('mobile') || s.includes('computer')) {
+    return 'https://d1nvnelpyr43e7.cloudfront.net/uploads/1793463322205-martzona_electronics_256.png'
+  }
+  if (s.includes('baker') || s.includes('dessert') || s.includes('cake') || s.includes('pastr')) {
+    return 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469923429-rustic-bakery-assortment-with-celebration-cake.jpg'
+  }
+  if (s.includes('grocer') || s.includes('fresh') || s.includes('produce') || s.includes('supermarket') || s.includes('pantry')) {
+    return 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469782535-martzona_grocery_optimized_256px.png'
+  }
+  if (s.includes('restaurant') || s.includes('dining') || s.includes('food') || s.includes('pizza') || s.includes('burger')) {
+    return 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469765505-martzona_restaurant_256.png'
+  }
+  return 'https://d1nvnelpyr43e7.cloudfront.net/categories/1793469765505-martzona_restaurant_256.png'
+}
+
 const ProductCatalog = ({
   searchQuery = '',
   searchCategory = 'all',
@@ -212,6 +257,33 @@ const ProductCatalog = ({
   const shopCount = useMemo(() => topShops.filter(s => !isRestaurantShop(s)).length, [topShops])
   const latestStores = useMemo(() => topShops.filter(s => !isRestaurantShop(s)), [topShops])
   const popularRestaurants = useMemo(() => topShops.filter(isRestaurantShop), [topShops])
+
+  // Category Carousel sorted to match exact design:
+  // 1. Electronics & Tech -> 2. Bakery & Desserts -> 3. Fresh Groceries -> 4. Restaurant
+  const sortedCategories = useMemo(() => {
+    const source = categories && categories.length > 0 ? categories : DEFAULT_CIRCULAR_DEPARTMENTS
+    const orderMap = {
+      'electronics': 1,
+      'tech': 1,
+      'bakery': 2,
+      'dessert': 2,
+      'cake': 2,
+      'grocer': 3,
+      'fresh': 3,
+      'supermarket': 3,
+      'restaurant': 4,
+      'dining': 4,
+      'food': 4,
+    }
+    const getOrder = (cat) => {
+      const s = `${cat.name || ''} ${cat.code || ''}`.toLowerCase()
+      for (const [k, v] of Object.entries(orderMap)) {
+        if (s.includes(k)) return v
+      }
+      return 99
+    }
+    return [...source].sort((a, b) => getOrder(a) - getOrder(b))
+  }, [categories])
 
   const renderStorefrontCard = (shop, isRestaurant = false) => {
     const sId = String(shop.id)
@@ -2188,6 +2260,16 @@ const ProductCatalog = ({
                 <button
                   type="button"
                   onClick={() => {
+                    // Activate Restaurant in circular carousel
+                    const restCat = sortedCategories.find(c => {
+                      const s = `${c.name || ''} ${c.code || ''}`.toLowerCase()
+                      return s.includes('restaurant') || s.includes('dining') || s.includes('food')
+                    })
+                    if (restCat) {
+                      setSelectedCategory(restCat.id)
+                      setSelectedSubcategory(null)
+                      if (selectedVendor) setSelectedVendor(null)
+                    }
                     if (w1.buttonLink && !w1.buttonLink.includes('filter=restaurants') && w1.buttonLink !== '/deals') {
                       if (w1.buttonLink.startsWith('http')) window.open(w1.buttonLink, '_blank')
                       else router.push(w1.buttonLink)
@@ -2259,6 +2341,16 @@ const ProductCatalog = ({
                   <button
                     type="button"
                     onClick={() => {
+                      // Activate Shops / Retail in circular carousel
+                      const shopCat = sortedCategories.find(c => {
+                        const s = `${c.name || ''} ${c.code || ''}`.toLowerCase()
+                        return s.includes('electronics') || s.includes('tech')
+                      })
+                      if (shopCat) {
+                        setSelectedCategory(shopCat.id)
+                        setSelectedSubcategory(null)
+                        if (selectedVendor) setSelectedVendor(null)
+                      }
                       if (w2.footerLink && !w2.footerLink.includes('filter=shops') && w2.footerLink !== '/customer') {
                         if (w2.footerLink.startsWith('http')) window.open(w2.footerLink, '_blank')
                         else router.push(w2.footerLink)
@@ -2279,103 +2371,68 @@ const ProductCatalog = ({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          2. SHOP BY DEPARTMENT (Circular Modern Carousel)
+          2. CIRCULAR CATEGORY CAROUSEL (Hero Visual Departments)
+             Matches exact reference: Electronics & Tech, Bakery & Desserts, Fresh Groceries, Restaurant
       ══════════════════════════════════════════════════════════════════ */}
-      {categories.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          {/* Header */}
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4 px-1">
-            {t('shopByDepartments') && t('shopByDepartments') !== 'shopByDepartments'
-              ? t('shopByDepartments')
-              : (t('shopByDepartment') && t('shopByDepartment') !== 'shopByDepartment'
-                ? t('shopByDepartment')
-                : 'Shop by Departments')}
-          </h2>
-
-          <div className="relative group/dept px-1">
-            {/* Left Scroll Arrow */}
+      {sortedCategories.length > 0 && (
+        <div className="relative w-full py-4 sm:py-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-sm overflow-hidden my-2">
+          <div className="relative group/dept w-full">
+            {/* Left Circular Scroll Arrow */}
             <button
               type="button"
-              onClick={() => scrollCarousel(departmentStripRef, -260)}
-              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
-              className="dept-nav-btn absolute -left-2 sm:-left-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
+              onClick={() => scrollCarousel(departmentStripRef, -280)}
+              className="absolute left-1 sm:left-2 md:left-4 top-[36%] -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
               aria-label="Previous departments"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
             </button>
 
             {/* Circular Department Items Row */}
             <div
               ref={departmentStripRef}
-              className="flex gap-5 sm:gap-8 overflow-x-auto pb-2 pt-1 px-2 scrollbar-hide scroll-smooth items-start"
+              className="flex items-start justify-start sm:justify-center gap-6 sm:gap-10 md:gap-14 lg:gap-16 overflow-x-auto pb-2 pt-2 px-8 sm:px-14 scrollbar-hide scroll-smooth"
             >
-              {categories.map((cat) => {
+              {sortedCategories.map((cat) => {
                 const isSelected = selectedCategory === cat.id
+                const imgUrl = resolveCategoryImage(cat)
                 return (
                   <button
-                    key={cat.id}
+                    key={cat.id || cat.code}
                     type="button"
                     onClick={() => {
                       setSelectedCategory(isSelected ? null : cat.id)
                       setSelectedSubcategory(null)
+                      if (selectedVendor) setSelectedVendor(null)
                     }}
                     aria-label={cat.name || 'Browse category'}
-                    className="flex flex-col items-center flex-shrink-0 group/item focus:outline-none outline-none cursor-pointer"
+                    className="flex flex-col items-center flex-shrink-0 group/cat cursor-pointer focus:outline-none transition-transform"
                   >
-                    {/* Circular Avatar Container with Soft Background */}
+                    {/* Perfectly Circular Avatar Frame */}
                     <div
-                      style={{
-                        borderRadius: '50%',
-                        clipPath: 'circle(50% at 50% 50%)',
-                        WebkitClipPath: 'circle(50% at 50% 50%)',
-                        aspectRatio: '1 / 1',
-                      }}
-                      className={`dept-circle relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden p-1 transition-all duration-300 flex items-center justify-center bg-slate-100 dark:bg-slate-800 ${
+                      className={`relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full p-1 bg-white dark:bg-slate-800 border-2 transition-all duration-300 flex items-center justify-center ${
                         isSelected
-                          ? 'scale-105 shadow-md shadow-blue-500/25 ring-2 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 bg-blue-50/60 dark:bg-blue-950/50'
-                          : 'group-hover/item:scale-105 group-hover/item:shadow-sm'
+                          ? 'border-blue-600 ring-4 ring-blue-500/25 shadow-md shadow-blue-500/20 scale-105'
+                          : 'border-slate-100 dark:border-slate-700/80 shadow-sm hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 hover:scale-105'
                       }`}
                     >
-                      <div
-                        style={{
-                          borderRadius: '50%',
-                          clipPath: 'circle(50% at 50% 50%)',
-                          WebkitClipPath: 'circle(50% at 50% 50%)',
-                          aspectRatio: '1 / 1',
-                        }}
-                        className="dept-inner-circle w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white dark:bg-slate-900"
-                      >
-                        {cat.image ? (
-                          <Image
-                            src={normalizeImageUrl(cat.image)}
-                            alt={cat.name || 'Category'}
-                            width={112}
-                            height={112}
-                            sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 112px"
-                            loading="lazy"
-                            style={{
-                              borderRadius: '50%',
-                              clipPath: 'circle(50% at 50% 50%)',
-                              WebkitClipPath: 'circle(50% at 50% 50%)',
-                              aspectRatio: '1 / 1',
-                              objectFit: 'cover',
-                            }}
-                            className="dept-circle-img w-full h-full object-cover rounded-full transition-transform duration-300 group-hover/item:scale-110"
-                          />
-                        ) : (
-                          <span className="text-slate-700 dark:text-slate-300 font-black text-2xl">
-                            {cat.name?.charAt(0)?.toUpperCase() || 'C'}
-                          </span>
-                        )}
+                      <div className="w-full h-full rounded-full overflow-hidden relative bg-slate-50 dark:bg-slate-900">
+                        <Image
+                          src={normalizeImageUrl(imgUrl)}
+                          alt={cat.name || 'Category'}
+                          fill
+                          sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
+                          loading="eager"
+                          className="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover/cat:scale-110"
+                        />
                       </div>
                     </div>
 
-                    {/* Clean Category Label Centered Underneath */}
+                    {/* Centered Category Title */}
                     <span
-                      className={`mt-2.5 text-xs sm:text-sm font-medium text-center max-w-[100px] sm:max-w-[120px] line-clamp-2 leading-snug transition-colors ${
+                      className={`mt-3 sm:mt-4 text-sm sm:text-base text-center max-w-[120px] sm:max-w-[140px] leading-snug transition-colors line-clamp-2 ${
                         isSelected
                           ? 'text-blue-600 dark:text-blue-400 font-bold'
-                          : 'text-slate-800 dark:text-slate-200 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                          : 'text-slate-800 dark:text-slate-200 font-medium sm:font-semibold group-hover/cat:text-blue-600 dark:group-hover/cat:text-blue-400'
                       }`}
                     >
                       {t(cat.name) || cat.name}
@@ -2385,15 +2442,14 @@ const ProductCatalog = ({
               })}
             </div>
 
-            {/* Right Scroll Arrow */}
+            {/* Right Circular Scroll Arrow */}
             <button
               type="button"
-              onClick={() => scrollCarousel(departmentStripRef, 260)}
-              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
-              className="dept-nav-btn absolute -right-2 sm:-right-3 top-[45%] -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100 focus:outline-none"
+              onClick={() => scrollCarousel(departmentStripRef, 280)}
+              className="absolute right-1 sm:right-2 md:right-3 top-[36%] -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
               aria-label="Next departments"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
             </button>
           </div>
         </div>
