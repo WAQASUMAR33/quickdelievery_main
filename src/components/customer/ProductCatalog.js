@@ -38,6 +38,7 @@ import {
   Percent,
   Sparkles,
   Utensils,
+  MapPin,
   Laptop,
   CheckCircle2,
   Truck,
@@ -209,12 +210,115 @@ const ProductCatalog = ({
 
   const restaurantCount = useMemo(() => topShops.filter(isRestaurantShop).length, [topShops])
   const shopCount = useMemo(() => topShops.filter(s => !isRestaurantShop(s)).length, [topShops])
+  const latestStores = useMemo(() => topShops.filter(s => !isRestaurantShop(s)), [topShops])
+  const popularRestaurants = useMemo(() => topShops.filter(isRestaurantShop), [topShops])
 
-  const displayedTopShops = useMemo(() => {
-    if (boutiqueFilter === 'RESTAURANTS') return topShops.filter(isRestaurantShop)
-    if (boutiqueFilter === 'SHOPS') return topShops.filter(s => !isRestaurantShop(s))
-    return topShops
-  }, [topShops, boutiqueFilter])
+  const renderStorefrontCard = (shop, isRestaurant = false) => {
+    const sId = String(shop.id)
+    const isSelected = selectedVendor === sId
+    const coverImg = shop.urlCoverPhoto || shop.urlLogo || (Array.isArray(shop.urlRestaurantImages) ? shop.urlRestaurantImages[0] : null)
+    const logoImg = shop.urlLogo || shop.urlCoverPhoto || null
+    const count = products.filter(p => productMatchesShop(p, shop)).length
+    const categoryLabel = shop.businessCategory?.categoryTitle || shop.businessType?.typeTitle || (isRestaurant ? 'Restaurant & Dining' : 'Retail Store')
+
+    return (
+      <button
+        key={shop.id}
+        type="button"
+        onClick={() => handleStoreClick(sId)}
+        className={`flex-shrink-0 w-64 sm:w-72 rounded-2xl border text-left shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col bg-white dark:bg-slate-900 cursor-pointer ${
+          isSelected
+            ? 'border-blue-600 ring-2 ring-blue-500/40 shadow-blue-500/10'
+            : 'border-slate-200/90 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500'
+        }`}
+      >
+        {/* ── 1. Store Front Hero Cover Photo ── */}
+        <div className="relative h-32 sm:h-36 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          {coverImg ? (
+            <Image
+              src={normalizeImageUrl(coverImg)}
+              alt={shop.businessName || 'Storefront'}
+              fill
+              sizes="(max-width: 640px) 260px, 290px"
+              loading="lazy"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-slate-500">
+              {isRestaurant ? <Utensils className="w-10 h-10 text-rose-400/50" /> : <Store className="w-10 h-10 text-blue-400/50" />}
+            </div>
+          )}
+
+          {/* Soft Gradient Overlay for depth */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none" />
+
+          {/* Top Badges */}
+          <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-white border border-white/20 shadow-sm">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400 fill-emerald-400/20" />
+              <span>{t('verified') || 'Verified'}</span>
+            </span>
+
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[11px] font-black shadow-md">
+              <Star className="w-3 h-3 fill-current" />
+              <span>4.9</span>
+            </span>
+          </div>
+
+          {/* Bottom Category Tag over image */}
+          <div className="absolute bottom-2 left-2.5 z-10 max-w-[80%] truncate">
+            <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold tracking-wide">
+              {categoryLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* ── 2. Floating Brand Logo & Storefront Info ── */}
+        <div className="p-3.5 pt-0 flex-1 flex flex-col justify-between">
+          <div className="flex items-start gap-2.5 -mt-5 relative z-20 mb-2">
+            {/* Logo Badge */}
+            <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 p-0.5 flex items-center justify-center overflow-hidden border-2 border-white dark:border-slate-900 shadow-md flex-shrink-0">
+              {logoImg ? (
+                <Image
+                  src={normalizeImageUrl(logoImg)}
+                  alt={shop.businessName || 'Logo'}
+                  width={48}
+                  height={48}
+                  sizes="48px"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <Store className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1 pt-4">
+              <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {shop.businessName || shop.username}
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                <MapPin className="w-3 h-3 flex-shrink-0 text-slate-400" />
+                <span>{shop.city || 'Express Doorstep Delivery'}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* ── 3. Storefront Footer Bar ── */}
+          <div className="pt-2.5 mt-auto border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <ShoppingBag className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+              <span>{count} {isRestaurant ? 'Dishes' : 'Products'}</span>
+            </span>
+
+            <span className="font-extrabold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 text-xs">
+              <span>{isSelected ? (t('viewingBoutique') || 'Viewing') : isRestaurant ? 'Explore Menu' : (t('visitBoutique') || 'Visit Store')}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
+      </button>
+    )
+  }
 
   // Reset visibleCount on filter change
   useEffect(() => {
@@ -285,6 +389,10 @@ const ProductCatalog = ({
   const departmentStripRef = useRef(null)
   const flashDealsScrollRef = useRef(null)
   const topShopsScrollRef = useRef(null)
+  const storesCarouselSectionRef = useRef(null)
+  const storesScrollContainerRef = useRef(null)
+  const restaurantsCarouselSectionRef = useRef(null)
+  const restaurantsScrollContainerRef = useRef(null)
   const orderAgainScrollRef = useRef(null)
   const catalogMainRef = useRef(null)
 
@@ -2084,8 +2192,7 @@ const ProductCatalog = ({
                       if (w1.buttonLink.startsWith('http')) window.open(w1.buttonLink, '_blank')
                       else router.push(w1.buttonLink)
                     } else {
-                      setBoutiqueFilter('RESTAURANTS')
-                      topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+                      restaurantsCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }
                   }}
                   className="relative z-10 mt-3.5 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
@@ -2156,8 +2263,7 @@ const ProductCatalog = ({
                         if (w2.footerLink.startsWith('http')) window.open(w2.footerLink, '_blank')
                         else router.push(w2.footerLink)
                       } else {
-                        setBoutiqueFilter('SHOPS')
-                        topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+                        storesCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }
                     }}
                     className="font-extrabold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group/btn cursor-pointer transition-colors"
@@ -2356,87 +2462,47 @@ const ProductCatalog = ({
       )}
 
       {/* ══════════════════════════════════════════════════════════════════
-          4. OFFICIAL MULTI-VENDOR BRAND BOUTIQUES
+          4A. LATEST STORES & SUPERMARKETS (Storefronts Carousel)
       ══════════════════════════════════════════════════════════════════ */}
-      {topShops.length > 0 && (
-        <div ref={topShopsScrollRef} className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+      {latestStores.length > 0 && (
+        <div ref={storesCarouselSectionRef} className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm scroll-mt-24">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques') || 'Featured Stores & Restaurants'}
+                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Latest Stores & Supermarkets
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                100% verified merchants, restaurants & supermarkets
+                100% verified electronics, gadgets, groceries & flagship store fronts
               </p>
             </div>
 
-            {/* Quick Segment Filter: All | Latest Stores | Popular Restaurants */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setBoutiqueFilter('ALL')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    boutiqueFilter === 'ALL'
-                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  All ({topShops.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBoutiqueFilter('SHOPS')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                    boutiqueFilter === 'SHOPS'
-                      ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>🏬 Latest Stores</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                    {shopCount}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBoutiqueFilter('RESTAURANTS')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                    boutiqueFilter === 'RESTAURANTS'
-                      ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>🍽️ Popular Restaurants</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
-                    {restaurantCount}
-                  </span>
-                </button>
-              </div>
-
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setAllStoresFilter(boutiqueFilter === 'RESTAURANTS' ? 'Restaurant' : 'ALL')
+                  setAllStoresFilter('ALL')
                   setShowAllStores(true)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs font-black transition-colors shadow-sm cursor-pointer"
               >
-                <span>View All</span>
+                <span>View All Stores</span>
+                <span className="text-[10px] bg-blue-600 text-white dark:bg-blue-500 px-1.5 py-0.2 rounded-full font-bold">
+                  {latestStores.length}
+                </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
 
               <div className="flex gap-1.5">
                 <button
-                  onClick={() => scrollCarousel(topShopsScrollRef, -240)}
+                  onClick={() => scrollCarousel(storesScrollContainerRef, -300)}
                   className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
                   aria-label="Scroll stores left"
                 >
                   <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                 </button>
                 <button
-                  onClick={() => scrollCarousel(topShopsScrollRef, 240)}
+                  onClick={() => scrollCarousel(storesScrollContainerRef, 300)}
                   className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
                   aria-label="Scroll stores right"
                 >
@@ -2447,70 +2513,70 @@ const ProductCatalog = ({
           </div>
 
           <div
-            ref={topShopsScrollRef}
-            className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+            ref={storesScrollContainerRef}
+            className="flex gap-4 overflow-x-auto pb-3 pt-1 scrollbar-hide scroll-smooth"
           >
-            {displayedTopShops.map((shop, idx) => {
-              const sId = String(shop.id)
-              const isSelected = selectedVendor === sId
-              const logo = shop.urlLogo || shop.urlCoverPhoto || null
-              const count = products.filter(p => productMatchesShop(p, shop)).length
+            {latestStores.map((shop) => renderStorefrontCard(shop, false))}
+          </div>
+        </div>
+      )}
 
-              return (
+      {/* ══════════════════════════════════════════════════════════════════
+          4B. POPULAR RESTAURANTS & DINING (Restaurant Storefronts Carousel)
+      ══════════════════════════════════════════════════════════════════ */}
+      {popularRestaurants.length > 0 && (
+        <div ref={restaurantsCarouselSectionRef} className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm scroll-mt-24">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-rose-600 dark:text-rose-400" /> Popular Restaurants & Dining
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Chef-curated gourmet dining, artisan cafes, bakeries & pizzerias
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAllStoresFilter('Restaurant')
+                  setShowAllStores(true)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 text-xs font-black transition-colors shadow-sm cursor-pointer"
+              >
+                <span>View All Restaurants</span>
+                <span className="text-[10px] bg-rose-600 text-white dark:bg-rose-500 px-1.5 py-0.2 rounded-full font-bold">
+                  {popularRestaurants.length}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="flex gap-1.5">
                 <button
-                  key={shop.id || idx}
-                  type="button"
-                  onClick={() => handleStoreClick(sId)}
-                  className={`flex-shrink-0 w-48 sm:w-56 rounded-2xl border p-4 text-left shadow-sm hover:shadow-md transition-all group ${
-                    isSelected
-                      ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 dark:border-blue-500'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-500'
-                  }`}
+                  onClick={() => scrollCarousel(restaurantsScrollContainerRef, -300)}
+                  className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
+                  aria-label="Scroll restaurants left"
                 >
-                  <div className="flex items-center gap-3 mb-2.5">
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 flex-shrink-0">
-                      {logo ? (
-                        <Image
-                          src={normalizeImageUrl(logo)}
-                          alt={shop.businessName || 'Store'}
-                          width={48}
-                          height={48}
-                          sizes="48px"
-                          loading="lazy"
-                          className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <Store className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100 dark:fill-emerald-950" />
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase">{t('verified') || 'Verified'}</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{count} {t('productsCount') || 'Products'}</span>
-                    </div>
-                  </div>
-
-                  <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {shop.businessName || shop.username}
-                  </h4>
-
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                    {shop.city || 'Express Doorstep Delivery'}
-                  </p>
-
-                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span className="font-extrabold text-blue-600 dark:text-blue-400 group-hover:underline">
-                      {isSelected ? (t('viewingBoutique') || 'Viewing Store') : (t('visitBoutique') || 'Visit Store →')}
-                    </span>
-                    <span className="text-amber-500 font-extrabold flex items-center gap-0.5">
-                      <Star className="w-3 h-3 fill-current" /> 4.9
-                    </span>
-                  </div>
+                  <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                 </button>
-              )
-            })}
+                <button
+                  onClick={() => scrollCarousel(restaurantsScrollContainerRef, 300)}
+                  className="p-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm cursor-pointer"
+                  aria-label="Scroll restaurants right"
+                >
+                  <ChevronRight className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            ref={restaurantsScrollContainerRef}
+            className="flex gap-4 overflow-x-auto pb-3 pt-1 scrollbar-hide scroll-smooth"
+          >
+            {popularRestaurants.map((shop) => renderStorefrontCard(shop, true))}
           </div>
         </div>
       )}
