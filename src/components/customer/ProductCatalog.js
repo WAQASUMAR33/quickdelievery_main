@@ -2371,17 +2371,18 @@ const ProductCatalog = ({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          2. CIRCULAR CATEGORY CAROUSEL (Hero Visual Departments)
+          2. CIRCULAR CATEGORY CAROUSEL (Hero Visual Departments - Flat / No Elevation)
              Matches exact reference: Electronics & Tech, Bakery & Desserts, Fresh Groceries, Restaurant
       ══════════════════════════════════════════════════════════════════ */}
       {sortedCategories.length > 0 && (
-        <div className="relative w-full py-4 sm:py-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-sm overflow-hidden my-2">
+        <div className="relative w-full py-3 sm:py-5 my-1">
           <div className="relative group/dept w-full">
-            {/* Left Circular Scroll Arrow */}
+            {/* Left Circular Scroll Arrow - Flat / No Elevation */}
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, -280)}
-              className="absolute left-1 sm:left-2 md:left-4 top-[36%] -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
+              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
+              className="dept-nav-btn absolute left-0 sm:left-2 top-[36%] -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
               aria-label="Previous departments"
             >
               <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
@@ -2407,22 +2408,42 @@ const ProductCatalog = ({
                     aria-label={cat.name || 'Browse category'}
                     className="flex flex-col items-center flex-shrink-0 group/cat cursor-pointer focus:outline-none transition-transform"
                   >
-                    {/* Perfectly Circular Avatar Frame */}
+                    {/* Perfectly Circular Frame - Flat / No Elevation / No Square Border */}
                     <div
-                      className={`relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full p-1 bg-white dark:bg-slate-800 border-2 transition-all duration-300 flex items-center justify-center ${
+                      style={{
+                        borderRadius: '50%',
+                        clipPath: 'circle(50% at 50% 50%)',
+                        WebkitClipPath: 'circle(50% at 50% 50%)',
+                        aspectRatio: '1 / 1',
+                      }}
+                      className={`dept-circle relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden transition-transform duration-300 flex items-center justify-center ${
                         isSelected
-                          ? 'border-blue-600 ring-4 ring-blue-500/25 shadow-md shadow-blue-500/20 scale-105'
-                          : 'border-slate-100 dark:border-slate-700/80 shadow-sm hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 hover:scale-105'
+                          ? 'scale-105 ring-3 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                          : 'group-hover/cat:scale-105'
                       }`}
                     >
-                      <div className="w-full h-full rounded-full overflow-hidden relative bg-slate-50 dark:bg-slate-900">
+                      <div
+                        style={{
+                          borderRadius: '50%',
+                          clipPath: 'circle(50% at 50% 50%)',
+                          WebkitClipPath: 'circle(50% at 50% 50%)',
+                          aspectRatio: '1 / 1',
+                        }}
+                        className="dept-inner-circle w-full h-full rounded-full overflow-hidden flex items-center justify-center"
+                      >
                         <Image
                           src={normalizeImageUrl(imgUrl)}
                           alt={cat.name || 'Category'}
                           fill
                           sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
                           loading="eager"
-                          className="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover/cat:scale-110"
+                          style={{
+                            borderRadius: '50%',
+                            clipPath: 'circle(50% at 50% 50%)',
+                            WebkitClipPath: 'circle(50% at 50% 50%)',
+                            objectFit: 'cover',
+                          }}
+                          className="dept-circle-img w-full h-full object-cover rounded-full transition-transform duration-500 group-hover/cat:scale-110"
                         />
                       </div>
                     </div>
@@ -2442,11 +2463,12 @@ const ProductCatalog = ({
               })}
             </div>
 
-            {/* Right Circular Scroll Arrow */}
+            {/* Right Circular Scroll Arrow - Flat / No Elevation */}
             <button
               type="button"
               onClick={() => scrollCarousel(departmentStripRef, 280)}
-              className="absolute right-1 sm:right-2 md:right-3 top-[36%] -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
+              style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
+              className="dept-nav-btn absolute right-0 sm:right-2 top-[36%] -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
               aria-label="Next departments"
             >
               <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
