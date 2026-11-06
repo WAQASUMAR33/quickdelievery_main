@@ -49,9 +49,10 @@ export default function AllStoresView({
   products = [],
   onBack,
   onSelectStore,
+  initialCategory = 'ALL',
   t = (key) => key
 }) {
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCity, setSelectedCity] = useState('ALL')
   const [sortBy, setSortBy] = useState('rating')
@@ -126,9 +127,13 @@ export default function AllStoresView({
 
     // Business Category filter
     if (selectedCategory !== 'ALL') {
+      const sel = selectedCategory.toLowerCase()
       list = list.filter((s) => {
-        const cat = s.businessCategory?.categoryTitle || s.category?.name || 'Other'
-        return cat.toLowerCase() === selectedCategory.toLowerCase()
+        const cat = (s.businessCategory?.categoryTitle || s.category?.name || 'Other').toLowerCase()
+        if (sel === 'restaurant') {
+          return cat.includes('restaurant') || cat.includes('dining') || cat.includes('food') || cat.includes('baker')
+        }
+        return cat === sel || cat.includes(sel)
       })
     }
 

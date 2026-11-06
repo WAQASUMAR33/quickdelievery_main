@@ -97,8 +97,8 @@ export default function SlidersManagementPage() {
       badge: 'LIMITED DROPS',
       title: 'Curated Drop Discounts',
       subtitle: 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.',
-      buttonText: 'Explore Drops',
-      buttonLink: '/deals',
+      buttonText: 'Explore Restaurants',
+      buttonLink: '/customer?filter=restaurants',
       showTimer: true,
       status: 'ACTIVE',
     },
@@ -107,11 +107,11 @@ export default function SlidersManagementPage() {
       badge: 'FEATURED STORES & RESTAURANTS',
       title: '100% Authentic Brand Guarantees',
       subtitle: 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.',
-      buttonText: 'View Boutiques',
-      buttonLink: '/customer',
+      buttonText: 'Explore Shops',
+      buttonLink: '/customer?filter=shops',
       footerTag: '7-Day Easy Returns',
-      footerLinkText: 'View Boutiques →',
-      footerLink: '/customer',
+      footerLinkText: 'Explore Shops →',
+      footerLink: '/customer?filter=shops',
       status: 'ACTIVE',
     },
   })
@@ -897,7 +897,7 @@ export default function SlidersManagementPage() {
                             boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
                           }}
                         >
-                          <span>{widgets.widget_1?.buttonText || 'Explore Drops'}</span>
+                          <span>{widgets.widget_1?.buttonText || 'Explore Restaurants'}</span>
                           <ArrowForwardIcon sx={{ fontSize: 14 }} />
                         </Box>
                       </Box>
@@ -953,7 +953,7 @@ export default function SlidersManagementPage() {
                               fullWidth
                               size="small"
                               label="Button Text"
-                              placeholder="e.g. Explore Drops"
+                              placeholder="e.g. Explore Restaurants"
                               value={widgets.widget_1?.buttonText || ''}
                               onChange={e => handleWidgetChange('widget_1', 'buttonText', e.target.value)}
                               {...tf}
@@ -1147,7 +1147,7 @@ export default function SlidersManagementPage() {
                               gap: 0.5,
                             }}
                           >
-                            <span>{widgets.widget_2?.footerLinkText || 'View Boutiques →'}</span>
+                            <span>{widgets.widget_2?.footerLinkText || 'Explore Shops →'}</span>
                           </Typography>
                         </Box>
                       </Box>
@@ -1202,7 +1202,7 @@ export default function SlidersManagementPage() {
                               fullWidth
                               size="small"
                               label="Footer Link Text"
-                              placeholder="e.g. View Boutiques →"
+                              placeholder="e.g. Explore Shops →"
                               value={widgets.widget_2?.footerLinkText || ''}
                               onChange={e => handleWidgetChange('widget_2', 'footerLinkText', e.target.value)}
                               {...tf}

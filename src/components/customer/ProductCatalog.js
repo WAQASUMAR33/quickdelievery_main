@@ -180,6 +180,41 @@ const ProductCatalog = ({
   const [visibleCount, setVisibleCount] = useState(24)
   const [activeStoreProfile, setActiveStoreProfile] = useState(null)
   const [showAllStores, setShowAllStores] = useState(false)
+  const [allStoresFilter, setAllStoresFilter] = useState('ALL')
+  const [boutiqueFilter, setBoutiqueFilter] = useState('ALL') // 'ALL' | 'SHOPS' | 'RESTAURANTS'
+
+  const isRestaurantShop = (shop) => {
+    const cat = (shop?.businessCategory?.categoryTitle || shop?.category?.name || '').toLowerCase()
+    const name = (shop?.businessName || shop?.username || '').toLowerCase()
+    const type = (shop?.businessType?.typeTitle || '').toLowerCase()
+    return (
+      cat.includes('restaurant') ||
+      cat.includes('dining') ||
+      cat.includes('baker') ||
+      cat.includes('patisserie') ||
+      cat.includes('cafe') ||
+      cat.includes('food') ||
+      name.includes('bistro') ||
+      name.includes('pizzeria') ||
+      name.includes('restaurant') ||
+      name.includes('burger') ||
+      name.includes('pizza') ||
+      type.includes('restaurant') ||
+      type.includes('trattoria') ||
+      type.includes('patisserie') ||
+      type.includes('fast food') ||
+      type.includes('dining')
+    )
+  }
+
+  const restaurantCount = useMemo(() => topShops.filter(isRestaurantShop).length, [topShops])
+  const shopCount = useMemo(() => topShops.filter(s => !isRestaurantShop(s)).length, [topShops])
+
+  const displayedTopShops = useMemo(() => {
+    if (boutiqueFilter === 'RESTAURANTS') return topShops.filter(isRestaurantShop)
+    if (boutiqueFilter === 'SHOPS') return topShops.filter(s => !isRestaurantShop(s))
+    return topShops
+  }, [topShops, boutiqueFilter])
 
   // Reset visibleCount on filter change
   useEffect(() => {
@@ -1836,7 +1871,11 @@ const ProductCatalog = ({
         <AllStoresView
           shops={topShops}
           products={products}
-          onBack={() => setShowAllStores(false)}
+          initialCategory={allStoresFilter}
+          onBack={() => {
+            setShowAllStores(false)
+            setAllStoresFilter('ALL')
+          }}
           onSelectStore={(shop) => {
             setActiveStoreProfile(shop)
             window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1992,8 +2031,8 @@ const ProductCatalog = ({
             badge: 'LIMITED DROPS',
             title: 'Curated Drop Discounts',
             subtitle: 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.',
-            buttonText: 'Explore Drops',
-            buttonLink: '/deals',
+            buttonText: 'Explore Restaurants',
+            buttonLink: '/customer?filter=restaurants',
             showTimer: true,
           }
           const w2 = promoWidgets?.widget_2 || {
@@ -2001,8 +2040,8 @@ const ProductCatalog = ({
             title: '100% Authentic Brand Guarantees',
             subtitle: 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.',
             footerTag: '7-Day Easy Returns',
-            footerLinkText: 'View Boutiques →',
-            footerLink: '/customer',
+            footerLinkText: 'Explore Shops →',
+            footerLink: '/customer?filter=shops',
           }
 
           return (
@@ -2041,16 +2080,17 @@ const ProductCatalog = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (w1.buttonLink) {
+                    if (w1.buttonLink && !w1.buttonLink.includes('filter=restaurants') && w1.buttonLink !== '/deals') {
                       if (w1.buttonLink.startsWith('http')) window.open(w1.buttonLink, '_blank')
                       else router.push(w1.buttonLink)
                     } else {
-                      setOnlyDeals(true)
+                      setBoutiqueFilter('RESTAURANTS')
+                      topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
                     }
                   }}
                   className="relative z-10 mt-3.5 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
                 >
-                  <span>{w1.buttonText || 'Explore Drops'}</span>
+                  <span>{w1.buttonText || 'Explore Restaurants'}</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>
@@ -2112,16 +2152,17 @@ const ProductCatalog = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (w2.footerLink) {
+                      if (w2.footerLink && !w2.footerLink.includes('filter=shops') && w2.footerLink !== '/customer') {
                         if (w2.footerLink.startsWith('http')) window.open(w2.footerLink, '_blank')
                         else router.push(w2.footerLink)
                       } else {
+                        setBoutiqueFilter('SHOPS')
                         topShopsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
                       }
                     }}
                     className="font-extrabold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group/btn cursor-pointer transition-colors"
                   >
-                    <span>{w2.footerLinkText || 'View Boutiques →'}</span>
+                    <span>{w2.footerLinkText || 'Explore Shops →'}</span>
                     <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
                   </button>
                 </div>
@@ -2319,7 +2360,7 @@ const ProductCatalog = ({
       ══════════════════════════════════════════════════════════════════ */}
       {topShops.length > 0 && (
         <div ref={topShopsScrollRef} className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                 <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t('officialBoutiques') || 'Featured Stores & Restaurants'}
@@ -2329,19 +2370,60 @@ const ProductCatalog = ({
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Quick Segment Filter: All | Latest Stores | Popular Restaurants */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setBoutiqueFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    boutiqueFilter === 'ALL'
+                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  All ({topShops.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoutiqueFilter('SHOPS')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                    boutiqueFilter === 'SHOPS'
+                      ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>🏬 Latest Stores</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                    {shopCount}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoutiqueFilter('RESTAURANTS')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                    boutiqueFilter === 'RESTAURANTS'
+                      ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>🍽️ Popular Restaurants</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+                    {restaurantCount}
+                  </span>
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => {
+                  setAllStoresFilter(boutiqueFilter === 'RESTAURANTS' ? 'Restaurant' : 'ALL')
                   setShowAllStores(true)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs font-black transition-colors shadow-sm cursor-pointer"
               >
-                <span>View All Stores</span>
-                <span className="text-[10px] bg-blue-600 text-white dark:bg-blue-500 px-1.5 py-0.2 rounded-full font-bold">
-                  {topShops.length}
-                </span>
+                <span>View All</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
 
@@ -2368,7 +2450,7 @@ const ProductCatalog = ({
             ref={topShopsScrollRef}
             className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
           >
-            {topShops.map((shop, idx) => {
+            {displayedTopShops.map((shop, idx) => {
               const sId = String(shop.id)
               const isSelected = selectedVendor === sId
               const logo = shop.urlLogo || shop.urlCoverPhoto || null
