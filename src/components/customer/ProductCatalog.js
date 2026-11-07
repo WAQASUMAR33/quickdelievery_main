@@ -332,30 +332,33 @@ const ProductCatalog = ({
   const latestStores = useMemo(() => topShops.filter(s => !isRestaurantShop(s)), [topShops])
   const popularRestaurants = useMemo(() => topShops.filter(isRestaurantShop), [topShops])
 
-  const [activeShopSlide, setActiveShopSlide] = useState(0)
-  const [activeRestaurantSlide, setActiveRestaurantSlide] = useState(0)
-  const [isShopPaused, setIsShopPaused] = useState(false)
-  const [isRestaurantPaused, setIsRestaurantPaused] = useState(false)
-
-  // Auto-advance Shop Carousel in top bento widget
+  // Auto-scroll Shop Carousel in top bento widget
   useEffect(() => {
-    const list = latestStores.length > 0 ? latestStores : DEFAULT_BENTO_SHOPS
-    if (list.length <= 1 || isShopPaused) return
+    const el = bentoShopsScrollRef.current
+    if (!el) return
     const timer = setInterval(() => {
-      setActiveShopSlide(prev => (prev + 1) % list.length)
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        el.scrollBy({ left: 95, behavior: 'smooth' })
+      }
     }, 4500)
     return () => clearInterval(timer)
-  }, [latestStores, isShopPaused])
+  }, [latestStores.length])
 
-  // Auto-advance Restaurant Carousel in bottom bento widget
+  // Auto-scroll Restaurant Carousel in bottom bento widget
   useEffect(() => {
-    const list = popularRestaurants.length > 0 ? popularRestaurants : DEFAULT_BENTO_RESTAURANTS
-    if (list.length <= 1 || isRestaurantPaused) return
+    const el = bentoRestaurantsScrollRef.current
+    if (!el) return
     const timer = setInterval(() => {
-      setActiveRestaurantSlide(prev => (prev + 1) % list.length)
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        el.scrollBy({ left: 95, behavior: 'smooth' })
+      }
     }, 5000)
     return () => clearInterval(timer)
-  }, [popularRestaurants, isRestaurantPaused])
+  }, [popularRestaurants.length])
 
   // Category Carousel sorted to match exact design:
   // 1. Electronics & Tech -> 2. Bakery & Desserts -> 3. Fresh Groceries -> 4. Restaurant
@@ -566,6 +569,15 @@ const ProductCatalog = ({
   const restaurantsScrollContainerRef = useRef(null)
   const orderAgainScrollRef = useRef(null)
   const catalogMainRef = useRef(null)
+  const bentoShopsScrollRef = useRef(null)
+  const bentoRestaurantsScrollRef = useRef(null)
+
+  const scrollBentoShops = (offset) => {
+    bentoShopsScrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' })
+  }
+  const scrollBentoRestaurants = (offset) => {
+    bentoRestaurantsScrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' })
+  }
 
   // Dedicated store selection handler that opens dedicated store profile view
   const handleStoreClick = (sId, fallbackShop = null) => {
@@ -2304,243 +2316,197 @@ const ProductCatalog = ({
           </div>
         </div>
 
-        {/* Right Bento Promotional Carousels (4 Cols on Desktop): Shops (above) & Restaurants (below) */}
+        {/* Right Bento Promotional Multi-Vendor Carousels (4 Cols on Desktop): Shops (above) & Restaurants (below) */}
         {(() => {
           const displayedShops = latestStores.length > 0 ? latestStores : DEFAULT_BENTO_SHOPS
           const displayedRestaurants = popularRestaurants.length > 0 ? popularRestaurants : DEFAULT_BENTO_RESTAURANTS
 
-          const currentShop = displayedShops[activeShopSlide % displayedShops.length]
-          const currentRestaurant = displayedRestaurants[activeRestaurantSlide % displayedRestaurants.length]
-
-          const shopCover = currentShop?.urlCoverPhoto || currentShop?.urlLogo || DEFAULT_BENTO_SHOPS[0].urlCoverPhoto
-          const restCover = currentRestaurant?.urlCoverPhoto || currentRestaurant?.urlLogo || (Array.isArray(currentRestaurant?.urlRestaurantImages) ? currentRestaurant.urlRestaurantImages[0] : null) || DEFAULT_BENTO_RESTAURANTS[0].urlCoverPhoto
-
           return (
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4 h-full">
-              {/* TOP WIDGET: SHOPS CAROUSEL */}
-              <div
-                onMouseEnter={() => setIsShopPaused(true)}
-                onMouseLeave={() => setIsShopPaused(false)}
-                onClick={() => handleStoreClick(currentShop.id, currentShop)}
-                className="flex-1 rounded-2xl relative overflow-hidden border border-slate-700/60 shadow-xl flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:border-blue-500/80 hover:shadow-2xl hover:shadow-blue-950/30 min-h-[200px]"
-              >
-                {/* Background Cover Photo with Dark Scrim Overlay */}
-                <div className="absolute inset-0 z-0">
-                  <Image
-                    src={normalizeImageUrl(shopCover)}
-                    alt={currentShop.businessName || 'Shop'}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 400px"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/50" />
-                  <div className="absolute inset-0 bg-blue-950/20 mix-blend-overlay pointer-events-none" />
-                </div>
-
-                {/* Top Header Row */}
-                <div className="relative z-10 p-4 pb-0 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/25 border border-blue-400/40 text-[10px] sm:text-[11px] font-black tracking-wider uppercase text-blue-200 backdrop-blur-md shadow-sm">
-                    <Store className="w-3.5 h-3.5 text-blue-300" />
-                    <span>FEATURED SHOPS</span>
-                  </span>
-
-                  {/* Slide Navigation & Indicator */}
-                  <div className="flex items-center gap-1.5 backdrop-blur-md bg-black/50 border border-white/15 rounded-full px-2 py-0.5 shadow-sm">
-                    <span className="text-[10px] font-bold text-white/90 tabular-nums">
-                      {(activeShopSlide % displayedShops.length) + 1}/{displayedShops.length}
+              {/* TOP WIDGET: SHOPS MULTI-VENDOR CAROUSEL */}
+              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between overflow-hidden min-h-[195px] transition-all hover:shadow-md">
+                {/* Header: Title & "Explore more" Text Link */}
+                <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                      <Store className="w-4 h-4" />
                     </span>
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveShopSlide(prev => (prev - 1 + displayedShops.length) % displayedShops.length)
-                        }}
-                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-                        aria-label="Previous shop"
-                      >
-                        <ChevronLeft className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveShopSlide(prev => (prev + 1) % displayedShops.length)
-                        }}
-                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-                        aria-label="Next shop"
-                      >
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Shop Details & CTA Button */}
-                <div className="relative z-10 p-4 pt-2 flex flex-col justify-end flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden ring-2 ring-white/30 bg-slate-900 flex-shrink-0 shadow-lg">
-                      {currentShop.urlLogo ? (
-                        <Image
-                          src={normalizeImageUrl(currentShop.urlLogo)}
-                          alt={currentShop.businessName || 'Shop logo'}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center font-black text-white text-base bg-blue-600">
-                          {(currentShop.businessName || 'S').charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-black text-sm sm:text-base text-white truncate drop-shadow-sm">
-                          {currentShop.businessName}
-                        </h4>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                      </div>
-                      <p className="text-[11px] text-blue-200/90 font-medium truncate flex items-center gap-1 mt-0.5">
-                        <span>{currentShop.businessCategory?.categoryTitle || currentShop.businessType?.typeTitle || 'Retail & Electronics'}</span>
-                        {currentShop.city && (
-                          <>
-                            <span className="opacity-60">•</span>
-                            <span>{currentShop.city}</span>
-                          </>
-                        )}
+                    <div>
+                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                        Featured Shops
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        Verified stores & electronics
                       </p>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStoreClick(currentShop.id, currentShop)
+                    onClick={() => {
+                      storesCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}
-                    className="w-full py-2 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-blue-600/30 flex items-center justify-between transition-all cursor-pointer hover:scale-[1.01]"
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <Store className="w-3.5 h-3.5" />
-                      <span>Explore Shop</span>
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                    <span>Explore more</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Horizontal Multi-Vendor Carousel Track (Left arrow, cards, Right arrow) */}
+                <div className="relative flex items-center py-1">
+                  {/* Left Chevron Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollBentoShops(-160)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
+                    aria-label="Scroll shops left"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Cards Scroll Container */}
+                  <div
+                    ref={bentoShopsScrollRef}
+                    className="flex items-start gap-3 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
+                  >
+                    {displayedShops.map((shop, i) => {
+                      const shopImg = shop.urlCoverPhoto || shop.urlLogo
+                      const isFirst = i === 0
+                      return (
+                        <button
+                          key={shop.id || i}
+                          type="button"
+                          onClick={() => handleStoreClick(shop.id, shop)}
+                          className="flex-shrink-0 flex flex-col items-center group/card cursor-pointer focus:outline-none text-center"
+                        >
+                          <div className={`w-[74px] sm:w-[82px] h-[74px] sm:h-[82px] rounded-xl overflow-hidden border-2 ${
+                            isFirst ? 'border-amber-500 shadow-md ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-700'
+                          } group-hover/card:border-amber-500 dark:group-hover/card:border-amber-400 bg-slate-50 dark:bg-slate-800 shadow-sm relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md`}>
+                            {shopImg ? (
+                              <Image
+                                src={normalizeImageUrl(shopImg)}
+                                alt={shop.businessName || 'Shop'}
+                                fill
+                                sizes="84px"
+                                className="object-cover transition-transform duration-500 group-hover/card:scale-110"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 text-base">
+                                {(shop.businessName || 'S').charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[76px] sm:max-w-[84px] mt-1.5 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400 transition-colors">
+                            {shop.businessName}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Right Chevron Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollBentoShops(160)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
+                    aria-label="Scroll shops right"
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* BOTTOM WIDGET: RESTAURANTS CAROUSEL */}
-              <div
-                onMouseEnter={() => setIsRestaurantPaused(true)}
-                onMouseLeave={() => setIsRestaurantPaused(false)}
-                onClick={() => handleStoreClick(currentRestaurant.id, currentRestaurant)}
-                className="flex-1 rounded-2xl relative overflow-hidden border border-slate-700/60 shadow-xl flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:border-emerald-500/80 hover:shadow-2xl hover:shadow-emerald-950/30 min-h-[200px]"
-              >
-                {/* Background Cover Photo with Dark Scrim Overlay */}
-                <div className="absolute inset-0 z-0">
-                  <Image
-                    src={normalizeImageUrl(restCover)}
-                    alt={currentRestaurant.businessName || 'Restaurant'}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 400px"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/50" />
-                  <div className="absolute inset-0 bg-emerald-950/20 mix-blend-overlay pointer-events-none" />
-                </div>
-
-                {/* Top Header Row */}
-                <div className="relative z-10 p-4 pb-0 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-[10px] sm:text-[11px] font-black tracking-wider uppercase text-emerald-200 backdrop-blur-md shadow-sm">
-                    <Utensils className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>POPULAR RESTAURANTS</span>
-                  </span>
-
-                  {/* Slide Navigation & Indicator */}
-                  <div className="flex items-center gap-1.5 backdrop-blur-md bg-black/50 border border-white/15 rounded-full px-2 py-0.5 shadow-sm">
-                    <span className="text-[10px] font-bold text-white/90 tabular-nums">
-                      {(activeRestaurantSlide % displayedRestaurants.length) + 1}/{displayedRestaurants.length}
+              {/* BOTTOM WIDGET: RESTAURANTS MULTI-VENDOR CAROUSEL */}
+              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between overflow-hidden min-h-[195px] transition-all hover:shadow-md">
+                {/* Header: Title & "Explore more" Text Link */}
+                <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                      <Utensils className="w-4 h-4" />
                     </span>
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveRestaurantSlide(prev => (prev - 1 + displayedRestaurants.length) % displayedRestaurants.length)
-                        }}
-                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-                        aria-label="Previous restaurant"
-                      >
-                        <ChevronLeft className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveRestaurantSlide(prev => (prev + 1) % displayedRestaurants.length)
-                        }}
-                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-                        aria-label="Next restaurant"
-                      >
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Restaurant Details & CTA Button */}
-                <div className="relative z-10 p-4 pt-2 flex flex-col justify-end flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden ring-2 ring-white/30 bg-slate-900 flex-shrink-0 shadow-lg">
-                      {currentRestaurant.urlLogo ? (
-                        <Image
-                          src={normalizeImageUrl(currentRestaurant.urlLogo)}
-                          alt={currentRestaurant.businessName || 'Restaurant logo'}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center font-black text-white text-base bg-emerald-600">
-                          {(currentRestaurant.businessName || 'R').charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-black text-sm sm:text-base text-white truncate drop-shadow-sm">
-                          {currentRestaurant.businessName}
-                        </h4>
-                        <span className="flex items-center text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 flex-shrink-0 shadow-sm">
-                          ★ {currentRestaurant.rating || '4.9'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-emerald-200/90 font-medium truncate flex items-center gap-1 mt-0.5">
-                        <span>{currentRestaurant.businessCategory?.categoryTitle || currentRestaurant.businessType?.typeTitle || 'Dining & Cafe'}</span>
-                        {currentRestaurant.city && (
-                          <>
-                            <span className="opacity-60">•</span>
-                            <span>{currentRestaurant.city}</span>
-                          </>
-                        )}
+                    <div>
+                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                        Popular Restaurants
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        Top dining, burgers & fast food
                       </p>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStoreClick(currentRestaurant.id, currentRestaurant)
+                    onClick={() => {
+                      restaurantsCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}
-                    className="w-full py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/30 flex items-center justify-between transition-all cursor-pointer hover:scale-[1.01]"
+                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <Utensils className="w-3.5 h-3.5" />
-                      <span>Explore Menu</span>
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                    <span>Explore more</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Horizontal Multi-Vendor Carousel Track (Left arrow, cards, Right arrow) */}
+                <div className="relative flex items-center py-1">
+                  {/* Left Chevron Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollBentoRestaurants(-160)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
+                    aria-label="Scroll restaurants left"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Cards Scroll Container */}
+                  <div
+                    ref={bentoRestaurantsScrollRef}
+                    className="flex items-start gap-3 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
+                  >
+                    {displayedRestaurants.map((rest, i) => {
+                      const restImg = rest.urlCoverPhoto || rest.urlLogo || (Array.isArray(rest.urlRestaurantImages) ? rest.urlRestaurantImages[0] : null)
+                      const isFirst = i === 0
+                      return (
+                        <button
+                          key={rest.id || i}
+                          type="button"
+                          onClick={() => handleStoreClick(rest.id, rest)}
+                          className="flex-shrink-0 flex flex-col items-center group/card cursor-pointer focus:outline-none text-center"
+                        >
+                          <div className={`w-[74px] sm:w-[82px] h-[74px] sm:h-[82px] rounded-xl overflow-hidden border-2 ${
+                            isFirst ? 'border-amber-500 shadow-md ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-700'
+                          } group-hover/card:border-amber-500 dark:group-hover/card:border-amber-400 bg-slate-50 dark:bg-slate-800 shadow-sm relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md`}>
+                            {restImg ? (
+                              <Image
+                                src={normalizeImageUrl(restImg)}
+                                alt={rest.businessName || 'Restaurant'}
+                                fill
+                                sizes="84px"
+                                className="object-cover transition-transform duration-500 group-hover/card:scale-110"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-base">
+                                {(rest.businessName || 'R').charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[76px] sm:max-w-[84px] mt-1.5 group-hover/card:text-emerald-600 dark:group-hover/card:text-emerald-400 transition-colors">
+                            {rest.businessName}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Right Chevron Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollBentoRestaurants(160)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
+                    aria-label="Scroll restaurants right"
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
