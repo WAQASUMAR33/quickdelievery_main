@@ -139,6 +139,80 @@ const DEFAULT_CIRCULAR_DEPARTMENTS = [
   },
 ]
 
+const DEFAULT_BENTO_SHOPS = [
+  {
+    id: 'shop-1',
+    businessName: 'ElectroZone Mobile Accessories',
+    city: 'Islamabad',
+    businessCategory: { categoryTitle: 'Electronics & Tech' },
+    urlLogo: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'shop-2',
+    businessName: 'Apex Computers & Laptops',
+    city: 'Lahore',
+    businessCategory: { categoryTitle: 'Computers & IT' },
+    urlLogo: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'shop-3',
+    businessName: 'Green Harvest Organic Supermarket',
+    city: 'Rawalpindi',
+    businessCategory: { categoryTitle: 'Fresh Groceries' },
+    urlLogo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'shop-4',
+    businessName: 'Metro Fresh Supermarket & Groceries',
+    city: 'Karachi',
+    businessCategory: { categoryTitle: 'Supermarket & Pantry' },
+    urlLogo: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop&q=80',
+  },
+]
+
+const DEFAULT_BENTO_RESTAURANTS = [
+  {
+    id: 'rest-1',
+    businessName: 'The Gourmet Burger Lab',
+    city: 'F-7 Markaz',
+    rating: '4.9',
+    businessCategory: { categoryTitle: 'Fast Food & Burgers' },
+    urlLogo: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'rest-2',
+    businessName: 'Bella Italia Trattoria & Pizzeria',
+    city: 'Blue Area',
+    rating: '4.8',
+    businessCategory: { categoryTitle: 'Italian & Pizza' },
+    urlLogo: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'rest-3',
+    businessName: 'Maison Moreau French Patisserie',
+    city: 'F-6 Super Market',
+    rating: '5.0',
+    businessCategory: { categoryTitle: 'Bakery & Desserts' },
+    urlLogo: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'rest-4',
+    businessName: 'Restaurant Khas',
+    city: 'Centaurus',
+    rating: '4.9',
+    businessCategory: { categoryTitle: 'Traditional Dining' },
+    urlLogo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&auto=format&fit=crop&q=80',
+    urlCoverPhoto: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80',
+  },
+]
+
 function resolveCategoryImage(cat) {
   if (cat?.image && String(cat.image).trim().length > 0) return cat.image
   const s = `${cat?.name || ''} ${cat?.code || ''}`.toLowerCase()
@@ -257,6 +331,31 @@ const ProductCatalog = ({
   const shopCount = useMemo(() => topShops.filter(s => !isRestaurantShop(s)).length, [topShops])
   const latestStores = useMemo(() => topShops.filter(s => !isRestaurantShop(s)), [topShops])
   const popularRestaurants = useMemo(() => topShops.filter(isRestaurantShop), [topShops])
+
+  const [activeShopSlide, setActiveShopSlide] = useState(0)
+  const [activeRestaurantSlide, setActiveRestaurantSlide] = useState(0)
+  const [isShopPaused, setIsShopPaused] = useState(false)
+  const [isRestaurantPaused, setIsRestaurantPaused] = useState(false)
+
+  // Auto-advance Shop Carousel in top bento widget
+  useEffect(() => {
+    const list = latestStores.length > 0 ? latestStores : DEFAULT_BENTO_SHOPS
+    if (list.length <= 1 || isShopPaused) return
+    const timer = setInterval(() => {
+      setActiveShopSlide(prev => (prev + 1) % list.length)
+    }, 4500)
+    return () => clearInterval(timer)
+  }, [latestStores, isShopPaused])
+
+  // Auto-advance Restaurant Carousel in bottom bento widget
+  useEffect(() => {
+    const list = popularRestaurants.length > 0 ? popularRestaurants : DEFAULT_BENTO_RESTAURANTS
+    if (list.length <= 1 || isRestaurantPaused) return
+    const timer = setInterval(() => {
+      setActiveRestaurantSlide(prev => (prev + 1) % list.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [popularRestaurants, isRestaurantPaused])
 
   // Category Carousel sorted to match exact design:
   // 1. Electronics & Tech -> 2. Bakery & Desserts -> 3. Fresh Groceries -> 4. Restaurant
@@ -469,8 +568,8 @@ const ProductCatalog = ({
   const catalogMainRef = useRef(null)
 
   // Dedicated store selection handler that opens dedicated store profile view
-  const handleStoreClick = (sId) => {
-    const targetShop = topShops.find(s => String(s.id) === String(sId) || String(s.uid) === String(sId))
+  const handleStoreClick = (sId, fallbackShop = null) => {
+    const targetShop = topShops.find(s => String(s.id) === String(sId) || String(s.uid) === String(sId)) || fallbackShop
     if (targetShop) {
       setActiveStoreProfile(targetShop)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -2205,163 +2304,243 @@ const ProductCatalog = ({
           </div>
         </div>
 
-        {/* Right Bento Promo Cards (4 Cols on Desktop - Dynamic & Premium Redesign) */}
+        {/* Right Bento Promotional Carousels (4 Cols on Desktop): Shops (above) & Restaurants (below) */}
         {(() => {
-          const w1 = promoWidgets?.widget_1 || {
-            badge: 'LIMITED DROPS',
-            title: 'Curated Drop Discounts',
-            subtitle: 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.',
-            buttonText: 'Explore Restaurants',
-            buttonLink: '/customer?filter=restaurants',
-            showTimer: true,
-          }
-          const w2 = promoWidgets?.widget_2 || {
-            badge: 'FEATURED STORES & RESTAURANTS',
-            title: '100% Authentic Brand Guarantees',
-            subtitle: 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.',
-            footerTag: '7-Day Easy Returns',
-            footerLinkText: 'Explore Shops →',
-            footerLink: '/customer?filter=shops',
-          }
+          const displayedShops = latestStores.length > 0 ? latestStores : DEFAULT_BENTO_SHOPS
+          const displayedRestaurants = popularRestaurants.length > 0 ? popularRestaurants : DEFAULT_BENTO_RESTAURANTS
+
+          const currentShop = displayedShops[activeShopSlide % displayedShops.length]
+          const currentRestaurant = displayedRestaurants[activeRestaurantSlide % displayedRestaurants.length]
+
+          const shopCover = currentShop?.urlCoverPhoto || currentShop?.urlLogo || DEFAULT_BENTO_SHOPS[0].urlCoverPhoto
+          const restCover = currentRestaurant?.urlCoverPhoto || currentRestaurant?.urlLogo || (Array.isArray(currentRestaurant?.urlRestaurantImages) ? currentRestaurant.urlRestaurantImages[0] : null) || DEFAULT_BENTO_RESTAURANTS[0].urlCoverPhoto
 
           return (
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4 h-full">
-              {/* Bento Card 1: Live Flash Drops Countdown (Electric Violet & Obsidian Glow) */}
-              <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#0c0f1d] via-[#1a1438] to-[#2d124d] border border-violet-500/30 p-5 text-white shadow-xl shadow-purple-950/20 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 hover:border-violet-400/60 hover:-translate-y-0.5">
-                {/* Ambient Glow & Watermark Flame */}
-                <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-violet-600/20 blur-2xl pointer-events-none" />
-                <div className="absolute right-1 bottom-1 opacity-10 text-violet-400 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
-                  <Flame className="w-28 h-28" />
+              {/* TOP WIDGET: SHOPS CAROUSEL */}
+              <div
+                onMouseEnter={() => setIsShopPaused(true)}
+                onMouseLeave={() => setIsShopPaused(false)}
+                onClick={() => handleStoreClick(currentShop.id, currentShop)}
+                className="flex-1 rounded-2xl relative overflow-hidden border border-slate-700/60 shadow-xl flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:border-blue-500/80 hover:shadow-2xl hover:shadow-blue-950/30 min-h-[200px]"
+              >
+                {/* Background Cover Photo with Dark Scrim Overlay */}
+                <div className="absolute inset-0 z-0">
+                  <Image
+                    src={normalizeImageUrl(shopCover)}
+                    alt={currentShop.businessName || 'Shop'}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 400px"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/50" />
+                  <div className="absolute inset-0 bg-blue-950/20 mix-blend-overlay pointer-events-none" />
                 </div>
 
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-[11px] font-black tracking-wider uppercase text-rose-300 shadow-sm shadow-rose-950/30">
-                      <Flame className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
-                      <span>{w1.badge || 'LIMITED DROPS'}</span>
-                    </span>
-                    <span className="text-[11px] font-black text-violet-300/80 tracking-wider flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      CLOSING IN
-                    </span>
-                  </div>
-
-                  {/* Digital Countdown Timer Blocks with Micro Labels */}
-                  {w1.showTimer !== false && <BentoCountdown />}
-
-                  <h4 className="font-black text-base text-white leading-tight mb-1">
-                    {w1.title || 'Curated Drop Discounts'}
-                  </h4>
-                  <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">
-                    {w1.subtitle || 'Flash deals with up to 50% discount across verified tech, pantry, and gourmet dining.'}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Activate Restaurant in circular carousel
-                    const restCat = sortedCategories.find(c => {
-                      const s = `${c.name || ''} ${c.code || ''}`.toLowerCase()
-                      return s.includes('restaurant') || s.includes('dining') || s.includes('food')
-                    })
-                    if (restCat) {
-                      setSelectedCategory(restCat.id)
-                      setSelectedSubcategory(null)
-                      if (selectedVendor) setSelectedVendor(null)
-                    }
-                    if (w1.buttonLink && !w1.buttonLink.includes('filter=restaurants') && w1.buttonLink !== '/deals') {
-                      if (w1.buttonLink.startsWith('http')) window.open(w1.buttonLink, '_blank')
-                      else router.push(w1.buttonLink)
-                    } else {
-                      restaurantsCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                  className="relative z-10 mt-3.5 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
-                >
-                  <span>{w1.buttonText || 'Explore Restaurants'}</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </button>
-              </div>
-
-              {/* Bento Card 2: 100% Genuine Multi-Vendor Guarantee (Emerald Shield) */}
-              <div className="flex-1 rounded-2xl bg-gradient-to-br from-[#061412] via-[#09221d] to-[#043329] border border-emerald-500/30 p-5 text-white shadow-xl shadow-emerald-950/20 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 hover:border-emerald-400/60 hover:-translate-y-0.5">
-                {/* Ambient Glow */}
-                <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none" />
-                <div className="absolute right-2 top-2 opacity-10 text-emerald-400 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
-                  <ShieldCheck className="w-24 h-24" />
-                </div>
-
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[11px] font-black tracking-wider uppercase text-emerald-300 shadow-sm shadow-emerald-950/30">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{w2.badge || 'FEATURED STORES & RESTAURANTS'}</span>
-                    </span>
-                  </div>
-
-                  <h4 className="font-extrabold text-sm sm:text-base text-slate-100 leading-tight mb-1">
-                    {w2.title || '100% Authentic Brand Guarantees'}
-                  </h4>
-                  <p className="text-xs text-slate-300/80 leading-relaxed line-clamp-2 mb-2.5">
-                    {w2.subtitle || 'Direct partner merchants with certified authenticity, direct fulfillment, and official warranties.'}
-                  </p>
-
-                  {/* Social Proof: Verified Store Avatars Strip */}
-                  {topShops && topShops.length > 0 && (
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {topShops.slice(0, 4).map((shop, i) => (
-                          <div
-                            key={shop.id || i}
-                            className="inline-block h-6 w-6 rounded-full ring-2 ring-emerald-950 overflow-hidden bg-slate-800"
-                            title={shop.businessName}
-                          >
-                            {shop.urlLogo ? (
-                              <Image src={normalizeImageUrl(shop.urlLogo)} alt={shop.businessName || 'Brand'} width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-emerald-300">
-                                {(shop.businessName || 'S').charAt(0)}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-[11px] font-semibold text-emerald-300/90 ml-1">
-                        {topShops.length}+ Verified Partners
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between pt-2.5 border-t border-emerald-500/20 text-xs">
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-extrabold text-[11px]">
-                    {w2.footerTag || '7-Day Easy Returns'}
+                {/* Top Header Row */}
+                <div className="relative z-10 p-4 pb-0 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/25 border border-blue-400/40 text-[10px] sm:text-[11px] font-black tracking-wider uppercase text-blue-200 backdrop-blur-md shadow-sm">
+                    <Store className="w-3.5 h-3.5 text-blue-300" />
+                    <span>FEATURED SHOPS</span>
                   </span>
+
+                  {/* Slide Navigation & Indicator */}
+                  <div className="flex items-center gap-1.5 backdrop-blur-md bg-black/50 border border-white/15 rounded-full px-2 py-0.5 shadow-sm">
+                    <span className="text-[10px] font-bold text-white/90 tabular-nums">
+                      {(activeShopSlide % displayedShops.length) + 1}/{displayedShops.length}
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveShopSlide(prev => (prev - 1 + displayedShops.length) % displayedShops.length)
+                        }}
+                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        aria-label="Previous shop"
+                      >
+                        <ChevronLeft className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveShopSlide(prev => (prev + 1) % displayedShops.length)
+                        }}
+                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        aria-label="Next shop"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shop Details & CTA Button */}
+                <div className="relative z-10 p-4 pt-2 flex flex-col justify-end flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden ring-2 ring-white/30 bg-slate-900 flex-shrink-0 shadow-lg">
+                      {currentShop.urlLogo ? (
+                        <Image
+                          src={normalizeImageUrl(currentShop.urlLogo)}
+                          alt={currentShop.businessName || 'Shop logo'}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-black text-white text-base bg-blue-600">
+                          {(currentShop.businessName || 'S').charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-black text-sm sm:text-base text-white truncate drop-shadow-sm">
+                          {currentShop.businessName}
+                        </h4>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                      </div>
+                      <p className="text-[11px] text-blue-200/90 font-medium truncate flex items-center gap-1 mt-0.5">
+                        <span>{currentShop.businessCategory?.categoryTitle || currentShop.businessType?.typeTitle || 'Retail & Electronics'}</span>
+                        {currentShop.city && (
+                          <>
+                            <span className="opacity-60">•</span>
+                            <span>{currentShop.city}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      // Activate Shops / Retail in circular carousel
-                      const shopCat = sortedCategories.find(c => {
-                        const s = `${c.name || ''} ${c.code || ''}`.toLowerCase()
-                        return s.includes('electronics') || s.includes('tech')
-                      })
-                      if (shopCat) {
-                        setSelectedCategory(shopCat.id)
-                        setSelectedSubcategory(null)
-                        if (selectedVendor) setSelectedVendor(null)
-                      }
-                      if (w2.footerLink && !w2.footerLink.includes('filter=shops') && w2.footerLink !== '/customer') {
-                        if (w2.footerLink.startsWith('http')) window.open(w2.footerLink, '_blank')
-                        else router.push(w2.footerLink)
-                      } else {
-                        storesCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStoreClick(currentShop.id, currentShop)
                     }}
-                    className="font-extrabold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group/btn cursor-pointer transition-colors"
+                    className="w-full py-2 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-blue-600/30 flex items-center justify-between transition-all cursor-pointer hover:scale-[1.01]"
                   >
-                    <span>{w2.footerLinkText || 'Explore Shops →'}</span>
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
+                    <span className="flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5" />
+                      <span>Explore Shop</span>
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </div>
+              </div>
+
+              {/* BOTTOM WIDGET: RESTAURANTS CAROUSEL */}
+              <div
+                onMouseEnter={() => setIsRestaurantPaused(true)}
+                onMouseLeave={() => setIsRestaurantPaused(false)}
+                onClick={() => handleStoreClick(currentRestaurant.id, currentRestaurant)}
+                className="flex-1 rounded-2xl relative overflow-hidden border border-slate-700/60 shadow-xl flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:border-emerald-500/80 hover:shadow-2xl hover:shadow-emerald-950/30 min-h-[200px]"
+              >
+                {/* Background Cover Photo with Dark Scrim Overlay */}
+                <div className="absolute inset-0 z-0">
+                  <Image
+                    src={normalizeImageUrl(restCover)}
+                    alt={currentRestaurant.businessName || 'Restaurant'}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 400px"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/50" />
+                  <div className="absolute inset-0 bg-emerald-950/20 mix-blend-overlay pointer-events-none" />
+                </div>
+
+                {/* Top Header Row */}
+                <div className="relative z-10 p-4 pb-0 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-[10px] sm:text-[11px] font-black tracking-wider uppercase text-emerald-200 backdrop-blur-md shadow-sm">
+                    <Utensils className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>POPULAR RESTAURANTS</span>
+                  </span>
+
+                  {/* Slide Navigation & Indicator */}
+                  <div className="flex items-center gap-1.5 backdrop-blur-md bg-black/50 border border-white/15 rounded-full px-2 py-0.5 shadow-sm">
+                    <span className="text-[10px] font-bold text-white/90 tabular-nums">
+                      {(activeRestaurantSlide % displayedRestaurants.length) + 1}/{displayedRestaurants.length}
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveRestaurantSlide(prev => (prev - 1 + displayedRestaurants.length) % displayedRestaurants.length)
+                        }}
+                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        aria-label="Previous restaurant"
+                      >
+                        <ChevronLeft className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveRestaurantSlide(prev => (prev + 1) % displayedRestaurants.length)
+                        }}
+                        className="p-1 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        aria-label="Next restaurant"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Restaurant Details & CTA Button */}
+                <div className="relative z-10 p-4 pt-2 flex flex-col justify-end flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden ring-2 ring-white/30 bg-slate-900 flex-shrink-0 shadow-lg">
+                      {currentRestaurant.urlLogo ? (
+                        <Image
+                          src={normalizeImageUrl(currentRestaurant.urlLogo)}
+                          alt={currentRestaurant.businessName || 'Restaurant logo'}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-black text-white text-base bg-emerald-600">
+                          {(currentRestaurant.businessName || 'R').charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-black text-sm sm:text-base text-white truncate drop-shadow-sm">
+                          {currentRestaurant.businessName}
+                        </h4>
+                        <span className="flex items-center text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 flex-shrink-0 shadow-sm">
+                          ★ {currentRestaurant.rating || '4.9'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-emerald-200/90 font-medium truncate flex items-center gap-1 mt-0.5">
+                        <span>{currentRestaurant.businessCategory?.categoryTitle || currentRestaurant.businessType?.typeTitle || 'Dining & Cafe'}</span>
+                        {currentRestaurant.city && (
+                          <>
+                            <span className="opacity-60">•</span>
+                            <span>{currentRestaurant.city}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStoreClick(currentRestaurant.id, currentRestaurant)
+                    }}
+                    className="w-full py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/30 flex items-center justify-between transition-all cursor-pointer hover:scale-[1.01]"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Utensils className="w-3.5 h-3.5" />
+                      <span>Explore Menu</span>
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
               </div>
