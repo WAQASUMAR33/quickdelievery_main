@@ -24,6 +24,7 @@ import Switch from '@mui/material/Switch'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
+import Paper from '@mui/material/Paper'
 import toast from 'react-hot-toast'
 import {
   DEFAULT_RAPIDRIDE_SETTINGS,
