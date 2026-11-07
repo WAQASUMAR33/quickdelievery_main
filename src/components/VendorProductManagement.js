@@ -174,6 +174,15 @@ const VendorProductManagement = () => {
     servings: '1-2 Persons',
     spiceLevel: 'Medium',
 
+    // SEO & Search Engine Optimization Metadata
+    metaTitle: '',
+    canonicalUrl: '',
+    metaDescription: '',
+    metaKeywords: '',
+    ogTitle: '',
+    ogDescription: '',
+    ogImage: '',
+
     // Phase 5: Modifiers, Options & Variations
     parentChild: 'Standalone',
     parentSku: '',
@@ -350,6 +359,14 @@ const VendorProductManagement = () => {
           saleEndDate:       formData.saleEndDate || null,
           currency:          formData.currency || 'PKR',
           variations:        variationsPayload,
+          // SEO Metadata
+          metaTitle:         formData.metaTitle || null,
+          canonicalUrl:      formData.canonicalUrl || null,
+          metaDescription:   formData.metaDescription || null,
+          metaKeywords:      formData.metaKeywords || null,
+          ogTitle:           formData.ogTitle || null,
+          ogDescription:     formData.ogDescription || null,
+          ogImage:           formData.ogImage || null,
         }),
       })
       const r = await res.json()
@@ -527,6 +544,14 @@ const VendorProductManagement = () => {
         { name: 'Artisan Garlic Truffle Dip', price: '80' },
         { name: 'Chilled Soft Drink Can (330ml)', price: '120' },
       ] : []),
+      // SEO Metadata
+      metaTitle: product.metaTitle || '',
+      canonicalUrl: product.canonicalUrl || '',
+      metaDescription: product.metaDescription || '',
+      metaKeywords: product.metaKeywords || '',
+      ogTitle: product.ogTitle || '',
+      ogDescription: product.ogDescription || '',
+      ogImage: product.ogImage || '',
     })
     setActiveEditPhase('all')
     setShowEditModal(true)
@@ -1091,6 +1116,7 @@ const VendorProductManagement = () => {
               { id: 'phase_5', label: isRestaurantActive ? 'Phase 5: Modifiers & Add-ons' : 'Phase 5: Variations & Options' },
               { id: 'phase_6', label: 'Phase 6: Image Media Assets' },
               { id: 'phase_7', label: isRestaurantActive ? 'Phase 7: Packaging & Handover' : 'Phase 7: Dimensions & Shipping' },
+              { id: 'phase_seo', label: '🔍 Phase 8: SEO & Search Metadata' },
             ].map(tab => (
               <Button
                 key={tab.id}
@@ -2040,6 +2066,131 @@ const VendorProductManagement = () => {
                     </FormControl>
                   </Box>
                 )}
+              </Card>
+            )}
+
+            {/* ── PHASE 8: SEO & Search Engine Optimization Metadata ── */}
+            {(activeEditPhase === 'all' || activeEditPhase === 'phase_seo') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 8" size="small" sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1d4ed8', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
+                      SEO & Search Engine Optimization
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Meta title, canonical URL, description, keywords and OpenGraph social metadata for Google ranking.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Google SERP Preview Card */}
+                <Box sx={{ p: 2, mb: 2.5, bgcolor: isDark ? '#1e293b' : '#f8fafc', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 1 }}>
+                    🌐 GOOGLE SEARCH PREVIEW
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#1a0dab', fontSize: 11, display: 'block' }}>
+                    {formData.canonicalUrl || `https://quickdelivery.com/products/${formData.sku || 'sample'}`}
+                  </Typography>
+                  <Typography variant="subtitle2" sx={{ color: '#1a0dab', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', lineHeight: 1.3 }}>
+                    {formData.metaTitle || formData.proName || 'Product Title | QuickDelivery'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4d5156', fontSize: 12.5, mt: 0.5, lineHeight: 1.4 }}>
+                    {formData.metaDescription || formData.description?.slice(0, 155) || 'Product description will appear here in Google search snippet.'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Meta Title (SEO Title)"
+                      value={formData.metaTitle || ''}
+                      onChange={e => setFormData({ ...formData, metaTitle: e.target.value })}
+                      placeholder="e.g. Crispy Zinger Burger & Fries | QuickDelivery Food"
+                      helperText={`Recommended: 50-60 characters (${(formData.metaTitle || '').length} chars)`}
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Canonical Tag / Canonical URL"
+                      value={formData.canonicalUrl || ''}
+                      onChange={e => setFormData({ ...formData, canonicalUrl: e.target.value })}
+                      placeholder="e.g. https://quickdelivery.com/products/crispy-zinger-burger"
+                      helperText="Specify the master URL for this product to prevent duplicate content indexing"
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      size="small"
+                      label="Meta Description"
+                      value={formData.metaDescription || ''}
+                      onChange={e => setFormData({ ...formData, metaDescription: e.target.value })}
+                      placeholder="Engaging summary for search engine results..."
+                      helperText={`Recommended: 150-160 characters (${(formData.metaDescription || '').length} chars)`}
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Meta Keywords (Comma-Separated)"
+                      value={formData.metaKeywords || ''}
+                      onChange={e => setFormData({ ...formData, metaKeywords: e.target.value })}
+                      placeholder="e.g. burger, fast food, zinger, lunch deal, delivery"
+                      helperText="Target search keywords separated by commas"
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Title (Social Share Title)"
+                      value={formData.ogTitle || ''}
+                      onChange={e => setFormData({ ...formData, ogTitle: e.target.value })}
+                      placeholder="Title for Facebook, WhatsApp & Twitter previews"
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Image URL"
+                      value={formData.ogImage || ''}
+                      onChange={e => setFormData({ ...formData, ogImage: e.target.value })}
+                      placeholder="https://.../social-banner.jpg"
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Description (Social Share Description)"
+                      value={formData.ogDescription || ''}
+                      onChange={e => setFormData({ ...formData, ogDescription: e.target.value })}
+                      placeholder="Description shown when sharing on WhatsApp, Twitter, Facebook"
+                      sx={{ borderRadius: 0 }}
+                    />
+                  </Box>
+                </Box>
               </Card>
             )}
 

@@ -109,11 +109,68 @@ export async function POST(request) {
     // 4. Strip sensitive data
     const { password: _, ...userWithoutPassword } = user
 
+    // 5. Determine whether onboarding/registration steps are complete for each role
+    let isOnboardingComplete = true
+    let requiredStep = null
+    let redirectUrl = '/'
+    let business = null
+
+    if (user.role === 'VENDOR') {
+      business = await prisma.business.findFirst({
+        where: { email: cleanEmail }
+      })
+      const isVendorComplete = Boolean(business && business.businessName)
+      if (!isVendorComplete || isNewUser) {
+        isOnboardingComplete = false
+        requiredStep = 'BUSINESS_REGISTRATION'
+        redirectUrl = `/business-register?email=${encodeURIComponent(cleanEmail)}&name=${encodeURIComponent(user.username || '')}`
+      } else {
+        isOnboardingComplete = true
+        redirectUrl = '/vendor/dashboard'
+      }
+    } else if (user.role === 'DRIVER') {
+      const driverProf = user.driverProfile
+      const isDriverComplete = Boolean(
+        driverProf &&
+        driverProf.cnicNumber &&
+        driverProf.cnicNumber !== 'Pending Verification' &&
+        driverProf.licenseNumber &&
+        driverProf.licenseNumber !== 'Pending Verification' &&
+        user.phoneNumber &&
+        user.phoneNumber.trim().length >= 7
+      )
+      if (!isDriverComplete || isNewUser) {
+        isOnboardingComplete = false
+        requiredStep = 'DRIVER_ONBOARDING'
+        redirectUrl = `/driver/register?email=${encodeURIComponent(cleanEmail)}&name=${encodeURIComponent(user.username || '')}`
+      } else {
+        isOnboardingComplete = true
+        redirectUrl = '/driver/profile'
+      }
+    } else if (user.role === 'CUSTOMER') {
+      const hasPhone = Boolean(user.phoneNumber && user.phoneNumber.trim().length >= 7)
+      if (isNewUser || !hasPhone) {
+        isOnboardingComplete = false
+        requiredStep = 'CUSTOMER_PROFILE_COMPLETION'
+        redirectUrl = `/customer?tab=profile&completeProfile=1`
+      } else {
+        isOnboardingComplete = true
+        redirectUrl = '/customer'
+      }
+    } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      isOnboardingComplete = true
+      redirectUrl = '/admin/dashboard'
+    }
+
     const response = Response.json({
       success: true,
       user: userWithoutPassword,
       token,
       isNewUser,
+      isOnboardingComplete,
+      requiredStep,
+      redirectUrl,
+      business: business || null,
     })
 
     // Set secure cookie

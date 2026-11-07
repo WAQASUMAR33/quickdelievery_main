@@ -298,18 +298,32 @@ export default function LoginPage() {
     }
   }
 
+  const routeUserAfterAuth = (result) => {
+    if (!result?.userData) {
+      router.push('/')
+      return
+    }
+    // If account was freshly created or incomplete, navigate to complete the required onboarding steps
+    if (result.isOnboardingComplete === false && result.redirectUrl) {
+      router.push(result.redirectUrl)
+      return
+    }
+    // Otherwise account already exists with all steps completed -> go to dashboard
+    const role = getUserRole(result.userData)
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
+    else if (role === 'VENDOR')   router.push('/vendor/dashboard')
+    else if (role === 'DRIVER')   router.push('/driver/profile')
+    else if (role === 'CUSTOMER') router.push('/customer')
+    else                          router.push('/')
+  }
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
     setError('')
     try {
       const result = await signInWithGoogle(selectedRole)
       if (result?.success && result?.userData) {
-        const role = getUserRole(result.userData)
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
-        else if (role === 'VENDOR')   router.push('/vendor/dashboard')
-        else if (role === 'DRIVER')   router.push('/driver/profile')
-        else if (role === 'CUSTOMER') router.push('/customer')
-        else                          router.push('/')
+        routeUserAfterAuth(result)
       } else if (!result?.success && !result?.cancelled) {
         setGoogleDialogOpen(true)
       }
@@ -337,12 +351,7 @@ export default function LoginPage() {
       })
       if (result?.success && result?.userData) {
         setGoogleDialogOpen(false)
-        const role = getUserRole(result.userData)
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
-        else if (role === 'VENDOR')   router.push('/vendor/dashboard')
-        else if (role === 'DRIVER')   router.push('/driver/profile')
-        else if (role === 'CUSTOMER') router.push('/customer')
-        else                          router.push('/')
+        routeUserAfterAuth(result)
       } else {
         setError(result?.error || 'Failed to authenticate with Gmail')
       }

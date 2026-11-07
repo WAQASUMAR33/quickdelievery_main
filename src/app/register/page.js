@@ -467,6 +467,12 @@ export default function RegisterPage() {
       const targetRole = formData.role || 'CUSTOMER'
       const result = await signInWithGoogle(targetRole)
       if (result?.success && result?.userData) {
+        // If account was freshly created or incomplete, navigate to complete the required onboarding steps
+        if (result.isOnboardingComplete === false && result.redirectUrl) {
+          router.push(result.redirectUrl)
+          return
+        }
+        // Otherwise account already exists with all steps completed -> go to dashboard
         const role = result.userData.role
         if (role === 'ADMIN' || role === 'SUPER_ADMIN') router.push('/admin/dashboard')
         else if (role === 'VENDOR') router.push('/vendor/dashboard')

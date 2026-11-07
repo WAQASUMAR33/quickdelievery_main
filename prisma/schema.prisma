@@ -59,6 +59,10 @@ model Category {
   status        CategoryStatus @default(ACTIVE)
   vertical      String         @default("FOOD") @map("vertical")
   image         String?        @map("image") @db.VarChar(500)
+  metaTitle     String?        @map("meta_title") @db.VarChar(255)
+  canonicalUrl  String?        @map("canonical_url") @db.VarChar(500)
+  metaDescription String?      @map("meta_description") @db.Text
+  metaKeywords  String?        @map("meta_keywords") @db.VarChar(500)
   createdBy     String         @map("createdBy")
   createdAt     DateTime       @default(now()) @map("createdAt")
   updatedAt     DateTime       @updatedAt @map("updatedAt")
@@ -77,6 +81,10 @@ model SubCategory {
   image             String?          @map("image") @db.VarChar(500)
   status            Boolean          @default(true)
   vertical          String           @default("FOOD") @map("vertical")
+  metaTitle         String?          @map("meta_title") @db.VarChar(255)
+  canonicalUrl      String?          @map("canonical_url") @db.VarChar(500)
+  metaDescription   String?          @map("meta_description") @db.Text
+  metaKeywords      String?          @map("meta_keywords") @db.VarChar(500)
   catId             Int?             @map("cat_id")
   productCategoryId Int?             @map("product_category_id")
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -96,6 +104,10 @@ model ProductCategory {
   categoryId                 Int              @map("category_id")
   productCategoryDescription String?          @db.Text @map("product_category_description")
   image                      String?          @map("image") @db.VarChar(500)
+  metaTitle                  String?          @map("meta_title") @db.VarChar(255)
+  canonicalUrl               String?          @map("canonical_url") @db.VarChar(500)
+  metaDescription            String?          @map("meta_description") @db.Text
+  metaKeywords               String?          @map("meta_keywords") @db.VarChar(500)
   createdAt                  DateTime         @default(now()) @map("created_at")
   updatedAt                  DateTime         @updatedAt @map("updated_at")
   
@@ -157,6 +169,13 @@ model Product {
   allergens         String?        @db.VarChar(255) // Nuts, Dairy, Shellfish, Gluten, Eggs
   modifiersJson     String?        @map("modifiers_json") @db.Text
   fitGuideJson      String?        @map("fit_guide_json") @db.Text
+  metaTitle         String?        @map("meta_title") @db.VarChar(255)
+  canonicalUrl      String?        @map("canonical_url") @db.VarChar(500)
+  metaDescription   String?        @map("meta_description") @db.Text
+  metaKeywords      String?        @map("meta_keywords") @db.VarChar(500)
+  ogTitle           String?        @map("og_title") @db.VarChar(255)
+  ogDescription     String?        @map("og_description") @db.Text
+  ogImage           String?        @map("og_image") @db.VarChar(500)
   approver          Users?         @relation("ApproverProducts", fields: [approveById], references: [uid])
   category          Category       @relation(fields: [catId], references: [id], onDelete: Cascade)
   creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)

@@ -232,6 +232,15 @@ export default function AddProductPage() {
     warrantyType: 'Freshness & Hygiene Guarantee Upon Handover',
     returnPolicy: 'Immediate Replacement on Delivery',
     isAuthenticGuaranteed: true,
+
+    // SEO Metadata
+    metaTitle: '',
+    canonicalUrl: '',
+    metaDescription: '',
+    metaKeywords: '',
+    ogTitle: '',
+    ogDescription: '',
+    ogImage: '',
   })
 
   const [newAddon, setNewAddon] = useState({ name: '', price: '' })
@@ -487,6 +496,14 @@ export default function AddProductPage() {
           saleStartDate: form.saleStartDate || null,
           saleEndDate: form.saleEndDate || null,
           currency: form.currency || 'PKR',
+          // SEO Metadata
+          metaTitle: form.metaTitle || null,
+          canonicalUrl: form.canonicalUrl || null,
+          metaDescription: form.metaDescription || null,
+          metaKeywords: form.metaKeywords || null,
+          ogTitle: form.ogTitle || null,
+          ogDescription: form.ogDescription || null,
+          ogImage: form.ogImage || null,
         }),
       })
 
@@ -1207,6 +1224,7 @@ export default function AddProductPage() {
                 { id: 'phase_5', label: 'Phase 5: Options & Variations' },
                 { id: 'phase_6', label: 'Phase 6: Image Assets' },
                 { id: 'phase_7', label: 'Phase 7: Dimensions & Shipping' },
+                { id: 'phase_seo', label: '🔍 Phase 8: SEO & Google Metadata' },
               ].map(tab => (
                 <Button
                   key={tab.id}
@@ -1499,6 +1517,131 @@ export default function AddProductPage() {
                   <TextField {...tfStyle} size="small" fullWidth label="Shipping Weight" value={form.shippingWeight} onChange={e => setField('shippingWeight', e.target.value)} />
                   <TextField {...tfStyle} size="small" fullWidth label="Warranty Coverage" value={form.warrantyType} onChange={e => setField('warrantyType', e.target.value)} />
                   <TextField {...tfStyle} size="small" fullWidth label="Return Policy" value={form.returnPolicy} onChange={e => setField('returnPolicy', e.target.value)} />
+                </Box>
+              </Card>
+            )}
+
+            {/* PHASE 8: SEO & Search Engine Optimization Metadata */}
+            {(activePhase === 'all' || activePhase === 'phase_seo') && (
+              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0, p: 3, bgcolor: 'background.paper' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Chip label="PHASE 8" size="small" sx={{ bgcolor: isDark ? 'rgba(59,130,246,0.18)' : '#dbeafe', color: isDark ? '#60a5fa' : '#1d4ed8', fontWeight: 900, borderRadius: 0, mb: 0.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="text.primary">
+                      SEO &amp; Search Engine Optimization
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Meta title, canonical URL, description, keywords and OpenGraph social metadata for Google ranking.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ mb: 2.5 }} />
+
+                {/* Google SERP Preview Card */}
+                <Box sx={{ p: 2, mb: 2.5, bgcolor: isDark ? '#1e293b' : '#f8fafc', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 1 }}>
+                    🌐 GOOGLE SEARCH PREVIEW
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#1a0dab', fontSize: 11, display: 'block' }}>
+                    {form.canonicalUrl || `https://quickdelivery.com/products/${form.sku || 'sample'}`}
+                  </Typography>
+                  <Typography variant="subtitle2" sx={{ color: '#1a0dab', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', lineHeight: 1.3 }}>
+                    {form.metaTitle || form.name || 'Product Title | QuickDelivery'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4d5156', fontSize: 12.5, mt: 0.5, lineHeight: 1.4 }}>
+                    {form.metaDescription || form.description?.slice(0, 155) || 'Product description will appear here in Google search snippet.'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="Meta Title (SEO Title)"
+                      value={form.metaTitle || ''}
+                      onChange={e => setField('metaTitle', e.target.value)}
+                      placeholder="e.g. Crispy Zinger Burger & Fries | QuickDelivery"
+                      helperText={`Recommended: 50-60 characters (${(form.metaTitle || '').length} chars)`}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="Canonical Tag / Canonical URL"
+                      value={form.canonicalUrl || ''}
+                      onChange={e => setField('canonicalUrl', e.target.value)}
+                      placeholder="e.g. https://quickdelivery.com/products/crispy-zinger-burger"
+                      helperText="Specify the canonical URL to prevent duplicate content indexing penalties"
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      multiline
+                      rows={3}
+                      size="small"
+                      label="Meta Description"
+                      value={form.metaDescription || ''}
+                      onChange={e => setField('metaDescription', e.target.value)}
+                      placeholder="Engaging summary for search engine results..."
+                      helperText={`Recommended: 150-160 characters (${(form.metaDescription || '').length} chars)`}
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="Meta Keywords (Comma-Separated)"
+                      value={form.metaKeywords || ''}
+                      onChange={e => setField('metaKeywords', e.target.value)}
+                      placeholder="e.g. burger, fast food, zinger, lunch deal, delivery"
+                    />
+                  </Box>
+
+                  <Box>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Title (Social Share Title)"
+                      value={form.ogTitle || ''}
+                      onChange={e => setField('ogTitle', e.target.value)}
+                      placeholder="Title for WhatsApp, Facebook & Twitter"
+                    />
+                  </Box>
+
+                  <Box>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Image URL"
+                      value={form.ogImage || ''}
+                      onChange={e => setField('ogImage', e.target.value)}
+                      placeholder="https://.../social-banner.jpg"
+                    />
+                  </Box>
+
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <TextField
+                      {...tfStyle}
+                      fullWidth
+                      size="small"
+                      label="OpenGraph Description (Social Share Description)"
+                      value={form.ogDescription || ''}
+                      onChange={e => setField('ogDescription', e.target.value)}
+                      placeholder="Description shown when sharing link on social media"
+                    />
+                  </Box>
                 </Box>
               </Card>
             )}

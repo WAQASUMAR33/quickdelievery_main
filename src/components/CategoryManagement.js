@@ -29,7 +29,11 @@ const CategoryManagement = () => {
     name: '',
     code: '',
     description: '',
-    status: 'ACTIVE'
+    status: 'ACTIVE',
+    metaTitle: '',
+    canonicalUrl: '',
+    metaDescription: '',
+    metaKeywords: ''
   })
 
   // Fetch categories from database
@@ -69,7 +73,11 @@ const CategoryManagement = () => {
           catCode: formData.code,
           catName: formData.name,
           description: formData.description,
-          status: formData.status === 'ACTIVE'
+          status: formData.status === 'ACTIVE',
+          metaTitle: formData.metaTitle,
+          canonicalUrl: formData.canonicalUrl,
+          metaDescription: formData.metaDescription,
+          metaKeywords: formData.metaKeywords
         })
       })
 
@@ -77,7 +85,7 @@ const CategoryManagement = () => {
       
       if (result.success) {
         setShowAddModal(false)
-        setFormData({ name: '', code: '', description: '', status: 'ACTIVE' })
+        setFormData({ name: '', code: '', description: '', status: 'ACTIVE', metaTitle: '', canonicalUrl: '', metaDescription: '', metaKeywords: '' })
         fetchCategories() // Refresh the list
       } else {
         console.error('Failed to add category:', result.error)
@@ -102,7 +110,11 @@ const CategoryManagement = () => {
           catCode: formData.code,
           catName: formData.name,
           description: formData.description,
-          status: formData.status === 'ACTIVE'
+          status: formData.status === 'ACTIVE',
+          metaTitle: formData.metaTitle,
+          canonicalUrl: formData.canonicalUrl,
+          metaDescription: formData.metaDescription,
+          metaKeywords: formData.metaKeywords
         })
       })
 
@@ -111,7 +123,7 @@ const CategoryManagement = () => {
       if (result.success) {
         setShowEditModal(false)
         setSelectedCategory(null)
-        setFormData({ name: '', code: '', description: '', status: 'ACTIVE' })
+        setFormData({ name: '', code: '', description: '', status: 'ACTIVE', metaTitle: '', canonicalUrl: '', metaDescription: '', metaKeywords: '' })
         fetchCategories() // Refresh the list
       } else {
         console.error('Failed to update category:', result.error)
@@ -156,7 +168,11 @@ const CategoryManagement = () => {
       name: category.name,
       code: category.code,
       description: category.description,
-      status: category.status
+      status: category.status,
+      metaTitle: category.metaTitle || '',
+      canonicalUrl: category.canonicalUrl || '',
+      metaDescription: category.metaDescription || '',
+      metaKeywords: category.metaKeywords || ''
     })
     setShowEditModal(true)
   }
@@ -305,7 +321,7 @@ const CategoryManagement = () => {
                 damping: 25,
                 stiffness: 300
               }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              className="bg-white rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl"
             >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Category</h3>
             
@@ -354,6 +370,63 @@ const CategoryManagement = () => {
                   <option value="INACTIVE">Inactive</option>
                 </select>
               </div>
+
+              {/* SEO & Search Engine Optimization Metadata */}
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">🔍 SEO & Search Optimization</span>
+                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">Search Metadata</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Title</label>
+                    <input
+                      type="text"
+                      value={formData.metaTitle}
+                      onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. Fresh Groceries & Organic Produce Online | QuickDelivery"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Recommended length: 50-60 characters ({formData.metaTitle?.length || 0} chars)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Canonical Tag / URL</label>
+                    <input
+                      type="text"
+                      value={formData.canonicalUrl}
+                      onChange={(e) => setFormData({ ...formData, canonicalUrl: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. https://quickdelivery.com/categories/groceries"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Canonical URL prevents duplicate content issues for search engines</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Description</label>
+                    <textarea
+                      value={formData.metaDescription}
+                      onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      rows="2"
+                      placeholder="Concise summary for Google search snippets (recommended 150-160 characters)"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Recommended length: 150-160 characters ({formData.metaDescription?.length || 0} chars)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Keywords / Search Tags</label>
+                    <input
+                      type="text"
+                      value={formData.metaKeywords}
+                      onChange={(e) => setFormData({ ...formData, metaKeywords: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. grocery, organic vegetables, dairy, fresh bakery, food delivery"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">
@@ -393,7 +466,7 @@ const CategoryManagement = () => {
                 damping: 25,
                 stiffness: 300
               }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              className="bg-white rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl"
             >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Category</h3>
             
@@ -438,6 +511,63 @@ const CategoryManagement = () => {
                   <option value="ACTIVE">Active</option>
                   <option value="INACTIVE">Inactive</option>
                 </select>
+              </div>
+
+              {/* SEO & Search Engine Optimization Metadata */}
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">🔍 SEO & Search Optimization</span>
+                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">Search Metadata</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Title</label>
+                    <input
+                      type="text"
+                      value={formData.metaTitle}
+                      onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. Fresh Groceries & Organic Produce Online | QuickDelivery"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Recommended length: 50-60 characters ({formData.metaTitle?.length || 0} chars)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Canonical Tag / URL</label>
+                    <input
+                      type="text"
+                      value={formData.canonicalUrl}
+                      onChange={(e) => setFormData({ ...formData, canonicalUrl: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. https://quickdelivery.com/categories/groceries"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Canonical URL prevents duplicate content issues for search engines</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Description</label>
+                    <textarea
+                      value={formData.metaDescription}
+                      onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      rows="2"
+                      placeholder="Concise summary for Google search snippets (recommended 150-160 characters)"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-0.5">Recommended length: 150-160 characters ({formData.metaDescription?.length || 0} chars)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Keywords / Search Tags</label>
+                    <input
+                      type="text"
+                      value={formData.metaKeywords}
+                      onChange={(e) => setFormData({ ...formData, metaKeywords: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder="e.g. grocery, organic vegetables, dairy, fresh bakery, food delivery"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

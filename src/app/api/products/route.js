@@ -587,7 +587,11 @@ export async function POST(request) {
           image: data.image ?? null,
           status: statusEnum,
           vertical: data.vertical || 'FOOD',
-          createdBy: data.createdBy || 'system'
+          createdBy: data.createdBy || 'system',
+          metaTitle: data.metaTitle || null,
+          canonicalUrl: data.canonicalUrl || null,
+          metaDescription: data.metaDescription || null,
+          metaKeywords: data.metaKeywords || null
         }
       })
 
@@ -632,7 +636,11 @@ export async function POST(request) {
           catId: parsedCatId,
           productCategoryId: parsedProductCatId,
           vertical: data.vertical || 'FOOD',
-          status: (data.status === true || data.status === 'ACTIVE')
+          status: (data.status === true || data.status === 'ACTIVE'),
+          metaTitle: data.metaTitle || null,
+          canonicalUrl: data.canonicalUrl || null,
+          metaDescription: data.metaDescription || null,
+          metaKeywords: data.metaKeywords || null
         },
         include: {
           category: true,
@@ -731,7 +739,15 @@ export async function POST(request) {
           ingredients: data.ingredients || null,
           reviews: data.reviews ? JSON.stringify(data.reviews) : null,
           size: data.size || null,
-          color: data.color || null
+          color: data.color || null,
+          // SEO Metadata
+          metaTitle: data.metaTitle || null,
+          canonicalUrl: data.canonicalUrl || null,
+          metaDescription: data.metaDescription || null,
+          metaKeywords: data.metaKeywords || null,
+          ogTitle: data.ogTitle || null,
+          ogDescription: data.ogDescription || null,
+          ogImage: data.ogImage || null
         }
       })
 
@@ -780,7 +796,11 @@ export async function PUT(request) {
           description: data.description,
           image: data.image !== undefined ? (data.image || null) : undefined,
           vertical: data.vertical || undefined,
-          status: (data.status === true || data.status === 'ACTIVE') ? 'ACTIVE' : 'INACTIVE'
+          status: (data.status === true || data.status === 'ACTIVE') ? 'ACTIVE' : 'INACTIVE',
+          metaTitle: data.metaTitle !== undefined ? (data.metaTitle || null) : undefined,
+          canonicalUrl: data.canonicalUrl !== undefined ? (data.canonicalUrl || null) : undefined,
+          metaDescription: data.metaDescription !== undefined ? (data.metaDescription || null) : undefined,
+          metaKeywords: data.metaKeywords !== undefined ? (data.metaKeywords || null) : undefined
         }
       })
 
@@ -804,7 +824,11 @@ export async function PUT(request) {
           catId: parsedCatId,
           productCategoryId: parsedProductCatId,
           vertical: data.vertical || undefined,
-          status: (data.status === true || data.status === 'ACTIVE')
+          status: (data.status === true || data.status === 'ACTIVE'),
+          metaTitle: data.metaTitle !== undefined ? (data.metaTitle || null) : undefined,
+          canonicalUrl: data.canonicalUrl !== undefined ? (data.canonicalUrl || null) : undefined,
+          metaDescription: data.metaDescription !== undefined ? (data.metaDescription || null) : undefined,
+          metaKeywords: data.metaKeywords !== undefined ? (data.metaKeywords || null) : undefined
         },
         include: {
           category: true,
@@ -900,6 +924,14 @@ export async function PUT(request) {
           salePrice:         data.salePrice  ? parseFloat(data.salePrice)  : null,
           saleStartDate:     data.saleStartDate ? new Date(data.saleStartDate) : null,
           saleEndDate:       data.saleEndDate   ? new Date(data.saleEndDate)   : null,
+          // SEO Metadata
+          metaTitle:         data.metaTitle !== undefined ? (data.metaTitle || null) : undefined,
+          canonicalUrl:      data.canonicalUrl !== undefined ? (data.canonicalUrl || null) : undefined,
+          metaDescription:   data.metaDescription !== undefined ? (data.metaDescription || null) : undefined,
+          metaKeywords:      data.metaKeywords !== undefined ? (data.metaKeywords || null) : undefined,
+          ogTitle:           data.ogTitle !== undefined ? (data.ogTitle || null) : undefined,
+          ogDescription:     data.ogDescription !== undefined ? (data.ogDescription || null) : undefined,
+          ogImage:           data.ogImage !== undefined ? (data.ogImage || null) : undefined,
         }
       })
 

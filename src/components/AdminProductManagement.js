@@ -99,7 +99,15 @@ const AdminProductManagement = () => {
     size: '',
     customSize: '',
     color: '',
-    customColor: ''
+    customColor: '',
+    // SEO Metadata
+    metaTitle: '',
+    canonicalUrl: '',
+    metaDescription: '',
+    metaKeywords: '',
+    ogTitle: '',
+    ogDescription: '',
+    ogImage: ''
   })
 
   // Predefined colors with hex values
@@ -255,7 +263,15 @@ const AdminProductManagement = () => {
           ingredients: formData.ingredients || null,
           reviews: formData.reviews.length > 0 ? formData.reviews : null,
           size: formData.size === 'custom' ? formData.customSize : formData.size || null,
-          color: formData.color === 'custom' ? formData.customColor : formData.color || null
+          color: formData.color === 'custom' ? formData.customColor : formData.color || null,
+          // SEO Metadata
+          metaTitle: formData.metaTitle || null,
+          canonicalUrl: formData.canonicalUrl || null,
+          metaDescription: formData.metaDescription || null,
+          metaKeywords: formData.metaKeywords || null,
+          ogTitle: formData.ogTitle || null,
+          ogDescription: formData.ogDescription || null,
+          ogImage: formData.ogImage || null
         })
       })
 
@@ -338,7 +354,15 @@ const AdminProductManagement = () => {
           barcode: formData.barcode,
           qnty: parseInt(formData.qnty),
           stock: parseInt(formData.stock),
-          status: formData.status
+          status: formData.status,
+          // SEO Metadata
+          metaTitle: formData.metaTitle || null,
+          canonicalUrl: formData.canonicalUrl || null,
+          metaDescription: formData.metaDescription || null,
+          metaKeywords: formData.metaKeywords || null,
+          ogTitle: formData.ogTitle || null,
+          ogDescription: formData.ogDescription || null,
+          ogImage: formData.ogImage || null
         })
       })
 
@@ -472,7 +496,15 @@ const AdminProductManagement = () => {
       qnty: product.qnty.toString(),
       stock: product.stock.toString(),
       status: product.status,
-      images: product.proImages || []
+      images: product.proImages || [],
+      // SEO Metadata
+      metaTitle: product.metaTitle || '',
+      canonicalUrl: product.canonicalUrl || '',
+      metaDescription: product.metaDescription || '',
+      metaKeywords: product.metaKeywords || '',
+      ogTitle: product.ogTitle || '',
+      ogDescription: product.ogDescription || '',
+      ogImage: product.ogImage || ''
     })
     setShowEditModal(true)
   }
@@ -1599,6 +1631,93 @@ const AdminProductManagement = () => {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* ── SEO & Search Engine Optimization Metadata ── */}
+                  <div className="col-span-1 md:col-span-2 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">🔍 SEO & Search Engine Optimization</span>
+                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">Google Metadata</span>
+                    </div>
+
+                    {/* Google SERP Preview */}
+                    <div className="p-3 mb-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <p className="text-xs font-bold text-gray-500 mb-1">GOOGLE SEARCH PREVIEW</p>
+                      <p className="text-xs text-blue-800 break-all">{formData.canonicalUrl || `https://quickdelivery.com/products/${formData.sku || 'preview'}`}</p>
+                      <p className="text-sm font-bold text-blue-700 hover:underline cursor-pointer">{formData.metaTitle || formData.proName || 'Product Title | QuickDelivery'}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{formData.metaDescription || (formData.description?.slice(0, 155)) || 'Product description snippet in Google search...'}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="col-span-1 md:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Title (SEO Title)</label>
+                        <input
+                          type="text"
+                          value={formData.metaTitle || ''}
+                          onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g. Premium Basmati Rice 5kg | QuickDelivery"
+                        />
+                        <p className="text-[11px] text-gray-500 mt-0.5">Recommended: 50-60 characters ({(formData.metaTitle || '').length} chars)</p>
+                      </div>
+
+                      <div className="col-span-1 md:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Canonical Tag / URL</label>
+                        <input
+                          type="text"
+                          value={formData.canonicalUrl || ''}
+                          onChange={(e) => setFormData({ ...formData, canonicalUrl: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g. https://quickdelivery.com/products/premium-basmati-rice"
+                        />
+                        <p className="text-[11px] text-gray-500 mt-0.5">Defines the primary URL to prevent search duplicate penalties</p>
+                      </div>
+
+                      <div className="col-span-1 md:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Description</label>
+                        <textarea
+                          rows={2}
+                          value={formData.metaDescription || ''}
+                          onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="Summary snippet for Google search results..."
+                        />
+                        <p className="text-[11px] text-gray-500 mt-0.5">Recommended: 150-160 characters ({(formData.metaDescription || '').length} chars)</p>
+                      </div>
+
+                      <div className="col-span-1 md:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Meta Keywords / Search Tags</label>
+                        <input
+                          type="text"
+                          value={formData.metaKeywords || ''}
+                          onChange={(e) => setFormData({ ...formData, metaKeywords: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g. rice, basmati, pantry, grains, grocery"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">OpenGraph Title (Social Share)</label>
+                        <input
+                          type="text"
+                          value={formData.ogTitle || ''}
+                          onChange={(e) => setFormData({ ...formData, ogTitle: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="Title for WhatsApp / Facebook"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">OpenGraph Image URL</label>
+                        <input
+                          type="text"
+                          value={formData.ogImage || ''}
+                          onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                          placeholder="https://.../social-image.jpg"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

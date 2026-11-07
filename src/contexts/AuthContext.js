@@ -261,7 +261,15 @@ export default function AuthProvider({ children }) {
       setUser(sessionUser)
       setUserData(dbUser)
       toast.success(`Welcome, ${dbUser.username}!`)
-      return { success: true, user: sessionUser, userData: dbUser }
+      return {
+        success: true,
+        user: sessionUser,
+        userData: dbUser,
+        isNewUser: result.isNewUser,
+        isOnboardingComplete: result.isOnboardingComplete,
+        requiredStep: result.requiredStep,
+        redirectUrl: result.redirectUrl,
+      }
     } catch (error) {
       console.error('Google login error:', error)
       toast.error(error.message || 'Google login failed')
