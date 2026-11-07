@@ -2324,18 +2324,18 @@ const ProductCatalog = ({
           return (
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4 h-full">
               {/* TOP WIDGET: SHOPS MULTI-VENDOR CAROUSEL */}
-              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between overflow-hidden min-h-[195px] transition-all hover:shadow-md">
+              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-3 sm:p-3.5 shadow-sm flex flex-col justify-between overflow-hidden min-h-[175px] transition-all hover:shadow-md">
                 {/* Header: Title & "Explore more" Text Link */}
-                <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-                      <Store className="w-4 h-4" />
+                <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    <span className="p-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                      <Store className="w-3.5 h-3.5" />
                     </span>
                     <div>
-                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                      <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">
                         Featured Shops
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                         Verified stores & electronics
                       </p>
                     </div>
@@ -2346,29 +2346,29 @@ const ProductCatalog = ({
                     onClick={() => {
                       storesCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}
-                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                   >
                     <span>Explore more</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
                 {/* Horizontal Multi-Vendor Carousel Track (Left arrow, cards, Right arrow) */}
-                <div className="relative flex items-center py-1">
+                <div className="relative flex items-center py-0.5">
                   {/* Left Chevron Button */}
                   <button
                     type="button"
-                    onClick={() => scrollBentoShops(-160)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
+                    onClick={() => scrollBentoShops(-140)}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
                     aria-label="Scroll shops left"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
 
                   {/* Cards Scroll Container */}
                   <div
                     ref={bentoShopsScrollRef}
-                    className="flex items-start gap-3 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
+                    className="flex items-start gap-2.5 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
                   >
                     {displayedShops.map((shop, i) => {
                       const shopImg = shop.urlCoverPhoto || shop.urlLogo
@@ -2380,7 +2380,7 @@ const ProductCatalog = ({
                           onClick={() => handleStoreClick(shop.id, shop)}
                           className="flex-shrink-0 flex flex-col items-center group/card cursor-pointer focus:outline-none text-center"
                         >
-                          <div className={`w-[74px] sm:w-[82px] h-[74px] sm:h-[82px] rounded-xl overflow-hidden border-2 ${
+                          <div className={`w-[60px] sm:w-[68px] h-[60px] sm:h-[68px] rounded-xl overflow-hidden border-2 ${
                             isFirst ? 'border-amber-500 shadow-md ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-700'
                           } group-hover/card:border-amber-500 dark:group-hover/card:border-amber-400 bg-slate-50 dark:bg-slate-800 shadow-sm relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md`}>
                             {shopImg ? (
@@ -2388,16 +2388,16 @@ const ProductCatalog = ({
                                 src={normalizeImageUrl(shopImg)}
                                 alt={shop.businessName || 'Shop'}
                                 fill
-                                sizes="84px"
+                                sizes="70px"
                                 className="object-cover transition-transform duration-500 group-hover/card:scale-110"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 text-base">
+                              <div className="w-full h-full flex items-center justify-center font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 text-sm">
                                 {(shop.businessName || 'S').charAt(0)}
                               </div>
                             )}
                           </div>
-                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[76px] sm:max-w-[84px] mt-1.5 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400 transition-colors">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[62px] sm:max-w-[70px] mt-1 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400 transition-colors">
                             {shop.businessName}
                           </span>
                         </button>
@@ -2408,28 +2408,28 @@ const ProductCatalog = ({
                   {/* Right Chevron Button */}
                   <button
                     type="button"
-                    onClick={() => scrollBentoShops(160)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
+                    onClick={() => scrollBentoShops(140)}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
                     aria-label="Scroll shops right"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* BOTTOM WIDGET: RESTAURANTS MULTI-VENDOR CAROUSEL */}
-              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between overflow-hidden min-h-[195px] transition-all hover:shadow-md">
+              <div className="flex-1 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-3 sm:p-3.5 shadow-sm flex flex-col justify-between overflow-hidden min-h-[175px] transition-all hover:shadow-md">
                 {/* Header: Title & "Explore more" Text Link */}
-                <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-                      <Utensils className="w-4 h-4" />
+                <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    <span className="p-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                      <Utensils className="w-3.5 h-3.5" />
                     </span>
                     <div>
-                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                      <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">
                         Popular Restaurants
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                         Top dining, burgers & fast food
                       </p>
                     </div>
@@ -2440,29 +2440,29 @@ const ProductCatalog = ({
                     onClick={() => {
                       restaurantsCarouselSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}
-                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                   >
                     <span>Explore more</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
                 {/* Horizontal Multi-Vendor Carousel Track (Left arrow, cards, Right arrow) */}
-                <div className="relative flex items-center py-1">
+                <div className="relative flex items-center py-0.5">
                   {/* Left Chevron Button */}
                   <button
                     type="button"
-                    onClick={() => scrollBentoRestaurants(-160)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
+                    onClick={() => scrollBentoRestaurants(-140)}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 mr-1"
                     aria-label="Scroll restaurants left"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
 
                   {/* Cards Scroll Container */}
                   <div
                     ref={bentoRestaurantsScrollRef}
-                    className="flex items-start gap-3 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
+                    className="flex items-start gap-2.5 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-1 flex-1 min-w-0"
                   >
                     {displayedRestaurants.map((rest, i) => {
                       const restImg = rest.urlCoverPhoto || rest.urlLogo || (Array.isArray(rest.urlRestaurantImages) ? rest.urlRestaurantImages[0] : null)
@@ -2474,7 +2474,7 @@ const ProductCatalog = ({
                           onClick={() => handleStoreClick(rest.id, rest)}
                           className="flex-shrink-0 flex flex-col items-center group/card cursor-pointer focus:outline-none text-center"
                         >
-                          <div className={`w-[74px] sm:w-[82px] h-[74px] sm:h-[82px] rounded-xl overflow-hidden border-2 ${
+                          <div className={`w-[60px] sm:w-[68px] h-[60px] sm:h-[68px] rounded-xl overflow-hidden border-2 ${
                             isFirst ? 'border-amber-500 shadow-md ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-700'
                           } group-hover/card:border-amber-500 dark:group-hover/card:border-amber-400 bg-slate-50 dark:bg-slate-800 shadow-sm relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md`}>
                             {restImg ? (
@@ -2482,16 +2482,16 @@ const ProductCatalog = ({
                                 src={normalizeImageUrl(restImg)}
                                 alt={rest.businessName || 'Restaurant'}
                                 fill
-                                sizes="84px"
+                                sizes="70px"
                                 className="object-cover transition-transform duration-500 group-hover/card:scale-110"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-base">
+                              <div className="w-full h-full flex items-center justify-center font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-sm">
                                 {(rest.businessName || 'R').charAt(0)}
                               </div>
                             )}
                           </div>
-                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[76px] sm:max-w-[84px] mt-1.5 group-hover/card:text-emerald-600 dark:group-hover/card:text-emerald-400 transition-colors">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-[62px] sm:max-w-[70px] mt-1 group-hover/card:text-emerald-600 dark:group-hover/card:text-emerald-400 transition-colors">
                             {rest.businessName}
                           </span>
                         </button>
@@ -2502,11 +2502,11 @@ const ProductCatalog = ({
                   {/* Right Chevron Button */}
                   <button
                     type="button"
-                    onClick={() => scrollBentoRestaurants(160)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
+                    onClick={() => scrollBentoRestaurants(140)}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-400 flex items-center justify-center shrink-0 shadow-sm cursor-pointer z-10 transition-all hover:scale-105 active:scale-95 ml-1"
                     aria-label="Scroll restaurants right"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -2516,27 +2516,27 @@ const ProductCatalog = ({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          2. CIRCULAR CATEGORY CAROUSEL (Hero Visual Departments - Flat / No Elevation)
+          2. CIRCULAR CATEGORY CAROUSEL (Hero Visual Departments - Flat / No Elevation - Small Compact Design)
              Matches exact reference: Electronics & Tech, Bakery & Desserts, Fresh Groceries, Restaurant
       ══════════════════════════════════════════════════════════════════ */}
       {sortedCategories.length > 0 && (
-        <div className="relative w-full py-3 sm:py-5 my-1">
+        <div className="relative w-full py-2 sm:py-3 my-0.5">
           <div className="relative group/dept w-full">
             {/* Left Circular Scroll Arrow - Flat / No Elevation */}
             <button
               type="button"
-              onClick={() => scrollCarousel(departmentStripRef, -280)}
+              onClick={() => scrollCarousel(departmentStripRef, -240)}
               style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
-              className="dept-nav-btn absolute left-0 sm:left-2 top-[36%] -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
+              className="dept-nav-btn absolute left-0 sm:left-1 top-[38%] -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none shadow-sm"
               aria-label="Previous departments"
             >
-              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
+              <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
             </button>
 
             {/* Circular Department Items Row */}
             <div
               ref={departmentStripRef}
-              className="flex items-start justify-start sm:justify-center gap-6 sm:gap-10 md:gap-14 lg:gap-16 overflow-x-auto pb-2 pt-2 px-8 sm:px-14 scrollbar-hide scroll-smooth"
+              className="flex items-start justify-start sm:justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 overflow-x-auto pb-1.5 pt-1 px-8 sm:px-12 scrollbar-hide scroll-smooth"
             >
               {sortedCategories.map((cat) => {
                 const isSelected = selectedCategory === cat.id
@@ -2553,7 +2553,7 @@ const ProductCatalog = ({
                     aria-label={cat.name || 'Browse category'}
                     className="flex flex-col items-center flex-shrink-0 group/cat cursor-pointer focus:outline-none transition-transform"
                   >
-                    {/* Perfectly Circular Frame - Flat / No Elevation / No Square Border */}
+                    {/* Perfectly Circular Frame - Flat / No Elevation / No Square Border - Small & Compact */}
                     <div
                       style={{
                         borderRadius: '50%',
@@ -2561,9 +2561,9 @@ const ProductCatalog = ({
                         WebkitClipPath: 'circle(50% at 50% 50%)',
                         aspectRatio: '1 / 1',
                       }}
-                      className={`dept-circle relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden transition-transform duration-300 flex items-center justify-center ${
+                      className={`dept-circle relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden transition-transform duration-300 flex items-center justify-center ${
                         isSelected
-                          ? 'scale-105 ring-3 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                          ? 'scale-105 ring-2 sm:ring-3 ring-blue-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
                           : 'group-hover/cat:scale-105'
                       }`}
                     >
@@ -2580,7 +2580,7 @@ const ProductCatalog = ({
                           src={normalizeImageUrl(imgUrl)}
                           alt={cat.name || 'Category'}
                           fill
-                          sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
+                          sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
                           loading="eager"
                           style={{
                             borderRadius: '50%',
@@ -2595,7 +2595,7 @@ const ProductCatalog = ({
 
                     {/* Centered Category Title */}
                     <span
-                      className={`mt-3 sm:mt-4 text-sm sm:text-base text-center max-w-[120px] sm:max-w-[140px] leading-snug transition-colors line-clamp-2 ${
+                      className={`mt-1.5 sm:mt-2 text-xs sm:text-sm text-center max-w-[85px] sm:max-w-[105px] leading-snug transition-colors line-clamp-2 ${
                         isSelected
                           ? 'text-blue-600 dark:text-blue-400 font-bold'
                           : 'text-slate-800 dark:text-slate-200 font-medium sm:font-semibold group-hover/cat:text-blue-600 dark:group-hover/cat:text-blue-400'
@@ -2611,12 +2611,12 @@ const ProductCatalog = ({
             {/* Right Circular Scroll Arrow - Flat / No Elevation */}
             <button
               type="button"
-              onClick={() => scrollCarousel(departmentStripRef, 280)}
+              onClick={() => scrollCarousel(departmentStripRef, 240)}
               style={{ borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }}
-              className="dept-nav-btn absolute right-0 sm:right-2 top-[36%] -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
+              className="dept-nav-btn absolute right-0 sm:right-1 top-[38%] -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none shadow-sm"
               aria-label="Next departments"
             >
-              <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
+              <ChevronRight className="w-4 h-4 text-slate-700 dark:text-slate-200" strokeWidth={2.2} />
             </button>
           </div>
         </div>
