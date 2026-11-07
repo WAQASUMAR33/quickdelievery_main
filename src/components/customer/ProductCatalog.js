@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getProductUrl } from '@/lib/productSlug'
 import { normalizeImageUrl } from '@/lib/imageUtils'
-import { BentoCountdown, PillCountdown } from '@/components/customer/FlashCountdown'
 import { DEFAULT_HERO_SLIDES } from '@/lib/heroSlideDefaults'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -1331,10 +1330,10 @@ const ProductCatalog = ({
             </div>
           )}
 
-          {/* Food-specific signals: Prep Time & Halal Pill */}
-          {isFoodItem ? (
+          {/* Food-specific signals: Prep Time (only if real data present) */}
+          {product.prepTime ? (
             <div className="absolute top-2 right-9 rounded-full bg-emerald-600/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-black text-white shadow-sm z-10 flex items-center gap-0.5 tracking-wide uppercase">
-              <span>⏱️ 15-20m</span>
+              <span>⏱️ {product.prepTime}</span>
             </div>
           ) : (
             product.brandName && (
@@ -1381,7 +1380,7 @@ const ProductCatalog = ({
                   {product.vendor?.businessName || product.vendor?.username || 'Verified Store'}
                 </span>
               </div>
-              {isFoodItem && (
+              {(product.isHalal || product.halal) && (
                 <span className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1 py-0.2 rounded">
                   🥩 Halal
                 </span>
@@ -1399,17 +1398,21 @@ const ProductCatalog = ({
               </h3>
             </Link>
 
-            {/* Star Rating & Review Count */}
+            {/* Star Rating & Review Count (Only real ratings shown) */}
             <div className="flex items-center text-xs gap-1.5 mb-2">
-              <div className="flex items-center text-amber-500 font-extrabold">
-                <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
-                <span>{avgRating !== null ? avgRating.toFixed(1) : '4.8'}</span>
-              </div>
-              <span className="text-slate-400 text-[11px]">
-                ({product.reviews?.length || 24})
-              </span>
+              {(avgRating !== null || product.rating) && (
+                <div className="flex items-center text-amber-500 font-extrabold">
+                  <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
+                  <span>{avgRating !== null ? avgRating.toFixed(1) : parseFloat(product.rating).toFixed(1)}</span>
+                </div>
+              )}
+              {Array.isArray(product.reviews) && product.reviews.length > 0 && (
+                <span className="text-slate-400 text-[11px]">
+                  ({product.reviews.length})
+                </span>
+              )}
               <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded text-[10px] font-black tracking-wide">
-                {t('inStock')}
+                {product.inStock === false || product.stock === 0 ? t('outOfStock') || 'Out of Stock' : t('inStock')}
               </span>
             </div>
           </div>
@@ -1428,7 +1431,7 @@ const ProductCatalog = ({
                 )}
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                {product.freeDelivery ? t('freeDelivery') : (isFoodItem ? 'Express 30m Courier' : t('standardShipping'))}
+                {product.freeDelivery ? t('freeDelivery') : (product.shippingText || (isFoodItem ? t('expressDelivery') || 'Express Delivery' : t('standardShipping')))}
               </span>
             </div>
 
@@ -1578,14 +1581,20 @@ const ProductCatalog = ({
               </h3>
             </Link>
 
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
               <span>Sold by: <strong>{product.vendor?.businessName || 'Verified Merchant'}</strong></span>
-              <span>•</span>
-              <div className="flex items-center text-amber-500 font-extrabold">
-                <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
-                <span>{avgRating !== null ? avgRating.toFixed(1) : '4.8'}</span>
-              </div>
-              <span>({product.reviews?.length || 24} reviews)</span>
+              {(avgRating !== null || product.rating) && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center text-amber-500 font-extrabold">
+                    <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
+                    <span>{avgRating !== null ? avgRating.toFixed(1) : parseFloat(product.rating).toFixed(1)}</span>
+                  </div>
+                </>
+              )}
+              {Array.isArray(product.reviews) && product.reviews.length > 0 && (
+                <span>({product.reviews.length} {t('reviews') || 'reviews'})</span>
+              )}
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-2 leading-relaxed">
@@ -1619,7 +1628,7 @@ const ProductCatalog = ({
             </div>
 
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
-              {product.freeDelivery ? (t('freeDelivery') || 'Free Delivery') : (isFoodItem ? (t('expressCourier') || 'Express 30m Courier') : (t('standardShipping') || 'Standard Shipping (Rs. 150)'))}
+              {product.freeDelivery ? (t('freeDelivery') || 'Free Delivery') : (product.shippingText || (isFoodItem ? (t('expressCourier') || 'Express Courier') : (t('standardShipping') || 'Standard Shipping')))}
             </span>
 
             {!isFoodItem && listPrice >= 2000 && (
@@ -2637,8 +2646,9 @@ const ProductCatalog = ({
                 </h3>
               </div>
 
-              {/* Ticking Timer Countdown Pill */}
-              <PillCountdown label={t('endsIn') || 'Ends in:'} />
+              <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-800/80 px-2.5 py-0.5 rounded-full">
+                {discountedProducts.length} {t('dealsLive') || 'Deals Live'}
+              </span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -3226,11 +3236,20 @@ const ProductCatalog = ({
 
                     {/* Ratings & Category */}
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3 flex-wrap">
-                      <div className="flex items-center text-amber-500 font-extrabold">
-                        <Star className="w-4 h-4 fill-current mr-0.5" />
-                        <span>4.8 (24 {t('reviews') || 'Reviews'})</span>
-                      </div>
-                      <span>•</span>
+                      {(detailProduct.rating || (Array.isArray(detailProduct.reviews) && detailProduct.reviews.length > 0)) && (
+                        <>
+                          <div className="flex items-center text-amber-500 font-extrabold">
+                            <Star className="w-4 h-4 fill-current mr-0.5" />
+                            <span>
+                              {detailProduct.rating
+                                ? parseFloat(detailProduct.rating).toFixed(1)
+                                : (detailProduct.reviews.reduce((a, b) => a + (parseFloat(b.rating) || 0), 0) / detailProduct.reviews.length).toFixed(1)}
+                              {Array.isArray(detailProduct.reviews) && detailProduct.reviews.length > 0 && ` (${detailProduct.reviews.length} ${t('reviews') || 'Reviews'})`}
+                            </span>
+                          </div>
+                          <span>•</span>
+                        </>
+                      )}
                       <span className="font-bold text-slate-700 dark:text-slate-300">
                         {[detailProduct.category?.name, detailProduct.subCategory?.subCatName].filter(Boolean).map(c => t(c) || c).join(' / ')}
                       </span>
